@@ -1,0 +1,13 @@
+# macOS
+.DS_Store
+
+# Temporary and editor files
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+
+# Generated documentation output
+site/
+build/
