@@ -1,0 +1,406 @@
+---
+title: Core Domain Model
+document_id: LB-DOC-04
+version: 0.1.0
+status: Draft
+last_updated: 2026-07-10
+---
+
+# Core Domain Model
+
+## Purpose
+
+This document defines the core business entities of LinguaBrain AI and their boundaries. It establishes a stable vocabulary for the product, database, API contracts, and implementation.
+
+The model must support language learning now without preventing future learning domains. Therefore, the system's central entity is not a `Word`; it is a `KnowledgeItem`.
+
+## Core decision
+
+> Every thing that can be learned is represented as a KnowledgeItem.
+
+A word is one kind of knowledge item. So are phrases, sentences, grammar rules, dialogues, concepts, images, audio, exercises, and future learning resources.
+
+This decision avoids rebuilding the core when the learner wants to study a phrase such as `Guten Morgen`, a grammar topic such as German Dativ, or a technical concept rather than an individual word.
+
+## Domain boundaries
+
+The core domain defines business meaning and invariants. It does not define:
+
+- Flutter widgets or screen state;
+- SQL tables or ORM-specific types;
+- a particular AI provider or prompt implementation;
+- a particular synchronization backend;
+- language-specific grammar rules.
+
+Those concerns consume the domain model through explicit interfaces and are specified in related documents.
+
+## Conceptual overview
+
+```mermaid
+classDiagram
+    class KnowledgeItem {
+      +UUID id
+      +KnowledgeItemType type
+      +LanguageCode language
+      +String title
+      +ContentStatus status
+      +Metadata metadata
+    }
+    class Word
+    class Phrase
+    class GrammarRule
+    class MediaItem
+    class Exercise
+    class KnowledgeRelation
+    class UserKnowledgeState
+    class LearningObjective
+
+    KnowledgeItem <|-- Word
+    KnowledgeItem <|-- Phrase
+    KnowledgeItem <|-- GrammarRule
+    KnowledgeItem <|-- MediaItem
+    KnowledgeItem <|-- Exercise
+    KnowledgeItem "1" --> "0..*" KnowledgeRelation : source or target
+    KnowledgeItem "1" --> "0..*" LearningObjective
+    KnowledgeItem "1" --> "0..*" UserKnowledgeState
+```
+
+## Entity: KnowledgeItem
+
+`KnowledgeItem` is the canonical, language-agnostic representation of learning content. It is immutable in identity and mutable through validated revisions.
+
+### Required attributes
+
+| Attribute | Meaning | Notes |
+| --- | --- | --- |
+| `id` | Globally stable identifier | UUID or equivalent; never reused. |
+| `type` | Kind of learnable item | Defined by `KnowledgeItemType`. |
+| `language` | Primary content language | BCP 47 language tag where possible, e.g. `de`, `fa`. |
+| `title` | Human-readable canonical label | For a word, normally the lemma. |
+| `content` | Canonical structured content | Type-specific schema. |
+| `difficulty` | Estimated learning difficulty | Must be distinguishable from CEFR level. |
+| `cefr_level` | Optional CEFR mapping | Relevant to language items. |
+| `domains` | Domains or contexts | E.g. daily-life, embedded-systems, medicine. |
+| `tags` | User/system labels | Not a substitute for structured relations. |
+| `source` | Origin/provenance | Manual, imported, dictionary, AI, OCR, etc. |
+| `status` | Lifecycle state | Draft, validated, archived, rejected. |
+| `created_at` | Creation timestamp | Immutable. |
+| `updated_at` | Last approved update timestamp | Updated only through a revision. |
+| `metadata` | Extensible typed metadata | Must be versioned and validated. |
+
+### Invariants
+
+- A KnowledgeItem must have one stable `id`, one `type`, and one primary `language`.
+- A canonical item must not contain unvalidated AI content presented as fact.
+- `title` and `content` must satisfy the validation rules for their type.
+- A soft-deleted or archived item must remain referable by historical learning events.
+- Type-specific information belongs in a typed extension, not arbitrary unstructured fields.
+
+## KnowledgeItem types
+
+| Type | Description | MVP status |
+| --- | --- | --- |
+| `WORD` | A lexical unit represented by a lemma | Required |
+| `PHRASE` | A fixed or semi-fixed multiword expression | Required |
+| `SENTENCE` | A complete language example or pattern | Required |
+| `GRAMMAR_RULE` | A learnable grammar concept or rule | Required |
+| `DIALOGUE` | A structured multi-turn interaction | Future |
+| `CONCEPT` | A language-independent or domain concept | Future-ready |
+| `IMAGE` | A visual learning resource | Level 1 required |
+| `AUDIO` | An audio learning resource | Future/MVP cache-ready |
+| `VIDEO` | A video learning resource | Future |
+| `EXERCISE` | A generated or authored learning activity | Required |
+| `ARTICLE` | A longer reading resource | Future |
+| `CONVERSATION` | A saved guided conversation | Future |
+
+New types may be added only with a documented schema, lifecycle rules, learning-objective templates, and migration strategy.
+
+## Entity: Word
+
+`Word` is a KnowledgeItem with lexical properties. The stored canonical form is the lemma, not merely the surface form encountered in a sentence.
+
+### Word-specific attributes
+
+| Attribute | Meaning |
+| --- | --- |
+| `lemma` | Dictionary/canonical form, e.g. `arbeiten`. |
+| `part_of_speech` | Noun, verb, adjective, adverb, preposition, etc. |
+| `pronunciation` | Human-readable pronunciation support. |
+| `ipa` | International Phonetic Alphabet form where applicable. |
+| `frequency_band` | Frequency estimate or rank, with source. |
+| `senses` | Structured meanings, scoped by context. |
+| `morphology` | Language-package-owned forms and features. |
+| `etymology` | Optional explanatory metadata. |
+
+### German extension examples
+
+German data is not universal core data. It belongs to the German language package and may include:
+
+- noun article, grammatical gender, plural, and case forms;
+- verb infinitive, present, Präteritum, Partizip II, auxiliary, separability, reflexivity, valency, and governed prepositions;
+- adjective comparative and superlative forms;
+- compound-word decomposition.
+
+## Entity: Phrase
+
+`Phrase` represents a meaningful multiword unit that should be learned as a whole or pattern.
+
+Required properties include the exact text, a literal or structural interpretation where useful, natural translation(s), usage context, formality, and variables for reusable patterns.
+
+Examples:
+
+- `Guten Morgen`
+- `eine Entscheidung treffen`
+- `Ich hätte gern …`
+
+## Entity: Sentence
+
+`Sentence` is a complete, language-specific example. It can support a word, phrase, grammar rule, dialogue, or exercise.
+
+Required properties:
+
+- text;
+- language;
+- translation(s), where configured;
+- difficulty/CEFR estimate;
+- source and validation status;
+- references to the knowledge items illustrated.
+
+## Entity: GrammarRule
+
+`GrammarRule` models a teachable language rule, not a single exercise explanation.
+
+Required properties:
+
+- stable title and language package;
+- explanation appropriate to a target learner level;
+- rule pattern or constraints;
+- examples and exceptions;
+- prerequisite and related grammar relations;
+- validation/source metadata.
+
+Examples:
+
+- German present-tense verb conjugation;
+- German Dativ after `mit`;
+- separable verb position in main clauses.
+
+## Entity: MediaItem
+
+`MediaItem` provides reusable learning media. Image, audio, and video are modeled as KnowledgeItems when they are meaningful learning targets; otherwise, they can be attached resources to another KnowledgeItem.
+
+### Required metadata
+
+- media type and MIME type;
+- storage reference and checksum;
+- language if speech or text is present;
+- caption/transcript where applicable;
+- attribution and license;
+- accessibility information such as alt text or transcript;
+- generation/provider provenance when generated.
+
+The platform must not assume that remote URLs remain available. Cached and user-owned media require a local storage strategy.
+
+## Entity: Exercise
+
+`Exercise` is a learning activity derived from one or more knowledge items and learning objectives.
+
+### Required attributes
+
+| Attribute | Meaning |
+| --- | --- |
+| `exercise_type` | Translation, cloze, recognition, listening, word order, etc. |
+| `prompt` | Learner-facing task content. |
+| `expected_response` | Structured answer or evaluator specification. |
+| `knowledge_item_refs` | Items practiced or used as context. |
+| `learning_objective_refs` | Objectives being assessed or reinforced. |
+| `difficulty` | Intended difficulty. |
+| `hints` | Optional graded help. |
+| `generation_provenance` | Template/AI/manual source and version. |
+| `expiry_policy` | Whether it can be reused or must be regenerated. |
+
+An exercise is not itself proof of learning. The learner's attempt produces a LearningEvent, which later updates mastery and review state.
+
+## Entity: KnowledgeRelation
+
+`KnowledgeRelation` represents a typed, directed connection between two KnowledgeItems.
+
+### Required attributes
+
+| Attribute | Meaning |
+| --- | --- |
+| `id` | Stable relation identifier. |
+| `source_item_id` | Relation origin. |
+| `target_item_id` | Relation destination. |
+| `relation_type` | Controlled vocabulary, e.g. `SYNONYM_OF`. |
+| `confidence` | Confidence from 0.0 to 1.0. |
+| `validation_state` | Proposed, validated, rejected, superseded. |
+| `provenance` | Manual, lexical source, rule engine, or AI suggestion. |
+| `created_at` / `updated_at` | Audit timestamps. |
+
+### Initial relation families
+
+| Family | Examples |
+| --- | --- |
+| Semantic | `SYNONYM_OF`, `ANTONYM_OF`, `RELATED_TO`, `BELONGS_TO_CONCEPT` |
+| Morphological | `DERIVED_FROM`, `HAS_NOUN_FORM`, `HAS_ADJECTIVE_FORM`, `HAS_WORD_FORM` |
+| Grammatical | `USES_GRAMMAR`, `GOVERNS_CASE`, `REQUIRES_PREPOSITION`, `EXAMPLE_OF` |
+| Usage | `COLLOCATES_WITH`, `APPEARS_IN`, `USED_IN_DOMAIN` |
+| Learning | `PREREQUISITE_FOR`, `SUPPORTS_OBJECTIVE`, `SIMILAR_DIFFICULTY` |
+| Translation | `TRANSLATES_TO` with sense/context qualifiers |
+
+Relations are directed even if their meaning is symmetric. Symmetric behavior is implemented by a relation policy, not by assuming every edge is identical.
+
+## Entity: LearningObjective
+
+`LearningObjective` describes a measurable ability related to a KnowledgeItem. It is a reusable domain definition, not a learner's current score.
+
+Examples for `arbeiten`:
+
+- recognize the German lemma from a definition;
+- recall `arbeiten` from Persian `کار کردن`;
+- produce the correct present-tense form;
+- recognize the word in an audio sentence;
+- use the verb correctly in a simple sentence.
+
+The learner-specific state of such an objective belongs to `UserKnowledgeState` and the Learning Domain Model.
+
+## Entity: UserKnowledgeState
+
+`UserKnowledgeState` represents one learner's relationship with one KnowledgeItem or LearningObjective.
+
+It must be separate from the canonical KnowledgeItem because different learners have different mastery, schedules, notes, and goals.
+
+### Core attributes
+
+- `user_id`;
+- `knowledge_item_id` and/or `learning_objective_id`;
+- learning status;
+- skill mastery indicators;
+- FSRS/review state reference;
+- personal importance or mission relevance;
+- last interaction timestamp;
+- user annotations and explicit overrides;
+- version/update metadata.
+
+## Entity: Deck
+
+A `Deck` is a learner-facing collection or view of KnowledgeItems. It is not the canonical storage location for a word.
+
+Deck types:
+
+- **smart deck:** a stored filter, e.g. all German verbs, A1 items, weak recall objectives, or embedded-systems vocabulary;
+- **manual deck:** an explicit learner-created collection;
+- **system deck:** a protected view generated by core rules, e.g. due reviews.
+
+An item may appear in many decks without duplication. Adding `arbeiten` to a Verbs deck must not create a second word record.
+
+## Entity: AIContent
+
+`AIContent` stores generated material separately from canonical facts. It can be attached to a KnowledgeItem, Exercise, or explanation request.
+
+Required provenance:
+
+- task type;
+- provider and model identifier;
+- prompt template/version;
+- input-context hash or safe reference;
+- generation timestamp;
+- validation status and validator;
+- quality signals or user feedback;
+- content version.
+
+AIContent may be promoted to canonical content only through a validation workflow.
+
+## Entity: LearningEvent
+
+`LearningEvent` is an append-only record of a learner interaction. It is the factual basis for updating review state, mastery, the Digital Twin, and analytics.
+
+Examples:
+
+- card revealed;
+- response submitted;
+- answer evaluated;
+- hint used;
+- item postponed;
+- user corrected an AI classification;
+- session started or completed.
+
+Each event records a timestamp, user, relevant knowledge item/objective, context/exercise reference, response quality, response time where available, and schema version.
+
+## Ownership and lifecycle
+
+| Entity | Canonical ownership | Lifecycle notes |
+| --- | --- | --- |
+| KnowledgeItem | Shared language/content store or local learner library | Archive rather than hard-delete when history references it. |
+| UserKnowledgeState | Individual learner | Deletable/exportable by the learner subject to active event history policy. |
+| LearningEvent | Individual learner | Append-only; may be anonymized or exported. |
+| Deck | Individual learner or system | Smart-deck membership is computed; manual membership is explicit. |
+| AIContent | Learner/library scope | Requires provenance and validation state. |
+| KnowledgeRelation | Shared/language/library scope | Proposals can be rejected without deleting audit information. |
+
+## Creation and enrichment flow
+
+```mermaid
+sequenceDiagram
+    participant U as Learner
+    participant A as Application
+    participant D as Domain Service
+    participant AI as AI Orchestrator
+    participant V as Validation Service
+    participant G as Knowledge Graph
+
+    U->>A: Add "arbeiten"
+    A->>D: Create or find Word KnowledgeItem
+    D->>AI: Request optional enrichment
+    AI-->>D: Proposed forms, examples, relations
+    D->>V: Validate proposals
+    V-->>D: Accepted/rejected results
+    D->>G: Persist validated relations
+    D-->>A: KnowledgeItem with enrichment status
+```
+
+## Domain service responsibilities
+
+Domain services enforce the model's rules. Typical services include:
+
+- **KnowledgeItemService:** create, revise, archive, deduplicate, and validate items;
+- **LexicalAnalysisService:** delegate language-specific morphology and normalization to a language package;
+- **RelationService:** propose, validate, and query relations;
+- **DeckService:** manage smart filters and manual memberships;
+- **LearningStateService:** record learner-specific state through valid LearningEvents;
+- **ContentValidationService:** validate imported and AI-generated content before promotion.
+
+## Acceptance criteria
+
+The initial domain implementation is acceptable when:
+
+- a word, phrase, sentence, and grammar rule can be stored as distinct KnowledgeItem types;
+- a learner-specific review/mastery record does not alter canonical content;
+- one word can appear in multiple smart or manual decks without duplication;
+- an AI-generated example retains provenance and validation state;
+- a relation can be proposed without becoming a trusted graph fact;
+- historical LearningEvents remain valid after an item is archived;
+- German-specific attributes are supplied by a language extension rather than required for every language.
+
+## Open questions
+
+- Which entities should be globally shared versus private by default in the first local-only release?
+- Should translations be standalone KnowledgeItems, relations, or sense-level attributes in the MVP?
+- What is the minimum validated lexical dataset needed to reduce AI dependency for German?
+- Which JSON metadata fields need normalization into first-class entities before implementation begins?
+
+## Related documents
+
+- `01_Product_Vision.md` — Product direction and learner segments.
+- `02_Learning_Philosophy.md` — Competence and learning principles.
+- `03_Non_Functional_Requirements.md` — Data integrity, provenance, and offline constraints.
+- `05_Learning_Domain_Model.md` — Mastery, objectives, Digital Twin, and missions.
+- `06_Knowledge_Graph_Architecture.md` — Relation semantics and graph queries.
+- `12_Database_Schema_and_Persistence.md` — Persistent representation of these entities.
+
+## Revision history
+
+| Version | Date | Description |
+| --- | --- | --- |
+| 0.1.0 | 2026-07-10 | Initial core domain model specification. |
