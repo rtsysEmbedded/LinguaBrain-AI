@@ -20,3 +20,4 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Resolved FSRS scheduling at the learner/objective ReviewUnit level.
 - Defined authoritative validation versus learner-accepted private content.
 - Aligned MVP scope, no-AI fallback, daily check-in defaults, privacy, and pilot metrics.
+- Added minimal ClientSurface, CapabilitySnapshot, and consent-gated audio-pipeline extension points for future dedicated hardware while keeping hardware outside the app MVP.

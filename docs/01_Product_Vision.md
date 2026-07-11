@@ -1,7 +1,7 @@
 ---
 title: Product Vision
 document_id: LB-DOC-01
-version: 0.2.0
+version: 0.2.1
 status: Draft
 last_updated: 2026-07-11
 ---
@@ -131,6 +131,8 @@ The MVP explicitly excludes full social features, leaderboards, marketplaces, co
 
 LinguaBrain is expected to progress from an adaptive language learning platform to an AI language teacher and then to a general-purpose Personal Learning Operating System. Language learning remains the first and primary use case; broader domains are a future extension, not an MVP requirement.
 
+The same core may later serve multiple product surfaces: mobile/desktop applications and a focused dedicated learning device. A new surface must reuse the Knowledge, Learning, Review, Planning, Language Package, and AI contracts rather than fork learner state or educational logic.
+
 ## Related documents
 
 - [Learning Philosophy](02_Learning_Philosophy.md)
@@ -144,5 +146,6 @@ LinguaBrain is expected to progress from an adaptive language learning platform 
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 0.2.1 | 2026-07-11 | Added platform-neutral product-surface extension contract for a future dedicated device. |
 | 0.2.0 | 2026-07-11 | Cross-document architecture review; resolved domain, validation, scheduling, privacy, and MVP consistency contracts. |
 | 0.1.0 | 2026-07-10 | Initial consolidated specification based on the product-design discussion. |

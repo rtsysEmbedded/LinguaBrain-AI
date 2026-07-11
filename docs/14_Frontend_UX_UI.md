@@ -1,7 +1,7 @@
 ---
 title: Frontend UX/UI
 document_id: LB-DOC-14
-version: 0.2.0
+version: 0.2.1
 status: Draft
 last_updated: 2026-07-11
 ---
@@ -294,6 +294,15 @@ Tokens cover typography for Persian and German, spacing, elevation, semantic col
 - Desktop is not assumed shipped until keyboard/navigation and window behavior pass acceptance criteria.
 - Learning content width remains readable rather than stretching across large screens.
 
+## Client-surface profiles
+
+The shared UX state and application commands are independent of the rendering surface. Each client profile declares display class, touch/keyboard/physical controls, microphone, speaker/headset, connectivity, and locally available services.
+
+- Mobile remains the MVP reference surface.
+- A future dedicated device may expose a reduced focus-first navigation (Learn, Translate, Note) while using the same plans, ReviewUnits, events, and learner data.
+- Unsupported activities are hidden or replaced before session start; the UI never offers recording, playback, typing, or local inference that the active CapabilitySnapshot cannot provide.
+- Recording-capable surfaces require explicit start action, unmistakable active indicator, stop/delete controls, and consent guidance. Detailed device interaction and industrial design belong to separate post-MVP specifications.
+
 ## Analytics and usability testing
 
 With consent, capture completion/failure of flows without raw private learning content. Key usability studies test onboarding comprehension, add-item approval, reverse recall, plan explanation, mixed-direction readability, and API-provider setup.
@@ -328,5 +337,6 @@ With consent, capture completion/failure of flows without raw private learning c
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 0.2.1 | 2026-07-11 | Added capability-driven client-surface profiles without changing the mobile MVP. |
 | 0.2.0 | 2026-07-11 | Cross-document architecture review; resolved domain, validation, scheduling, privacy, and MVP consistency contracts. |
 | 0.1.0 | 2026-07-11 | Initial Frontend UX/UI specification. |

@@ -1,7 +1,7 @@
 ---
 title: Non-Functional Requirements
 document_id: LB-DOC-03
-version: 0.2.0
+version: 0.2.1
 status: Draft
 last_updated: 2026-07-11
 ---
@@ -175,6 +175,13 @@ Synchronization is not an MVP prerequisite, but the local architecture must rema
 - Significant technical choices require Architecture Decision Records in `decisions/`.
 - Public module interfaces must be documented and covered by automated tests appropriate to their risk.
 
+### Client-surface portability
+
+- Domain and application logic must not assume a phone, touchscreen, physical keyboard, microphone, speaker, or permanent network connection.
+- Every client declares a versioned CapabilitySnapshot; unsupported activities are filtered before planning or rendering.
+- Mobile, desktop, and a future dedicated device reuse the same event, mastery, ReviewUnit, and synchronization contracts.
+- Audio capture is an optional capability with explicit consent/recording state, not an always-present core dependency.
+
 ## Observability
 
 Observability must be privacy-conscious and useful for diagnosing product quality.
@@ -239,5 +246,6 @@ The MVP architecture satisfies this document when:
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 0.2.1 | 2026-07-11 | Added client-surface portability and capability-negotiation requirements. |
 | 0.2.0 | 2026-07-11 | Cross-document architecture review; resolved domain, validation, scheduling, privacy, and MVP consistency contracts. |
 | 0.1.0 | 2026-07-10 | Initial non-functional requirements specification. |

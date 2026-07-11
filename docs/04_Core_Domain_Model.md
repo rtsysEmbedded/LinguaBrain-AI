@@ -1,7 +1,7 @@
 ---
 title: Core Domain Model
 document_id: LB-DOC-04
-version: 0.2.0
+version: 0.2.1
 status: Draft
 last_updated: 2026-07-11
 ---
@@ -345,7 +345,13 @@ Examples:
 - user corrected an AI classification;
 - session started or completed.
 
-Each event records a timestamp, user, relevant knowledge item/objective, context/exercise reference, response quality, response time where available, and schema version.
+Each event records a timestamp, user, relevant knowledge item/objective, context/exercise reference, response quality, response time where available, schema version, and optional ClientContext reference.
+
+## Value object: ClientContext
+
+`ClientContext` identifies the interaction surface without embedding hardware logic in the learning domain. It includes surface type (`MOBILE_APP`, `DESKTOP_APP`, `DEDICATED_DEVICE`, or future type), client/runtime version, installation ID, and a versioned CapabilitySnapshot.
+
+Capabilities may include display class, text/audio input, microphone, speaker/headset, physical controls, connectivity, and locally available ASR/TTS/AI services. LearningEvents preserve the relevant snapshot so later analysis can distinguish learner performance from surface limitations.
 
 ## Ownership and lifecycle
 
@@ -425,5 +431,6 @@ The initial domain implementation is acceptable when:
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 0.2.1 | 2026-07-11 | Added platform-neutral ClientContext and CapabilitySnapshot value objects. |
 | 0.2.0 | 2026-07-11 | Cross-document architecture review; resolved domain, validation, scheduling, privacy, and MVP consistency contracts. |
 | 0.1.0 | 2026-07-10 | Initial core domain model specification. |

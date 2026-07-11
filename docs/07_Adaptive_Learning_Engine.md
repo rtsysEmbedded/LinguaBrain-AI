@@ -1,7 +1,7 @@
 ---
 title: Adaptive Learning Engine
 document_id: LB-DOC-07
-version: 0.2.0
+version: 0.2.1
 status: Draft
 last_updated: 2026-07-11
 ---
@@ -45,6 +45,7 @@ The engine does not replace FSRS. FSRS supplies review timing and memory-risk si
 | Daily Learning State | Check-in | Adapt duration, modality, and cognitive load. |
 | Preferences and overrides | Learner settings | Respect selected modes and accessibility needs. |
 | Available content | Local cache/content services | Avoid selecting activities that cannot be delivered offline. |
+| Capability snapshot | Active client surface | Exclude activities that the current client cannot capture, render, play, or evaluate. |
 
 ## Outputs
 
@@ -205,7 +206,7 @@ Re-planning should preserve completed work, avoid abrupt topic switching, and ex
 
 ## Determinism and replay
 
-ALE consumes only persisted, versioned facts and projections; it never waits for or calls a live AI model while scoring a plan. A planning snapshot records algorithm/config version, clock instant, candidate IDs, normalized component values, package versions, capability set, and stable tie-break key. Equal scores are ordered by stable ID after mission/user priority. Low-confidence AI-evaluated evidence is capped or excluded by the versioned evidence policy. Given the same snapshot, ALE must reproduce the same plan.
+ALE consumes only persisted, versioned facts and projections; it never waits for or calls a live AI model while scoring a plan. A planning snapshot records algorithm/config version, clock instant, candidate IDs, normalized component values, package versions, client surface/CapabilitySnapshot, and stable tie-break key. Equal scores are ordered by stable ID after mission/user priority. Low-confidence AI-evaluated evidence is capped or excluded by the versioned evidence policy. Given the same snapshot, ALE must reproduce the same plan.
 
 ## Explainability
 
@@ -265,5 +266,6 @@ The MVP ALE is acceptable when:
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 0.2.1 | 2026-07-11 | Made planning explicitly capability-aware across app and future device surfaces. |
 | 0.2.0 | 2026-07-11 | Cross-document architecture review; resolved domain, validation, scheduling, privacy, and MVP consistency contracts. |
 | 0.1.0 | 2026-07-11 | Initial Adaptive Learning Engine specification. |

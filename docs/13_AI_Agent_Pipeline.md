@@ -1,7 +1,7 @@
 ---
 title: AI Agent Pipeline
 document_id: LB-DOC-13
-version: 0.2.0
+version: 0.2.1
 status: Draft
 last_updated: 2026-07-11
 ---
@@ -31,6 +31,7 @@ Agents never write directly to canonical learning data. The application orchestr
 | Manual word/phrase | Required | normalization → analysis → enrichment → validation → preview |
 | Pasted text | Limited/next | clean → segment → extract → learner filter → preview |
 | Image | Post-MVP | preprocess → OCR → clean → extract → preview |
+| Audio/conversation | Post-MVP | consent gate → capture → VAD/STT → optional diarization → segment → extract → preview |
 | PDF/document | Post-MVP | parse/OCR → segment → extract → preview |
 | URL/article | Future | fetch with consent/policy → extract → preview |
 
@@ -78,6 +79,12 @@ Validates file/type/size, computes checksum, detects likely input kind, and choo
 Extracts text blocks and layout metadata. OCR output contains confidence by block/token and never becomes canonical text automatically. Image preprocessing is deterministic and preserves the original asset reference.
 
 Candidate providers include PaddleOCR or platform services, selected later by ADR and licensing/performance evaluation.
+
+### Audio Capture and Speech Processing (post-MVP)
+
+The client audio gateway must receive explicit recording authorization/consent state, expose an active-recording indicator, and attach source/capability metadata. It produces bounded audio segments for VAD, speech-to-text, optional speaker-turn separation, and language detection. Transcript candidates then rejoin the normal cleaning, segmentation, extraction, validation, and approval pipeline.
+
+Raw audio is a private MediaAsset, not a LearningEvent or KnowledgeItem. Extracted words are never added automatically; they pass known-item filtering and learner approval. Device-specific microphone drivers remain behind the audio gateway.
 
 ### Text Cleaner
 
@@ -238,5 +245,6 @@ sequenceDiagram
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 0.2.1 | 2026-07-11 | Added a platform-neutral, consent-gated future audio/conversation pipeline entry point. |
 | 0.2.0 | 2026-07-11 | Cross-document architecture review; resolved domain, validation, scheduling, privacy, and MVP consistency contracts. |
 | 0.1.0 | 2026-07-11 | Initial AI Agent Pipeline specification. |

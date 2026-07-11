@@ -1,7 +1,7 @@
 ---
 title: MVP Definition and Roadmap
 document_id: LB-DOC-10
-version: 0.2.0
+version: 0.2.1
 status: Draft
 last_updated: 2026-07-11
 ---
@@ -103,8 +103,11 @@ flowchart TD
 - Multiple target languages.
 - Fully general Learning OS support beyond the language-domain contracts.
 - Advanced Level 1 image curriculum authoring.
+- Dedicated-device hardware, meeting recording, live translation, and device manufacturing.
 
 These are postponed, not silently included in MVP estimates.
+
+The MVP implementation remains client-surface neutral: shared domain/application contracts and capability-aware planning must allow a later dedicated device without changing learner identity, KnowledgeItems, LearningEvents, ReviewUnits, or FSRS history.
 
 ## Technology baseline
 
@@ -258,5 +261,6 @@ Roadmap candidates require evidence from the MVP and separate specifications.
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 0.2.1 | 2026-07-11 | Kept dedicated hardware out of MVP while preserving shared-core extension points. |
 | 0.2.0 | 2026-07-11 | Cross-document architecture review; resolved domain, validation, scheduling, privacy, and MVP consistency contracts. |
 | 0.1.0 | 2026-07-11 | Initial MVP definition and delivery roadmap. |

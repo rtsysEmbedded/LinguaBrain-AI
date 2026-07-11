@@ -64,3 +64,4 @@ All 14 specifications are complete as reviewed drafts. The repository is ready f
 - FSRS schedules learner-specific ReviewUnits per LearningObjective.
 - Domain services validate/promote content; ALE makes educational decisions.
 - German and Persian Language Packages are built-in, first-party MVP components.
+- The shared core is client-surface neutral and can later support a focused dedicated device without forking learner data or learning logic.

@@ -1,7 +1,7 @@
 ---
 title: AI Orchestration Layer
 document_id: LB-DOC-08
-version: 0.2.0
+version: 0.2.1
 status: Draft
 last_updated: 2026-07-11
 ---
@@ -92,6 +92,9 @@ Routing considers:
 - latency and token budget;
 - availability and recent provider health;
 - task quality requirements.
+- active ClientContext capabilities, including on-client ASR/TTS/model availability and current connectivity.
+
+Execution targets are abstract (`ON_CLIENT`, `LOCAL_NETWORK`, `CLOUD`) rather than tied to a phone or specific board. The same task contract can therefore move between app, dedicated device, local server, and cloud without changing domain logic.
 
 The initial MVP supports Bring Your Own Key cloud providers and OpenAI-compatible local endpoints. The core must not depend on a named provider SDK.
 
@@ -172,5 +175,6 @@ On network failure, timeout, quota exhaustion, or invalid output:
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 0.2.1 | 2026-07-11 | Added client-capability-aware execution targets for future dedicated hardware. |
 | 0.2.0 | 2026-07-11 | Cross-document architecture review; resolved domain, validation, scheduling, privacy, and MVP consistency contracts. |
 | 0.1.0 | 2026-07-11 | Initial AI Orchestration Layer specification. |

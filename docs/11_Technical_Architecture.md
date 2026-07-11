@@ -1,7 +1,7 @@
 ---
 title: Technical Architecture
 document_id: LB-DOC-11
-version: 0.2.0
+version: 0.2.1
 status: Draft
 last_updated: 2026-07-11
 ---
@@ -10,7 +10,7 @@ last_updated: 2026-07-11
 
 ## Purpose
 
-This document maps the product and domain specifications to an implementable software architecture. The MVP is a modular, offline-first Flutter application with local persistence and optional cloud or local AI providers.
+This document maps the product and domain specifications to an implementable software architecture. The MVP is a modular, offline-first Flutter application with local persistence and optional cloud or local AI providers. Domain/application packages remain UI-surface neutral so a later dedicated Linux/embedded client can reuse them.
 
 ## Architecture principles
 
@@ -26,14 +26,17 @@ This document maps the product and domain specifications to an implementable sof
 
 ```mermaid
 flowchart LR
-    U[Learner] --> APP[Flutter Application]
-    APP --> DB[("Encrypted/Protected SQLite")]
-    APP --> AI[AI Orchestration]
+    U[Learner] --> CLIENT["Client Surface Adapter"]
+    CLIENT --> CORE["Shared Application / Domain Core"]
+    CORE --> DB[("Encrypted/Protected SQLite")]
+    CORE --> AI[AI Orchestration]
     AI --> CLOUD[Cloud AI Provider]
     AI --> LOCAL[Local OpenAI-compatible Model]
-    APP --> MEDIA[Local Media Cache]
-    APP -. future .-> SYNC["Sync API / FastAPI"]
+    CORE --> MEDIA[Local Media Cache]
+    CORE -. future .-> SYNC["Sync API / FastAPI"]
 ```
+
+Client Surface Adapters include the MVP Flutter mobile UI and future desktop/dedicated-device UIs. Each adapter exposes a CapabilitySnapshot and maps physical/touch controls to the same application commands.
 
 ## Layer model
 
@@ -85,6 +88,10 @@ Task registry, prompt/context management, model routing, provider adapters, outp
 ### Media
 
 Images, audio metadata, local cache, playback/download lifecycle, accessibility metadata, and quotas.
+
+### Client Runtime
+
+Client registration, surface type, CapabilitySnapshot, installation identity, platform secure-storage adapter, lifecycle/power signals, and optional audio-capture gateway. Hardware drivers and industrial-device concerns stay outside the shared domain.
 
 ## Suggested repository structure
 
@@ -281,5 +288,6 @@ FastAPI may later provide accounts, encrypted sync coordination, provider proxyi
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 0.2.1 | 2026-07-11 | Added shared-core Client Surface Adapter and capability contract for future dedicated hardware. |
 | 0.2.0 | 2026-07-11 | Cross-document architecture review; resolved domain, validation, scheduling, privacy, and MVP consistency contracts. |
 | 0.1.0 | 2026-07-11 | Initial Technical Architecture specification. |

@@ -1,7 +1,7 @@
 ---
 title: Database Schema and Persistence
 document_id: LB-DOC-12
-version: 0.2.0
+version: 0.2.1
 status: Draft
 last_updated: 2026-07-11
 ---
@@ -74,6 +74,10 @@ API keys are not stored here; only secure-storage references may be persisted.
 
 Contains learner/native and target language roles, CEFR level, active state, and package version references. Unique constraint prevents duplicate active role/language combinations per user.
 
+### `client_installations` and `capability_snapshots`
+
+Client installations store stable installation ID, user, surface type, runtime/platform version, registration time, and last-seen metadata. Immutable capability snapshots store versioned input/output/local-service capabilities and are referenced by sessions, plans, and events. No hardware serial number is required in domain data.
+
 ### `knowledge_items`
 
 | Column | Notes |
@@ -140,7 +144,7 @@ Unique `(user_id, learning_objective_id)`. Stores score, confidence, stage, evid
 
 ### `learning_events`
 
-Append-only event table with event ID, schema version, user/session/item/objective and optional ReviewUnit references, event type, outcome, response time, hint/reveal flags, evaluator source/confidence, safe payload JSON, and timestamp.
+Append-only event table with event ID, schema version, user/session/item/objective and optional ReviewUnit references, event type, outcome, response time, hint/reveal flags, evaluator source/confidence, client installation/capability snapshot references, safe payload JSON, and timestamp.
 
 No UPDATE or DELETE occurs in normal application flow. Corrections create new events.
 
@@ -156,7 +160,7 @@ Append-only scheduler inputs/results: ReviewUnit, rating, rating source (`USER` 
 
 ### `learning_sessions`
 
-Stores start/end timestamps, planned/actual duration, mode, plan ID, completion state, and summary projection.
+Stores start/end timestamps, planned/actual duration, mode, plan ID, client installation/capability snapshot references, completion state, and summary projection.
 
 ### `learning_plans` and `learning_plan_activities`
 
@@ -283,5 +287,6 @@ Stable UUIDs, append-only events, versions, tombstones, and the outbox enable de
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 0.2.1 | 2026-07-11 | Added client installation and immutable capability-snapshot persistence contracts. |
 | 0.2.0 | 2026-07-11 | Cross-document architecture review; resolved domain, validation, scheduling, privacy, and MVP consistency contracts. |
 | 0.1.0 | 2026-07-11 | Initial Database Schema and Persistence specification. |
