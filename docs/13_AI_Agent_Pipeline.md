@@ -1,7 +1,7 @@
 ---
 title: AI Agent Pipeline
 document_id: LB-DOC-13
-version: 0.1.0
+version: 0.2.0
 status: Draft
 last_updated: 2026-07-11
 ---
@@ -39,11 +39,11 @@ Agents never write directly to canonical learning data. The application orchestr
 ```mermaid
 flowchart TD
     IN[Input] --> IA[Input Analyzer]
-    IA -->|image/document| OCR[OCR / Parser]
+    IA -->|image/document| OCR["OCR / Parser"]
     IA -->|text/manual| CLEAN[Text Cleaner]
     OCR --> CLEAN
     CLEAN --> SEG[Language Detection & Segmentation]
-    SEG --> EXT[Vocabulary / Phrase Extractor]
+    SEG --> EXT["Vocabulary / Phrase Extractor"]
     EXT --> LAN[Language Package Analyzer]
     LAN --> DIF[Difficulty & Relevance Analyzer]
     DIF --> ENR[Content Enrichment]
@@ -173,7 +173,7 @@ Low-risk validated cache reuse may be auto-applied according to learner settings
 - External URLs are not fetched without explicit feature authorization.
 - Raw source content is sent to cloud providers only with disclosure and consent.
 - Secrets are excluded from job payloads/logs.
-- Temporary artifacts have retention and deletion policies.
+- Raw imported sources and intermediate artifacts default to deletion after successful approval or within 24 hours, whichever comes first, unless the learner explicitly chooses to retain the original. Failed/cancelled jobs follow the same 24-hour maximum; retention and deletion are auditable.
 
 ## Quality evaluation
 
@@ -224,7 +224,7 @@ sequenceDiagram
 
 - Which OCR engine provides acceptable German/Persian mixed-text results and licensing?
 - What batch size keeps approval understandable?
-- How long should raw imported documents and intermediate text be retained?
+- Should future enterprise deployments permit an administrator-configured retention window beyond the private MVP default?
 - Which pipeline stages can safely run fully on-device?
 
 ## Related documents
@@ -238,4 +238,5 @@ sequenceDiagram
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 0.2.0 | 2026-07-11 | Cross-document architecture review; resolved domain, validation, scheduling, privacy, and MVP consistency contracts. |
 | 0.1.0 | 2026-07-11 | Initial AI Agent Pipeline specification. |

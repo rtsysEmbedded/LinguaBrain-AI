@@ -1,9 +1,9 @@
 ---
 title: Knowledge Graph Architecture
 document_id: LB-DOC-06
-version: 0.1.0
+version: 0.2.0
 status: Draft
-last_updated: 2026-07-10
+last_updated: 2026-07-11
 ---
 
 # Knowledge Graph Architecture
@@ -33,12 +33,11 @@ The graph is a domain capability, not an AI output store. AI can propose nodes a
 
 ```mermaid
 flowchart LR
-    V[arbeiten: Word] -->|HAS_NOUN_FORM| N[Arbeit: Word]
-    V -->|COLLOCATES_WITH| P[eine Arbeit finden: Phrase]
-    V -->|USES_GRAMMAR| G[Perfekt mit haben: GrammarRule]
-    V -->|USED_IN_DOMAIN| D[Workplace: Concept]
+    V["arbeiten: Word"] -->|HAS_NOUN_FORM| N["Arbeit: Word"]
+    V -->|COLLOCATES_WITH| P["eine Arbeit finden: Phrase"]
+    V -->|USES_GRAMMAR| G["Perfekt mit haben: GrammarRule"]
     N -->|DERIVED_FROM| V
-    G -->|PREREQUISITE_FOR| X[Past-tense production: LearningObjective]
+    G -->|PREREQUISITE_FOR| T["German past-tense topic: GrammarRule"]
 ```
 
 ### Nodes
@@ -48,9 +47,9 @@ Nodes are canonical `KnowledgeItem` records from the Core Domain Model. The grap
 Node categories include:
 
 - words, phrases, sentences, grammar rules, and dialogues;
-- concepts and domains;
-- media resources where they are learning-relevant;
-- LearningObjectives when prerequisite or support relationships are needed.
+- validated Concept items where a semantic concept is itself a learning target.
+
+In the MVP, domains such as workplace or medicine are controlled taxonomy values on items/missions, not graph nodes. LearningObjectives are not graph nodes; objective dependencies are modeled by `ObjectiveDependency` in the Learning Domain Model.
 
 ### Edges
 
@@ -63,9 +62,9 @@ Edges are `KnowledgeRelation` records. Every edge is directed and typed. Symmetr
 | Semantic | `SYNONYM_OF`, `ANTONYM_OF`, `RELATED_TO`, `BELONGS_TO_CONCEPT` | `schnell` ↔ `rasch` |
 | Morphological | `DERIVED_FROM`, `HAS_NOUN_FORM`, `HAS_ADJECTIVE_FORM`, `HAS_WORD_FORM` | `entscheiden` → `Entscheidung` |
 | Grammar | `USES_GRAMMAR`, `GOVERNS_CASE`, `REQUIRES_PREPOSITION`, `EXAMPLE_OF` | `warten` → `auf + Akkusativ` |
-| Usage | `COLLOCATES_WITH`, `APPEARS_IN`, `USED_IN_DOMAIN`, `HAS_REGISTER` | `Vertrag` → business German |
+| Usage | `COLLOCATES_WITH`, `APPEARS_IN`, `HAS_REGISTER` | formal/informal usage |
 | Translation | `TRANSLATES_TO` | sense-qualified German ↔ Persian mapping |
-| Learning | `PREREQUISITE_FOR`, `SUPPORTS_OBJECTIVE`, `SIMILAR_DIFFICULTY` | verb basics → conjugation |
+| Learning-content | `PREREQUISITE_FOR`, `SIMILAR_DIFFICULTY` between KnowledgeItems | basic grammar topic → advanced topic |
 
 ### Relation policy
 
@@ -89,14 +88,16 @@ Every graph relation contains:
 | `id` | Stable relation identifier. |
 | `source_item_id`, `target_item_id` | Directed endpoints. |
 | `relation_type` | Controlled vocabulary. |
-| `qualifiers` | Context, sense, grammatical constraints, level, or domain. |
+| `qualifiers` | Context, stable source/target sense IDs, grammatical constraints, level, or domain. |
 | `confidence` | Numeric confidence from 0.0 to 1.0. |
-| `validation_state` | Proposed, validated, rejected, superseded. |
+| `validation_state` | Proposed, accepted-private, validated, rejected, superseded. |
 | `provenance` | User, trusted source, language rule, import, or AI proposal. |
 | `evidence_refs` | Safe references to supporting source data. |
 | `created_at`, `updated_at` | Audit timestamps. |
 
-No relation with `proposed` status is used as a trusted prerequisite or automatically shown as a fact to a learner.
+No `proposed` relation is used as a trusted prerequisite or automatically shown as fact. `Accepted-private` relations may be shown only to their owner with provenance and warning; only `validated` relations drive system prerequisites/shared facts.
+
+For lexical translation, `TRANSLATES_TO` is a graph read-model backed by the stable `lexical_senses`/`translations` records defined in Document 12; it is not a second independent source of translation truth.
 
 ## Validation pipeline
 
@@ -120,9 +121,12 @@ sequenceDiagram
 1. Endpoints must exist and satisfy the relation type's allowed node categories.
 2. Language and sense qualifiers must be compatible.
 3. Duplicate or contradictory relations must be detected.
-4. Language-package rules validate morphology and grammar where possible.
-5. AI proposals require provenance and confidence; they may require user review for ambiguous or high-impact facts.
-6. Rejected proposals remain auditable but do not appear in normal graph queries.
+4. Language-package deterministic validators check morphology and grammar.
+5. Trusted lexical sources are required for high-impact facts that deterministic rules cannot validate.
+6. User approval may create `accepted-private` content for that learner, but it does not create a system-validated graph fact.
+7. The Relation domain service alone promotes a proposal to `validated` after all required authoritative gates pass.
+8. If authoritative validation is unavailable, the relation remains `proposed`/`accepted-private` and cannot affect system prerequisites or shared canonical facts.
+9. Rejected proposals remain auditable but do not appear in normal graph queries.
 
 ## Word-family engine
 
@@ -250,4 +254,5 @@ The initial graph capability is acceptable when:
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 0.2.0 | 2026-07-11 | Cross-document architecture review; resolved domain, validation, scheduling, privacy, and MVP consistency contracts. |
 | 0.1.0 | 2026-07-10 | Initial Knowledge Graph Architecture specification. |

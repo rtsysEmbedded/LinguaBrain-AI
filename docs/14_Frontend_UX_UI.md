@@ -1,7 +1,7 @@
 ---
 title: Frontend UX/UI
 document_id: LB-DOC-14
-version: 0.1.0
+version: 0.2.0
 status: Draft
 last_updated: 2026-07-11
 ---
@@ -28,7 +28,7 @@ The interface should feel like a calm personal learning coach. It exposes contro
 
 ```mermaid
 flowchart TD
-    HOME[Home / Today] --> SESSION[Learning Session]
+    HOME["Home / Today"] --> SESSION[Learning Session]
     HOME --> ADD[Add Knowledge]
     HOME --> LIB[Library]
     HOME --> PROG[Progress]
@@ -83,9 +83,9 @@ The Today screen asks for a lightweight state before generating the plan:
 
 - available time: 5, 10, 20, 30, 60+ minutes;
 - energy: simple 1–10 control or five-step labels;
-- optional mode: light review, balanced learning, speaking/challenge.
+- optional mode: light review, balanced/new learning, or challenge. Speaking is shown only after that capability ships.
 
-The UI immediately shows how the choice affects the plan, for example: “Low-energy plan: short reviews and familiar listening.” The learner can skip check-in and use defaults.
+The UI immediately shows how the choice affects the plan. The learner may skip the prompt; planning then uses named stored defaults and displays that source. The plan persists whether inputs are fresh or defaulted and how stale they are.
 
 ## Today dashboard
 
@@ -106,7 +106,7 @@ The dashboard must not overwhelm the learner with all analytics before a session
 MVP entry supports a word or phrase.
 
 ```text
-Enter German item → Normalize/check duplicate → Enrich → Preview → Accept/edit → Added
+Enter German item → Normalize/check duplicate → Enrich if available → Preview → Accept/edit → Added
 ```
 
 ### Preview screen
@@ -121,7 +121,9 @@ Shows:
 - confidence/validation warnings;
 - provenance summary.
 
-Actions: Accept, Edit, Reject, Save draft. AI uncertainty is visible and never disguised as certainty.
+Actions: Accept, Edit, Reject, Save draft. When authoritative validation is absent, acceptance creates `ACCEPTED_PRIVATE` content with a visible provenance/warning; AI uncertainty is never disguised as system validation.
+
+Without AI/network access, the learner can create a minimal manual card (lemma/phrase, Persian meaning, type if known) or select bundled validated seed content. Optional enrichment remains queued or can be requested later.
 
 ## Smart card
 
@@ -136,7 +138,7 @@ Actions: Accept, Edit, Reject, Save draft. AI uncertainty is visible and never d
 - Relevant form: article/plural for nouns; essential verb forms for verbs.
 - One level-appropriate example.
 - Short error explanation when applicable.
-- Review rating: Again, Hard, Good, Easy.
+- For self-graded reveal cards: Again, Hard, Good, Easy. Automatically evaluated exercises show feedback while the versioned policy derives the rating without asking twice.
 
 Secondary details and graph relations are expandable to keep the review focused.
 
@@ -326,4 +328,5 @@ With consent, capture completion/failure of flows without raw private learning c
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 0.2.0 | 2026-07-11 | Cross-document architecture review; resolved domain, validation, scheduling, privacy, and MVP consistency contracts. |
 | 0.1.0 | 2026-07-11 | Initial Frontend UX/UI specification. |

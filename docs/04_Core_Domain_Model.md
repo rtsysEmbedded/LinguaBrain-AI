@@ -1,9 +1,9 @@
 ---
 title: Core Domain Model
 document_id: LB-DOC-04
-version: 0.1.0
+version: 0.2.0
 status: Draft
-last_updated: 2026-07-10
+last_updated: 2026-07-11
 ---
 
 # Core Domain Model
@@ -16,9 +16,9 @@ The model must support language learning now without preventing future learning 
 
 ## Core decision
 
-> Every thing that can be learned is represented as a KnowledgeItem.
+> Every semantic unit of knowledge that can be learned is represented as a KnowledgeItem.
 
-A word is one kind of knowledge item. So are phrases, sentences, grammar rules, dialogues, concepts, images, audio, exercises, and future learning resources.
+A word is one kind of knowledge item. So are phrases, sentences, grammar rules, dialogues, and concepts. Media assets present knowledge, and exercises assess or reinforce it; neither is automatically a KnowledgeItem.
 
 This decision avoids rebuilding the core when the learner wants to study a phrase such as `Guten Morgen`, a grammar topic such as German Dativ, or a technical concept rather than an individual word.
 
@@ -49,20 +49,24 @@ classDiagram
     class Word
     class Phrase
     class GrammarRule
-    class MediaItem
+    class LexicalSense
+    class MediaAsset
     class Exercise
     class KnowledgeRelation
     class UserKnowledgeState
     class LearningObjective
+    class ReviewUnit
 
     KnowledgeItem <|-- Word
     KnowledgeItem <|-- Phrase
     KnowledgeItem <|-- GrammarRule
-    KnowledgeItem <|-- MediaItem
-    KnowledgeItem <|-- Exercise
+    Word "1" --> "1..*" LexicalSense
+    KnowledgeItem "1" --> "0..*" MediaAsset
+    Exercise "0..*" --> "1..*" LearningObjective
     KnowledgeItem "1" --> "0..*" KnowledgeRelation : source or target
     KnowledgeItem "1" --> "0..*" LearningObjective
     KnowledgeItem "1" --> "0..*" UserKnowledgeState
+    LearningObjective "1" --> "0..*" ReviewUnit
 ```
 
 ## Entity: KnowledgeItem
@@ -75,7 +79,7 @@ classDiagram
 | --- | --- | --- |
 | `id` | Globally stable identifier | UUID or equivalent; never reused. |
 | `type` | Kind of learnable item | Defined by `KnowledgeItemType`. |
-| `language` | Primary content language | BCP 47 language tag where possible, e.g. `de`, `fa`. |
+| `language` | Primary content language | BCP 47 tag; `und` is allowed for a language-neutral Concept. Mixed content declares additional languages in typed metadata. |
 | `title` | Human-readable canonical label | For a word, normally the lemma. |
 | `content` | Canonical structured content | Type-specific schema. |
 | `difficulty` | Estimated learning difficulty | Must be distinguishable from CEFR level. |
@@ -83,7 +87,8 @@ classDiagram
 | `domains` | Domains or contexts | E.g. daily-life, embedded-systems, medicine. |
 | `tags` | User/system labels | Not a substitute for structured relations. |
 | `source` | Origin/provenance | Manual, imported, dictionary, AI, OCR, etc. |
-| `status` | Lifecycle state | Draft, validated, archived, rejected. |
+| `status` | Lifecycle state | Draft/proposed, accepted-private, validated, archived, or rejected. |
+| `scope` / `owner` | Visibility and ownership | MVP: bundled `SYSTEM` or learner-owned `USER_PRIVATE`. |
 | `created_at` | Creation timestamp | Immutable. |
 | `updated_at` | Last approved update timestamp | Updated only through a revision. |
 | `metadata` | Extensible typed metadata | Must be versioned and validated. |
@@ -91,7 +96,7 @@ classDiagram
 ### Invariants
 
 - A KnowledgeItem must have one stable `id`, one `type`, and one primary `language`.
-- A canonical item must not contain unvalidated AI content presented as fact.
+- Unvalidated AI content must not be presented as a system-validated fact. A learner may explicitly accept it as private content with provenance/warning preserved.
 - `title` and `content` must satisfy the validation rules for their type.
 - A soft-deleted or archived item must remain referable by historical learning events.
 - Type-specific information belongs in a typed extension, not arbitrary unstructured fields.
@@ -105,15 +110,15 @@ classDiagram
 | `SENTENCE` | A complete language example or pattern | Required |
 | `GRAMMAR_RULE` | A learnable grammar concept or rule | Required |
 | `DIALOGUE` | A structured multi-turn interaction | Future |
-| `CONCEPT` | A language-independent or domain concept | Future-ready |
-| `IMAGE` | A visual learning resource | Level 1 required |
-| `AUDIO` | An audio learning resource | Future/MVP cache-ready |
-| `VIDEO` | A video learning resource | Future |
-| `EXERCISE` | A generated or authored learning activity | Required |
+| `CONCEPT` | A language-independent semantic concept | Level 1/future-ready |
 | `ARTICLE` | A longer reading resource | Future |
 | `CONVERSATION` | A saved guided conversation | Future |
 
 New types may be added only with a documented schema, lifecycle rules, learning-objective templates, and migration strategy.
+
+## Entity: KnowledgeItemRevision
+
+Every approved or proposed change to canonical content is represented by a `KnowledgeItemRevision`. It records item ID, revision/version, previous revision, structured change, actor/source, validation decision, reason, and timestamp. Historical revisions remain auditable; only an approved revision is projected as current content.
 
 ## Entity: Word
 
@@ -131,6 +136,12 @@ New types may be added only with a documented schema, lifecycle rules, learning-
 | `senses` | Structured meanings, scoped by context. |
 | `morphology` | Language-package-owned forms and features. |
 | `etymology` | Optional explanatory metadata. |
+
+## Entity: LexicalSense
+
+`LexicalSense` is a stable, language-specific meaning of a Word or Phrase. It prevents polysemous forms such as German `Bank` from sharing one undifferentiated translation.
+
+Each sense has a stable ID, definition or gloss, optional domain/register qualifiers, provenance, validation state, and version. Translation relations reference source and target sense IDs when both endpoints are lexical. The MVP may begin with one validated default sense, but it must not invent a global one-word-to-one-word mapping.
 
 ### German extension examples
 
@@ -185,9 +196,9 @@ Examples:
 - German Dativ after `mit`;
 - separable verb position in main clauses.
 
-## Entity: MediaItem
+## Entity: MediaAsset
 
-`MediaItem` provides reusable learning media. Image, audio, and video are modeled as KnowledgeItems when they are meaningful learning targets; otherwise, they can be attached resources to another KnowledgeItem.
+`MediaAsset` provides reusable image, audio, or video resources attached to one or more KnowledgeItems. In Level 1, the learnable target is normally a Concept or Word; the image is its presentation resource.
 
 ### Required metadata
 
@@ -233,6 +244,7 @@ An exercise is not itself proof of learning. The learner's attempt produces a Le
 | `source_item_id` | Relation origin. |
 | `target_item_id` | Relation destination. |
 | `relation_type` | Controlled vocabulary, e.g. `SYNONYM_OF`. |
+| `qualifiers` | Stable sense IDs, context, register, grammar, or domain constraints. |
 | `confidence` | Confidence from 0.0 to 1.0. |
 | `validation_state` | Proposed, validated, rejected, superseded. |
 | `provenance` | Manual, lexical source, rule engine, or AI suggestion. |
@@ -245,15 +257,15 @@ An exercise is not itself proof of learning. The learner's attempt produces a Le
 | Semantic | `SYNONYM_OF`, `ANTONYM_OF`, `RELATED_TO`, `BELONGS_TO_CONCEPT` |
 | Morphological | `DERIVED_FROM`, `HAS_NOUN_FORM`, `HAS_ADJECTIVE_FORM`, `HAS_WORD_FORM` |
 | Grammatical | `USES_GRAMMAR`, `GOVERNS_CASE`, `REQUIRES_PREPOSITION`, `EXAMPLE_OF` |
-| Usage | `COLLOCATES_WITH`, `APPEARS_IN`, `USED_IN_DOMAIN` |
-| Learning | `PREREQUISITE_FOR`, `SUPPORTS_OBJECTIVE`, `SIMILAR_DIFFICULTY` |
-| Translation | `TRANSLATES_TO` with sense/context qualifiers |
+| Usage | `COLLOCATES_WITH`, `APPEARS_IN`, `HAS_REGISTER` |
+| Learning-content | `PREREQUISITE_FOR`, `SIMILAR_DIFFICULTY` between KnowledgeItems |
+| Translation | `TRANSLATES_TO` with required stable sense/context qualifiers |
 
 Relations are directed even if their meaning is symmetric. Symmetric behavior is implemented by a relation policy, not by assuming every edge is identical.
 
 ## Entity: LearningObjective
 
-`LearningObjective` describes a measurable ability related to a KnowledgeItem. It is a reusable domain definition, not a learner's current score.
+`LearningObjective` describes a measurable ability related to a KnowledgeItem. It is a reusable domain definition, not a learner's current score or target stage. Learner/mission target stages are separate associations.
 
 Examples for `arbeiten`:
 
@@ -263,25 +275,32 @@ Examples for `arbeiten`:
 - recognize the word in an audio sentence;
 - use the verb correctly in a simple sentence.
 
-The learner-specific state of such an objective belongs to `UserKnowledgeState` and the Learning Domain Model.
+The learner-specific mastery of such an objective belongs to `SkillMastery` in the Learning Domain Model.
 
 ## Entity: UserKnowledgeState
 
-`UserKnowledgeState` represents one learner's relationship with one KnowledgeItem or LearningObjective.
+`UserKnowledgeState` is the item-level aggregate representing one learner's relationship with one KnowledgeItem.
 
 It must be separate from the canonical KnowledgeItem because different learners have different mastery, schedules, notes, and goals.
 
 ### Core attributes
 
 - `user_id`;
-- `knowledge_item_id` and/or `learning_objective_id`;
+- `knowledge_item_id`;
 - learning status;
-- skill mastery indicators;
-- FSRS/review state reference;
+- derived item-level mastery summary;
 - personal importance or mission relevance;
 - last interaction timestamp;
 - user annotations and explicit overrides;
 - version/update metadata.
+
+Objective-level evidence and scores live in `SkillMastery`; scheduling lives in `ReviewUnit`. This separation avoids conflating item ownership, competence, and memory scheduling.
+
+## Entity: ReviewUnit
+
+A `ReviewUnit` is a learner-specific schedulable retrieval contract for exactly one LearningObjective. It defines direction/modality, evaluator policy, and FSRS state independently from other objectives of the same KnowledgeItem.
+
+For `arbeiten`, German-to-Persian recognition and Persian-to-German recall are separate ReviewUnits. Automatically evaluated exercises derive a rating through a versioned mapping policy; self-graded reveal cards may ask the learner for Again, Hard, Good, or Easy.
 
 ## Entity: Deck
 
@@ -380,13 +399,16 @@ The initial domain implementation is acceptable when:
 - one word can appear in multiple smart or manual decks without duplication;
 - an AI-generated example retains provenance and validation state;
 - a relation can be proposed without becoming a trusted graph fact;
+- homographs can have stable, separately translated LexicalSenses;
+- media and exercises reference KnowledgeItems without becoming KnowledgeItems themselves;
+- recognition and recall can have independent learner ReviewUnits and FSRS state;
 - historical LearningEvents remain valid after an item is archived;
 - German-specific attributes are supplied by a language extension rather than required for every language.
 
 ## Open questions
 
-- Which entities should be globally shared versus private by default in the first local-only release?
-- Should translations be standalone KnowledgeItems, relations, or sense-level attributes in the MVP?
+- What trust and sharing policy should apply if private learner content is offered for future cloud promotion?
+- When should a target translation expression be promoted into its own Word/Phrase and LexicalSense?
 - What is the minimum validated lexical dataset needed to reduce AI dependency for German?
 - Which JSON metadata fields need normalization into first-class entities before implementation begins?
 
@@ -403,4 +425,5 @@ The initial domain implementation is acceptable when:
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 0.2.0 | 2026-07-11 | Cross-document architecture review; resolved domain, validation, scheduling, privacy, and MVP consistency contracts. |
 | 0.1.0 | 2026-07-10 | Initial core domain model specification. |

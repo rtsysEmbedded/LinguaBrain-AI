@@ -1,9 +1,9 @@
 ---
 title: Product Vision
 document_id: LB-DOC-01
-version: 0.1.0
+version: 0.2.0
 status: Draft
-last_updated: 2026-07-10
+last_updated: 2026-07-11
 ---
 
 # Product Vision
@@ -75,7 +75,7 @@ German-to-Persian is the first language package. Morphology, grammar, pronunciat
 
 ## Target users
 
-### Beginner and image-based learner
+### Beginner and image-based learner (post-MVP curriculum)
 
 Learns universal concepts through images, sound, and recognition-first activities. This mode is intended for children, complete beginners, and learners who benefit from minimal dependence on a written source language.
 
@@ -89,7 +89,7 @@ Learns language in a domain such as software engineering, embedded systems, busi
 
 ## Learning levels
 
-1. **Level 1 — Image-based learning:** language-light foundational concepts, visual recognition, and audio.
+1. **Level 1 — Image-based learning (post-MVP):** language-light foundational concepts, visual recognition, and audio.
 2. **Level 2 — General language:** CEFR-oriented everyday vocabulary, phrases, grammar, and contexts.
 3. **Level 3 — Professional language:** specialized vocabulary, scenarios, texts, and exercises based on a chosen domain.
 
@@ -97,7 +97,7 @@ Learns language in a domain such as software engineering, embedded systems, busi
 
 1. The learner completes setup: native language, target language, current level, mission, and optionally professional domain.
 2. At the start of a session, they choose available time, energy, and preferred mode.
-3. They add a word, phrase, sentence, text, image, or document—or follow the suggested plan.
+3. In the MVP they add a word or phrase—or follow the suggested plan. Text, image, and document ingestion are later pipeline entry points.
 4. The system creates or retrieves enriched knowledge items, classifies them, adds graph relations, and updates smart collections.
 5. The Learning Engine selects review and practice activities based on FSRS, mastery by skill, mission relevance, known errors, and the daily state.
 6. Each answer updates the learner model, which improves future recommendations.
@@ -120,12 +120,12 @@ The MVP explicitly excludes full social features, leaderboards, marketplaces, co
 
 ## Success measures
 
-- Learners can add or generate an enriched vocabulary item in a few seconds when AI is available.
+- Local item creation acknowledges immediately; optional AI completion is measured separately by provider p50/p95 latency.
 - Learners can review and complete core exercises offline using stored content.
 - The system distinguishes weak skills from merely weak words.
-- The daily plan visibly adapts to learner state and goals.
+- Automated tests show that controlled changes to time/energy, due state, mastery, or mission produce explainable plan changes.
 - Learners need minimal manual deck management.
-- Early users feel that the product understands their progress and recommends relevant next steps.
+- A preregistered pilot measures delayed recall, proposal edit rate, plan acceptance, and learner-rated relevance against defined stop/go thresholds.
 
 ## Long-term direction
 
@@ -144,4 +144,5 @@ LinguaBrain is expected to progress from an adaptive language learning platform 
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 0.2.0 | 2026-07-11 | Cross-document architecture review; resolved domain, validation, scheduling, privacy, and MVP consistency contracts. |
 | 0.1.0 | 2026-07-10 | Initial consolidated specification based on the product-design discussion. |

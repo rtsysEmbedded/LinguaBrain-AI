@@ -13,13 +13,15 @@ AI may generate examples, explanations, cards, and exercises. The Learning Engin
 ## MVP focus
 
 - German ↔ Persian learning
-- Image-based introductory learning, general vocabulary, and professional vocabulary
+- German–Persian word and phrase learning for general and professional missions
 - AI-enriched knowledge items and automatic classification
 - Basic knowledge graph and smart decks
 - FSRS-based review scheduling
 - Adaptive daily plan using available time and energy
 - Translation and cloze exercises
 - Offline-first local data model with optional AI providers
+
+Image-based Level 1 learning, OCR/document ingestion, speaking evaluation, and additional languages are post-MVP capabilities.
 
 ## Repository layout
 
@@ -53,4 +55,12 @@ AI may generate examples, explanations, cards, and exercises. The Learning Engin
 
 ## Status
 
-This repository is in the architecture and specification phase.
+All 14 specifications are complete as reviewed drafts. The repository is ready for Architecture Decision Records (ADRs) and implementation backlog creation; unresolved decisions are explicitly listed in each document.
+
+## Key resolved contracts
+
+- KnowledgeItems represent semantic learning targets; exercises and media reference them.
+- LexicalSense provides stable polysemy and translation identity.
+- FSRS schedules learner-specific ReviewUnits per LearningObjective.
+- Domain services validate/promote content; ALE makes educational decisions.
+- German and Persian Language Packages are built-in, first-party MVP components.

@@ -1,7 +1,7 @@
 ---
 title: Adaptive Learning Engine
 document_id: LB-DOC-07
-version: 0.1.0
+version: 0.2.0
 status: Draft
 last_updated: 2026-07-11
 ---
@@ -95,8 +95,7 @@ Each candidate receives an explainable priority score. The exact weights are con
 
 ```text
 PriorityScore =
-  ReviewUrgency
-  + ForgettingRisk
+  MemoryPriority
   + SkillWeakness
   + ErrorPatternWeight
   + MissionRelevance
@@ -112,8 +111,7 @@ PriorityScore =
 
 | Component | Interpretation |
 | --- | --- |
-| `ReviewUrgency` | Increases as scheduled review becomes due or overdue. |
-| `ForgettingRisk` | Uses FSRS-derived probability/risk; does not duplicate scheduler logic. |
+| `MemoryPriority` | One normalized FSRS-derived component combining due/overdue state and retrievability; it is counted once. |
 | `SkillWeakness` | Increases when the relevant objective has low mastery or confidence. |
 | `ErrorPatternWeight` | Promotes practice that addresses repeated, supported errors. |
 | `MissionRelevance` | Weights items aligned with active goals, domains, and target level. |
@@ -131,11 +129,11 @@ The engine selects a modality based on the objective, not simply the KnowledgeIt
 
 | Evidence pattern | Preferred practice |
 | --- | --- |
-| Recognition strong; recall weak | Persian → German retrieval, typed/selected recall |
+| Recognition strong; recall weak | `L1_TO_L2_RECALL`, mapped by the active LanguagePairProfile |
 | Meaning known; form/spelling weak | Dictation, form completion, constrained writing |
 | Reading strong; listening weak | Slower audio recognition, short dictation, repeated listening |
 | Grammar rule recognized; usage weak | Cloze, word order, sentence builder |
-| Production weak; basic knowledge ready | Guided sentence production, speaking prompt, conversation turn |
+| Production weak; basic knowledge ready | `GUIDED_PRODUCTION`, only when an installed evaluator and release capability permit it |
 | New material | Short contextual introduction, recognition, then low-risk retrieval |
 
 The engine must not select open-ended production as the first evidence for an unintroduced beginner item unless the learner explicitly asks for a challenge.
@@ -160,7 +158,7 @@ Difficulty is adjusted independently for content and task.
 - required output length;
 - amount of context.
 
-The default contextual novelty target is approximately **90% known material and 10% new material**. This is an adjustable guideline, not a rigid rule; recovery sessions may use less novelty.
+The default contextual novelty target is approximately **90% known material and 10% new material**. For MVP verification, the ratio counts normalized content-word lemmas in the target language; function words, punctuation, names, and inflected duplicates are excluded. “Known” means the relevant recognition objective has reached the configured threshold with sufficient confidence. The verifier reports the achieved ratio and allows a ±5 percentage-point tolerance. Recovery sessions may use less novelty.
 
 ## Daily Learning State
 
@@ -169,7 +167,7 @@ At session start, the learner may supply:
 - available time;
 - energy (1–10);
 - motivation, focus, and stress where desired;
-- preferred mode: light review, new learning, speaking, or challenge.
+- preferred mode: light review, balanced/new learning, or challenge. Speaking is capability-gated and post-MVP.
 
 ### Session modes
 
@@ -204,6 +202,10 @@ Re-planning is triggered when:
 - the session is interrupted and later resumed.
 
 Re-planning should preserve completed work, avoid abrupt topic switching, and explain material changes when they are visible to the learner.
+
+## Determinism and replay
+
+ALE consumes only persisted, versioned facts and projections; it never waits for or calls a live AI model while scoring a plan. A planning snapshot records algorithm/config version, clock instant, candidate IDs, normalized component values, package versions, capability set, and stable tie-break key. Equal scores are ordered by stable ID after mission/user priority. Low-confidence AI-evaluated evidence is capped or excluded by the versioned evidence policy. Given the same snapshot, ALE must reproduce the same plan.
 
 ## Explainability
 
@@ -263,4 +265,5 @@ The MVP ALE is acceptable when:
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 0.2.0 | 2026-07-11 | Cross-document architecture review; resolved domain, validation, scheduling, privacy, and MVP consistency contracts. |
 | 0.1.0 | 2026-07-11 | Initial Adaptive Learning Engine specification. |

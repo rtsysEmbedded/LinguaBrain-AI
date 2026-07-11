@@ -1,7 +1,7 @@
 ---
 title: Language Independence Framework
 document_id: LB-DOC-09
-version: 0.1.0
+version: 0.2.0
 status: Draft
 last_updated: 2026-07-11
 ---
@@ -41,7 +41,7 @@ The core may request “normalize this lexical form,” “create objectives for
 
 ```mermaid
 flowchart TD
-    CORE[Learning Engine / Domain Core] --> API[Language Package API]
+    CORE["Learning Engine / Domain Core"] --> API["Language Package API"]
     API --> DE[German Package]
     API --> FA[Persian Package]
     API --> FUTURE[Future Language Package]
@@ -233,7 +233,11 @@ The AI Orchestrator must include explicit package data in task context:
 
 AI must not infer the language pair when it is already configured. Generated content is validated by the relevant packages before promotion.
 
-## Package lifecycle
+## MVP package registration
+
+German and Persian MVP packages are statically registered, first-party, versioned adapters/data bundles shipped and tested with the application. MVP does not load executable third-party or remotely downloaded packages.
+
+## Future package lifecycle
 
 1. Install and validate the manifest.
 2. Verify core API compatibility.
@@ -244,6 +248,8 @@ AI must not infer the language pair when it is already configured. Generated con
 7. Allow rollback when a package update fails validation.
 
 Removing a package must not delete learner history or canonical content. Unsupported extension data remains preserved and readable after reinstallation.
+
+Any future downloadable package mechanism requires signed manifests, trust policy, license enforcement, atomic rollback, and a sandboxed or data-only extension model before activation.
 
 ## Conformance tests
 
@@ -292,4 +298,5 @@ The MVP framework is acceptable when:
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 0.2.0 | 2026-07-11 | Cross-document architecture review; resolved domain, validation, scheduling, privacy, and MVP consistency contracts. |
 | 0.1.0 | 2026-07-11 | Initial Language Independence Framework specification. |

@@ -1,7 +1,7 @@
 ---
 title: Technical Architecture
 document_id: LB-DOC-11
-version: 0.1.0
+version: 0.2.0
 status: Draft
 last_updated: 2026-07-11
 ---
@@ -27,12 +27,12 @@ This document maps the product and domain specifications to an implementable sof
 ```mermaid
 flowchart LR
     U[Learner] --> APP[Flutter Application]
-    APP --> DB[(Encrypted/Protected SQLite)]
+    APP --> DB[("Encrypted/Protected SQLite")]
     APP --> AI[AI Orchestration]
     AI --> CLOUD[Cloud AI Provider]
     AI --> LOCAL[Local OpenAI-compatible Model]
     APP --> MEDIA[Local Media Cache]
-    APP -. future .-> SYNC[Sync API / FastAPI]
+    APP -. future .-> SYNC["Sync API / FastAPI"]
 ```
 
 ## Layer model
@@ -68,7 +68,7 @@ LearningObjectives, SkillMastery, LearningEvents, ErrorPatterns, Digital Twin su
 
 ### Review
 
-FSRS state, due queues, ratings, review logs, and scheduling invariants.
+ReviewUnits, FSRS state, due queues, versioned evidence-to-rating policies, review logs, and scheduling invariants. Scheduling is per learner/objective retrieval contract, not per whole KnowledgeItem.
 
 ### Planning
 
@@ -265,6 +265,7 @@ FastAPI may later provide accounts, encrypted sync coordination, provider proxyi
 - Flutter state management and dependency injection.
 - SQLite library/ORM and migration tooling.
 - FSRS implementation/version.
+- ReviewUnit retrieval contracts and automatic evidence-to-rating mapping.
 - Domain event and transactional outbox approach.
 - Local database encryption/security strategy.
 - Package/module repository layout.
@@ -280,4 +281,5 @@ FastAPI may later provide accounts, encrypted sync coordination, provider proxyi
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 0.2.0 | 2026-07-11 | Cross-document architecture review; resolved domain, validation, scheduling, privacy, and MVP consistency contracts. |
 | 0.1.0 | 2026-07-11 | Initial Technical Architecture specification. |

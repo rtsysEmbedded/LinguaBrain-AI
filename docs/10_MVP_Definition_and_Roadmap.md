@@ -1,7 +1,7 @@
 ---
 title: MVP Definition and Roadmap
 document_id: LB-DOC-10
-version: 0.1.0
+version: 0.2.0
 status: Draft
 last_updated: 2026-07-11
 ---
@@ -24,7 +24,7 @@ The primary MVP user is a Persian-speaking adult learning German at beginner or 
 
 ```mermaid
 flowchart TD
-    A[Onboarding: Persian → German] --> B[Choose level and mission]
+    A["Onboarding: Persian → German"] --> B[Choose level and mission]
     B --> C[Daily time and energy check-in]
     C --> D[Enter or select a German word]
     D --> E[Validate and enrich KnowledgeItem]
@@ -44,7 +44,8 @@ flowchart TD
    - CEFR level, active mission, domains, daily target, and preferences.
 
 2. **Daily check-in**
-   - Available time and energy are required.
+   - Planning always has available-time and energy inputs, resolved from a fresh check-in or named stored defaults.
+   - The plan records input source and staleness; the learner may skip the prompt.
    - Preferred mode is optional: recovery, growth, or challenge.
 
 3. **Knowledge-item ingestion**
@@ -56,22 +57,24 @@ flowchart TD
    - Persian meaning, part of speech, CEFR estimate, pronunciation where available, and level-appropriate example.
    - German noun article/plural and essential verb forms.
    - Provider-independent AI with validation and caching.
+   - A bundled seed lexicon and manual minimal-card path work without an AI provider or network.
 
 5. **Automatic collections**
    - All items, nouns, verbs, adjectives, weak items, due reviews, CEFR level, and selected domain.
    - Collections are views; they do not duplicate KnowledgeItems.
 
 6. **Basic Knowledge Graph**
-   - Word family, related phrase, grammar relation, domain relation, synonym/antonym when validated.
+   - Word family, related phrase, grammar relation, and synonym/antonym when validated; domains remain controlled taxonomy values in MVP.
    - One-hop learner-facing related-items view.
 
 7. **Learning objectives and mastery**
-   - Recognition, recall, and grammar usage are required.
+   - Required objective contracts include recognizing meaning, recalling lexical form, and applying supported grammar.
    - Listening can use cached audio when available.
    - Mastery changes remain traceable to LearningEvents.
 
 8. **FSRS review scheduling**
-   - Again, Hard, Good, and Easy outcomes.
+   - Scheduling per learner-specific ReviewUnit (one objective/retrieval contract).
+   - Again, Hard, Good, and Easy are user-entered for self-graded cards or deterministically derived for auto-evaluated exercises.
    - Persistent review history and offline scheduling.
 
 9. **Adaptive daily plan**
@@ -166,27 +169,30 @@ The release must demonstrate this end-to-end path:
 2. They report 15 minutes and energy 4/10.
 3. They add `arbeiten`.
 4. The system normalizes it, enriches it, validates essential forms, and presents a preview.
-5. The accepted item appears in All Items, Verbs, A1/A2 metadata, and Work collections without duplication.
+5. The accepted item appears in All Items, Verbs, its validated CEFR metadata, and Work collections without duplication.
 6. Recognition, recall, and present-form objectives are created.
 7. The daily plan combines due reviews with a short recovery-friendly activity.
 8. Responses create LearningEvents, update objective mastery, and schedule future reviews.
 9. The learner can close the app, reopen it offline, and continue without lost progress.
 
+The same first-item scenario must also pass with no configured provider: the learner can create a manual minimal card or select bundled validated seed content, then review it offline.
+
 ## Success metrics
 
 ### Product quality
 
-- ≥99% successful persistence of completed local learning events in test scenarios.
+- 100% durability is an invariant in completed local transaction/restart tests; operational crash-free metrics are tracked separately.
 - Core offline interactions meet Document 03 latency targets.
 - Zero API keys in database, logs, analytics, or exports.
 - AI enrichment records 100% required provenance metadata.
 
-### Learning value
+### Pilot learning protocol
 
-- Learners complete recommended sessions without excessive manual organization.
-- Recall mastery is measured separately from recognition.
-- Pilot learners report that recommendations are understandable and relevant.
-- Retention and lapse trends can be compared with a non-adaptive baseline after sufficient data.
+- Primary outcome: delayed objective-level recall at pre-registered 7- and 14-day windows.
+- Comparator: randomized item-level or within-learner baseline using non-adaptive FSRS review, where ethically and operationally appropriate.
+- Secondary outcomes: proposal edit rate, plan acceptance/modification, session completion, and learner-rated relevance/explainability.
+- Sample assumptions, minimum detectable effect, success threshold, and stop/go rule are fixed in a pilot protocol before enrollment rather than chosen after results.
+- Recall and recognition are analyzed separately; card count and streak length are not learning outcomes.
 
 ### Engagement guardrails
 
@@ -204,6 +210,10 @@ The MVP cannot enter pilot until:
 - AI failure does not block review;
 - generated linguistic facts pass defined validation policy;
 - privacy disclosures and local deletion/export behavior are complete.
+- platform threat model, database/backup protection, recovery behavior, cloud-consent moment, and redaction tests are approved;
+- raw import/intermediate-artifact retention defaults and verified deletion tests are implemented;
+- first-run and first-item flows pass with and without AI/network access;
+- pilot protocol and stop/go thresholds are preregistered before pilot data collection.
 
 ## Post-MVP roadmap
 
@@ -248,4 +258,5 @@ Roadmap candidates require evidence from the MVP and separate specifications.
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 0.2.0 | 2026-07-11 | Cross-document architecture review; resolved domain, validation, scheduling, privacy, and MVP consistency contracts. |
 | 0.1.0 | 2026-07-11 | Initial MVP definition and delivery roadmap. |

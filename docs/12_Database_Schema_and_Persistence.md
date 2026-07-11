@@ -1,7 +1,7 @@
 ---
 title: Database Schema and Persistence
 document_id: LB-DOC-12
-version: 0.1.0
+version: 0.2.0
 status: Draft
 last_updated: 2026-07-11
 ---
@@ -37,8 +37,9 @@ erDiagram
     LEARNING_OBJECTIVES ||--o{ SKILL_MASTERY : measured_by
     USERS ||--o{ LEARNING_EVENTS : produces
     KNOWLEDGE_ITEMS ||--o{ LEARNING_EVENTS : concerns
-    USERS ||--o{ FSRS_STATES : schedules
-    KNOWLEDGE_ITEMS ||--o{ FSRS_STATES : scheduled_for
+    USERS ||--o{ REVIEW_UNITS : owns
+    LEARNING_OBJECTIVES ||--o{ REVIEW_UNITS : schedules
+    REVIEW_UNITS ||--|| FSRS_STATES : has
     USERS ||--o{ LEARNING_SESSIONS : starts
     LEARNING_SESSIONS ||--o{ LEARNING_EVENTS : contains
     KNOWLEDGE_ITEMS ||--o{ AI_CONTENT : enriched_by
@@ -83,15 +84,31 @@ Contains learner/native and target language roles, CEFR level, active state, and
 | `canonical_key` | Normalized deduplication key scoped by language/type. |
 | `title`, `content_json` | Human label and versioned typed content. |
 | `cefr_level`, `difficulty` | Separately nullable. |
-| `status` | DRAFT, VALIDATED, ARCHIVED, REJECTED. |
+| `status` | DRAFT/PROPOSED, ACCEPTED_PRIVATE, VALIDATED, ARCHIVED, REJECTED. |
+| `scope` | `SYSTEM` or `USER_PRIVATE` in MVP. |
+| `owner_user_id` | Required for `USER_PRIVATE`; null for bundled system content. |
 | `source_type`, `source_ref` | Provenance. |
 | `created_at`, `updated_at`, `version` | Audit/concurrency. |
 
-Unique index: `(type, language_tag, canonical_key)` for active canonical items, with sense-aware exceptions handled through policy.
+Unique index: `(scope, owner_user_id, type, language_tag, canonical_key)` for active canonical items. This identifies a lexeme/content item; meanings are stored as stable LexicalSenses.
+
+### `knowledge_item_revisions`
+
+Append-only revisions store item ID, revision number, previous revision, changed payload, change reason, actor/source, validation decision, and timestamp. Exactly one approved revision is projected as the current item state.
+
+### `content_proposals` and `validation_decisions`
+
+Proposals store target aggregate, proposed patch/payload, source/task provenance, confidence, status, and idempotency key. Validation decisions record each gate, validator/policy version, evidence, result, and timestamp. The owning domain service records final promotion or rejection.
 
 ### `word_extensions`
 
 One-to-one with WORD items. Stores lemma, part of speech, IPA, pronunciation, frequency metadata, and `language_data_json` with schema/package version. Frequently queried German fields may later be normalized after profiling.
+
+### `lexical_senses` and `translations`
+
+`lexical_senses` stores stable sense ID, parent word/phrase ID, definition/gloss, domain/register qualifiers, provenance, validation state, and version. Unique sense keys are scoped to the parent item and source/version.
+
+`translations` links a required source sense ID to a target sense ID or a versioned target expression when no target lexeme exists. It stores direction, natural/literal form, context/register, confidence, provenance, and validation state. FTS indexes only validated translation text.
 
 ### `knowledge_relations`
 
@@ -107,7 +124,11 @@ Duplicate relation policy uses endpoints, type, and normalized qualifiers.
 
 ### `learning_objectives`
 
-Stores KnowledgeItem reference, skill type, objective type, target stage, assessment-policy version, language-package version, and active status.
+Stores KnowledgeItem reference, operation, modality, target component, objective type, assessment-policy version, language-package version, and active status. Desired stages are stored in mission/learner target associations.
+
+### `objective_dependencies` and `mission_objective_targets`
+
+Objective dependencies store prerequisite/support associations between LearningObjectives outside the Knowledge Graph. Mission targets link user/mission/objective to desired stage, weight, and rationale.
 
 ### `user_knowledge_states`
 
@@ -119,21 +140,27 @@ Unique `(user_id, learning_objective_id)`. Stores score, confidence, stage, evid
 
 ### `learning_events`
 
-Append-only event table with event ID, schema version, user/session/item/objective references, event type, outcome, response time, hint/reveal flags, evaluator source/confidence, safe payload JSON, and timestamp.
+Append-only event table with event ID, schema version, user/session/item/objective and optional ReviewUnit references, event type, outcome, response time, hint/reveal flags, evaluator source/confidence, safe payload JSON, and timestamp.
 
 No UPDATE or DELETE occurs in normal application flow. Corrections create new events.
 
-### `fsrs_states`
+### `review_units` and `fsrs_states`
 
-Unique `(user_id, knowledge_item_id, objective_scope)` as defined by the selected FSRS ADR. Stores state, stability, difficulty, due time, last review, repetitions, lapses, and scheduler version.
+Each `review_unit` belongs to one user and exactly one LearningObjective and defines direction/modality, evaluator policy, active state, and version. Unique identity includes `(user_id, learning_objective_id, retrieval_contract_key)`.
+
+Each active ReviewUnit has one `fsrs_state` storing state, stability, difficulty, due time, last review, repetitions, lapses, and scheduler version. Recognition and recall for the same KnowledgeItem schedule independently.
 
 ### `review_logs`
 
-Append-only scheduler inputs/results: rating, state before/after, due before/after, elapsed days, scheduled days, FSRS version, and LearningEvent reference.
+Append-only scheduler inputs/results: ReviewUnit, rating, rating source (`USER` or `DERIVED`), mapping-policy version, state before/after, due before/after, elapsed/scheduled days, FSRS version, and LearningEvent reference.
 
 ### `learning_sessions`
 
 Stores start/end timestamps, planned/actual duration, mode, plan ID, completion state, and summary projection.
+
+### `learning_plans` and `learning_plan_activities`
+
+Plans store user, planning snapshot/version, time budget, daily-state source, rationale, status, and timestamps. Ordered activities store objective/review-unit references, exercise intent, capability requirements, estimated duration, priority components, and completion state.
 
 ### `daily_learning_states`
 
@@ -141,7 +168,7 @@ Unique per user and check-in timestamp/date policy. Stores time budget, energy, 
 
 ### `learning_missions`
 
-Stores goal, target language/level/date, status, domain/skill weights, requirements JSON, and version.
+Stores goal, target language/level/date, status, domain/objective-dimension weights, requirements JSON, and version.
 
 ### `error_patterns`
 
@@ -157,7 +184,7 @@ Exercises store type, schema version, prompt/answer/rubric JSON, objective/item 
 
 ### `ai_content`
 
-Stores task type, target reference, provider/model, prompt/schema versions, safe context hash, generated payload, validation status, quality signals, cache key, timestamps, and expiry/reuse policy.
+Stores owner/scope, task type, target reference, provider/model, prompt/schema/package/validator versions, safe context fingerprint, generated payload, validation status, quality signals, cache key, timestamps, and expiry/reuse policy. Learner-influenced content is always `USER_PRIVATE`.
 
 ### `media_assets`
 
@@ -167,13 +194,17 @@ Stores checksum, MIME type, local path/reference, remote source, size, language,
 
 Transactional domain event/outbox records enable reliable in-process projections and future sync. Stores event ID/type/version, aggregate reference, payload, created time, processed time, retry count, and error classification.
 
+### `pipeline_jobs` and `pipeline_stage_attempts`
+
+Jobs store owner, source checksum/reference, language pair, current state, configuration/schema versions, approval state, retention deadline, and final accepted IDs. Stage attempts store stage/version, idempotency key, status, input/output references, attempts, provider/package versions, timestamps, and classified errors.
+
 ## Transactions
 
 The following are atomic:
 
 - create draft KnowledgeItem plus initial revision/outbox event;
 - approve content proposal plus validated fields/relations;
-- save exercise attempt, LearningEvent, review log, FSRS update, and mastery projection;
+- save exercise attempt, LearningEvent, derived/entered rating, review log, ReviewUnit FSRS update, and mastery projection;
 - archive item while preserving referential history.
 
 Long AI/network work never holds a database transaction open.
@@ -206,7 +237,9 @@ MVP uses SQLite FTS for titles, lemmas, translations, and approved textual conte
 
 ### Deletion
 
-- User-requested full deletion removes local user-scoped data and secure-storage secrets.
+- The MVP is a single-profile local database with explicit `SYSTEM` and `USER_PRIVATE` scopes. Manual entries, personalized AI content, imports, examples, and media are private by default.
+- User-requested full deletion removes all `USER_PRIVATE` content and learner data, FTS entries, cached/private media, selected backups, pipeline artifacts, outbox records, and secure-storage secrets; bundled `SYSTEM` seed content may remain.
+- A verified deletion test confirms no private rows, files, index entries, or secrets remain.
 - Normal content removal uses archive/soft-delete when event history references an item.
 - Future cloud deletion requires separate verified propagation rules.
 
@@ -236,7 +269,7 @@ Stable UUIDs, append-only events, versions, tombstones, and the outbox enable de
 
 - Which Flutter SQLite library and migration framework best satisfy transaction/testing needs?
 - Is SQLCipher justified for MVP platforms, and how will key recovery work?
-- Should FSRS scheduling be per KnowledgeItem or per LearningObjective for the first release?
+- Which deterministic evidence-to-rating thresholds should the ReviewUnit ADR adopt for each MVP exercise type?
 - Which response payloads are necessary for feedback while minimizing sensitive storage?
 
 ## Related documents
@@ -250,4 +283,5 @@ Stable UUIDs, append-only events, versions, tombstones, and the outbox enable de
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 0.2.0 | 2026-07-11 | Cross-document architecture review; resolved domain, validation, scheduling, privacy, and MVP consistency contracts. |
 | 0.1.0 | 2026-07-11 | Initial Database Schema and Persistence specification. |

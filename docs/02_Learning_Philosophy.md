@@ -1,9 +1,9 @@
 ---
 title: Learning Philosophy
 document_id: LB-DOC-02
-version: 0.1.0
+version: 0.2.0
 status: Draft
-last_updated: 2026-07-10
+last_updated: 2026-07-11
 ---
 
 # Learning Philosophy
@@ -39,7 +39,7 @@ Examples:
 
 Practice should be distributed over time. Each review should occur close enough to the predicted forgetting point to strengthen retention, while avoiding unnecessary repetition.
 
-LinguaBrain uses FSRS as the preferred scheduling approach. The scheduler considers review outcomes and response quality; it does not treat all knowledge items as equally important or all practice modalities as equivalent.
+LinguaBrain uses FSRS as the preferred memory scheduler for learner-specific ReviewUnits. FSRS estimates memory state from versioned review ratings; mission importance, modality choice, and session priority belong to the Adaptive Learning Engine rather than FSRS.
 
 **Implementation policy:** review scheduling remains deterministic and auditable. AI may create review content, but it must not alter scheduling state directly.
 
@@ -142,7 +142,7 @@ Example explanation:
 
 Learning history is personal data. The learner owns their data and controls optional cloud AI use. Core learning activities should remain usable offline whenever cached content and local state are available.
 
-AI is an enhancement layer. It generates, analyzes, and explains; the Learning Engine validates outputs and retains final control over learning decisions.
+AI is an enhancement layer. It generates, analyzes, and explains; owning domain services validate and promote content, while the Learning Engine retains final control over educational decisions.
 
 ## Learning progression
 
@@ -181,6 +181,15 @@ The target is not merely to identify a translation. The target is automatic, con
 - Which learner controls should override adaptive recommendations?
 - What validation sources will be used for grammar facts and lexical data?
 
+## Acceptance criteria
+
+- An introduced item advances only from eligible retrieval evidence, not exposure count alone.
+- Recognition and recall are represented by different objective/ReviewUnit contracts.
+- A low-energy check-in changes session load while preserving long-term targets and due-memory obligations.
+- Feedback identifies the relevant error/component and offers a corrective opportunity.
+- Contextual novelty is measured using the operational definition in Document 07 rather than an untestable raw word count.
+- The same persisted planning/evidence snapshot produces the same deterministic educational decision.
+
 ## Related documents
 
 - `01_Product_Vision.md` — Product goals and target experience.
@@ -193,4 +202,5 @@ The target is not merely to identify a translation. The target is automatic, con
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 0.2.0 | 2026-07-11 | Cross-document architecture review; resolved domain, validation, scheduling, privacy, and MVP consistency contracts. |
 | 0.1.0 | 2026-07-10 | Initial learning philosophy specification. |

@@ -1,7 +1,7 @@
 ---
 title: AI Orchestration Layer
 document_id: LB-DOC-08
-version: 0.1.0
+version: 0.2.0
 status: Draft
 last_updated: 2026-07-11
 ---
@@ -12,7 +12,7 @@ last_updated: 2026-07-11
 
 The AI Orchestration Layer provides a provider-independent, safe interface between LinguaBrain and cloud or local language models. It builds controlled context, routes tasks, validates results, controls cost, and records provenance.
 
-> AI proposes, generates, analyzes, and explains. The deterministic Learning Engine validates and decides.
+> AI proposes, generates, analyzes, and explains. Owning domain services validate and promote content; the Learning Engine decides how validated evidence is used educationally.
 
 ## Scope
 
@@ -22,7 +22,7 @@ This layer supports card enrichment, examples, exercises, explanations, correcti
 
 ```mermaid
 flowchart LR
-    APP[Application / Learning Engine] --> ORCH[AI Orchestrator]
+    APP["Application / Learning Engine"] --> ORCH[AI Orchestrator]
     ORCH --> CTX[Context Builder]
     ORCH --> PM[Prompt Manager]
     ORCH --> MR[Model Router]
@@ -98,18 +98,30 @@ The initial MVP supports Bring Your Own Key cloud providers and OpenAI-compatibl
 ## Validation and promotion
 
 ```text
-AI output → schema validation → language/rule checks → duplicate/conflict checks
-          → validated cache or proposed-content store → domain service decision
+AI output → schema/safety validation → Language Package deterministic checks
+          → trusted lexical source when authoritative validation is required
+          → owning domain service promotion decision
 ```
 
 - Invalid output is rejected or retried with a bounded repair request.
 - AI facts remain `proposed` until validation succeeds.
-- High-impact facts such as conjugation, article, or graph prerequisites require language-rule or trusted-source validation where available.
+- High-impact facts such as conjugation, article, or graph prerequisites require deterministic rule or trusted-source validation. Without it they remain proposed or learner-approved private content.
 - AI never writes directly to mastery, review schedules, or canonical graph relations.
+
+Promotion states are explicit:
+
+| State | Meaning/use |
+| --- | --- |
+| `PROPOSED` | Not yet accepted; cannot drive learning decisions as fact. |
+| `ACCEPTED_PRIVATE` | Learner accepted for personal use; provenance/warning retained; never shared as validated system data. |
+| `VALIDATED` | Passed required deterministic or authoritative-source gates and may be used as a trusted fact. |
+| `REJECTED` | Preserved for audit but excluded from normal use. |
 
 ## Caching and cost control
 
-The cache key includes task type, normalized inputs, language pair, level, domain, prompt version, relevant model settings, and output schema version.
+The cache key includes task type, normalized inputs, language pair, level/domain, prompt/model settings, output schema, Language Package/data versions, validator/rubric/safety-policy versions, and a privacy-preserving context fingerprint.
+
+Canonical cache entries contain no learner-specific context and may be shared locally. Any artifact influenced by a learner's mission, error patterns, Daily State, responses, or private content is stored in a user-scoped private cache and is never reused across users.
 
 - Reuse validated content before making a new call.
 - Support per-user request/token budgets and configurable daily limits.
@@ -160,4 +172,5 @@ On network failure, timeout, quota exhaustion, or invalid output:
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 0.2.0 | 2026-07-11 | Cross-document architecture review; resolved domain, validation, scheduling, privacy, and MVP consistency contracts. |
 | 0.1.0 | 2026-07-11 | Initial AI Orchestration Layer specification. |

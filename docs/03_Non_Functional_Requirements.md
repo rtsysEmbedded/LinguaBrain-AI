@@ -1,9 +1,9 @@
 ---
 title: Non-Functional Requirements
 document_id: LB-DOC-03
-version: 0.1.0
+version: 0.2.0
 status: Draft
-last_updated: 2026-07-10
+last_updated: 2026-07-11
 ---
 
 # Non-Functional Requirements
@@ -32,7 +32,8 @@ AI generation may be delayed or unavailable. Existing knowledge items, review sc
 | Local vocabulary search | ≤ 200 ms | At 10,000 knowledge items. |
 | Build a local daily plan | ≤ 1 s | No network dependency. |
 | Basic graph relation query | ≤ 100 ms | At MVP data scale. |
-| AI card-generation feedback | ≤ 5 s | Network/provider dependent; progress UI required. |
+| AI request acknowledgement | ≤ 250 ms | Show cancellable progress after local validation. |
+| AI completion | Measured p50/p95, no hard provider-independent SLO | Timeout/fallback policy applies; provider latency is reported separately. |
 
 ### Interface performance
 
@@ -40,6 +41,8 @@ AI generation may be delayed or unavailable. Existing knowledge items, review sc
 - Scrolling lists of cards, decks, review history, and search results must use paging or virtualization.
 - The primary mobile experience should target smooth interaction on a mid-range device.
 - Expensive graph visualizations must load on demand and must not block a review session.
+
+Performance acceptance uses a named benchmark device class, a fixed 10,000-item/50,000-event dataset, cold/warm conditions, and p50/p95 results. The exact pilot device is recorded in the implementation test plan.
 
 ### Capacity targets for the MVP
 
@@ -236,4 +239,5 @@ The MVP architecture satisfies this document when:
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 0.2.0 | 2026-07-11 | Cross-document architecture review; resolved domain, validation, scheduling, privacy, and MVP consistency contracts. |
 | 0.1.0 | 2026-07-10 | Initial non-functional requirements specification. |

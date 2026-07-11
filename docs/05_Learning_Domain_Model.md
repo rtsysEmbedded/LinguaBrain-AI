@@ -1,9 +1,9 @@
 ---
 title: Learning Domain Model
 document_id: LB-DOC-05
-version: 0.1.0
+version: 0.2.0
 status: Draft
-last_updated: 2026-07-10
+last_updated: 2026-07-11
 ---
 
 # Learning Domain Model
@@ -50,24 +50,28 @@ A **LearningObjective** is a measurable ability associated with a KnowledgeItem.
 | --- | --- |
 | `id` | Stable objective identifier. |
 | `knowledge_item_id` | Item this objective concerns. |
-| `skill_type` | Competence dimension being developed. |
-| `objective_type` | Specific operation, e.g. recall lemma or use article. |
-| `target_mastery_level` | Desired stage for the learner/mission. |
+| `operation` | Cognitive operation: recognize, recall, comprehend, apply, or produce. |
+| `modality` | Text, audio, speech, visual, or mixed presentation/response. |
+| `target_component` | Meaning, lexical form, grammar, pronunciation, or contextual usage. |
+| `objective_type` | Specific measurable contract, e.g. recall lemma or apply article. |
 | `assessment_policy` | Evidence accepted for mastery updates. |
 | `prerequisites` | Optional objective or knowledge prerequisites. |
 | `language_package` | Rule source when language-specific. |
 
-### Initial skill types
+### Orthogonal objective dimensions
 
-| Skill type | Learner capability | Typical evidence |
-| --- | --- | --- |
-| `RECOGNITION` | Identify meaning/form when shown | multiple choice, card recognition |
-| `RECALL` | Retrieve a form or meaning without a prompt answer | translation, typed answer |
-| `LISTENING` | Understand spoken language | audio identification, dictation |
-| `READING` | Understand language in written context | contextual comprehension |
-| `WRITING` | Produce accurate written language | dictation, sentence writing |
-| `SPEAKING` | Produce spoken language appropriately | guided speech, conversation |
-| `GRAMMAR_USAGE` | Apply a grammatical rule in context | cloze, sentence building |
+The taxonomy must not mix a cognitive operation with a modality or content component. Each objective combines dimensions explicitly.
+
+| Dimension | Values/examples |
+| --- | --- |
+| Operation | `RECOGNIZE`, `RECALL`, `COMPREHEND`, `APPLY`, `PRODUCE` |
+| Modality | `TEXT`, `AUDIO`, `SPEECH`, `VISUAL`, `MIXED` |
+| Target component | `MEANING`, `LEXICAL_FORM`, `GRAMMAR`, `PRONUNCIATION`, `CONTEXTUAL_USAGE` |
+| Context | language pair, direction, register, domain, and task constraints |
+
+Examples: reverse translation is `RECALL + TEXT + LEXICAL_FORM`; dictation is `PRODUCE + AUDIO→TEXT + LEXICAL_FORM`; article cloze is `APPLY + TEXT + GRAMMAR`.
+
+Objective-to-objective prerequisites use a separate `ObjectiveDependency` association with source objective, target objective, dependency type, confidence, and provenance. These associations are not Knowledge Graph edges because LearningObjectives are not KnowledgeItems.
 
 ### Objective templates
 
@@ -100,7 +104,7 @@ Language packages define reusable templates. Examples for German:
 
 ## Mastery model
 
-**SkillMastery** is a learner-specific estimate for one LearningObjective. It is derived from events, never manually overwritten without recording a reason.
+**SkillMastery** is a learner-specific estimate for one LearningObjective. It is derived from events, never manually overwritten without recording a reason. Desired target stages belong to mission/learner requirements, not the reusable objective.
 
 ### Attributes
 
@@ -199,10 +203,18 @@ A **LearningMission** represents a learner goal that influences what is importan
 | `target_level` | Optional CEFR or mission-specific level. |
 | `target_date` | Optional, never treated as a guarantee. |
 | `domain_weights` | Relevance of domains such as work or travel. |
-| `skill_weights` | Priority by skill, e.g. listening for an exam. |
+| `objective_dimension_weights` | Priority by operation, modality, or target component, e.g. audio comprehension for an exam. |
 | `requirements` | Vocabulary, grammar, and activity requirements. |
 
 Missions guide prioritization. They must not hide due reviews or force irrelevant content into every session.
+
+A `MissionObjectiveTarget` links a mission (or explicit learner goal) to a LearningObjective and desired stage/weight. This allows the same objective to have different targets for different learners and missions.
+
+## Review unit
+
+A `ReviewUnit` binds one learner, one LearningObjective, one retrieval direction/modality, one evaluator/rating policy, and one FSRS state. The MVP schedules ReviewUnits rather than whole KnowledgeItems, so recognition and recall can become due independently.
+
+Automatically scored attempts map correctness, hints, reveal state, and latency to FSRS ratings through a versioned deterministic policy. A user rating is requested only for self-graded reveal cards. The raw evidence and derived rating are both retained.
 
 ## Digital Twin
 
@@ -214,7 +226,7 @@ The **Digital Twin** is a privacy-respecting, explainable aggregate model of a l
 | --- | --- |
 | Vocabulary profile | mastery distribution by CEFR, domain, and POS |
 | Grammar profile | strengths and error patterns by rule/topic |
-| Skill profile | recognition, recall, listening, writing, speaking trends |
+| Competence profile | trends by operation, modality, and target component; learner-facing summaries may say reading/listening/writing/speaking |
 | Retention profile | forgetting risk, review completion, lapse patterns |
 | Learning behavior | preferred session duration, completion patterns, best study times when supported by evidence |
 | Preferences | chosen domains, example styles, accessibility settings |
@@ -338,4 +350,5 @@ The initial Learning Domain Model is acceptable when:
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 0.2.0 | 2026-07-11 | Cross-document architecture review; resolved domain, validation, scheduling, privacy, and MVP consistency contracts. |
 | 0.1.0 | 2026-07-10 | Initial Learning Domain Model specification. |
