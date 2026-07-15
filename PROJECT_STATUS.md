@@ -1,7 +1,7 @@
 ---
 title: Project Status and Delivery Checklist
 document_id: LB-STATUS
-version: 0.1.1
+version: 0.1.2
 status: Active
 last_updated: 2026-07-15
 ---
@@ -25,10 +25,10 @@ This file is the single progress checklist for LinguaBrain AI. It must be update
 | Current phase | M0 — Specification baseline and implementation preparation |
 | Product scope | German–Persian offline-first MVP |
 | Documentation | Documents 01–15 complete as reviewed drafts |
-| Architecture baseline | Versions 0.2.0 and 0.2.1 |
+| Architecture baseline | Reviewed draft series 0.2.x; DOC-11 at 0.2.2 |
 | Active Git branch | `main` |
-| Latest architecture commit | `4ff4da9` |
-| Next primary deliverable | Decision Register and blocking M0 ADRs |
+| Last major architecture review commit | `4ff4da9` |
+| Next primary deliverable | ADR-001 — Repository/package/module layout |
 
 ## Completed foundation
 
@@ -73,20 +73,23 @@ This file is the single progress checklist for LinguaBrain AI. It must be update
 
 - [x] Create Document 15 — Implementation Backlog and Requirements Traceability.
 - [x] Map every MVP requirement to a milestone, backlog item, acceptance criterion, and test level.
-- [ ] Create a Decision Register for all open questions.
-- [ ] Classify open questions as `MVP-blocking`, `MVP-later`, or `post-MVP`.
+- [x] Create a Decision Register for all 53 source open questions and three supplemental architecture decisions.
+- [x] Classify decisions as `MVP-blocking`, `MVP-later`, or `post-MVP`, with status, owner, due gate, and required artifact.
 - [x] Define issue labels, priorities, dependencies, and Definition of Done.
 - [ ] Approve the M1 implementation backlog.
 
-### Required ADRs before coding
+### M0/M1-blocking ADRs
 
 - [ ] ADR — Repository/package/module layout.
 - [ ] ADR — Flutter state management and dependency injection.
 - [ ] ADR — SQLite library, ORM/query layer, and migration tooling.
-- [ ] ADR — FSRS implementation and version.
-- [ ] ADR — ReviewUnit retrieval contracts and evidence-to-rating mapping.
 - [ ] ADR — Domain events and transactional outbox strategy.
 - [ ] ADR — Local database protection, backup, recovery, and key handling.
+
+### ADRs required before M3
+
+- [ ] ADR — FSRS implementation and version.
+- [ ] ADR — ReviewUnit retrieval contracts and evidence-to-rating mapping.
 
 ### Canonical diagrams
 
@@ -217,6 +220,7 @@ Complete these actions with every milestone or architectural change:
 - [MVP Definition and Roadmap](docs/10_MVP_Definition_and_Roadmap.md)
 - [Technical Architecture](docs/11_Technical_Architecture.md)
 - [Implementation Backlog and Requirements Traceability](docs/15_Implementation_Backlog_and_Traceability.md)
+- [Decision Register](decisions/DECISION_REGISTER.md)
 - [ADR index](decisions/README.md)
 - [Diagram index](diagrams/README.md)
 
@@ -224,5 +228,6 @@ Complete these actions with every milestone or architectural change:
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 0.1.2 | 2026-07-15 | Completed the 56-entry Decision Register, classified every source question, aligned ADRs with their milestone gates, and advanced the next task to ADR-001. |
 | 0.1.1 | 2026-07-15 | Completed Document 15 and linked requirements to milestones, backlog work, acceptance evidence, and issue governance. |
 | 0.1.0 | 2026-07-15 | Created the central completed/remaining-work checklist for repository, documentation, milestones, and post-MVP work. |

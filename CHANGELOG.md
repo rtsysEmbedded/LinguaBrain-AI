@@ -11,6 +11,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Initial Git-ready documentation repository structure.
 - Central `PROJECT_STATUS.md` checklist for completed work, remaining work, milestone gates, and maintenance rules.
 - Document 15 implementation backlog with stable requirement/work-item identifiers, milestone dependencies, acceptance evidence, test catalog, and requirements traceability matrix.
+- Decision Register covering all 53 source open questions plus three supplemental architecture decisions, with stable IDs, classifications, statuses, owners, due gates, decision clusters, and the planned ADR queue.
 - Product Vision specification.
 - Complete product and technical specifications for documents 02 through 14.
 - Domain contracts for LexicalSense, ReviewUnit, revisions, proposals, learning plans, and pipeline jobs.
@@ -24,3 +25,4 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Defined authoritative validation versus learner-accepted private content.
 - Aligned MVP scope, no-AI fallback, daily check-in defaults, privacy, and pilot metrics.
 - Added minimal ClientSurface, CapabilitySnapshot, and consent-gated audio-pipeline extension points for future dedicated hardware while keeping hardware outside the app MVP.
+- Aligned architecture-decision timing: M1-blocking ADRs remain M0 gates, while FSRS and ReviewUnit evidence-mapping ADRs are hard-gated before M3.

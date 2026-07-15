@@ -33,13 +33,13 @@ Image-based Level 1 learning, OCR/document ingestion, speaking evaluation, and a
 ├── LICENSE
 ├── docs/          # Product and technical specifications
 ├── diagrams/      # Source diagram files and exports
-├── decisions/     # Architecture Decision Records (ADRs)
+├── decisions/     # Decision Register and Architecture Decision Records
 └── assets/        # Documentation assets
 ```
 
 ## Documentation index
 
-Track current progress and the next verified task in the [Project Status and Delivery Checklist](PROJECT_STATUS.md).
+Track current progress and the next verified task in the [Project Status and Delivery Checklist](PROJECT_STATUS.md). Open, decided, and deferred choices are indexed in the [Decision Register](decisions/DECISION_REGISTER.md).
 
 1. [Product Vision](docs/01_Product_Vision.md)
 2. [Learning Philosophy](docs/02_Learning_Philosophy.md)
@@ -59,7 +59,7 @@ Track current progress and the next verified task in the [Project Status and Del
 
 ## Status
 
-Documents 01–15 are complete as reviewed drafts. The implementation backlog and traceability model are now defined; the next gate is the Decision Register, blocking Architecture Decision Records (ADRs), and approval of the M1 backlog.
+Documents 01–15 are complete as reviewed drafts. The 56-entry Decision Register and implementation traceability model are defined. The next gate is ADR-001 for repository/package/module layout, followed by the remaining M1-blocking decisions and approval of the M1 backlog.
 
 ## Key resolved contracts
 

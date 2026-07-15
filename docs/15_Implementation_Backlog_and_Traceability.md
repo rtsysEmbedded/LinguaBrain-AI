@@ -1,7 +1,7 @@
 ---
 title: Implementation Backlog and Requirements Traceability
 document_id: LB-DOC-15
-version: 0.1.0
+version: 0.1.1
 status: Draft
 last_updated: 2026-07-15
 ---
@@ -235,19 +235,21 @@ Follow-up specifications are delivered at the latest safe gate, not all during M
 | Work item | Pri. | State | Deliverable and acceptance evidence | Dependencies |
 | --- | --- | --- | --- | --- |
 | `LB-WI-M0-01` | P0 | `DONE` | Publish Document 15 with requirement catalog, milestone backlog, test IDs, traceability, and governance; Markdown/link checks pass. | Documents 01–14 |
-| `LB-WI-M0-02` | P0 | `PROPOSED` | Create a Decision Register; classify all open questions as `MVP-blocking`, `MVP-later`, or `post-MVP`, with owner, due gate, and ADR link. | `LB-WI-M0-01` |
+| `LB-WI-M0-02` | P0 | `DONE` | Publish the Decision Register with all 53 source open questions and three supplemental architecture decisions; assign stable IDs, class, status, owner, due gate, and required decision artifact; coverage and count checks pass. | `LB-WI-M0-01` |
 | `LB-WI-M0-03` | P0 | `PROPOSED` | Accept ADR for repository/package/module layout and explicitly classify `vocabulary-mvp/`. | Decision Register |
 | `LB-WI-M0-04` | P0 | `PROPOSED` | Accept ADR for Flutter state management and dependency injection; a minimal testable composition-root example is included. | Platform target decision |
 | `LB-WI-M0-05` | P0 | `PROPOSED` | Accept ADR for SQLite library/query layer and migration tooling; transaction and testability requirements are demonstrated. | Threat/storage constraints |
-| `LB-WI-M0-06` | P0 | `PROPOSED` | Accept ADR for FSRS implementation/version with reproducible reference vectors and upgrade policy. | Review requirements |
-| `LB-WI-M0-07` | P0 | `PROPOSED` | Accept ADR for ReviewUnit retrieval contracts and automatic evidence-to-rating mapping; raw evidence and derived rating remain auditable. | `LB-WI-M0-06` |
+| `LB-WI-M0-06` | P1 | `PROPOSED` | Prepare and accept, no later than M3 start, the ADR for FSRS implementation/version with reproducible reference vectors and upgrade policy. | Review requirements |
+| `LB-WI-M0-07` | P1 | `PROPOSED` | Prepare and accept, before M3 review implementation, the ADR for ReviewUnit retrieval contracts and automatic evidence-to-rating mapping; raw evidence and derived rating remain auditable. | `LB-WI-M0-06` |
 | `LB-WI-M0-08` | P0 | `PROPOSED` | Accept ADR for in-process domain events and transactional outbox behavior, including idempotency and replay. | Persistence ADR |
 | `LB-WI-M0-09` | P0 | `PROPOSED` | Accept ADR for database protection, secure-storage keys, backup/recovery, and lost-key behavior on initial platforms. | Platform target, persistence ADR |
 | `LB-WI-M0-10` | P1 | `PROPOSED` | Add canonical System Context, Module Architecture, Domain ERD, Review Sequence, ALE Flow, and AI Pipeline diagrams linked from source documents. | Relevant ADRs |
 | `LB-WI-M0-11` | P0 | `PROPOSED` | Publish Document 16 with commands, queries, DTOs, domain events, typed errors, repositories, and transaction boundaries required by M1. | Layout, state/DI, persistence ADRs |
-| `LB-WI-M0-12` | P0 | `PROPOSED` | Resolve initial pilot platform, font/license baseline, and M1 blocking decisions; convert approved specifications to a versioned baseline and create M1 Git issues. | `LB-WI-M0-02` through `LB-WI-M0-11` |
+| `LB-WI-M0-12` | P0 | `PROPOSED` | Resolve initial pilot platform, font/license baseline, and M1 blocking decisions; convert approved specifications to a versioned baseline and create M1 Git issues. | `LB-WI-M0-02`–`05`, `LB-WI-M0-08`–`11`; M3 ADRs `06`–`07` may remain scheduled |
 
 **M0 exit criterion:** The M1 backlog is approved; every M1 item is `READY`; blocking architectural choices are accepted ADRs; canonical contracts are versioned; and the specification baseline is tagged.
+
+`LB-WI-M0-06` and `LB-WI-M0-07` are registered early to protect review architecture, but their hard gates are M3. They do not block the M1 baseline when ownership, dependencies, and target gates remain explicit in the Decision Register.
 
 ## M1 — Domain walking skeleton backlog
 
@@ -447,7 +449,7 @@ Every requirement has at least one mapped work item and one verification path. W
 
 ## Blocking decision gates
 
-The future Decision Register owns final status and ADR links. This table defines the latest acceptable decision point.
+The [Decision Register](../decisions/DECISION_REGISTER.md) owns final status and decision-artifact links. This table defines the latest acceptable decision point.
 
 | Decision | Required by | Blocking outcome |
 | --- | --- | --- |
@@ -514,16 +516,17 @@ One issue has one primary work-item ID. A pull request may close multiple small 
 
 ## Proposed next execution batch
 
-The next batch is documentation/decision work, not production feature coding:
+The next batch is architecture and contract work, not production feature coding:
 
-1. create the Decision Register and classify all open questions;
-2. accept repository/module-layout ADR and classify `vocabulary-mvp/`;
+1. accept repository/module-layout ADR and classify `vocabulary-mvp/`;
+2. resolve the initial Flutter/golden-layout platform decision;
 3. accept Flutter state-management/DI ADR;
 4. accept SQLite/migration ADR;
 5. define the minimum database protection/backup baseline;
-6. publish Document 16 application/domain contracts;
-7. add System Context, Module Architecture, and initial Domain ERD canonical diagrams;
-8. review and approve M1 issues, then tag the specification baseline.
+6. accept the domain-event/transactional-outbox ADR;
+7. publish Document 16 application/domain contracts;
+8. add System Context, Module Architecture, and initial Domain ERD canonical diagrams;
+9. review and approve M1 issues, then tag the specification baseline.
 
 The FSRS and evidence-mapping ADRs must be completed before M3; Language Package/data decisions before M2; full security/pilot specifications before their respective release gates.
 
@@ -568,6 +571,7 @@ Run these checks at least at every milestone review:
 - [Database Schema and Persistence](12_Database_Schema_and_Persistence.md)
 - [AI Agent Pipeline](13_AI_Agent_Pipeline.md)
 - [Frontend UX/UI](14_Frontend_UX_UI.md)
+- [Decision Register](../decisions/DECISION_REGISTER.md)
 - [ADR index](../decisions/README.md)
 - [Diagram index](../diagrams/README.md)
 
@@ -575,4 +579,5 @@ Run these checks at least at every milestone review:
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 0.1.1 | 2026-07-15 | Linked the completed Decision Register, closed work item LB-WI-M0-02, aligned ADR timing with M1/M3 gates, and advanced the proposed execution batch to the first architecture decisions. |
 | 0.1.0 | 2026-07-15 | Initial implementation backlog, requirement catalog, milestone work items, verification catalog, and traceability matrix. |

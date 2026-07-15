@@ -1,9 +1,9 @@
 ---
 title: Technical Architecture
 document_id: LB-DOC-11
-version: 0.2.1
+version: 0.2.2
 status: Draft
-last_updated: 2026-07-11
+last_updated: 2026-07-15
 ---
 
 # Technical Architecture
@@ -267,15 +267,20 @@ FastAPI may later provide accounts, encrypted sync coordination, provider proxyi
 - UI cannot directly mutate persistence or FSRS state.
 - Core flows have integration tests with offline and failure cases.
 
-## Required ADRs before coding
+## Required ADRs by implementation gate
+
+Before M1 work becomes `READY`:
 
 - Flutter state management and dependency injection.
 - SQLite library/ORM and migration tooling.
-- FSRS implementation/version.
-- ReviewUnit retrieval contracts and automatic evidence-to-rating mapping.
 - Domain event and transactional outbox approach.
 - Local database encryption/security strategy.
 - Package/module repository layout.
+
+Before M3 review work becomes `READY`:
+
+- FSRS implementation/version.
+- ReviewUnit retrieval contracts and automatic evidence-to-rating mapping.
 
 ## Related documents
 
@@ -283,11 +288,13 @@ FastAPI may later provide accounts, encrypted sync coordination, provider proxyi
 - `12_Database_Schema_and_Persistence.md` — Storage design.
 - `13_AI_Agent_Pipeline.md` — Processing orchestration.
 - `14_Frontend_UX_UI.md` — Presentation behavior.
+- `../decisions/DECISION_REGISTER.md` — Decision ownership, status, and latest safe gates.
 
 ## Revision history
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 0.2.2 | 2026-07-15 | Aligned required ADRs with their M1 and M3 implementation gates and linked the Decision Register. |
 | 0.2.1 | 2026-07-11 | Added shared-core Client Surface Adapter and capability contract for future dedicated hardware. |
 | 0.2.0 | 2026-07-11 | Cross-document architecture review; resolved domain, validation, scheduling, privacy, and MVP consistency contracts. |
 | 0.1.0 | 2026-07-11 | Initial Technical Architecture specification. |
