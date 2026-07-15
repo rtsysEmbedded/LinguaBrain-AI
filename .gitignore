@@ -1,5 +1,10 @@
 # macOS
 .DS_Store
+.AppleDouble
+.LSOverride
+
+# Local projects intentionally outside this repository scope
+/noji_anki/
 
 # Temporary and editor files
 *.swp
@@ -7,6 +12,42 @@
 *~
 .idea/
 .vscode/
+
+# Environment files and local secrets
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Local runtime data
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+*.log
+.n8n/
+
+# Flutter and Dart generated files
+.dart_tool/
+.packages
+.pub-cache/
+.flutter-plugins
+.flutter-plugins-dependencies
 
 # Generated documentation output
 site/

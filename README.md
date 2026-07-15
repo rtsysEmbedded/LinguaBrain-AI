@@ -28,6 +28,7 @@ Image-based Level 1 learning, OCR/document ingestion, speaking evaluation, and a
 ```text
 .
 ├── README.md
+├── PROJECT_STATUS.md # Live completed/remaining-work checklist
 ├── CHANGELOG.md
 ├── LICENSE
 ├── docs/          # Product and technical specifications
@@ -37,6 +38,8 @@ Image-based Level 1 learning, OCR/document ingestion, speaking evaluation, and a
 ```
 
 ## Documentation index
+
+Track current progress and the next verified task in the [Project Status and Delivery Checklist](PROJECT_STATUS.md).
 
 1. [Product Vision](docs/01_Product_Vision.md)
 2. [Learning Philosophy](docs/02_Learning_Philosophy.md)
