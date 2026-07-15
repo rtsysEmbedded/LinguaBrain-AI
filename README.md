@@ -55,10 +55,11 @@ Track current progress and the next verified task in the [Project Status and Del
 12. [Database Schema and Persistence](docs/12_Database_Schema_and_Persistence.md)
 13. [AI Agent Pipeline](docs/13_AI_Agent_Pipeline.md)
 14. [Frontend UX/UI](docs/14_Frontend_UX_UI.md)
+15. [Implementation Backlog and Requirements Traceability](docs/15_Implementation_Backlog_and_Traceability.md)
 
 ## Status
 
-All 14 specifications are complete as reviewed drafts. The repository is ready for Architecture Decision Records (ADRs) and implementation backlog creation; unresolved decisions are explicitly listed in each document.
+Documents 01–15 are complete as reviewed drafts. The implementation backlog and traceability model are now defined; the next gate is the Decision Register, blocking Architecture Decision Records (ADRs), and approval of the M1 backlog.
 
 ## Key resolved contracts
 

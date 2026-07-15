@@ -10,6 +10,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - Initial Git-ready documentation repository structure.
 - Central `PROJECT_STATUS.md` checklist for completed work, remaining work, milestone gates, and maintenance rules.
+- Document 15 implementation backlog with stable requirement/work-item identifiers, milestone dependencies, acceptance evidence, test catalog, and requirements traceability matrix.
 - Product Vision specification.
 - Complete product and technical specifications for documents 02 through 14.
 - Domain contracts for LexicalSense, ReviewUnit, revisions, proposals, learning plans, and pipeline jobs.

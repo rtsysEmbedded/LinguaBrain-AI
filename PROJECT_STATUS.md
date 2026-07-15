@@ -1,7 +1,7 @@
 ---
 title: Project Status and Delivery Checklist
 document_id: LB-STATUS
-version: 0.1.0
+version: 0.1.1
 status: Active
 last_updated: 2026-07-15
 ---
@@ -24,11 +24,11 @@ This file is the single progress checklist for LinguaBrain AI. It must be update
 | --- | --- |
 | Current phase | M0 — Specification baseline and implementation preparation |
 | Product scope | German–Persian offline-first MVP |
-| Documentation | Documents 01–14 complete as reviewed drafts |
+| Documentation | Documents 01–15 complete as reviewed drafts |
 | Architecture baseline | Versions 0.2.0 and 0.2.1 |
 | Active Git branch | `main` |
 | Latest architecture commit | `4ff4da9` |
-| Next primary deliverable | Document 15 — Implementation Backlog and Requirements Traceability |
+| Next primary deliverable | Decision Register and blocking M0 ADRs |
 
 ## Completed foundation
 
@@ -62,6 +62,7 @@ This file is the single progress checklist for LinguaBrain AI. It must be update
 - [x] Document 12 — Database Schema and Persistence.
 - [x] Document 13 — AI Agent Pipeline.
 - [x] Document 14 — Frontend UX/UI.
+- [x] Document 15 — Implementation Backlog and Requirements Traceability.
 - [x] Review Documents 01–14 for domain, scheduling, validation, privacy, and MVP consistency.
 - [x] Preserve a future dedicated-device path through `ClientSurface` and `CapabilitySnapshot` without adding hardware to MVP scope.
 - [ ] Resolve MVP-blocking decisions and promote the approved specification set from `Draft` to a versioned baseline.
@@ -70,11 +71,11 @@ This file is the single progress checklist for LinguaBrain AI. It must be update
 
 ### Planning and traceability
 
-- [ ] Create Document 15 — Implementation Backlog and Requirements Traceability.
-- [ ] Map every MVP requirement to a milestone, backlog item, acceptance criterion, and test level.
+- [x] Create Document 15 — Implementation Backlog and Requirements Traceability.
+- [x] Map every MVP requirement to a milestone, backlog item, acceptance criterion, and test level.
 - [ ] Create a Decision Register for all open questions.
 - [ ] Classify open questions as `MVP-blocking`, `MVP-later`, or `post-MVP`.
-- [ ] Define issue labels, priorities, dependencies, and Definition of Done.
+- [x] Define issue labels, priorities, dependencies, and Definition of Done.
 - [ ] Approve the M1 implementation backlog.
 
 ### Required ADRs before coding
@@ -96,13 +97,13 @@ This file is the single progress checklist for LinguaBrain AI. It must be update
 - [ ] Adaptive Learning Engine decision-flow diagram.
 - [ ] AI pipeline sequence diagram.
 
-### Follow-up implementation specifications
+## Specification readiness gates
 
-- [ ] Document 16 — Application and Domain Contracts.
-- [ ] Document 17 — Review Engine, FSRS, and ReviewUnit.
-- [ ] Document 18 — German–Persian Language Package.
-- [ ] Document 19 — Security, Privacy, and Threat Model.
-- [ ] Document 20 — Verification Strategy and Pilot Protocol.
+- [ ] Document 16 — Application and Domain Contracts, required before M1 implementation.
+- [ ] Document 18 — German–Persian Language Package, required before M2 implementation.
+- [ ] Document 17 — Review Engine, FSRS, and ReviewUnit, required before M3 implementation.
+- [ ] Document 19 — Security, Privacy, and Threat Model, required before M6 hardening; its minimum protection/backup ADR is still an M0 gate.
+- [ ] Document 20 — Verification Strategy and Pilot Protocol, required before pilot enrollment.
 
 ## M1 — Domain walking skeleton
 
@@ -111,6 +112,7 @@ This file is the single progress checklist for LinguaBrain AI. It must be update
 - [ ] Add the first SQLite schema and migration runner.
 - [ ] Implement `KnowledgeItem` and its repository contract.
 - [ ] Implement learner profile and language-pair configuration.
+- [ ] Implement editable onboarding with explicit BCP 47 language roles and a versioned CapabilitySnapshot.
 - [ ] Store and retrieve one manual German word fully offline.
 - [ ] Add unit and integration tests for the first offline transaction.
 - [ ] Verify restart durability and error handling.
@@ -125,7 +127,10 @@ This file is the single progress checklist for LinguaBrain AI. It must be update
 - [ ] Add provider-independent AI enrichment and structured-output validation.
 - [ ] Add proposal preview, approval, provenance, and private/canonical validation states.
 - [ ] Implement smart-card presentation and basic automatic collections.
+- [ ] Complete the smart-card contract for meaning/sense, POS, CEFR, example, noun/verb forms, pronunciation availability, provenance, and validation state.
 - [ ] Add cache keys with prompt, package, model, validator, and safety versions.
+- [ ] Add secure AI provider settings, configurable usage budgets, and a provider/request/token/cost view.
+- [ ] Add baseline cached pronunciation audio with accessible offline playback where media is available.
 - [ ] Select and document validated lexical datasets and licenses.
 
 **M2 exit criterion:** A learner can create or enrich a German item, inspect and approve the result, avoid duplicates, and use the accepted content offline.
@@ -138,6 +143,8 @@ This file is the single progress checklist for LinguaBrain AI. It must be update
 - [ ] Implement Persian-to-German active recall.
 - [ ] Record immutable LearningEvents and review history.
 - [ ] Update objective-level mastery without AI mutation.
+- [ ] Verify that exposure/reveal alone cannot advance mastery and that automatically evaluated exercises do not request self-rating.
+- [ ] Provide component/rule-specific feedback and a corrective opportunity.
 - [ ] Add deterministic fake-clock and restart test vectors.
 
 **M3 exit criterion:** Recognition and recall for the same item are scheduled independently, survive restart, and produce reproducible FSRS history.
@@ -150,6 +157,8 @@ This file is the single progress checklist for LinguaBrain AI. It must be update
 - [ ] Build capability-aware daily sessions.
 - [ ] Target weak skills and explain every recommendation.
 - [ ] Add basic Digital Twin summaries from auditable LearningEvents.
+- [ ] Let the learner inspect, correct, and delete Digital Twin profile/inference data.
+- [ ] Implement the actionable progress summary for objectives, skills, weak patterns, mission coverage, retention, time, and recent activity.
 
 **M4 exit criterion:** Given the same versioned inputs, clock, and capabilities, the engine produces the same explainable daily plan.
 
@@ -207,6 +216,7 @@ Complete these actions with every milestone or architectural change:
 - [Changelog](CHANGELOG.md)
 - [MVP Definition and Roadmap](docs/10_MVP_Definition_and_Roadmap.md)
 - [Technical Architecture](docs/11_Technical_Architecture.md)
+- [Implementation Backlog and Requirements Traceability](docs/15_Implementation_Backlog_and_Traceability.md)
 - [ADR index](decisions/README.md)
 - [Diagram index](diagrams/README.md)
 
@@ -214,4 +224,5 @@ Complete these actions with every milestone or architectural change:
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 0.1.1 | 2026-07-15 | Completed Document 15 and linked requirements to milestones, backlog work, acceptance evidence, and issue governance. |
 | 0.1.0 | 2026-07-15 | Created the central completed/remaining-work checklist for repository, documentation, milestones, and post-MVP work. |
