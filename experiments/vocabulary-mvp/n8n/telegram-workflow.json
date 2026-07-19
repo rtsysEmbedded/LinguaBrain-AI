@@ -1,0 +1,320 @@
+{
+  "name": "German Vocabulary Telegram — Local Polling MVP",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "seconds",
+              "secondsInterval": 5
+            }
+          ]
+        }
+      },
+      "id": "schedule-trigger",
+      "name": "Check Telegram Every 5 Seconds",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [0, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "const state = $getWorkflowStaticData('global');\nreturn [{ json: { offset: Number.isInteger(state.telegram_offset) ? state.telegram_offset : 0 } }];"
+      },
+      "id": "load-offset",
+      "name": "Load Telegram Offset",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [220, 0]
+    },
+    {
+      "parameters": {
+        "url": "={{ 'https://api.telegram.org/bot' + $env.TELEGRAM_BOT_TOKEN + '/getUpdates' }}",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "offset",
+              "value": "={{ $json.offset }}"
+            },
+            {
+              "name": "limit",
+              "value": "100"
+            },
+            {
+              "name": "allowed_updates",
+              "value": "[\"message\"]"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "get-updates",
+      "name": "Get Telegram Updates",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [460, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "const response = $input.first().json;\nif (!response.ok || !Array.isArray(response.result)) {\n  throw new Error('Telegram getUpdates returned an invalid response');\n}\n\nconst state = $getWorkflowStaticData('global');\nconst updates = response.result;\nlet nextOffset = Number.isInteger(state.telegram_offset) ? state.telegram_offset : 0;\nfor (const update of updates) {\n  if (Number.isInteger(update.update_id)) nextOffset = Math.max(nextOffset, update.update_id + 1);\n}\n\n// The first active run consumes old pending messages so only new messages are handled.\nif (state.telegram_offset === undefined) {\n  state.telegram_offset = nextOffset;\n  return [];\n}\n\nstate.telegram_offset = nextOffset;\nconst output = [];\nfor (const update of updates) {\n  const message = update.message;\n  if (!message || !message.chat || message.chat.id === undefined) continue;\n  const text = typeof message.text === 'string' ? message.text.trim() : '';\n  output.push({\n    json: {\n      chat_id: message.chat.id,\n      kind: text && !text.startsWith('/') ? 'lookup' : 'help',\n      word: text,\n    },\n  });\n}\nreturn output;"
+      },
+      "id": "extract-messages",
+      "name": "Extract New Messages",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [700, 0]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "is-lookup",
+              "leftValue": "={{ $json.kind }}",
+              "rightValue": "lookup",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "is-lookup",
+      "name": "Is Vocabulary Request?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [940, 0]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ ($env.VOCABULARY_API_URL || 'http://host.docker.internal:8000') + '/lookup' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({ word: $json.word, provider: $env.VOCABULARY_AI_PROVIDER || 'lmstudio', add_to_anki: false }) }}",
+        "options": {}
+      },
+      "id": "lookup",
+      "name": "Lookup Word",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1180, -120],
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "success-chat-id",
+              "name": "chat_id",
+              "type": "number",
+              "value": "={{ $('Extract New Messages').item.json.chat_id }}"
+            },
+            {
+              "id": "success-text",
+              "name": "text",
+              "type": "string",
+              "value": "={{ '📘 ' + $json.record.word + '\\n' + $json.record.type.charAt(0).toUpperCase() + $json.record.type.slice(1) + ' | ' + $json.record.level + '\\n🇮🇷 ' + $json.record.meaning_fa.join('، ') + '\\n🇬🇧 ' + $json.record.meaning_en.join(', ') + '\\n💬 ' + $json.record.example_de + '\\n' + $json.record.example_fa + ($json.record.grammar.perfect ? '\\nPerfekt: ' + $json.record.grammar.perfect : '') + '\\n⚠️ AI · تأیید زبانی نشده' }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "format-success",
+      "name": "Format Vocabulary Response",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1420, -160]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ 'https://api.telegram.org/bot' + $env.TELEGRAM_BOT_TOKEN + '/sendMessage' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({ chat_id: $json.chat_id, text: $json.text }) }}",
+        "options": {}
+      },
+      "id": "send-success",
+      "name": "Send Vocabulary Response",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1660, -160]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "help-chat-id",
+              "name": "chat_id",
+              "type": "number",
+              "value": "={{ $json.chat_id }}"
+            },
+            {
+              "id": "help-text",
+              "name": "text",
+              "type": "string",
+              "value": "لطفاً فقط یک واژه یا عبارت آلمانی بفرستید."
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "format-help",
+      "name": "Format Input Help",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1180, 140]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ 'https://api.telegram.org/bot' + $env.TELEGRAM_BOT_TOKEN + '/sendMessage' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({ chat_id: $json.chat_id, text: $json.text }) }}",
+        "options": {}
+      },
+      "id": "send-help",
+      "name": "Send Input Help",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1420, 140]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "error-chat-id",
+              "name": "chat_id",
+              "type": "number",
+              "value": "={{ $('Extract New Messages').item.json.chat_id }}"
+            },
+            {
+              "id": "error-text",
+              "name": "text",
+              "type": "string",
+              "value": "پردازش واژه انجام نشد. اتصال مدل یا سرویس واژگان را بررسی و دوباره تلاش کنید."
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "format-error",
+      "name": "Format Processing Error",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1420, 20]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ 'https://api.telegram.org/bot' + $env.TELEGRAM_BOT_TOKEN + '/sendMessage' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({ chat_id: $json.chat_id, text: $json.text }) }}",
+        "options": {}
+      },
+      "id": "send-error",
+      "name": "Send Processing Error",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1660, 20]
+    }
+  ],
+  "connections": {
+    "Check Telegram Every 5 Seconds": {
+      "main": [[{"node": "Load Telegram Offset", "type": "main", "index": 0}]]
+    },
+    "Load Telegram Offset": {
+      "main": [[{"node": "Get Telegram Updates", "type": "main", "index": 0}]]
+    },
+    "Get Telegram Updates": {
+      "main": [[{"node": "Extract New Messages", "type": "main", "index": 0}]]
+    },
+    "Extract New Messages": {
+      "main": [[{"node": "Is Vocabulary Request?", "type": "main", "index": 0}]]
+    },
+    "Is Vocabulary Request?": {
+      "main": [
+        [{"node": "Lookup Word", "type": "main", "index": 0}],
+        [{"node": "Format Input Help", "type": "main", "index": 0}]
+      ]
+    },
+    "Lookup Word": {
+      "main": [
+        [{"node": "Format Vocabulary Response", "type": "main", "index": 0}],
+        [{"node": "Format Processing Error", "type": "main", "index": 0}]
+      ]
+    },
+    "Format Vocabulary Response": {
+      "main": [[{"node": "Send Vocabulary Response", "type": "main", "index": 0}]]
+    },
+    "Format Input Help": {
+      "main": [[{"node": "Send Input Help", "type": "main", "index": 0}]]
+    },
+    "Format Processing Error": {
+      "main": [[{"node": "Send Processing Error", "type": "main", "index": 0}]]
+    }
+  },
+  "pinData": {},
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "active": false,
+  "versionId": "f58bc0fb-fbe7-42e0-a7e4-d9df4f36e7dd"
+}

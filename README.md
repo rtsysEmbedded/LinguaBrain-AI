@@ -25,16 +25,39 @@ Image-based Level 1 learning, OCR/document ingestion, speaking evaluation, and a
 
 ## Repository layout
 
+The normative monorepo paths and dependency boundaries are defined by [ADR-001](decisions/ADR-001-Repository-Package-and-Module-Layout.md). Directories are created when their approved milestone begins.
+
 ```text
-.
+LinguaBrain AI/
+├── apps/
+│   ├── mobile/                         # M1 Flutter reference client
+│   └── device/                         # Future; created only after approval
+├── packages/
+│   ├── linguabrain_domain/             # Pure Dart domain model and contracts
+│   ├── linguabrain_application/        # Pure Dart use cases, ports, transactions
+│   ├── linguabrain_language_de/        # First-party German Language Package
+│   ├── linguabrain_language_fa/        # First-party Persian Language Package
+│   ├── linguabrain_persistence_sqlite/ # SQLite repositories, migrations, FTS, outbox
+│   ├── linguabrain_ai/                 # AI orchestration and provider adapters
+│   ├── linguabrain_review_fsrs/        # FSRS scheduler adapter and vectors
+│   ├── linguabrain_media/              # Media cache and playback adapters
+│   ├── linguabrain_platform_flutter/   # Secure storage, lifecycle, capabilities
+│   └── linguabrain_test_support/       # Synthetic fixtures, fakes, contract suites
+├── services/
+│   └── sync_api/                       # Post-MVP FastAPI service
+├── contracts/                          # Future external API/event schemas
+├── experiments/
+│   └── vocabulary-mvp/                 # Python/FastAPI/n8n reference experiment
+├── tooling/                            # Repository checks and developer commands
+├── docs/
+├── decisions/
+├── diagrams/
+├── assets/
 ├── README.md
-├── PROJECT_STATUS.md # Live completed/remaining-work checklist
+├── PROJECT_STATUS.md
 ├── CHANGELOG.md
 ├── LICENSE
-├── docs/          # Product and technical specifications
-├── diagrams/      # Source diagram files and exports
-├── decisions/     # Decision Register and Architecture Decision Records
-└── assets/        # Documentation assets
+└── .gitignore
 ```
 
 ## Documentation index
@@ -59,7 +82,7 @@ Track current progress and the next verified task in the [Project Status and Del
 
 ## Status
 
-Documents 01–15 are complete as reviewed drafts. The 56-entry Decision Register and implementation traceability model are defined. The next gate is ADR-001 for repository/package/module layout, followed by the remaining M1-blocking decisions and approval of the M1 backlog.
+Documents 01–15 remain reviewed drafts. [ADR-001](decisions/ADR-001-Repository-Package-and-Module-Layout.md) is accepted and the repository/package/module layout is defined. The next gate is the initial Flutter/golden-layout platform decision (`LB-DEC-037` and `LB-DEC-053`), followed by ADR-002 and the remaining M1-blocking decisions.
 
 ## Key resolved contracts
 
@@ -69,3 +92,4 @@ Documents 01–15 are complete as reviewed drafts. The 56-entry Decision Registe
 - Domain services validate/promote content; ALE makes educational decisions.
 - German and Persian Language Packages are built-in, first-party MVP components.
 - The shared core is client-surface neutral and can later support a focused dedicated device without forking learner data or learning logic.
+- Production code uses a modular monorepo with pure Dart domain/application packages and thin client shells; the Python vocabulary spike remains a non-production experiment.

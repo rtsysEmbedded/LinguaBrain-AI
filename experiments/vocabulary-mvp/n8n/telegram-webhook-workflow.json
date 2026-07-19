@@ -1,0 +1,157 @@
+{
+  "name": "German Vocabulary Telegram — Webhook (Optional Future Mode)",
+  "nodes": [
+    {
+      "parameters": {"updates": ["message"], "additionalFields": {}},
+      "id": "telegram-trigger",
+      "name": "Telegram Trigger",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [0, 0]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "message-word",
+              "name": "word",
+              "type": "string",
+              "value": "={{ typeof $json.message?.text === 'string' ? $json.message.text.trim() : '' }}"
+            },
+            {
+              "id": "message-valid",
+              "name": "valid",
+              "type": "boolean",
+              "value": "={{ typeof $json.message?.text === 'string' && $json.message.text.trim().length > 0 && !$json.message.text.trim().startsWith('/') }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "prepare-message",
+      "name": "Prepare Message",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [220, 0]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {"caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 2},
+          "conditions": [
+            {
+              "id": "valid-text-condition",
+              "leftValue": "={{ $json.valid }}",
+              "rightValue": "",
+              "operator": {"type": "boolean", "operation": "true", "singleValue": true}
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "valid-message",
+      "name": "Valid Text?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [440, 0]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ ($env.VOCABULARY_API_URL || 'http://host.docker.internal:8000') + '/lookup' }}",
+        "sendHeaders": true,
+        "headerParameters": {"parameters": [{"name": "Content-Type", "value": "application/json"}]},
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify({ word: $json.word, provider: $env.VOCABULARY_AI_PROVIDER || 'lmstudio', add_to_anki: false }) }}",
+        "options": {}
+      },
+      "id": "lookup",
+      "name": "Lookup Word",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [680, -100],
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "formatted-text",
+              "name": "text",
+              "type": "string",
+              "value": "={{ '📘 ' + $json.record.word + '\n' + $json.record.type.charAt(0).toUpperCase() + $json.record.type.slice(1) + ' | ' + $json.record.level + '\n🇮🇷 ' + $json.record.meaning_fa.join('، ') + '\n🇬🇧 ' + $json.record.meaning_en.join(', ') + '\n💬 ' + $json.record.example_de + '\n' + $json.record.example_fa + ($json.record.grammar.perfect ? '\nPerfekt: ' + $json.record.grammar.perfect : '') + '\n⚠️ AI · تأیید زبانی نشده' }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "format",
+      "name": "Format Response",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [920, -160]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "={{ $json.text }}",
+        "additionalFields": {}
+      },
+      "id": "telegram-send",
+      "name": "Send Telegram Message",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [1160, -160]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "لطفاً فقط یک واژه یا عبارت آلمانی بفرستید.",
+        "additionalFields": {}
+      },
+      "id": "telegram-help",
+      "name": "Send Input Help",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [680, 140]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "پردازش واژه انجام نشد. اتصال مدل یا سرویس واژگان را بررسی و دوباره تلاش کنید.",
+        "additionalFields": {}
+      },
+      "id": "telegram-error",
+      "name": "Send Processing Error",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [920, 20]
+    }
+  ],
+  "connections": {
+    "Telegram Trigger": {"main": [[{"node": "Prepare Message", "type": "main", "index": 0}]]},
+    "Prepare Message": {"main": [[{"node": "Valid Text?", "type": "main", "index": 0}]]},
+    "Valid Text?": {
+      "main": [
+        [{"node": "Lookup Word", "type": "main", "index": 0}],
+        [{"node": "Send Input Help", "type": "main", "index": 0}]
+      ]
+    },
+    "Lookup Word": {
+      "main": [
+        [{"node": "Format Response", "type": "main", "index": 0}],
+        [{"node": "Send Processing Error", "type": "main", "index": 0}]
+      ]
+    },
+    "Format Response": {"main": [[{"node": "Send Telegram Message", "type": "main", "index": 0}]]}
+  },
+  "pinData": {},
+  "settings": {"executionOrder": "v1"},
+  "active": false,
+  "versionId": "4bd11786-e891-4a65-9d02-71ee49b313ad"
+}

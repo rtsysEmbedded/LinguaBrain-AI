@@ -3,6 +3,8 @@ title: "ADR-XXX: Decision title"
 status: proposed
 date: YYYY-MM-DD
 decision_makers: []
+decision_ids: []
+work_items: []
 ---
 
 # ADR-XXX: Decision title

@@ -7,18 +7,21 @@ Use [ADR_TEMPLATE.md](ADR_TEMPLATE.md) as the starting point for new records. Na
 ## Rules
 
 - The Decision Register is an index; an accepted ADR remains authoritative for an architectural choice.
-- Reserved ADR numbers are not accepted decisions until the corresponding file has status `Accepted`.
+- Reserved ADR numbers are not accepted decisions until the corresponding file has status `accepted`.
 - Significant decisions update affected specifications, the register, `PROJECT_STATUS.md`, and `CHANGELOG.md` in the same commit.
 - Superseded decisions and ADRs remain in Git and point to their replacements.
 
+## Accepted ADRs
+
+- [ADR-001 — Repository, Package, and Module Layout](ADR-001-Repository-Package-and-Module-Layout.md)
+
 ## Planned ADR queue
 
-1. `ADR-001-Repository-Package-and-Module-Layout.md`
-2. `ADR-002-Flutter-State-Management-and-DI.md`
-3. `ADR-003-SQLite-Query-and-Migration-Stack.md`
-4. `ADR-004-FSRS-Implementation-and-Version.md`
-5. `ADR-005-ReviewUnit-Retrieval-and-Evidence-Rating.md`
-6. `ADR-006-Domain-Events-and-Transactional-Outbox.md`
-7. `ADR-007-Local-Database-Protection-and-Recovery.md`
+- `ADR-002-Flutter-State-Management-and-DI.md`
+- `ADR-003-SQLite-Query-and-Migration-Stack.md`
+- `ADR-004-FSRS-Implementation-and-Version.md`
+- `ADR-005-ReviewUnit-Retrieval-and-Evidence-Rating.md`
+- `ADR-006-Domain-Events-and-Transactional-Outbox.md`
+- `ADR-007-Local-Database-Protection-and-Recovery.md`
 
 The live order, owners, gates, and linked decision IDs are maintained in the [Decision Register](DECISION_REGISTER.md).

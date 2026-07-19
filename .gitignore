@@ -42,6 +42,11 @@ htmlcov/
 *.log
 .n8n/
 
+# Private/generated experiment inputs and exports
+/experiments/vocabulary-mvp/*.csv
+/experiments/vocabulary-mvp/*.xlsx
+/experiments/vocabulary-mvp/*.xlsm
+
 # Flutter and Dart generated files
 .dart_tool/
 .packages

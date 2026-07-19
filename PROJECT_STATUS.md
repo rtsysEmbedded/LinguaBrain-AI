@@ -1,9 +1,9 @@
 ---
 title: Project Status and Delivery Checklist
 document_id: LB-STATUS
-version: 0.1.2
+version: 0.1.3
 status: Active
-last_updated: 2026-07-15
+last_updated: 2026-07-19
 ---
 
 # Project Status and Delivery Checklist
@@ -25,10 +25,11 @@ This file is the single progress checklist for LinguaBrain AI. It must be update
 | Current phase | M0 — Specification baseline and implementation preparation |
 | Product scope | German–Persian offline-first MVP |
 | Documentation | Documents 01–15 complete as reviewed drafts |
-| Architecture baseline | Reviewed draft series 0.2.x; DOC-11 at 0.2.2 |
+| Architecture baseline | Reviewed draft series 0.2.x; DOC-11 at 0.2.3; DOC-15 at 0.1.2 |
+| Latest accepted ADR | [ADR-001](decisions/ADR-001-Repository-Package-and-Module-Layout.md) |
 | Active Git branch | `main` |
 | Last major architecture review commit | `4ff4da9` |
-| Next primary deliverable | ADR-001 — Repository/package/module layout |
+| Next primary deliverable | Initial client platform decision — LB-DEC-037 / LB-DEC-053 |
 
 ## Completed foundation
 
@@ -42,7 +43,7 @@ This file is the single progress checklist for LinguaBrain AI. It must be update
 - [x] Add an ADR template.
 - [x] Add this project-status checklist.
 - [x] Harden `.gitignore` for local projects, secrets, Python, SQLite, Flutter, and generated files.
-- [ ] Decide whether `vocabulary-mvp/` belongs under `experiments/`, in the production monorepo, or in a separate repository.
+- [x] Classify and place the vocabulary prototype at `experiments/vocabulary-mvp/` according to [ADR-001](decisions/ADR-001-Repository-Package-and-Module-Layout.md).
 - [ ] Configure a Git remote and push `main`.
 - [ ] Create an annotated MVP specification baseline tag.
 
@@ -80,7 +81,7 @@ This file is the single progress checklist for LinguaBrain AI. It must be update
 
 ### M0/M1-blocking ADRs
 
-- [ ] ADR — Repository/package/module layout.
+- [x] [ADR-001 — Repository/package/module layout](decisions/ADR-001-Repository-Package-and-Module-Layout.md).
 - [ ] ADR — Flutter state management and dependency injection.
 - [ ] ADR — SQLite library, ORM/query layer, and migration tooling.
 - [ ] ADR — Domain events and transactional outbox strategy.
@@ -228,6 +229,7 @@ Complete these actions with every milestone or architectural change:
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 0.1.3 | 2026-07-19 | Accepted ADR-001, established the modular monorepo boundary, relocated the vocabulary prototype under experiments, and advanced the next gate to the initial client platform decision. |
 | 0.1.2 | 2026-07-15 | Completed the 56-entry Decision Register, classified every source question, aligned ADRs with their milestone gates, and advanced the next task to ADR-001. |
 | 0.1.1 | 2026-07-15 | Completed Document 15 and linked requirements to milestones, backlog work, acceptance evidence, and issue governance. |
 | 0.1.0 | 2026-07-15 | Created the central completed/remaining-work checklist for repository, documentation, milestones, and post-MVP work. |

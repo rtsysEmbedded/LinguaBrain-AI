@@ -1,9 +1,9 @@
 ---
 title: Implementation Backlog and Requirements Traceability
 document_id: LB-DOC-15
-version: 0.1.1
+version: 0.1.2
 status: Draft
-last_updated: 2026-07-15
+last_updated: 2026-07-19
 ---
 
 # Implementation Backlog and Requirements Traceability
@@ -47,7 +47,7 @@ Explicitly excluded from the MVP backlog:
 - social features, marketplace, public decks, and leaderboards;
 - dedicated-device hardware, meeting recording, live translation, and manufacturing.
 
-The shared core must retain the extension points already defined for these post-MVP capabilities. `vocabulary-mvp/` is an unclassified local prototype and is not production scope until a repository-layout ADR explicitly accepts or relocates it.
+The shared core must retain the extension points already defined for these post-MVP capabilities. [ADR-001](../decisions/ADR-001-Repository-Package-and-Module-Layout.md) classifies the Python prototype at `experiments/vocabulary-mvp/` as reference-only experimental code outside production packages, releases, schemas, and default CI.
 
 ## Source of truth and precedence
 
@@ -236,7 +236,7 @@ Follow-up specifications are delivered at the latest safe gate, not all during M
 | --- | --- | --- | --- | --- |
 | `LB-WI-M0-01` | P0 | `DONE` | Publish Document 15 with requirement catalog, milestone backlog, test IDs, traceability, and governance; Markdown/link checks pass. | Documents 01–14 |
 | `LB-WI-M0-02` | P0 | `DONE` | Publish the Decision Register with all 53 source open questions and three supplemental architecture decisions; assign stable IDs, class, status, owner, due gate, and required decision artifact; coverage and count checks pass. | `LB-WI-M0-01` |
-| `LB-WI-M0-03` | P0 | `PROPOSED` | Accept ADR for repository/package/module layout and explicitly classify `vocabulary-mvp/`. | Decision Register |
+| `LB-WI-M0-03` | P0 | `DONE` | Accepted [ADR-001](../decisions/ADR-001-Repository-Package-and-Module-Layout.md); repository/package/module boundaries, dependency and CI scope, and the prototype's `experiments/vocabulary-mvp/` disposition are explicit and reflected in the repository. | Decision Register |
 | `LB-WI-M0-04` | P0 | `PROPOSED` | Accept ADR for Flutter state management and dependency injection; a minimal testable composition-root example is included. | Platform target decision |
 | `LB-WI-M0-05` | P0 | `PROPOSED` | Accept ADR for SQLite library/query layer and migration tooling; transaction and testability requirements are demonstrated. | Threat/storage constraints |
 | `LB-WI-M0-06` | P1 | `PROPOSED` | Prepare and accept, no later than M3 start, the ADR for FSRS implementation/version with reproducible reference vectors and upgrade policy. | Review requirements |
@@ -453,7 +453,7 @@ The [Decision Register](../decisions/DECISION_REGISTER.md) owns final status and
 
 | Decision | Required by | Blocking outcome |
 | --- | --- | --- |
-| Repository/monorepo/module layout and `vocabulary-mvp/` classification | M1 start | Cannot create stable package paths or CI scope |
+| Repository/monorepo/module layout and prototype classification — resolved by [ADR-001](../decisions/ADR-001-Repository-Package-and-Module-Layout.md) | M1 start | Resolved; stable package paths, dependency rules, CI scope, and experiment boundaries are defined |
 | Pilot platform: Android only or Android plus iOS | M1 start | Cannot finalize platform adapters, secure storage, or golden layout |
 | Flutter state management and dependency injection | M1 start | Presentation/application composition remains undefined |
 | SQLite/query/migration stack | M1 start | Persistence walking skeleton cannot begin safely |
@@ -518,15 +518,14 @@ One issue has one primary work-item ID. A pull request may close multiple small 
 
 The next batch is architecture and contract work, not production feature coding:
 
-1. accept repository/module-layout ADR and classify `vocabulary-mvp/`;
-2. resolve the initial Flutter/golden-layout platform decision;
-3. accept Flutter state-management/DI ADR;
-4. accept SQLite/migration ADR;
-5. define the minimum database protection/backup baseline;
-6. accept the domain-event/transactional-outbox ADR;
-7. publish Document 16 application/domain contracts;
-8. add System Context, Module Architecture, and initial Domain ERD canonical diagrams;
-9. review and approve M1 issues, then tag the specification baseline.
+1. resolve the initial Flutter/golden-layout platform decision;
+2. accept Flutter state-management/DI ADR;
+3. accept SQLite/migration ADR;
+4. define the minimum database protection/backup baseline;
+5. accept the domain-event/transactional-outbox ADR;
+6. publish Document 16 application/domain contracts;
+7. add System Context, Module Architecture, and initial Domain ERD canonical diagrams;
+8. review and approve M1 issues, then tag the specification baseline.
 
 The FSRS and evidence-mapping ADRs must be completed before M3; Language Package/data decisions before M2; full security/pilot specifications before their respective release gates.
 
@@ -572,6 +571,7 @@ Run these checks at least at every milestone review:
 - [AI Agent Pipeline](13_AI_Agent_Pipeline.md)
 - [Frontend UX/UI](14_Frontend_UX_UI.md)
 - [Decision Register](../decisions/DECISION_REGISTER.md)
+- [ADR-001 — Repository, Package, and Module Layout](../decisions/ADR-001-Repository-Package-and-Module-Layout.md)
 - [ADR index](../decisions/README.md)
 - [Diagram index](../diagrams/README.md)
 
@@ -579,5 +579,6 @@ Run these checks at least at every milestone review:
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 0.1.2 | 2026-07-19 | Accepted ADR-001, closed LB-WI-M0-03, classified and relocated the vocabulary prototype, and advanced the execution queue. |
 | 0.1.1 | 2026-07-15 | Linked the completed Decision Register, closed work item LB-WI-M0-02, aligned ADR timing with M1/M3 gates, and advanced the proposed execution batch to the first architecture decisions. |
 | 0.1.0 | 2026-07-15 | Initial implementation backlog, requirement catalog, milestone work items, verification catalog, and traceability matrix. |

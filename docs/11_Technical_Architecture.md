@@ -1,9 +1,9 @@
 ---
 title: Technical Architecture
 document_id: LB-DOC-11
-version: 0.2.2
+version: 0.2.3
 status: Draft
-last_updated: 2026-07-15
+last_updated: 2026-07-19
 ---
 
 # Technical Architecture
@@ -93,35 +93,48 @@ Images, audio metadata, local cache, playback/download lifecycle, accessibility 
 
 Client registration, surface type, CapabilitySnapshot, installation identity, platform secure-storage adapter, lifecycle/power signals, and optional audio-capture gateway. Hardware drivers and industrial-device concerns stay outside the shared domain.
 
-## Suggested repository structure
+## Accepted repository structure
+
+Repository, package, dependency, CI, and experiment boundaries are governed by [ADR-001](../decisions/ADR-001-Repository-Package-and-Module-Layout.md). The following ownership/path map is normative. Directories are created only when their approved milestone begins.
 
 ```text
-app/
-├── lib/
-│   ├── bootstrap/
-│   ├── presentation/
-│   ├── application/
-│   ├── domain/
-│   │   ├── knowledge/
-│   │   ├── learning/
-│   │   ├── review/
-│   │   ├── planning/
-│   │   └── exercises/
-│   ├── infrastructure/
-│   │   ├── persistence/
-│   │   ├── ai/
-│   │   ├── language_packages/
-│   │   ├── media/
-│   │   └── secure_storage/
-│   └── shared/
-└── test/
-    ├── unit/
-    ├── integration/
-    ├── widget/
-    └── fixtures/
+LinguaBrain AI/
+├── apps/
+│   ├── mobile/                         # M1 Flutter reference client
+│   └── device/                         # Future; created only after approval
+├── packages/
+│   ├── linguabrain_domain/             # Pure Dart domain model and contracts
+│   ├── linguabrain_application/        # Pure Dart use cases, ports, transactions
+│   ├── linguabrain_language_de/        # First-party German Language Package
+│   ├── linguabrain_language_fa/        # First-party Persian Language Package
+│   ├── linguabrain_persistence_sqlite/ # SQLite repositories, migrations, FTS, outbox
+│   ├── linguabrain_ai/                 # AI orchestration and provider adapters
+│   ├── linguabrain_review_fsrs/        # FSRS scheduler adapter and vectors
+│   ├── linguabrain_media/              # Media cache and playback adapters
+│   ├── linguabrain_platform_flutter/   # Secure storage, lifecycle, capabilities
+│   └── linguabrain_test_support/       # Synthetic fixtures, fakes, contract suites
+├── services/
+│   └── sync_api/                       # Post-MVP FastAPI service
+├── contracts/                          # Future external API/event schemas
+├── experiments/
+│   └── vocabulary-mvp/                 # Python/FastAPI/n8n reference experiment
+├── tooling/                            # Repository checks and developer commands
+├── docs/
+├── decisions/
+├── diagrams/
+├── assets/
+├── README.md
+├── PROJECT_STATUS.md
+├── CHANGELOG.md
+├── LICENSE
+└── .gitignore
 ```
 
-Final framework and state-management selections require ADRs before implementation.
+The domain and application packages are pure Dart. Bounded modules remain named folders inside those coarse-grained packages until a distinct dependency, adapter, test, or runtime boundary justifies extraction. Domain owns aggregate repository contracts required by domain semantics; application owns use-case gateways such as AI, media, secure storage, transaction coordination, event dispatch, and external services. A generic `shared` or `utils` package is prohibited.
+
+The mobile app owns Flutter presentation and composition only. Infrastructure and Language Package implementations depend inward on application ports and domain types. Production packages cannot import `experiments/`; future services cannot become a requirement for offline learning.
+
+Flutter state management, SQLite tooling, FSRS, event/outbox details, and data protection remain governed by their dedicated ADRs.
 
 ## Application use cases
 
@@ -275,7 +288,7 @@ Before M1 work becomes `READY`:
 - SQLite library/ORM and migration tooling.
 - Domain event and transactional outbox approach.
 - Local database encryption/security strategy.
-- Package/module repository layout.
+- Package/module repository layout — [accepted in ADR-001](../decisions/ADR-001-Repository-Package-and-Module-Layout.md).
 
 Before M3 review work becomes `READY`:
 
@@ -289,11 +302,13 @@ Before M3 review work becomes `READY`:
 - `13_AI_Agent_Pipeline.md` — Processing orchestration.
 - `14_Frontend_UX_UI.md` — Presentation behavior.
 - `../decisions/DECISION_REGISTER.md` — Decision ownership, status, and latest safe gates.
+- `../decisions/ADR-001-Repository-Package-and-Module-Layout.md` — Accepted monorepo, dependency, CI, and experiment boundaries.
 
 ## Revision history
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 0.2.3 | 2026-07-19 | Adopted ADR-001's modular monorepo topology, dependency rules, and non-production prototype classification. |
 | 0.2.2 | 2026-07-15 | Aligned required ADRs with their M1 and M3 implementation gates and linked the Decision Register. |
 | 0.2.1 | 2026-07-11 | Added shared-core Client Surface Adapter and capability contract for future dedicated hardware. |
 | 0.2.0 | 2026-07-11 | Cross-document architecture review; resolved domain, validation, scheduling, privacy, and MVP consistency contracts. |
