@@ -1,9 +1,9 @@
 ---
 title: Frontend UX/UI
 document_id: LB-DOC-14
-version: 0.2.1
+version: 0.2.2
 status: Draft
-last_updated: 2026-07-11
+last_updated: 2026-07-20
 ---
 
 # Frontend UX/UI
@@ -23,6 +23,27 @@ The interface should feel like a calm personal learning coach. It exposes contro
 - Treat Persian–German mixed direction as a first-class requirement.
 - Preserve learner progress during offline and failure states.
 - Prefer sustainable sessions over pressure, streak anxiety, or excessive gamification.
+
+## Accepted MVP platform and golden baseline
+
+[ADR-008](../decisions/ADR-008-Initial-Pilot-and-Golden-Layout-Platform.md) makes Android phones the only supported surface in the controlled MVP pilot. iOS is deferred behind a separate re-entry decision; shared presentation/application contracts remain portable and Android-specific behavior stays in the app shell or platform adapter.
+
+The canonical widget-golden fixture uses:
+
+| Property | Baseline |
+| --- | --- |
+| Target behavior | Android adaptive behavior, Material 3; not a substitute for native-device testing |
+| Viewport | `360 × 800` logical pixels, portrait |
+| Device-pixel ratio | `1.0` |
+| Interface | Persian (`fa`), RTL |
+| German content | `de-DE`, explicit LTR/bidi isolation |
+| Theme/text scale | Light, `TextScaler.noScaling` |
+| Test inputs | Fixed clock, synthetic data, settled/disabled animations, versioned `MediaQuery` insets |
+| Fonts | Bundled and explicitly loaded after LB-DEC-050 approves files and licenses |
+
+The canonical bitmap is regression evidence, not the supported-layout boundary. M1 establishes the harness and tests its shell/onboarding/first-item states; each later critical MVP screen passes the same matrix in its owning milestone. The matrix includes `320 × 568`, `412 × 915`, and `800 × 360` logical pixels, versioned `TextScaler.noScaling` and `TextScaler.linear(2.0)` fixtures, mixed RTL/LTR content, and required light/dark states. The app does not cap system text scaling and is not portrait-locked. TalkBack testing at the largest setting in the pinned Android device matrix and Android integration tests remain separate from pixel comparison.
+
+Authoritative bilingual text goldens are not accepted until LB-DEC-050 closes. Before then, the project may build the deterministic harness and use provisional snapshots or non-pixel assertions.
 
 ## Information architecture
 
@@ -289,7 +310,7 @@ Tokens cover typography for Persian and German, spacing, elevation, semantic col
 
 ## Responsive strategy
 
-- Mobile is the MVP design baseline.
+- Android phone is the MVP design and pilot baseline.
 - Tablet uses split views for library/detail where helpful.
 - Desktop is not assumed shipped until keyboard/navigation and window behavior pass acceptance criteria.
 - Learning content width remains readable rather than stretching across large screens.
@@ -320,6 +341,8 @@ With consent, capture completion/failure of flows without raw private learning c
 
 ## Open questions
 
+LB-DEC-053 is resolved by [ADR-008](../decisions/ADR-008-Initial-Pilot-and-Golden-Layout-Platform.md). Its original wording remains below as a historical source question; current status is governed by the Decision Register.
+
 - Should MVP navigation use four tabs plus a central Add action or five equal destinations?
 - Which Persian/German font pairing offers best cross-platform readability and licensing?
 - How much FSRS detail should be visible to advanced users?
@@ -337,6 +360,7 @@ With consent, capture completion/failure of flows without raw private learning c
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 0.2.2 | 2026-07-20 | Adopted the Android-phone pilot and deterministic golden-layout fixture/matrix from ADR-008 while retaining a portable shared UI boundary. |
 | 0.2.1 | 2026-07-11 | Added capability-driven client-surface profiles without changing the mobile MVP. |
 | 0.2.0 | 2026-07-11 | Cross-document architecture review; resolved domain, validation, scheduling, privacy, and MVP consistency contracts. |
 | 0.1.0 | 2026-07-11 | Initial Frontend UX/UI specification. |

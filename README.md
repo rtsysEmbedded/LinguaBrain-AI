@@ -13,6 +13,7 @@ AI may generate examples, explanations, cards, and exercises. The Learning Engin
 ## MVP focus
 
 - German ↔ Persian learning
+- Android-phone controlled MVP pilot
 - German–Persian word and phrase learning for general and professional missions
 - AI-enriched knowledge items and automatic classification
 - Basic knowledge graph and smart decks
@@ -82,7 +83,7 @@ Track current progress and the next verified task in the [Project Status and Del
 
 ## Status
 
-Documents 01–15 remain reviewed drafts. [ADR-001](decisions/ADR-001-Repository-Package-and-Module-Layout.md) is accepted and the repository/package/module layout is defined. The next gate is the initial Flutter/golden-layout platform decision (`LB-DEC-037` and `LB-DEC-053`), followed by ADR-002 and the remaining M1-blocking decisions.
+Documents 01–15 remain reviewed drafts. [ADR-001](decisions/ADR-001-Repository-Package-and-Module-Layout.md) defines the repository boundary, and [ADR-008](decisions/ADR-008-Initial-Pilot-and-Golden-Layout-Platform.md) defines an Android-phone-only pilot and Android golden-layout baseline. The next gate is ADR-002 for Flutter state management and dependency injection (`LB-DEC-055`, `LB-WI-M0-04`).
 
 ## Key resolved contracts
 
@@ -93,3 +94,4 @@ Documents 01–15 remain reviewed drafts. [ADR-001](decisions/ADR-001-Repository
 - German and Persian Language Packages are built-in, first-party MVP components.
 - The shared core is client-surface neutral and can later support a focused dedicated device without forking learner data or learning logic.
 - Production code uses a modular monorepo with pure Dart domain/application packages and thin client shells; the Python vocabulary spike remains a non-production experiment.
+- The controlled MVP pilot targets Android phones only; iOS requires a separate re-entry decision while shared code remains portable.

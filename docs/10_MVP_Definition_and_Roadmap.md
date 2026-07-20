@@ -1,9 +1,9 @@
 ---
 title: MVP Definition and Roadmap
 document_id: LB-DOC-10
-version: 0.2.1
+version: 0.2.2
 status: Draft
-last_updated: 2026-07-11
+last_updated: 2026-07-20
 ---
 
 # MVP Definition and Roadmap
@@ -113,7 +113,7 @@ The MVP implementation remains client-surface neutral: shared domain/application
 
 | Area | MVP choice |
 | --- | --- |
-| Client | Flutter, mobile-first |
+| Client | Flutter, Android-phone pilot; iOS deferred |
 | State management | Selected during Technical Architecture ADR |
 | Local persistence | SQLite with migrations and repository abstraction |
 | Review algorithm | FSRS implementation behind a scheduler interface |
@@ -121,6 +121,19 @@ The MVP implementation remains client-surface neutral: shared domain/application
 | Backend | Not required for local MVP; FastAPI reserved for later sync/services |
 | Audio | Cached TTS or validated media; offline playback |
 | Testing | Unit, integration, widget, migration, and AI contract evaluations |
+
+## Accepted pilot platform baseline
+
+[ADR-008](../decisions/ADR-008-Initial-Pilot-and-Golden-Layout-Platform.md) defines the first controlled pilot and all MVP mobile release gates as Android-phone only.
+
+- The initial Flutter host, distribution, platform QA, privacy/recovery evidence, and release matrix target Android.
+- iOS is not an MVP support claim, build target, or pilot dependency.
+- Shared domain/application packages and presentation contracts remain portable; Android APIs stay behind the app shell or platform adapters.
+- The M1 build baseline is Flutter `3.44.0`, Android `minSdk 24`, `compileSdk 36`, and `targetSdk 36`; release policy is rechecked at each distribution gate.
+- ADR-007 may raise the Android floor for an evidenced security/recovery requirement before private learner data is stored.
+- iOS requires an explicit re-entry decision and its own signing, security, recovery, accessibility, bidi, migration, and device evidence.
+
+The canonical golden-layout fixture is an Android/Material 3 portrait phone at `360 × 800` logical pixels with Persian RTL interface direction and explicit German LTR spans. Companion viewport, text-scale, theme, semantics, and Android device tests prevent this one image from becoming a fixed-layout assumption. Bilingual pixel goldens remain provisional until LB-DEC-050 selects licensed fonts.
 
 ## Delivery milestones
 
@@ -244,6 +257,8 @@ Roadmap candidates require evidence from the MVP and separate specifications.
 
 ## Open questions
 
+LB-DEC-037 is resolved by [ADR-008](../decisions/ADR-008-Initial-Pilot-and-Golden-Layout-Platform.md). Its original wording remains below as a historical source question; current status is governed by the Decision Register.
+
 - Which Flutter platforms are included in the first pilot: Android only or Android plus iOS?
 - Which validated German lexical dataset is available under acceptable licensing?
 - What pilot size and duration can provide meaningful retention evidence?
@@ -261,6 +276,7 @@ Roadmap candidates require evidence from the MVP and separate specifications.
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 0.2.2 | 2026-07-20 | Selected an Android-phone-only MVP pilot and linked the canonical Android golden-layout baseline from ADR-008. |
 | 0.2.1 | 2026-07-11 | Kept dedicated hardware out of MVP while preserving shared-core extension points. |
 | 0.2.0 | 2026-07-11 | Cross-document architecture review; resolved domain, validation, scheduling, privacy, and MVP consistency contracts. |
 | 0.1.0 | 2026-07-11 | Initial MVP definition and delivery roadmap. |

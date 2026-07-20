@@ -14,6 +14,7 @@ Use [ADR_TEMPLATE.md](ADR_TEMPLATE.md) as the starting point for new records. Na
 ## Accepted ADRs
 
 - [ADR-001 — Repository, Package, and Module Layout](ADR-001-Repository-Package-and-Module-Layout.md)
+- [ADR-008 — Initial Pilot and Golden Layout Platform](ADR-008-Initial-Pilot-and-Golden-Layout-Platform.md)
 
 ## Planned ADR queue
 

@@ -1,9 +1,9 @@
 ---
 title: Project Status and Delivery Checklist
 document_id: LB-STATUS
-version: 0.1.3
+version: 0.1.4
 status: Active
-last_updated: 2026-07-19
+last_updated: 2026-07-20
 ---
 
 # Project Status and Delivery Checklist
@@ -25,11 +25,11 @@ This file is the single progress checklist for LinguaBrain AI. It must be update
 | Current phase | M0 — Specification baseline and implementation preparation |
 | Product scope | German–Persian offline-first MVP |
 | Documentation | Documents 01–15 complete as reviewed drafts |
-| Architecture baseline | Reviewed draft series 0.2.x; DOC-11 at 0.2.3; DOC-15 at 0.1.2 |
-| Latest accepted ADR | [ADR-001](decisions/ADR-001-Repository-Package-and-Module-Layout.md) |
+| Architecture baseline | Reviewed drafts; DOC-10/DOC-14 at 0.2.2, DOC-11 at 0.2.3, DOC-15 at 0.1.3 |
+| Latest accepted ADR | [ADR-008](decisions/ADR-008-Initial-Pilot-and-Golden-Layout-Platform.md) |
 | Active Git branch | `main` |
 | Last major architecture review commit | `4ff4da9` |
-| Next primary deliverable | Initial client platform decision — LB-DEC-037 / LB-DEC-053 |
+| Next primary deliverable | [ADR-002](decisions/DECISION_REGISTER.md) — Flutter state management and dependency injection (`LB-DEC-055`, `LB-WI-M0-04`) |
 
 ## Completed foundation
 
@@ -66,6 +66,7 @@ This file is the single progress checklist for LinguaBrain AI. It must be update
 - [x] Document 15 — Implementation Backlog and Requirements Traceability.
 - [x] Review Documents 01–14 for domain, scheduling, validation, privacy, and MVP consistency.
 - [x] Preserve a future dedicated-device path through `ClientSurface` and `CapabilitySnapshot` without adding hardware to MVP scope.
+- [x] Select an Android-phone-only controlled pilot and deterministic Android golden-layout baseline in [ADR-008](decisions/ADR-008-Initial-Pilot-and-Golden-Layout-Platform.md).
 - [ ] Resolve MVP-blocking decisions and promote the approved specification set from `Draft` to a versioned baseline.
 
 ## M0 — Implementation preparation
@@ -82,6 +83,7 @@ This file is the single progress checklist for LinguaBrain AI. It must be update
 ### M0/M1-blocking ADRs
 
 - [x] [ADR-001 — Repository/package/module layout](decisions/ADR-001-Repository-Package-and-Module-Layout.md).
+- [x] [ADR-008 — Initial Android pilot and golden-layout platform](decisions/ADR-008-Initial-Pilot-and-Golden-Layout-Platform.md).
 - [ ] ADR — Flutter state management and dependency injection.
 - [ ] ADR — SQLite library, ORM/query layer, and migration tooling.
 - [ ] ADR — Domain events and transactional outbox strategy.
@@ -111,7 +113,7 @@ This file is the single progress checklist for LinguaBrain AI. It must be update
 
 ## M1 — Domain walking skeleton
 
-- [ ] Create the Flutter application shell.
+- [ ] Create the Android Flutter application shell.
 - [ ] Establish domain, application, infrastructure, and presentation boundaries.
 - [ ] Add the first SQLite schema and migration runner.
 - [ ] Implement `KnowledgeItem` and its repository contract.
@@ -229,6 +231,7 @@ Complete these actions with every milestone or architectural change:
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 0.1.4 | 2026-07-20 | Accepted ADR-008, selected the Android-only pilot and golden baseline, and advanced the next gate to ADR-002. |
 | 0.1.3 | 2026-07-19 | Accepted ADR-001, established the modular monorepo boundary, relocated the vocabulary prototype under experiments, and advanced the next gate to the initial client platform decision. |
 | 0.1.2 | 2026-07-15 | Completed the 56-entry Decision Register, classified every source question, aligned ADRs with their milestone gates, and advanced the next task to ADR-001. |
 | 0.1.1 | 2026-07-15 | Completed Document 15 and linked requirements to milestones, backlog work, acceptance evidence, and issue governance. |
