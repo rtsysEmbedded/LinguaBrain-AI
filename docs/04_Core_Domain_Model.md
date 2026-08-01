@@ -1,9 +1,9 @@
 ---
 title: Core Domain Model
 document_id: LB-DOC-04
-version: 0.2.1
+version: 0.2.2
 status: Draft
-last_updated: 2026-07-11
+last_updated: 2026-07-21
 ---
 
 # Core Domain Model
@@ -26,7 +26,7 @@ This decision avoids rebuilding the core when the learner wants to study a phras
 
 The core domain defines business meaning and invariants. It does not define:
 
-- Flutter widgets or screen state;
+- SwiftUI views, navigation, or presentation state;
 - SQL tables or ORM-specific types;
 - a particular AI provider or prompt implementation;
 - a particular synchronization backend;
@@ -431,6 +431,7 @@ The initial domain implementation is acceptable when:
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 0.2.2 | 2026-07-21 | Replaced the retired Flutter boundary example with the native SwiftUI presentation boundary; domain semantics remain framework-independent. |
 | 0.2.1 | 2026-07-11 | Added platform-neutral ClientContext and CapabilitySnapshot value objects. |
 | 0.2.0 | 2026-07-11 | Cross-document architecture review; resolved domain, validation, scheduling, privacy, and MVP consistency contracts. |
 | 0.1.0 | 2026-07-10 | Initial core domain model specification. |

@@ -1,18 +1,20 @@
 ---
 title: Database Schema and Persistence
 document_id: LB-DOC-12
-version: 0.2.1
+version: 0.3.0
 status: Draft
-last_updated: 2026-07-11
+last_updated: 2026-07-21
 ---
 
 # Database Schema and Persistence
 
 ## Purpose
 
-This document defines the MVP local persistence model, integrity rules, indexing, migrations, backup/export behavior, and future synchronization readiness.
+This document defines the MVP local persistence model, integrity rules, indexing, migrations, backup/export behavior, and future synchronization readiness for the native Apple clients.
 
-SQLite is the local source of truth. Domain repositories isolate the application from SQL and preserve a future path to PostgreSQL or another storage implementation.
+Each iPhone, iPad, or Mac installation has a local source of truth behind domain repository and transaction protocols. The relational/table vocabulary below is the normative logical contract. ADR-003 decides whether its first physical adapter uses SwiftData/Core Data, direct SQLite, GRDB, or another native Swift stack. No SwiftUI view or `ModelContext` may become the domain repository boundary.
+
+Cross-device synchronization is not part of the MVP. The same schema and stable IDs on several Apple devices do not imply automatic continuity; CloudKit adoption requires a later sync, conflict, privacy, migration, and recovery decision.
 
 ## Principles
 
@@ -50,11 +52,11 @@ erDiagram
 
 - IDs: lowercase UUID text or native supported UUID representation.
 - Timestamps: UTC ISO-8601 or integer epoch with one project-wide convention.
-- Booleans: constrained integer values in SQLite.
+- Booleans: native Boolean values mapped consistently by the selected store.
 - Enums: constrained text values plus application enum validation.
 - `created_at` is immutable; `updated_at` changes on approved revision.
 - Each mutable aggregate includes a `version` for optimistic concurrency.
-- Foreign keys are enabled on every connection.
+- Equivalent referential-integrity checks are enforced by the selected store and domain transaction layer; direct SQLite adapters enable foreign keys on every connection.
 
 ## Core tables
 
@@ -215,12 +217,12 @@ Long AI/network work never holds a database transaction open.
 
 ## Search
 
-MVP uses SQLite FTS for titles, lemmas, translations, and approved textual content. Search indexing consumes domain events. Persian normalization and German canonicalization occur before indexing; raw and normalized forms may both be retained.
+The MVP requires indexed search for titles, lemmas, translations, and approved textual content. ADR-003 selects the physical search adapter (for example SQLite FTS or a native index). Search indexing consumes domain events. Persian normalization and German canonicalization occur before indexing; raw and normalized forms may both be retained.
 
 ## Migrations
 
 - Every schema change has a monotonically ordered migration.
-- Migrations run inside a transaction when SQLite permits.
+- Migrations run atomically when the selected store permits and use a recoverable staged procedure otherwise.
 - A pre-migration backup is required for destructive/transformative changes.
 - CI tests upgrade from representative previous database versions.
 - Application startup refuses unsafe downgrade and provides recovery guidance.
@@ -249,15 +251,15 @@ MVP uses SQLite FTS for titles, lemmas, translations, and approved textual conte
 
 ## Security
 
-- API key material stays in platform secure storage.
-- Database protection/encryption choice requires an ADR based on platform threat model.
+- API key material stays in Keychain and never in the learner store.
+- Store-file protection, encryption, Keychain accessibility, iOS/iPadOS Data Protection, macOS App Sandbox, backups, recovery, and lost-key behavior require ADR-007 based on the Apple-platform threat model.
 - Logs never include raw secrets or unrestricted response payloads.
-- Parameterized queries are mandatory.
+- Parameterized queries are mandatory for SQL-backed adapters; equivalent typed/predicate-safe APIs are mandatory for other adapters.
 - Imported JSON is schema-validated with size/depth limits.
 
 ## Future synchronization
 
-Stable UUIDs, append-only events, versions, tombstones, and the outbox enable delta sync. LearningEvents are never silently discarded. User edits outrank AI enrichment; conflict resolution is domain-specific and auditable.
+Stable UUIDs, append-only events, versions, tombstones, and the outbox enable future delta sync. SwiftData/CloudKit convenience does not override these domain conflict rules. LearningEvents are never silently discarded; user edits outrank AI enrichment, and conflict resolution remains domain-specific and auditable.
 
 ## Acceptance criteria
 
@@ -270,6 +272,8 @@ Stable UUIDs, append-only events, versions, tombstones, and the outbox enable de
 - Export contains no API keys or secret references.
 
 ## Open questions
+
+The first source question below is preserved verbatim for traceability. LB-DEC-041 is superseded by LB-DEC-059, which asks the equivalent native Swift persistence/query/migration question and is owned by the revised ADR-003.
 
 - Which Flutter SQLite library and migration framework best satisfy transaction/testing needs?
 - Is SQLCipher justified for MVP platforms, and how will key recovery work?
@@ -287,6 +291,7 @@ Stable UUIDs, append-only events, versions, tombstones, and the outbox enable de
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 0.3.0 | 2026-07-21 | Recast the schema as a native Apple local-store contract, deferred SwiftData/SQLite selection to ADR-003, and added Apple protection and no-implied-sync boundaries. |
 | 0.2.1 | 2026-07-11 | Added client installation and immutable capability-snapshot persistence contracts. |
 | 0.2.0 | 2026-07-11 | Cross-document architecture review; resolved domain, validation, scheduling, privacy, and MVP consistency contracts. |
 | 0.1.0 | 2026-07-11 | Initial Database Schema and Persistence specification. |

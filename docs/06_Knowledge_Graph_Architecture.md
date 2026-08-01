@@ -1,9 +1,9 @@
 ---
 title: Knowledge Graph Architecture
 document_id: LB-DOC-06
-version: 0.2.0
+version: 0.2.1
 status: Draft
-last_updated: 2026-07-11
+last_updated: 2026-07-21
 ---
 
 # Knowledge Graph Architecture
@@ -201,7 +201,7 @@ Example: `Bank` may represent a financial institution or a bench. Sense qualifie
 
 ### MVP
 
-Use SQLite relational tables for nodes (`knowledge_items`) and edges (`knowledge_relations`) with indexes on:
+Represent nodes (`knowledge_items`) and edges (`knowledge_relations`) through the logical store contract defined in Document 12. The adapter selected by ADR-003 must provide efficient indexes or equivalent query support for:
 
 - `source_item_id`;
 - `target_item_id`;
@@ -209,11 +209,11 @@ Use SQLite relational tables for nodes (`knowledge_items`) and edges (`knowledge
 - `validation_state`;
 - language/domain qualifiers where queried frequently.
 
-Recursive queries or application-level bounded traversal are sufficient for MVP graph depth.
+Recursive queries, fetch-based traversal, or application-level bounded traversal are sufficient for MVP graph depth. This document does not preselect SwiftData, Core Data, direct SQLite, GRDB, or another physical adapter.
 
 ### Future migration
 
-The domain API must remain independent of SQLite. If query scale or traversal complexity justifies it, a graph-oriented store may be introduced behind the same repository interface. Migration must preserve IDs, provenance, validation state, and history.
+The domain API must remain independent of the selected physical store. If query scale or traversal complexity justifies it, a graph-oriented store may be introduced behind the same repository interface. Migration must preserve IDs, provenance, validation state, and history.
 
 ## Graph quality metrics
 
@@ -254,5 +254,6 @@ The initial graph capability is acceptable when:
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 0.2.1 | 2026-07-21 | Made graph persistence neutral and delegated the native Swift adapter choice to ADR-003. |
 | 0.2.0 | 2026-07-11 | Cross-document architecture review; resolved domain, validation, scheduling, privacy, and MVP consistency contracts. |
 | 0.1.0 | 2026-07-10 | Initial Knowledge Graph Architecture specification. |

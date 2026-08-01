@@ -1,9 +1,9 @@
 ---
 title: MVP Definition and Roadmap
 document_id: LB-DOC-10
-version: 0.2.2
+version: 0.3.0
 status: Draft
-last_updated: 2026-07-20
+last_updated: 2026-07-21
 ---
 
 # MVP Definition and Roadmap
@@ -99,41 +99,48 @@ flowchart TD
 - Automatic pronunciation scoring.
 - Complete OCR/PDF ingestion.
 - Multi-device cloud sync and accounts.
+- Cross-device synchronization between the first-class Apple applications; each application uses an independent local learner store until a post-MVP sync design is accepted.
 - Social feeds, leaderboards, marketplace, or shared public decks.
 - Multiple target languages.
 - Fully general Learning OS support beyond the language-domain contracts.
 - Advanced Level 1 image curriculum authoring.
 - Dedicated-device hardware, meeting recording, live translation, and device manufacturing.
+- Flutter, Dart, Android, and Web application targets. Adding any of them requires a new platform ADR and its own security, accessibility, migration, recovery, and release evidence.
 
 These are postponed, not silently included in MVP estimates.
 
-The MVP implementation remains client-surface neutral: shared domain/application contracts and capability-aware planning must allow a later dedicated device without changing learner identity, KnowledgeItems, LearningEvents, ReviewUnits, or FSRS history.
+The shared domain/application contracts remain client-surface neutral even though the shipped MVP clients are native Apple applications. Capability-aware planning must allow a later dedicated device or newly accepted application target without changing learner identity, KnowledgeItems, LearningEvents, ReviewUnits, or FSRS history.
 
 ## Technology baseline
 
 | Area | MVP choice |
 | --- | --- |
-| Client | Flutter, Android-phone pilot; iOS deferred |
-| State management | Selected during Technical Architecture ADR |
-| Local persistence | SQLite with migrations and repository abstraction |
+| Client | Native SwiftUI applications for iOS/iPadOS 27 and macOS 27; iPhone is the primary controlled-pilot surface |
+| Language and UI framework | Swift 6.4 and SwiftUI |
+| Build toolchain | Xcode 27 beta is provisional during development; stable Xcode 27 and final OS SDKs are release gates |
+| Package/module layout | Swift Package Manager topology accepted in [ADR-010](../decisions/ADR-010-Swift-Package-and-Module-Layout.md) |
+| State, navigation, and dependency composition | Defined by planned `ADR-011-SwiftUI-State-Observation-Navigation-and-Dependency-Composition.md` before the native shell starts |
+| Local persistence | Native local-store adapter selected by ADR-003, with migrations and repository/transaction abstraction |
 | Review algorithm | FSRS implementation behind a scheduler interface |
 | AI integration | Provider adapters; BYOK and OpenAI-compatible local endpoint |
 | Backend | Not required for local MVP; FastAPI reserved for later sync/services |
 | Audio | Cached TTS or validated media; offline playback |
-| Testing | Unit, integration, widget, migration, and AI contract evaluations |
+| Testing | Swift Testing/XCTest, repository and integration tests, SwiftUI view/snapshot tests, XCUITest, migration/recovery tests, and AI contract evaluations |
 
 ## Accepted pilot platform baseline
 
-[ADR-008](../decisions/ADR-008-Initial-Pilot-and-Golden-Layout-Platform.md) defines the first controlled pilot and all MVP mobile release gates as Android-phone only.
+[ADR-009](../decisions/ADR-009-Native-Apple-Client-and-Platform-Baseline.md) supersedes the earlier Android/Flutter pilot decision and establishes the native Apple MVP baseline.
 
-- The initial Flutter host, distribution, platform QA, privacy/recovery evidence, and release matrix target Android.
-- iOS is not an MVP support claim, build target, or pilot dependency.
-- Shared domain/application packages and presentation contracts remain portable; Android APIs stay behind the app shell or platform adapters.
-- The M1 build baseline is Flutter `3.44.0`, Android `minSdk 24`, `compileSdk 36`, and `targetSdk 36`; release policy is rechecked at each distribution gate.
-- ADR-007 may raise the Android floor for an evidenced security/recovery requirement before private learner data is stored.
-- iOS requires an explicit re-entry decision and its own signing, security, recovery, accessibility, bidi, migration, and device evidence.
+- iOS/iPadOS 27 and macOS 27 are first-class, local-only MVP application surfaces.
+- iPhone is the primary controlled-pilot surface and the primary source of product-performance and learning-evidence measurements. iPad and macOS remain release-supported companion surfaces, not deferred ports.
+- The iPad experience ships from the universal iOS/iPadOS application with adaptive layouts. The macOS application is a native, first-class local companion using the same domain/application contracts.
+- Each application maintains an independent local learner store. “Companion” does not imply account, cloud, or cross-device synchronization; supported export/import is the only transfer path until post-MVP sync is separately designed.
+- Swift 6.4 and SwiftUI are the implementation baseline. [ADR-010](../decisions/ADR-010-Swift-Package-and-Module-Layout.md) owns the Swift Package Manager topology and framework-dependency boundaries.
+- Xcode 27 beta and beta OS SDKs are provisional development inputs. Builds, screenshots, snapshots, performance numbers, and platform behavior observed with beta tooling are non-authoritative until rerun with the stable/GM Xcode 27 toolchain and final iOS/iPadOS/macOS 27 SDKs.
+- Pilot enrollment and release require a clean stable-toolchain build plus a complete rerun of automated tests, approved snapshots, accessibility checks, security/privacy checks, migrations, backup/restore, and recovery scenarios on all first-class surfaces.
+- Flutter, Dart, Android, and Web are not active MVP targets. A later target requires a new ADR and complete target-specific verification rather than an implied portability claim.
 
-The canonical golden-layout fixture is an Android/Material 3 portrait phone at `360 × 800` logical pixels with Persian RTL interface direction and explicit German LTR spans. Companion viewport, text-scale, theme, semantics, and Android device tests prevent this one image from becoming a fixed-layout assumption. Bilingual pixel goldens remain provisional until LB-DEC-050 selects licensed fonts.
+Document 14 owns the adaptive-layout and SwiftUI snapshot matrix. Snapshot fixtures created before the stable Xcode 27 toolchain and before LB-DEC-050 approves licensed bilingual fonts are explicitly provisional and cannot satisfy the final visual release gate.
 
 ## Delivery milestones
 
@@ -145,7 +152,7 @@ The canonical golden-layout fixture is an Android/Material 3 portrait phone at `
 
 ### M1 — Domain walking skeleton
 
-- Flutter shell and local database.
+- Native Swift/SwiftUI iOS/iPadOS and macOS shells with local databases.
 - KnowledgeItem, learner profile, LearningEvent, and repository interfaces.
 - One manual German word can be stored and retrieved offline.
 
@@ -229,6 +236,8 @@ The MVP cannot enter pilot until:
 - platform threat model, database/backup protection, recovery behavior, cloud-consent moment, and redaction tests are approved;
 - raw import/intermediate-artifact retention defaults and verified deletion tests are implemented;
 - first-run and first-item flows pass with and without AI/network access;
+- iPhone, iPad, and macOS first-class surfaces pass their required local-only build, adaptive-layout, accessibility, persistence, migration, and recovery matrices;
+- the release candidate is built with stable/GM Xcode 27 and final iOS/iPadOS/macOS 27 SDKs, with all provisional beta-era evidence rerun and approved;
 - pilot protocol and stop/go thresholds are preregistered before pilot data collection.
 
 ## Post-MVP roadmap
@@ -257,7 +266,7 @@ Roadmap candidates require evidence from the MVP and separate specifications.
 
 ## Open questions
 
-LB-DEC-037 is resolved by [ADR-008](../decisions/ADR-008-Initial-Pilot-and-Golden-Layout-Platform.md). Its original wording remains below as a historical source question; current status is governed by the Decision Register.
+LB-DEC-037 is `SUPERSEDED` by LB-DEC-057 and the native Apple baseline in [ADR-009](../decisions/ADR-009-Native-Apple-Client-and-Platform-Baseline.md). Its original wording remains below as a historical source question; current status is governed by the Decision Register.
 
 - Which Flutter platforms are included in the first pilot: Android only or Android plus iOS?
 - Which validated German lexical dataset is available under acceptable licensing?
@@ -271,11 +280,15 @@ LB-DEC-037 is resolved by [ADR-008](../decisions/ADR-008-Initial-Pilot-and-Golde
 - `09_Language_Independence_Framework.md` — MVP German/Persian packages.
 - `11_Technical_Architecture.md` — Implementation boundaries.
 - `14_Frontend_UX_UI.md` — MVP screens and journeys.
+- `../decisions/ADR-009-Native-Apple-Client-and-Platform-Baseline.md` — Supported Apple surfaces, pilot priority, and stable-toolchain release gate.
+- `../decisions/ADR-010-Swift-Package-and-Module-Layout.md` — Swift Package Manager and module topology.
+- `ADR-011-SwiftUI-State-Observation-Navigation-and-Dependency-Composition.md` — Planned SwiftUI composition decision; file is created when that decision is proposed.
 
 ## Revision history
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 0.3.0 | 2026-07-21 | Replaced the superseded Android/Flutter pilot with native Swift 6.4/SwiftUI first-class iOS/iPadOS 27 and macOS 27 surfaces, an iPhone-primary pilot, independent local stores, and a stable Xcode 27 release gate. |
 | 0.2.2 | 2026-07-20 | Selected an Android-phone-only MVP pilot and linked the canonical Android golden-layout baseline from ADR-008. |
 | 0.2.1 | 2026-07-11 | Kept dedicated hardware out of MVP while preserving shared-core extension points. |
 | 0.2.0 | 2026-07-11 | Cross-document architecture review; resolved domain, validation, scheduling, privacy, and MVP consistency contracts. |

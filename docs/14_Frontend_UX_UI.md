@@ -1,9 +1,9 @@
 ---
 title: Frontend UX/UI
 document_id: LB-DOC-14
-version: 0.2.2
+version: 0.3.0
 status: Draft
-last_updated: 2026-07-20
+last_updated: 2026-07-21
 ---
 
 # Frontend UX/UI
@@ -26,24 +26,36 @@ The interface should feel like a calm personal learning coach. It exposes contro
 
 ## Accepted MVP platform and golden baseline
 
-[ADR-008](../decisions/ADR-008-Initial-Pilot-and-Golden-Layout-Platform.md) makes Android phones the only supported surface in the controlled MVP pilot. iOS is deferred behind a separate re-entry decision; shared presentation/application contracts remain portable and Android-specific behavior stays in the app shell or platform adapter.
+[ADR-009](../decisions/ADR-009-Native-Apple-Client-and-Platform-Baseline.md) supersedes the Android/Flutter pilot and makes iOS/iPadOS 27 and macOS 27 first-class, local-only MVP surfaces. iPhone is the primary controlled-pilot and evidence surface; iPad and macOS are release-supported companion surfaces with independent local learner stores. The UI is implemented in Swift 6.4 and SwiftUI. Flutter, Dart, Android, and Web are not active MVP targets.
 
-The canonical widget-golden fixture uses:
+Xcode 27 beta and the beta OS SDKs are provisional development inputs. The canonical SwiftUI snapshot fixture is:
 
 | Property | Baseline |
 | --- | --- |
-| Target behavior | Android adaptive behavior, Material 3; not a substitute for native-device testing |
-| Viewport | `360 × 800` logical pixels, portrait |
-| Device-pixel ratio | `1.0` |
+| Target behavior | Native SwiftUI on iOS 27; deterministic regression evidence, not a substitute for device testing |
+| Device and orientation | iPhone 17 Pro simulator, portrait; exact runtime, build, and rendered metrics are pinned only after GM |
 | Interface | Persian (`fa`), RTL |
 | German content | `de-DE`, explicit LTR/bidi isolation |
-| Theme/text scale | Light, `TextScaler.noScaling` |
-| Test inputs | Fixed clock, synthetic data, settled/disabled animations, versioned `MediaQuery` insets |
+| Appearance and text | Light appearance, default Dynamic Type size (`large`) |
+| Test inputs | Fixed clock, synthetic data, deterministic safe-area/environment values, disabled animations |
 | Fonts | Bundled and explicitly loaded after LB-DEC-050 approves files and licenses |
+| Toolchain | Swift 6.4 with Xcode 27 beta; provisional until the stable/GM toolchain and final SDKs are available |
 
-The canonical bitmap is regression evidence, not the supported-layout boundary. M1 establishes the harness and tests its shell/onboarding/first-item states; each later critical MVP screen passes the same matrix in its owning milestone. The matrix includes `320 × 568`, `412 × 915`, and `800 × 360` logical pixels, versioned `TextScaler.noScaling` and `TextScaler.linear(2.0)` fixtures, mixed RTL/LTR content, and required light/dark states. The app does not cap system text scaling and is not portrait-locked. TalkBack testing at the largest setting in the pinned Android device matrix and Android integration tests remain separate from pixel comparison.
+The canonical image is not the supported-layout boundary. M1 establishes the native view/snapshot harness for the shell, onboarding, and first-item flow; each later critical screen passes the applicable matrix in its owning milestone:
 
-Authoritative bilingual text goldens are not accepted until LB-DEC-050 closes. Before then, the project may build the deterministic harness and use provisional snapshots or non-pixel assertions.
+| Surface or dimension | Required coverage |
+| --- | --- |
+| iPhone | Compact width at a small supported window, the canonical reference window, a large phone window, and landscape |
+| iPad | Compact and regular horizontal size classes, relevant vertical size classes, portrait/landscape, Split View, and representative resizable-window widths |
+| macOS | Minimum supported, reference, and large resizable windows; window restoration is tested separately |
+| Text | Default through accessibility Dynamic Type categories without app-defined caps; essential actions and answers must remain usable |
+| Appearance and language | Light/dark, Persian RTL, German LTR, and mixed bidi content |
+| State | Loading, empty, offline, error, proposal warning, long content, and restored-session states |
+| Accessibility | VoiceOver on every first-class surface; XCUITest and simulator/device checks remain separate from pixel comparison |
+
+iPad layouts respond to available space and size classes rather than device names. macOS layouts additionally verify keyboard focus, pointer/hover and context behavior, menu commands, documented shortcuts, resizable windows, and window restoration. iPad keyboard and pointer behavior are tested where supported. Snapshot tests do not replace VoiceOver, keyboard, pointer, localization, integration, or physical-device evidence.
+
+All snapshots generated with Xcode 27 beta or beta SDKs are provisional. Authoritative bilingual snapshots are not accepted until LB-DEC-050 closes and are not release evidence until regenerated and reviewed under stable/GM Xcode 27 with final iOS/iPadOS/macOS 27 SDKs.
 
 ## Information architecture
 
@@ -62,7 +74,7 @@ flowchart TD
     SETTINGS --> LANG[Language & Mission]
 ```
 
-Primary mobile navigation:
+Primary iPhone navigation:
 
 1. Today
 2. Library
@@ -71,6 +83,8 @@ Primary mobile navigation:
 5. Settings
 
 Review/session UI is a focused flow outside normal tab navigation.
+
+On iPad, the same information architecture may adapt to a sidebar and split view at regular width while preserving a compact-width path equivalent to iPhone. On macOS, a native sidebar, toolbar, menus, commands, keyboard shortcuts, and multiple/resizable window behavior expose the same application commands without imitating a phone tab bar.
 
 ## Onboarding
 
@@ -272,11 +286,11 @@ Font scale, high contrast, dark mode, reduced motion, dyslexia-friendly option w
 
 ## Accessibility requirements
 
-- All actions have semantic labels and logical focus order.
+- All actions have accessibility labels, values, hints where necessary, and logical focus order for VoiceOver on iPhone, iPad, and macOS.
 - Touch targets meet platform guidance.
 - Color is never the only indicator of correctness or validation state.
-- Dynamic text does not truncate essential answers.
-- Keyboard navigation is supported on desktop/tablet targets where shipped.
+- Dynamic Type on iPhone and iPad does not truncate, overlap, or hide essential answers/actions, including accessibility categories; the application does not impose a text-size cap.
+- Keyboard navigation, visible focus, pointer behavior, menus, commands, and shortcuts are first-class macOS acceptance requirements and are verified on iPad where the input hardware is supported.
 - Audio content has transcript or text equivalent.
 - Animations honor reduced-motion settings.
 
@@ -310,19 +324,22 @@ Tokens cover typography for Persian and German, spacing, elevation, semantic col
 
 ## Responsive strategy
 
-- Android phone is the MVP design and pilot baseline.
-- Tablet uses split views for library/detail where helpful.
-- Desktop is not assumed shipped until keyboard/navigation and window behavior pass acceptance criteria.
+- iPhone is the primary controlled-pilot and UX-evidence surface.
+- iPad is a first-class MVP surface. Compact widths follow the iPhone hierarchy; regular widths use adaptive SwiftUI navigation, sidebars, inspectors, and split views where they improve comprehension.
+- macOS is a first-class local companion. It uses native window, sidebar, toolbar, menu, keyboard, focus, pointer, and restoration conventions rather than a stretched mobile layout.
+- Layout decisions use available SwiftUI environment values, size classes where applicable, and window size rather than hard-coded device-name checks.
 - Learning content width remains readable rather than stretching across large screens.
 
 ## Client-surface profiles
 
 The shared UX state and application commands are independent of the rendering surface. Each client profile declares display class, touch/keyboard/physical controls, microphone, speaker/headset, connectivity, and locally available services.
 
-- Mobile remains the MVP reference surface.
+- Native iPhone, iPad, and macOS profiles are first-class MVP surfaces; iPhone remains the primary pilot reference.
+- Each Apple application uses an independent local learner store. A companion surface does not imply cloud or cross-device synchronization; export/import is the only supported transfer path until post-MVP sync is accepted.
 - A future dedicated device may expose a reduced focus-first navigation (Learn, Translate, Note) while using the same plans, ReviewUnits, events, and learner data.
 - Unsupported activities are hidden or replaced before session start; the UI never offers recording, playback, typing, or local inference that the active CapabilitySnapshot cannot provide.
 - Recording-capable surfaces require explicit start action, unmistakable active indicator, stop/delete controls, and consent guidance. Detailed device interaction and industrial design belong to separate post-MVP specifications.
+- Flutter, Dart, Android, and Web client profiles are future candidates only and require a new platform ADR plus target-specific UX, accessibility, security, persistence, and recovery evidence.
 
 ## Analytics and usability testing
 
@@ -338,10 +355,14 @@ With consent, capture completion/failure of flows without raw private learning c
 - Unverified content is clearly distinguishable and editable.
 - Every recommendation exposes a concise rationale.
 - Critical screens support dynamic text and non-color status cues.
+- Critical flows pass the required iPhone, iPad size-class/window, and macOS resizable-window matrices.
+- VoiceOver can complete onboarding, first-item approval, review, plan explanation, export, and deletion on every first-class surface.
+- macOS critical flows are operable with keyboard navigation and commands; pointer/context behavior and window restoration are verified.
+- All beta-era snapshots are regenerated and approved with stable/GM Xcode 27 and final OS SDKs before release.
 
 ## Open questions
 
-LB-DEC-053 is resolved by [ADR-008](../decisions/ADR-008-Initial-Pilot-and-Golden-Layout-Platform.md). Its original wording remains below as a historical source question; current status is governed by the Decision Register.
+LB-DEC-053 remains `DECIDED`, with its native Apple snapshot baseline now governed by [ADR-009](../decisions/ADR-009-Native-Apple-Client-and-Platform-Baseline.md); ADR-008 is preserved only as superseded history. Its original wording remains below as a historical source question.
 
 - Should MVP navigation use four tabs plus a central Add action or five equal destinations?
 - Which Persian/German font pairing offers best cross-platform readability and licensing?
@@ -355,11 +376,15 @@ LB-DEC-053 is resolved by [ADR-008](../decisions/ADR-008-Initial-Pilot-and-Golde
 - `10_MVP_Definition_and_Roadmap.md` — Required MVP journeys.
 - `11_Technical_Architecture.md` — Presentation/application boundaries.
 - `13_AI_Agent_Pipeline.md` — Approval preview and import states.
+- `../decisions/ADR-009-Native-Apple-Client-and-Platform-Baseline.md` — First-class surfaces, pilot priority, and stable-toolchain release gate.
+- `../decisions/ADR-010-Swift-Package-and-Module-Layout.md` — Shared Swift package and app-target boundaries.
+- `ADR-011-SwiftUI-State-Observation-Navigation-and-Dependency-Composition.md` — Planned SwiftUI state, navigation, and composition decision; file is created when that decision is proposed.
 
 ## Revision history
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 0.3.0 | 2026-07-21 | Replaced the superseded Android/Flutter baseline with native SwiftUI first-class iPhone, iPad, and macOS adaptive UX, accessibility/input matrices, provisional beta snapshots, and a stable Xcode 27 release gate. |
 | 0.2.2 | 2026-07-20 | Adopted the Android-phone pilot and deterministic golden-layout fixture/matrix from ADR-008 while retaining a portable shared UI boundary. |
 | 0.2.1 | 2026-07-11 | Added capability-driven client-surface profiles without changing the mobile MVP. |
 | 0.2.0 | 2026-07-11 | Cross-document architecture review; resolved domain, validation, scheduling, privacy, and MVP consistency contracts. |

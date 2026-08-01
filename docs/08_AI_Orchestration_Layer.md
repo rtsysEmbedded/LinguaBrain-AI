@@ -1,9 +1,9 @@
 ---
 title: AI Orchestration Layer
 document_id: LB-DOC-08
-version: 0.2.1
+version: 0.3.0
 status: Draft
-last_updated: 2026-07-11
+last_updated: 2026-07-21
 ---
 
 # AI Orchestration Layer
@@ -26,8 +26,10 @@ flowchart LR
     ORCH --> CTX[Context Builder]
     ORCH --> PM[Prompt Manager]
     ORCH --> MR[Model Router]
+    MR --> AF[Apple Foundation Models Adapter]
     MR --> CL[Cloud Provider Adapter]
-    MR --> LO[Local Model Adapter]
+    MR --> LO[Local/Network Model Adapter]
+    AF --> VAL[Output Validator]
     CL --> VAL[Output Validator]
     LO --> VAL
     VAL --> CACHE[Validated Content Cache]
@@ -42,7 +44,7 @@ flowchart LR
 | Context Builder | Selects the minimum safe learner/content context needed for a task. |
 | Prompt Manager | Stores versioned templates and controlled variables outside application code. |
 | Model Router | Selects a compatible provider/model based on capability, privacy, cost, and latency. |
-| Provider Adapter | Normalizes OpenAI, Claude, Gemini, Ollama, LM Studio, and future APIs. |
+| Provider Adapter | Normalizes Apple Foundation Models, user-selected cloud providers, OpenAI-compatible local endpoints, and future APIs. |
 | Validator | Enforces schema, linguistic checks, duplicate checks, and policy constraints. |
 | Cache Manager | Reuses validated results and prevents duplicate requests. |
 | Usage Meter | Records token/request usage, latency, failures, and estimated cost. |
@@ -94,9 +96,21 @@ Routing considers:
 - task quality requirements.
 - active ClientContext capabilities, including on-client ASR/TTS/model availability and current connectivity.
 
-Execution targets are abstract (`ON_CLIENT`, `LOCAL_NETWORK`, `CLOUD`) rather than tied to a phone or specific board. The same task contract can therefore move between app, dedicated device, local server, and cloud without changing domain logic.
+It also checks model/translation/speech locale support, installed assets, Apple Intelligence device eligibility, region, model readiness, and whether the learner has consented to a provider that sends content off-device.
 
-The initial MVP supports Bring Your Own Key cloud providers and OpenAI-compatible local endpoints. The core must not depend on a named provider SDK.
+Execution targets are abstract (`ON_DEVICE`, `PRIVATE_CLOUD_COMPUTE`, `LOCAL_NETWORK`, `THIRD_PARTY_CLOUD`) rather than encoded as educational logic. The same task contract can therefore select an Apple model, a configured local endpoint, or a cloud provider without changing the Learning Engine.
+
+The native OS 27 clients prefer an eligible Apple on-device model when it satisfies the task and language contract. Bring Your Own Key cloud providers and OpenAI-compatible local endpoints remain required fallbacks, especially for German–Persian tasks. The application/domain core must not depend on a named provider SDK.
+
+## Native Apple intelligence profile
+
+The Apple adapter uses the Foundation Models framework behind LinguaBrain-owned provider protocols. `SystemLanguageModel.availability`, `supportsLocale`, declared capabilities, context size, and model version are recorded before execution. The OS model can change during system updates, so prompt evaluations and cache/provenance keys include the effective model/OS generation.
+
+Foundation Models does not currently make Persian a guaranteed supported language. German–Persian generation, explanation, and translation therefore cannot depend exclusively on `SystemLanguageModel` or the Translation framework. Unsupported language/pair, ineligible hardware, unavailable region, missing assets, or a model-not-ready state selects a validated external/local provider or the no-AI path.
+
+Apple's OS 27 `LanguageModel` protocol may unify system, Private Cloud Compute, or custom model adapters inside the Apple infrastructure module, but it is still a beta API. LinguaBrain keeps its own stable `AIProvider` and task/result contracts so an SDK change cannot leak into domain or learning policy.
+
+Speech transcription is a separate capability gateway implemented with `SpeechAnalyzer`/`SpeechTranscriber` where the requested locale and assets are available. Translation uses runtime language-pair availability checks. Neither speech nor translation output becomes canonical knowledge without the normal proposal, validation, and learner-approval pipeline.
 
 ## Validation and promotion
 
@@ -142,15 +156,18 @@ On network failure, timeout, quota exhaustion, or invalid output:
 
 ## Security and privacy
 
-- API keys reside only in secure platform storage and are excluded from logs, exports, and normal database fields.
+- API keys reside only in Keychain through the Apple platform-security adapter and are excluded from logs, exports, and normal database fields.
 - Provider adapters use secure transport and bounded request sizes.
 - Usage logging excludes secret values and unnecessary private text.
 - Users can choose local-model operation when supported.
 - Generated content retains provider/model, prompt version, timestamp, validation state, and safe input reference.
+- The UI labels whether execution is on-device, uses Private Cloud Compute, uses a local-network endpoint, or sends content to a third-party cloud provider.
+- Raw meeting audio and transcripts are never sent off-device without task-specific disclosure and consent.
 
 ## Acceptance criteria
 
 - A task can run through a cloud or local provider without changing core Learning Engine code.
+- An unavailable or unsupported Apple model/locale selects a tested fallback without blocking offline review.
 - Output that does not meet the schema cannot become canonical learning data.
 - A provider outage yields cache/template fallback or a clear non-blocking failure.
 - API keys are absent from logs and exports.
@@ -175,6 +192,7 @@ On network failure, timeout, quota exhaustion, or invalid output:
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 0.3.0 | 2026-07-21 | Added the OS 27 Foundation Models, SpeechAnalyzer, Translation, capability/locale routing, and Apple privacy boundaries while retaining replaceable providers for Persian support. |
 | 0.2.1 | 2026-07-11 | Added client-capability-aware execution targets for future dedicated hardware. |
 | 0.2.0 | 2026-07-11 | Cross-document architecture review; resolved domain, validation, scheduling, privacy, and MVP consistency contracts. |
 | 0.1.0 | 2026-07-11 | Initial AI Orchestration Layer specification. |

@@ -13,13 +13,22 @@ Use [ADR_TEMPLATE.md](ADR_TEMPLATE.md) as the starting point for new records. Na
 
 ## Accepted ADRs
 
-- [ADR-001 — Repository, Package, and Module Layout](ADR-001-Repository-Package-and-Module-Layout.md)
-- [ADR-008 — Initial Pilot and Golden Layout Platform](ADR-008-Initial-Pilot-and-Golden-Layout-Platform.md)
+- [ADR-009 — Native Apple Client and Platform Baseline](ADR-009-Native-Apple-Client-and-Platform-Baseline.md)
+- [ADR-010 — Swift Package and Module Layout](ADR-010-Swift-Package-and-Module-Layout.md)
+
+## Superseded ADRs
+
+- [ADR-001 — Repository, Package, and Module Layout](ADR-001-Repository-Package-and-Module-Layout.md) — superseded by [ADR-010](ADR-010-Swift-Package-and-Module-Layout.md).
+- [ADR-008 — Initial Pilot and Golden Layout Platform](ADR-008-Initial-Pilot-and-Golden-Layout-Platform.md) — superseded by [ADR-009](ADR-009-Native-Apple-Client-and-Platform-Baseline.md).
+
+## Withdrawn ADR reservations
+
+- `ADR-002-Flutter-State-Management-and-DI.md` — withdrawn before proposal when Flutter ceased to be the production client stack; its number is not reused.
 
 ## Planned ADR queue
 
-- `ADR-002-Flutter-State-Management-and-DI.md`
-- `ADR-003-SQLite-Query-and-Migration-Stack.md`
+- `ADR-011-SwiftUI-State-Observation-Navigation-and-Dependency-Composition.md`
+- `ADR-003-Swift-Persistence-and-Migration-Stack.md`
 - `ADR-004-FSRS-Implementation-and-Version.md`
 - `ADR-005-ReviewUnit-Retrieval-and-Evidence-Rating.md`
 - `ADR-006-Domain-Events-and-Transactional-Outbox.md`

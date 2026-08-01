@@ -1,9 +1,9 @@
 ---
 title: Implementation Backlog and Requirements Traceability
 document_id: LB-DOC-15
-version: 0.1.3
+version: 0.2.0
 status: Draft
-last_updated: 2026-07-20
+last_updated: 2026-07-21
 ---
 
 # Implementation Backlog and Requirements Traceability
@@ -27,9 +27,9 @@ The backlog covers the local-first German–Persian MVP defined in [Document 10]
 
 Included:
 
-- a Flutter mobile reference client;
+- native Swift 6.4/SwiftUI applications for iOS/iPadOS 27 and macOS 27, with iPhone as the primary controlled-pilot surface;
 - shared domain and application logic that is client-surface neutral;
-- SQLite persistence and offline operation;
+- native local persistence behind repository/transaction protocols and offline operation;
 - German/Persian Language Packages;
 - manual word and phrase ingestion with optional AI enrichment;
 - objective-level review using ReviewUnits and FSRS;
@@ -43,11 +43,13 @@ Explicitly excluded from the MVP backlog:
 - full OCR, PDF, article, and batch-document ingestion;
 - speaking evaluation and open-ended conversation;
 - accounts and cloud synchronization;
+- cross-device synchronization between the first-class local Apple applications;
 - downloadable third-party Language Packages;
 - social features, marketplace, public decks, and leaderboards;
 - dedicated-device hardware, meeting recording, live translation, and manufacturing.
+- Flutter, Dart, Android, and Web application targets unless a future platform ADR adds them with complete target-specific evidence.
 
-The shared core must retain the extension points already defined for these post-MVP capabilities. [ADR-001](../decisions/ADR-001-Repository-Package-and-Module-Layout.md) classifies the Python prototype at `experiments/vocabulary-mvp/` as reference-only experimental code outside production packages, releases, schemas, and default CI. [ADR-008](../decisions/ADR-008-Initial-Pilot-and-Golden-Layout-Platform.md) limits the controlled MVP pilot to Android phones while keeping shared packages portable.
+The shared core must retain the extension points already defined for these post-MVP capabilities. [ADR-009](../decisions/ADR-009-Native-Apple-Client-and-Platform-Baseline.md) establishes the native Apple platform baseline, first-class local-only surfaces, iPhone-primary pilot, and stable Xcode 27 release gate. [ADR-010](../decisions/ADR-010-Swift-Package-and-Module-Layout.md) supersedes the production topology in ADR-001 while preserving its decision to keep the Python prototype at `experiments/vocabulary-mvp/` as reference-only experimental code outside production packages, releases, schemas, and default CI. ADR-001 and ADR-008 remain immutable historical records of superseded choices.
 
 ## Source of truth and precedence
 
@@ -235,17 +237,20 @@ Follow-up specifications are delivered at the latest safe gate, not all during M
 | Work item | Pri. | State | Deliverable and acceptance evidence | Dependencies |
 | --- | --- | --- | --- | --- |
 | `LB-WI-M0-01` | P0 | `DONE` | Publish Document 15 with requirement catalog, milestone backlog, test IDs, traceability, and governance; Markdown/link checks pass. | Documents 01–14 |
-| `LB-WI-M0-02` | P0 | `DONE` | Publish the Decision Register with all 53 source open questions and three supplemental architecture decisions; assign stable IDs, class, status, owner, due gate, and required decision artifact; coverage and count checks pass. | `LB-WI-M0-01` |
-| `LB-WI-M0-03` | P0 | `DONE` | Accepted [ADR-001](../decisions/ADR-001-Repository-Package-and-Module-Layout.md); repository/package/module boundaries, dependency and CI scope, and the prototype's `experiments/vocabulary-mvp/` disposition are explicit and reflected in the repository. | Decision Register |
-| `LB-WI-M0-04` | P0 | `READY` | Accept ADR for Flutter state management and dependency injection; a minimal testable composition-root example is included. | Platform target resolved by [ADR-008](../decisions/ADR-008-Initial-Pilot-and-Golden-Layout-Platform.md) |
-| `LB-WI-M0-05` | P0 | `PROPOSED` | Accept ADR for SQLite library/query layer and migration tooling; transaction and testability requirements are demonstrated. | Threat/storage constraints |
+| `LB-WI-M0-02` | P0 | `DONE` | Publish the Decision Register with all 53 source open questions and six supplemental architecture decisions (59 stable IDs); assign stable IDs, class, status, owner, due gate, and required decision artifact; coverage and count checks pass. | `LB-WI-M0-01` |
+| `LB-WI-M0-03` | P0 | `DONE` | Accepted historical [ADR-001](../decisions/ADR-001-Repository-Package-and-Module-Layout.md); its production package topology is superseded by ADR-010, while the accepted `experiments/vocabulary-mvp/` reference-only classification remains in force. | Decision Register; superseded by ADR-010 for production topology |
+| `LB-WI-M0-04` | P0 | `CANCELLED` | The planned Flutter state-management/dependency-injection ADR was cancelled by the native Apple pivot in ADR-009. Its replacement is `LB-WI-M0-15` and planned ADR-011. | [ADR-009](../decisions/ADR-009-Native-Apple-Client-and-Platform-Baseline.md) |
+| `LB-WI-M0-05` | P0 | `PROPOSED` | Accept revised ADR-003 for the native Swift persistence/query/migration stack; compare SwiftData, Core Data, direct SQLite, GRDB, and viable alternatives, then demonstrate actor/concurrency, transaction, repository-contract, migration, restart, and testability requirements. | ADR-009, ADR-010, LB-DEC-059, threat/storage constraints |
 | `LB-WI-M0-06` | P1 | `PROPOSED` | Prepare and accept, no later than M3 start, the ADR for FSRS implementation/version with reproducible reference vectors and upgrade policy. | Review requirements |
 | `LB-WI-M0-07` | P1 | `PROPOSED` | Prepare and accept, before M3 review implementation, the ADR for ReviewUnit retrieval contracts and automatic evidence-to-rating mapping; raw evidence and derived rating remain auditable. | `LB-WI-M0-06` |
 | `LB-WI-M0-08` | P0 | `PROPOSED` | Accept ADR for in-process domain events and transactional outbox behavior, including idempotency and replay. | Persistence ADR |
-| `LB-WI-M0-09` | P0 | `PROPOSED` | Accept ADR for database protection, secure-storage keys, backup/recovery, and lost-key behavior on initial platforms. | Platform target, persistence ADR |
+| `LB-WI-M0-09` | P0 | `PROPOSED` | Accept ADR for Apple data protection, Keychain/secure-storage keys, database and backup protection, recovery, and lost-key behavior on iOS/iPadOS and macOS. | ADR-009, persistence ADR |
 | `LB-WI-M0-10` | P1 | `PROPOSED` | Add canonical System Context, Module Architecture, Domain ERD, Review Sequence, ALE Flow, and AI Pipeline diagrams linked from source documents. | Relevant ADRs |
-| `LB-WI-M0-11` | P0 | `PROPOSED` | Publish Document 16 with commands, queries, DTOs, domain events, typed errors, repositories, and transaction boundaries required by M1. | Layout, state/DI, persistence ADRs |
-| `LB-WI-M0-12` | P0 | `PROPOSED` | Resolve initial pilot platform, font/license baseline, and M1 blocking decisions; convert approved specifications to a versioned baseline and create M1 Git issues. | `LB-WI-M0-02`–`05`, `LB-WI-M0-08`–`11`; M3 ADRs `06`–`07` may remain scheduled |
+| `LB-WI-M0-11` | P0 | `PROPOSED` | Publish Document 16 with commands, queries, DTOs, domain events, typed errors, repositories, and transaction boundaries required by M1. | ADR-010 module layout, ADR-011 composition, persistence ADR |
+| `LB-WI-M0-12` | P0 | `PROPOSED` | Resolve the font/license baseline and remaining M1 blocking decisions; convert approved specifications to a versioned baseline and create native Apple M1 Git issues. | `LB-WI-M0-02`–`05`, `LB-WI-M0-08`–`11`, `LB-WI-M0-13`–`15`; M3 ADRs `06`–`07` may remain scheduled |
+| `LB-WI-M0-13` | P0 | `DONE` | Accepted [ADR-009](../decisions/ADR-009-Native-Apple-Client-and-Platform-Baseline.md); iOS/iPadOS 27 and macOS 27 are first-class local-only surfaces, iPhone is the primary pilot, Swift 6.4/SwiftUI is selected, beta evidence is provisional, and stable Xcode 27/final SDKs gate release. | Decision Register |
+| `LB-WI-M0-14` | P0 | `DONE` | Accepted [ADR-010](../decisions/ADR-010-Swift-Package-and-Module-Layout.md); Swift Package Manager topology, dependency directions, app-target ownership, CI scope, and experiment boundaries are explicit. | `LB-WI-M0-13` |
+| `LB-WI-M0-15` | P0 | `READY` | Accept planned `ADR-011-SwiftUI-State-Observation-Navigation-and-Dependency-Composition.md` for SwiftUI state/observation, navigation, and dependency composition; include a minimal native composition-root example testable with fakes on iPhone, iPad, and macOS. | `LB-WI-M0-13`, `LB-WI-M0-14` |
 
 **M0 exit criterion:** The M1 backlog is approved; every M1 item is `READY`; blocking architectural choices are accepted ADRs; canonical contracts are versioned; and the specification baseline is tagged.
 
@@ -257,17 +262,18 @@ In milestone backlog tables, numeric entries in the **Requirements** column are 
 
 | Work item | Pri. | State | Requirements | Deliverable and acceptance evidence | Dependencies |
 | --- | --- | --- | --- | --- | --- |
-| `LB-WI-M1-01` | P0 | `PROPOSED` | 001, 019, 023 | Pin Flutter `3.44.0` with Android `minSdk 24`/`compileSdk 36`/`targetSdk 36`; create the Android mobile shell, composition root, routing skeleton, localization foundation, and fake ClientContext/CapabilitySnapshot. Widget smoke test passes. | M0 exit, ADR-008 |
-| `LB-WI-M1-02` | P0 | `PROPOSED` | 001, 004, 010 | Create framework-independent domain/application packages, typed result/error contracts, and the initial append-only LearningEvent envelope/repository port. Domain tests run without Flutter, SQLite, or network. | `LB-WI-M1-01`, DOC-16 |
-| `LB-WI-M1-03` | P0 | `PROPOSED` | 004, 020 | Implement schema version table, ordered migration runner, foreign-key enforcement, transaction wrapper, and repository adapters. `LB-TST-MIG-001` passes. | Persistence ADR |
+| `LB-WI-M1-01` | P0 | `CANCELLED` | 001, 019, 023 | The historical Flutter/Android application-shell work item was cancelled by ADR-009 and replaced by `LB-WI-M1-10`. | ADR-009 |
+| `LB-WI-M1-02` | P0 | `PROPOSED` | 001, 004, 010 | Create framework-independent Swift domain/application package targets, typed result/error contracts, and the initial append-only LearningEvent envelope/repository port. Domain tests run without SwiftUI, SQLite, or network. | `LB-WI-M1-10`, DOC-16 |
+| `LB-WI-M1-03` | P0 | `PROPOSED` | 004, 020 | Implement schema-version metadata, ordered migration runner, referential-integrity enforcement, transaction wrapper, and repository adapters using the stack selected by ADR-003. `LB-TST-MIG-001` passes. | Persistence ADR |
 | `LB-WI-M1-04` | P0 | `PROPOSED` | 004, 006 | Implement KnowledgeItem, distinct typed Word/Phrase/Sentence/GrammarRule minimum schemas, revision, stable IDs, ownership/scope, archive state, and repository contract. MediaAsset/Exercise remain separate; learner state cannot mutate canonical content; archive preserves event references. `LB-TST-DOM-001` passes. | `LB-WI-M1-02`, `LB-WI-M1-03` |
 | `LB-WI-M1-05` | P0 | `PROPOSED` | 002, 005, 023 | Implement single local learner profile, explicit BCP 47 language roles, German–Persian LanguagePairProfile, mission/preferences, editable onboarding command/query and reference screen, client installation, and immutable capability snapshots. | `LB-WI-M1-03` |
 | `LB-WI-M1-06` | P0 | `PROPOSED` | 003, 006 | Implement manual minimal word/phrase command and query path with no AI/provider dependency. `LB-TST-E2E-001` passes. | `LB-WI-M1-04`, `LB-WI-M1-05` |
 | `LB-WI-M1-07` | P0 | `PROPOSED` | 003, 020 | Persist locally before UI success, restore safely after restart, and expose recoverable persistence errors. `LB-TST-E2E-002` passes. | `LB-WI-M1-06` |
-| `LB-WI-M1-08` | P1 | `PROPOSED` | 019 | Establish bilingual typography tokens, explicit bidi isolation components, semantic labels, dynamic text, and non-color state indicators for M1 screens. | Pilot platform/font decision |
-| `LB-WI-M1-09` | P0 | `PROPOSED` | 001–004, 006, 019, 020, 023 | Add CI-quality unit, repository contract, integration, widget, and restart fixtures for the walking skeleton; document the first supported schema. | `LB-WI-M1-01` through `LB-WI-M1-08` |
+| `LB-WI-M1-08` | P1 | `PROPOSED` | 019 | Establish bilingual typography tokens, explicit bidi isolation components, accessibility labels, Dynamic Type behavior, focus/input conventions, and non-color state indicators for M1 screens. | ADR-009, LB-DEC-050 |
+| `LB-WI-M1-09` | P0 | `PROPOSED` | 001–004, 006, 019, 020, 023 | Add CI-quality Swift Testing/XCTest unit, repository-contract, integration, SwiftUI view/snapshot, XCUITest smoke, and restart fixtures for the walking skeleton; document the first supported schema. Beta-toolchain snapshots remain provisional. | `LB-WI-M1-02` through `LB-WI-M1-08`, `LB-WI-M1-10` |
+| `LB-WI-M1-10` | P0 | `PROPOSED` | 001, 019, 023 | Pin Swift 6.4 and the provisional Xcode 27 beta toolchain; create the universal iOS/iPadOS 27 target and macOS 27 target, shared SwiftUI presentation/composition targets, routing and localization foundations, and fake ClientContext/CapabilitySnapshot. Native build and SwiftUI view smoke tests pass; release artifacts remain blocked until rerun with stable Xcode 27 and final SDKs. | M0 exit, ADR-009, ADR-010, ADR-011 |
 
-**M1 exit criterion:** A manually entered German word can be stored, the app can close, and the same item can be retrieved offline through domain/application interfaces without direct UI-to-database access.
+**M1 exit criterion:** On iPhone, iPad, and macOS, a manually entered German word can be stored in that application's independent local store, the app can close, and the same item can be retrieved offline through domain/application interfaces without direct UI-to-database access.
 
 ## M2 — Card and language foundation backlog
 
@@ -340,13 +346,13 @@ In milestone backlog tables, numeric entries in the **Requirements** column are 
 | `LB-WI-M6-01` | P0 | `PROPOSED` | 017 | Publish Document 19 threat model and implement secure BYOK storage/removal, endpoint disclosure, consent, redacted logs, limits, dependency review, and untrusted-input controls. | Platform and protection ADRs |
 | `LB-WI-M6-02` | P0 | `PROPOSED` | 018 | Implement verified backup/restore, canonical JSON export, vocabulary/review CSV export, archive, and full private-data deletion across DB, FTS, files, caches, backups, jobs, outbox, and secure storage. | Stable schema |
 | `LB-WI-M6-03` | P0 | `PROPOSED` | 020 | Test ordered migrations from every supported previous schema, pre-migration backup, unsafe-downgrade refusal, corruption detection, and recovery guidance. | Migrations and backup |
-| `LB-WI-M6-04` | P0 | `PROPOSED` | 019 | Complete mixed RTL/LTR, screen-reader, dynamic-text, focus-order, touch target, contrast, reduced-motion, and non-color-state QA on supported platforms. | Stable UI |
-| `LB-WI-M6-05` | P0 | `PROPOSED` | 020 | Benchmark documented local latency/capacity targets using a named device and fixed 10k-item/50k-event fixture; verify AI acknowledgement ≤250 ms, report provider p50/p95 separately, and test indefinite review-history retention under the approved archival/compression policy. `LB-TST-PERF-001`, `LB-TST-PERF-002`, and `LB-TST-DATA-001` pass. | Stable MVP flows |
+| `LB-WI-M6-04` | P0 | `PROPOSED` | 019 | Complete mixed RTL/LTR, VoiceOver, Dynamic Type, focus order, touch targets, contrast, reduced motion, and non-color-state QA on iPhone/iPad; complete VoiceOver, keyboard, pointer, menu/command, focus, window-resize, and restoration QA on macOS. | Stable native Apple UI |
+| `LB-WI-M6-05` | P0 | `PROPOSED` | 020 | Benchmark documented local latency/capacity targets on a named iPhone primary-pilot device and record companion iPad/macOS results with a fixed 10k-item/50k-event fixture; verify AI acknowledgement ≤250 ms, report provider p50/p95 separately, and test indefinite review-history retention under the approved archival/compression policy. `LB-TST-PERF-001`, `LB-TST-PERF-002`, and `LB-TST-DATA-001` pass. | Stable MVP flows |
 | `LB-WI-M6-06` | P0 | `PROPOSED` | 003, 020 | Run network/provider outage, cancellation, app interruption, disk/migration failure, empty-plan, and restart recovery scenarios. | Stable MVP flows |
 | `LB-WI-M6-07` | P0 | `PROPOSED` | 017, 021 | Verify secrets never enter DB/log/export/analytics, telemetry is opt-in, cloud transfer is disclosed, retention/deletion is auditable, and diagnostics remain useful. | Security/privacy implementation |
 | `LB-WI-M6-08` | P0 | `PROPOSED` | 007, 021 | Run AI evaluation for schema validity, morphology/translation accuracy, CEFR/domain appropriateness, proposal edit/rejection, cache behavior, cost, and fallback quality. | Stable AI pipeline |
 | `LB-WI-M6-09` | P0 | `PROPOSED` | 022 | Publish Document 20 and pre-register pilot sample, comparator, 7/14-day outcomes, minimum detectable effect, success threshold, and stop/go rule before enrollment. | Product/learning review |
-| `LB-WI-M6-10` | P0 | `PROPOSED` | 001–026 | Execute full release-gate suite with and without network/AI, complete pilot-readiness review, and create signed/tagged MVP release candidate. | All prior M6 items |
+| `LB-WI-M6-10` | P0 | `PROPOSED` | 001–026 | Install stable/GM Xcode 27 and final iOS/iPadOS/macOS 27 SDKs; clean-build all first-class targets, regenerate and approve provisional snapshots, rerun the full release-gate suite with and without network/AI, complete pilot-readiness review, and create the signed/tagged MVP release candidate. | All prior M6 items; stable Xcode 27 and final SDK availability |
 
 **M6 exit criterion:** Every release gate passes, the pilot protocol is pre-registered, and the release candidate is recoverable, private, accessible, offline-capable, and evidence-ready.
 
@@ -360,10 +366,10 @@ In milestone backlog tables, numeric entries in the **Requirements** column are 
 | `DOM` | Domain-boundary test | Aggregate identity, canonical/learner separation, archive/history rules |
 | `LRN` | Learning-validity test | Eligible retrieval, feedback, mastery progression, learner agency |
 | `CON` | Contract test | Repository, provider, Language Package, evaluator ports |
-| `INT` | Integration test | SQLite transactions, complete use cases, indexing/outbox |
+| `INT` | Integration test | Local-store transactions, complete use cases, indexing/outbox |
 | `DATA` | Data-lifecycle test | Retention, archival/compression, projection rebuild, historical integrity |
 | `MIG` | Migration/recovery test | Upgrade, backup, restore, downgrade, corruption handling |
-| `WGT` | Widget/golden test | UI state, bidi layout, restoration, error/offline presentation |
+| `WGT` | SwiftUI view/snapshot test | UI state, adaptive/bidi layout, restoration, error/offline presentation |
 | `MEDIA` | Media test | Cache, offline playback, controls, lifecycle, accessible equivalent |
 | `E2E` | End-to-end scenario | User journey across presentation/application/infrastructure |
 | `REV` | Review/scheduler test | ReviewUnit, FSRS, rating mapping, atomicity, replay |
@@ -418,7 +424,7 @@ In milestone backlog tables, numeric entries in the **Requirements** column are 
 
 | Requirement | Primary work items | Verification evidence | Release gate |
 | --- | --- | --- | --- |
-| `LB-REQ-001` | `LB-WI-M1-01`, `LB-WI-M1-02`, `LB-WI-M2-01` | `LB-TST-CON-001`, `LB-TST-E2E-001` | M1/M2 |
+| `LB-REQ-001` | `LB-WI-M1-10`, `LB-WI-M1-02`, `LB-WI-M2-01` | `LB-TST-CON-001`, `LB-TST-E2E-001` | M1/M2 |
 | `LB-REQ-002` | `LB-WI-M1-05`, `LB-WI-M1-08`, `LB-WI-M2-09` | `LB-TST-WGT-002`, `LB-TST-E2E-001` | M2 |
 | `LB-REQ-003` | `LB-WI-M1-06`, `LB-WI-M1-07`, `LB-WI-M2-08`, `LB-WI-M3-07`, `LB-WI-M4-07` | `LB-TST-E2E-001`, `LB-TST-E2E-002`, `LB-TST-E2E-004`, `LB-TST-E2E-005`, `LB-TST-E2E-006` | M1–M4 |
 | `LB-REQ-004` | `LB-WI-M1-03`, `LB-WI-M1-04`, `LB-WI-M2-02`, `LB-WI-M3-08` | `LB-TST-DOM-001`, `LB-TST-MIG-001`, `LB-TST-INT-001` | M2/M3 |
@@ -436,11 +442,11 @@ In milestone backlog tables, numeric entries in the **Requirements** column are 
 | `LB-REQ-016` | `LB-WI-M5-01`, `LB-WI-M5-02`, `LB-WI-M5-03`, `LB-WI-M5-04`, `LB-WI-M5-05`, `LB-WI-M5-06`, `LB-WI-M5-07` | `LB-TST-GRAPH-001`, `LB-TST-GRAPH-002` | M5 |
 | `LB-REQ-017` | `LB-WI-M2-04`, `LB-WI-M2-07`, `LB-WI-M2-11`, `LB-WI-M6-01`, `LB-WI-M6-07` | `LB-TST-SEC-001`, `LB-TST-AI-001`, `LB-TST-AI-003` | M6 |
 | `LB-REQ-018` | `LB-WI-M6-02`, `LB-WI-M6-03` | `LB-TST-MIG-001`, `LB-TST-SEC-002` | M6 |
-| `LB-REQ-019` | `LB-WI-M1-01`, `LB-WI-M1-08`, `LB-WI-M2-01`, `LB-WI-M6-04` | `LB-TST-A11Y-001` | M6 |
+| `LB-REQ-019` | `LB-WI-M1-10`, `LB-WI-M1-08`, `LB-WI-M2-01`, `LB-WI-M6-04` | `LB-TST-A11Y-001` | M6 |
 | `LB-REQ-020` | `LB-WI-M1-03`, `LB-WI-M1-07`, `LB-WI-M3-07`, `LB-WI-M6-03`, `LB-WI-M6-05`, `LB-WI-M6-06` | `LB-TST-MIG-001`, `LB-TST-E2E-002`, `LB-TST-E2E-004`, `LB-TST-PERF-001`, `LB-TST-PERF-002`, `LB-TST-DATA-001` | M6 |
 | `LB-REQ-021` | `LB-WI-M2-04`, `LB-WI-M2-07`, `LB-WI-M2-11`, `LB-WI-M6-07`, `LB-WI-M6-08` | `LB-TST-AI-002`, `LB-TST-AI-003`, `LB-TST-SEC-001` | M6 |
 | `LB-REQ-022` | `LB-WI-M6-09`, `LB-WI-M6-10` | `LB-TST-PILOT-001` | Pilot |
-| `LB-REQ-023` | `LB-WI-M1-01`, `LB-WI-M1-05`, `LB-WI-M3-05`, `LB-WI-M3-08`, `LB-WI-M4-02`, `LB-WI-M4-04`, `LB-WI-M4-07` | `LB-TST-REV-001`, `LB-TST-PLAN-001` | M4 |
+| `LB-REQ-023` | `LB-WI-M1-10`, `LB-WI-M1-05`, `LB-WI-M3-05`, `LB-WI-M3-08`, `LB-WI-M4-02`, `LB-WI-M4-04`, `LB-WI-M4-07` | `LB-TST-REV-001`, `LB-TST-PLAN-001` | M4 |
 | `LB-REQ-024` | `LB-WI-M2-03`, `LB-WI-M2-08` | `LB-TST-WGT-003`, `LB-TST-E2E-003` | M2 |
 | `LB-REQ-025` | `LB-WI-M2-12`, `LB-WI-M3-04` | `LB-TST-MEDIA-001` | M3 |
 | `LB-REQ-026` | `LB-WI-M4-05`, `LB-WI-M4-08` | `LB-TST-WGT-001`, `LB-TST-INT-002` | M4 |
@@ -453,10 +459,10 @@ The [Decision Register](../decisions/DECISION_REGISTER.md) owns final status and
 
 | Decision | Required by | Blocking outcome |
 | --- | --- | --- |
-| Repository/monorepo/module layout and prototype classification — resolved by [ADR-001](../decisions/ADR-001-Repository-Package-and-Module-Layout.md) | M1 start | Resolved; stable package paths, dependency rules, CI scope, and experiment boundaries are defined |
-| Pilot/golden platform — resolved by [ADR-008](../decisions/ADR-008-Initial-Pilot-and-Golden-Layout-Platform.md) | M1 start | Resolved; Android-phone-only pilot, portable boundaries, golden fixture/matrix, and iOS re-entry gate are defined |
-| Flutter state management and dependency injection | M1 start | Presentation/application composition remains undefined |
-| SQLite/query/migration stack | M1 start | Persistence walking skeleton cannot begin safely |
+| Native Swift package/module layout and experiment classification — resolved by [ADR-010](../decisions/ADR-010-Swift-Package-and-Module-Layout.md) | M1 start | Resolved; Swift package paths, dependency rules, application ownership, CI scope, and experiment boundaries are defined |
+| Native Apple client/platform baseline — resolved by [ADR-009](../decisions/ADR-009-Native-Apple-Client-and-Platform-Baseline.md) | M1 start | Resolved; first-class local iPhone/iPad/macOS surfaces, iPhone-primary pilot, provisional beta evidence, and stable Xcode 27 release gate are defined |
+| SwiftUI state observation, navigation, and dependency composition — planned `ADR-011-SwiftUI-State-Observation-Navigation-and-Dependency-Composition.md` | M1 start | Presentation/application composition remains undefined until accepted |
+| Native Swift persistence/query/migration stack | M1 start | Persistence walking skeleton cannot begin safely |
 | Database protection and recovery baseline | Before private data in M1 | Threat model and backup behavior remain incomplete |
 | German/Persian lexical datasets and licenses | M2 start | Seed content and authoritative validation cannot ship |
 | Language Package minimum capability contract | M2 start | German rules may leak into core |
@@ -518,8 +524,8 @@ One issue has one primary work-item ID. A pull request may close multiple small 
 
 The next batch is architecture and contract work, not production feature coding:
 
-1. accept Flutter state-management/DI ADR;
-2. accept SQLite/migration ADR;
+1. accept ADR-011 for SwiftUI state observation, navigation, and dependency composition, including a minimal native composition-root example;
+2. accept revised ADR-003 for the native Swift persistence/query/migration stack;
 3. define the minimum database protection/backup baseline;
 4. accept the domain-event/transactional-outbox ADR;
 5. publish Document 16 application/domain contracts;
@@ -547,7 +553,7 @@ Run these checks at least at every milestone review:
 - no `READY` item has an unresolved blocking decision;
 - no completed persistent-data change lacks migration/recovery coverage;
 - no AI or import path bypasses proposal validation and learner approval policy;
-- no UI path writes directly to SQLite, FSRS, mastery, or canonical graph state;
+- no UI path writes directly to the physical store, FSRS, mastery, or canonical graph state;
 - no unsupported client capability reaches an activity or recording control;
 - no secret or user-private raw content appears in logs, exports, fixtures, or shared cache;
 - no checked box in `PROJECT_STATUS.md` lacks a commit/evidence trail.
@@ -570,8 +576,11 @@ Run these checks at least at every milestone review:
 - [AI Agent Pipeline](13_AI_Agent_Pipeline.md)
 - [Frontend UX/UI](14_Frontend_UX_UI.md)
 - [Decision Register](../decisions/DECISION_REGISTER.md)
-- [ADR-001 — Repository, Package, and Module Layout](../decisions/ADR-001-Repository-Package-and-Module-Layout.md)
-- [ADR-008 — Initial Pilot and Golden Layout Platform](../decisions/ADR-008-Initial-Pilot-and-Golden-Layout-Platform.md)
+- [ADR-009 — Native Apple Client and Platform Baseline](../decisions/ADR-009-Native-Apple-Client-and-Platform-Baseline.md)
+- [ADR-010 — Swift Package and Module Layout](../decisions/ADR-010-Swift-Package-and-Module-Layout.md)
+- `ADR-011-SwiftUI-State-Observation-Navigation-and-Dependency-Composition.md` — planned SwiftUI state, navigation, and dependency-composition decision
+- [ADR-001 — Repository, Package, and Module Layout (superseded history)](../decisions/ADR-001-Repository-Package-and-Module-Layout.md)
+- [ADR-008 — Initial Pilot and Golden Layout Platform (superseded history)](../decisions/ADR-008-Initial-Pilot-and-Golden-Layout-Platform.md)
 - [ADR index](../decisions/README.md)
 - [Diagram index](../diagrams/README.md)
 
@@ -579,6 +588,7 @@ Run these checks at least at every milestone review:
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 0.2.0 | 2026-07-21 | Pivoted governance and traceability to the accepted native Apple baseline and Swift package topology, cancelled Flutter/Android work, added ADR-011 and native-shell work items, and introduced the stable Xcode 27 release gate. |
 | 0.1.3 | 2026-07-20 | Accepted ADR-008, resolved the platform/golden gate, made LB-WI-M0-04 READY, and advanced the execution queue to ADR-002. |
 | 0.1.2 | 2026-07-19 | Accepted ADR-001, closed LB-WI-M0-03, classified and relocated the vocabulary prototype, and advanced the execution queue. |
 | 0.1.1 | 2026-07-15 | Linked the completed Decision Register, closed work item LB-WI-M0-02, aligned ADR timing with M1/M3 gates, and advanced the proposed execution batch to the first architecture decisions. |

@@ -1,9 +1,9 @@
 ---
 title: Product Vision
 document_id: LB-DOC-01
-version: 0.2.1
+version: 0.3.0
 status: Draft
-last_updated: 2026-07-11
+last_updated: 2026-07-21
 ---
 
 # Product Vision
@@ -67,7 +67,7 @@ Each daily session uses a brief check-in: energy, available time, motivation, an
 
 ### Offline first and privacy first
 
-Review, cached content, and core learning logic must remain useful without network access. User data belongs to the user. AI access can use the learner's own cloud API key or a local model where available.
+Review, cached content, and core learning logic must remain useful without network access. User data belongs to the user. The native Apple clients prefer eligible on-device Foundation Models and Speech capabilities, while user-selected cloud/local providers remain replaceable fallbacks where hardware, region, or German–Persian language support is unavailable.
 
 ### Language packages, not language-specific core code
 
@@ -116,6 +116,8 @@ Learns language in a domain such as software engineering, embedded systems, busi
 
 The MVP validates the Learning Engine with German ↔ Persian learning, AI-enriched word cards, automatic classification, basic graph relations, FSRS reviews, adaptive daily plans, and translation/cloze exercises.
 
+The first production implementation is Apple-native: Swift 6.4 and SwiftUI targeting iOS/iPadOS 27 and macOS 27 Golden Gate. iPhone is the primary controlled-pilot surface; iPad and Mac are supported local-only MVP surfaces. Multi-device synchronization is not implied by this platform scope.
+
 The MVP explicitly excludes full social features, leaderboards, marketplaces, comprehensive real-time speaking evaluation, multi-language expansion, and complete OCR book ingestion.
 
 ## Success measures
@@ -131,7 +133,7 @@ The MVP explicitly excludes full social features, leaderboards, marketplaces, co
 
 LinguaBrain is expected to progress from an adaptive language learning platform to an AI language teacher and then to a general-purpose Personal Learning Operating System. Language learning remains the first and primary use case; broader domains are a future extension, not an MVP requirement.
 
-The same core may later serve multiple product surfaces: mobile/desktop applications and a focused dedicated learning device. A new surface must reuse the Knowledge, Learning, Review, Planning, Language Package, and AI contracts rather than fork learner state or educational logic.
+The same native Swift core serves the iPhone, iPad, and Mac applications. A future focused device must preserve the Knowledge, Learning, Review, Planning, Language Package, and AI data/command semantics, but a non-Apple runtime is not promised direct SwiftUI or Apple-framework reuse and requires a separate interoperability decision.
 
 ## Related documents
 
@@ -146,6 +148,7 @@ The same core may later serve multiple product surfaces: mobile/desktop applicat
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 0.3.0 | 2026-07-21 | Set the product's first implementation to native Swift/SwiftUI on iOS, iPadOS, and macOS 27 with Apple capability fallbacks and an explicit non-Apple device boundary. |
 | 0.2.1 | 2026-07-11 | Added platform-neutral product-surface extension contract for a future dedicated device. |
 | 0.2.0 | 2026-07-11 | Cross-document architecture review; resolved domain, validation, scheduling, privacy, and MVP consistency contracts. |
 | 0.1.0 | 2026-07-10 | Initial consolidated specification based on the product-design discussion. |

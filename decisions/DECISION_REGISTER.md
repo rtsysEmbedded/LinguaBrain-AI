@@ -1,9 +1,9 @@
 ---
 title: Decision Register
 document_id: LB-DEC-REGISTER
-version: 0.1.2
+version: 0.2.0
 status: Active
-last_updated: 2026-07-20
+last_updated: 2026-07-21
 ---
 
 # Decision Register
@@ -20,8 +20,8 @@ This version contains:
 
 - all 53 bullets under the Open questions sections of Documents 02–10 and 12–14;
 - no source questions from Documents 01, 11, or 15 because those documents have no Open questions section;
-- three supplemental architecture decisions required by Documents 11 and 15;
-- 56 stable decision IDs in total.
+- six supplemental architecture decisions required by Documents 11 and 15 and by the native Apple architecture pivot;
+- 59 stable decision IDs in total.
 
 Source questions remain individually traceable even when several questions share one research package or ADR. IDs are never reused.
 
@@ -58,15 +58,15 @@ Each register row names one accountable owner role. Other affected roles review 
 
 | Dimension | Count |
 | --- | ---: |
-| Total decision records | 56 |
-| MVP-blocking | 13 |
+| Total decision records | 59 |
+| MVP-blocking | 16 |
 | MVP-later | 31 |
 | post-MVP | 12 |
 | OPEN | 38 |
 | DECIDED | 4 |
 | PROPOSED | 2 |
 | DEFERRED | 11 |
-| SUPERSEDED | 1 |
+| SUPERSEDED | 4 |
 
 ## Master decision register
 
@@ -76,7 +76,7 @@ Each register row names one accountable owner role. Other affected roles review 
 | LB-DEC-002 | DOC-02 | How should speaking and pronunciation be assessed in the MVP versus later releases? | post-MVP | DEFERRED | Product Owner | Reopen before speaking/pronunciation assessment is READY | MVP deferral in DOC-10 and DOC-15; future assessment specification |
 | LB-DEC-003 | DOC-02 | Which learner controls should override adaptive recommendations? | MVP-later | OPEN | Product Owner | M4 start | Adaptive-controls product decision |
 | LB-DEC-004 | DOC-02 | What validation sources will be used for grammar facts and lexical data? | MVP-later | OPEN | Language Data Lead | M2 start and DOC-18 approval | DOC-18 source and validation register |
-| LB-DEC-005 | DOC-03 | Which platform-secure storage APIs are required for the initial Flutter targets? | MVP-blocking | OPEN | Flutter Platform Lead | M1 start | ADR-007 |
+| LB-DEC-005 | DOC-03 | Which platform-secure storage APIs are required for the initial Flutter targets? | MVP-blocking | OPEN | Apple Platform Lead | M1 start | ADR-007 |
 | LB-DEC-006 | DOC-03 | Which encryption approach is justified for the local MVP database, given usability and recovery trade-offs? | MVP-blocking | OPEN | Security Lead | Before private learner data in M1 | ADR-007 and recovery evidence |
 | LB-DEC-007 | DOC-03 | What operational metrics are acceptable under the final privacy policy? | MVP-later | OPEN | Privacy Lead | Before M6 telemetry or pilot hardening | DOC-19 telemetry allowlist and privacy decision |
 | LB-DEC-008 | DOC-03 | At what scale, if any, should a graph database replace relational graph tables? | post-MVP | DEFERRED | Data Architect | Post-MVP scaling review | Graph-scaling research note and ADR only if migration is approved |
@@ -108,11 +108,11 @@ Each register row names one accountable owner role. Other affected roles review 
 | LB-DEC-034 | DOC-09 | Which package capabilities are mandatory for “supported” versus “experimental” status? | MVP-later | OPEN | Language Platform Lead | M2 start | DOC-18 capability/support-tier matrix |
 | LB-DEC-035 | DOC-09 | How should dialects and regional variants inherit or override base-language behavior? | post-MVP | DEFERRED | Language Platform Architect | Before the first regional package | Language-package inheritance ADR |
 | LB-DEC-036 | DOC-09 | Which NLP functions should be deterministic libraries versus optional local models? | MVP-later | OPEN | Language Platform Architect | M2 start | DOC-18 execution-boundary research and ADR |
-| LB-DEC-037 | DOC-10 | Which Flutter platforms are included in the first pilot: Android only or Android plus iOS? | MVP-blocking | DECIDED | Product Owner | M1 start | [ADR-008](ADR-008-Initial-Pilot-and-Golden-Layout-Platform.md) |
+| LB-DEC-037 | DOC-10 | Which Flutter platforms are included in the first pilot: Android only or Android plus iOS? | MVP-blocking | SUPERSEDED | Product Owner | M1 start | Superseded by LB-DEC-057; historical answer preserved in [ADR-008](ADR-008-Initial-Pilot-and-Golden-Layout-Platform.md) |
 | LB-DEC-038 | DOC-10 | Which validated German lexical dataset is available under acceptable licensing? | MVP-later | OPEN | Language Data Lead | M2 start | Shared DOC-18 dataset/licensing research package |
 | LB-DEC-039 | DOC-10 | What pilot size and duration can provide meaningful retention evidence? | MVP-later | OPEN | Learning Research Lead | Before M6 enrollment | DOC-20 pre-registered pilot protocol |
 | LB-DEC-040 | DOC-10 | Which FSRS library/version will be adopted and independently tested? | MVP-later | OPEN | Review Engine Architect | M3 start | ADR-004 and reference-vector test report |
-| LB-DEC-041 | DOC-12 | Which Flutter SQLite library and migration framework best satisfy transaction/testing needs? | MVP-blocking | OPEN | Persistence Lead | M1 start | ADR-003 and transaction/migration spike |
+| LB-DEC-041 | DOC-12 | Which Flutter SQLite library and migration framework best satisfy transaction/testing needs? | MVP-blocking | SUPERSEDED | Persistence Lead | M1 start | Superseded by LB-DEC-059; historical source question retained |
 | LB-DEC-042 | DOC-12 | Is SQLCipher justified for MVP platforms, and how will key recovery work? | MVP-blocking | OPEN | Security Lead | Before private learner data in M1 | ADR-007 and recovery test plan |
 | LB-DEC-043 | DOC-12 | Which deterministic evidence-to-rating thresholds should the ReviewUnit ADR adopt for each MVP exercise type? | MVP-later | OPEN | Learning Science Lead | M3 review completion | ADR-005 and versioned mapping/test vectors |
 | LB-DEC-044 | DOC-12 | Which response payloads are necessary for feedback while minimizing sensitive storage? | MVP-later | OPEN | Privacy Lead | M3 start | DOC-19 data-minimization and schema decision |
@@ -124,10 +124,13 @@ Each register row names one accountable owner role. Other affected roles review 
 | LB-DEC-050 | DOC-14 | Which Persian/German font pairing offers best cross-platform readability and licensing? | MVP-blocking | OPEN | Design Systems Lead | M1 start | Typography tokens, readability evidence, and license record |
 | LB-DEC-051 | DOC-14 | How much FSRS detail should be visible to advanced users? | MVP-later | OPEN | UX Lead | Before M3 review UI acceptance | Review-UI disclosure policy |
 | LB-DEC-052 | DOC-14 | Should the daily check-in appear every day or only when state is missing/stale? | MVP-later | OPEN | Product Owner | M4 start | Daily check-in product/UX policy |
-| LB-DEC-053 | DOC-14 | Which first platform defines the golden layout baseline? | MVP-blocking | DECIDED | Product Owner | M1 start | [ADR-008](ADR-008-Initial-Pilot-and-Golden-Layout-Platform.md) |
-| LB-DEC-054 | DOC-11/DOC-15 supplement | What repository/package/module layout should the project adopt, and how should vocabulary-mvp/ be classified? | MVP-blocking | DECIDED | Software Architect | M1 start | [ADR-001](ADR-001-Repository-Package-and-Module-Layout.md) |
-| LB-DEC-055 | DOC-11 supplement | Which Flutter state-management and dependency-injection approach should the MVP adopt? | MVP-blocking | OPEN | Flutter Architecture Lead | M1 start | ADR-002 and testable composition-root example |
+| LB-DEC-053 | DOC-14 | Which first platform defines the golden layout baseline? | MVP-blocking | DECIDED | Product Owner | M1 start | [ADR-009](ADR-009-Native-Apple-Client-and-Platform-Baseline.md) |
+| LB-DEC-054 | DOC-11/DOC-15 supplement | What repository/package/module layout should the project adopt, and how should vocabulary-mvp/ be classified? | MVP-blocking | DECIDED | Software Architect | M1 start | [ADR-010](ADR-010-Swift-Package-and-Module-Layout.md) |
+| LB-DEC-055 | DOC-11 supplement | Which Flutter state-management and dependency-injection approach should the MVP adopt? | MVP-blocking | SUPERSEDED | Flutter Architecture Lead | M1 start | Superseded by LB-DEC-058; ADR-002 withdrawn before proposal |
 | LB-DEC-056 | DOC-11 supplement | Which in-process domain-event and transactional-outbox strategy should the MVP adopt? | MVP-blocking | OPEN | Application Architect | M1 start | ADR-006 and retry/replay contract |
+| LB-DEC-057 | Native Apple architecture supplement | Which native client stack and Apple platform scope should the MVP adopt? | MVP-blocking | DECIDED | Product Owner | M1 start | [ADR-009](ADR-009-Native-Apple-Client-and-Platform-Baseline.md) |
+| LB-DEC-058 | Native Apple architecture supplement | Which SwiftUI observation/state, navigation, and dependency-composition approach should the MVP adopt? | MVP-blocking | OPEN | Apple Client Architect | M1 start | ADR-011 and testable composition-root example |
+| LB-DEC-059 | Native Apple persistence supplement | Which native Swift persistence/query/migration stack best satisfies atomicity, testing, and migration needs? | MVP-blocking | OPEN | Persistence Lead | M1 start | Revised ADR-003 and transaction/migration spike |
 
 ## Existing scope, proposed, and deferred baseline
 
@@ -137,8 +140,12 @@ The following existing specification positions are recorded without losing their
 - LB-DEC-013 is PROPOSED: core/query/integrity fields are normalized; genuinely extensible, package-specific payloads remain versioned and validated JSON until measured access patterns justify normalization. ADR-003/DOC-16 must ratify the boundary.
 - LB-DEC-016 is PROPOSED: Language Packages own language-specific error rules; generic evaluator, evidence, event, and lifecycle contracts remain in the shared core. DOC-16 must ratify the boundary.
 - LB-DEC-033 is DECIDED: German and Persian MVP packages are first-party, statically registered, versioned components shipped with the app; executable third-party/downloaded packages are post-MVP.
-- LB-DEC-037 and LB-DEC-053 are DECIDED: the controlled MVP pilot targets Android phones only, and Android/Material 3 at `360 × 800` logical pixels defines the canonical golden fixture under [ADR-008](ADR-008-Initial-Pilot-and-Golden-Layout-Platform.md).
-- LB-DEC-054 is DECIDED: LinguaBrain uses a modular monorepo with thin client shells and inward dependencies; the Python vocabulary prototype is retained only under `experiments/vocabulary-mvp/`.
+- LB-DEC-037 is SUPERSEDED by LB-DEC-057: the Flutter-specific platform question and its historical Android answer remain traceable through [ADR-008](ADR-008-Initial-Pilot-and-Golden-Layout-Platform.md).
+- LB-DEC-041 is SUPERSEDED by LB-DEC-059: the native Swift persistence decision is now governed by the revised ADR-003.
+- LB-DEC-053 is DECIDED: the native Apple layout and snapshot baseline is defined by [ADR-009](ADR-009-Native-Apple-Client-and-Platform-Baseline.md).
+- LB-DEC-054 is DECIDED: LinguaBrain uses the Swift/Xcode/SwiftPM monorepo topology and inward dependencies defined by [ADR-010](ADR-010-Swift-Package-and-Module-Layout.md); the Python vocabulary prototype remains under `experiments/vocabulary-mvp/`.
+- LB-DEC-055 is SUPERSEDED by LB-DEC-058: the planned Flutter state-management ADR was withdrawn before proposal.
+- LB-DEC-057 is DECIDED: the MVP uses the native Apple client and platform scope defined by [ADR-009](ADR-009-Native-Apple-Client-and-Platform-Baseline.md).
 
 Deferred records remain visible and do not become active work until their named gate is approved.
 
@@ -150,33 +157,37 @@ Related source questions should share evidence and, where appropriate, one final
 | --- | --- | --- |
 | Mastery and review evidence | LB-DEC-001, LB-DEC-014, LB-DEC-026, LB-DEC-040, LB-DEC-043, LB-DEC-051 | DOC-17, ADR-004, ADR-005, and deterministic vectors |
 | Lexical datasets, licensing, and validation | LB-DEC-004, LB-DEC-012, LB-DEC-019, LB-DEC-029, LB-DEC-032, LB-DEC-038 | One DOC-18 data-source/license/validation register |
-| Initial client platform and UX baseline | LB-DEC-005, LB-DEC-037, LB-DEC-049, LB-DEC-050, LB-DEC-053 | Platform product decision, M1 UI baseline, and license records |
+| Initial client platform and UX baseline | LB-DEC-005, LB-DEC-037, LB-DEC-049, LB-DEC-050, LB-DEC-053, LB-DEC-057 | Native Apple platform decision, M1 UI/snapshot baseline, and license records |
 | Local data protection and privacy | LB-DEC-006, LB-DEC-007, LB-DEC-009, LB-DEC-042, LB-DEC-044, LB-DEC-047 | ADR-007 and DOC-19 |
+| Native client composition and persistence | LB-DEC-041, LB-DEC-055, LB-DEC-058, LB-DEC-059 | ADR-011, revised ADR-003, and executable composition/persistence spikes |
 | Adaptive policy and learner control | LB-DEC-003, LB-DEC-023, LB-DEC-024, LB-DEC-025, LB-DEC-027, LB-DEC-052 | Versioned ALE and UX policy |
 | Knowledge Graph policy | LB-DEC-008, LB-DEC-010, LB-DEC-011, LB-DEC-020, LB-DEC-021, LB-DEC-022 | Graph domain/validation decisions and future scaling policy |
 | AI and Language Package execution | LB-DEC-028, LB-DEC-030, LB-DEC-031, LB-DEC-034, LB-DEC-036 | Provider contract, evaluation gate, and package capability boundary |
 
 ## ADR catalog and planned queue
 
-ADR-001 and ADR-008 are accepted. The remaining filenames are reserved and do not represent accepted decisions. The first column is the stable ADR number, not execution priority; the Current decision queue below owns execution order.
+ADR-009 and ADR-010 are accepted. ADR-001 and ADR-008 are preserved as superseded history, and ADR-002 was withdrawn before proposal. The remaining filenames are reserved and do not represent accepted decisions. The first column is the stable ADR number, not execution priority; the Current decision queue below owns execution order.
 
 | ADR no. | ADR | Status | Decision references | Target and hard gate | Acceptance evidence |
 | ---: | --- | --- | --- | --- | --- |
-| 1 | [ADR-001-Repository-Package-and-Module-Layout.md](ADR-001-Repository-Package-and-Module-Layout.md) | accepted | LB-DEC-054 | Accepted 2026-07-19; M1 paths stable | Package paths, CI scope, and explicit prototype disposition |
-| 2 | ADR-002-Flutter-State-Management-and-DI.md | planned | LB-DEC-055 | M0; hard gate M1 start | Minimal composition root that supports unit and widget tests |
-| 3 | ADR-003-SQLite-Query-and-Migration-Stack.md | planned | LB-DEC-013, LB-DEC-041 | M0; hard gate M1 start | Atomic transaction, repository fake, forward migration, and restart spike |
+| 1 | [ADR-001-Repository-Package-and-Module-Layout.md](ADR-001-Repository-Package-and-Module-Layout.md) | superseded by ADR-010 | LB-DEC-054 | Superseded 2026-07-21 | Historical Flutter/Dart topology and experiment decision |
+| 2 | ADR-002-Flutter-State-Management-and-DI.md | withdrawn before proposal | LB-DEC-055 | Withdrawn 2026-07-21 | Replaced by LB-DEC-058 and planned ADR-011; number is not reused |
+| 3 | ADR-003-Swift-Persistence-and-Migration-Stack.md | planned | LB-DEC-013, LB-DEC-059 | M0; hard gate M1 start | Atomic transaction, repository fake, forward migration, and restart spike |
 | 4 | ADR-004-FSRS-Implementation-and-Version.md | planned | LB-DEC-040 | Before M3 start | Pinned version, reference vectors, serialization, and upgrade policy |
 | 5 | ADR-005-ReviewUnit-Retrieval-and-Evidence-Rating.md | planned | LB-DEC-001, LB-DEC-014, LB-DEC-026, LB-DEC-043 | Before M3 review implementation | Retrieval contracts, raw evidence, derived rating, and deterministic replay |
 | 6 | ADR-006-Domain-Events-and-Transactional-Outbox.md | planned | LB-DEC-056 | M0; hard gate M1 start | Transaction boundary, ordering, idempotency, retry, and replay |
-| 7 | ADR-007-Local-Database-Protection-and-Recovery.md | planned | LB-DEC-005, LB-DEC-006, LB-DEC-009, LB-DEC-042 | Before private learner data in M1 | Threat assumptions, secure key storage, backup/restore, lost-key behavior, and deletion verification |
-| 8 | [ADR-008-Initial-Pilot-and-Golden-Layout-Platform.md](ADR-008-Initial-Pilot-and-Golden-Layout-Platform.md) | accepted | LB-DEC-037, LB-DEC-053 | Accepted 2026-07-20; M1 platform/golden baseline stable | Android-only pilot, portable boundaries, deterministic golden fixture/matrix, and iOS re-entry gate |
+| 7 | ADR-007-Local-Database-Protection-and-Recovery.md | planned | LB-DEC-005, LB-DEC-006, LB-DEC-009, LB-DEC-042 | Before private learner data in M1 | Apple-platform threat assumptions, secure key storage, backup/restore, lost-key behavior, and deletion verification |
+| 8 | [ADR-008-Initial-Pilot-and-Golden-Layout-Platform.md](ADR-008-Initial-Pilot-and-Golden-Layout-Platform.md) | superseded by ADR-009 | LB-DEC-037, LB-DEC-053 | Superseded 2026-07-21 | Historical Android/Flutter pilot and golden baseline |
+| 9 | [ADR-009-Native-Apple-Client-and-Platform-Baseline.md](ADR-009-Native-Apple-Client-and-Platform-Baseline.md) | accepted | LB-DEC-053, LB-DEC-057 | Accepted 2026-07-21; M1 platform/snapshot baseline stable | Native Swift/SwiftUI Apple targets, platform matrix, and current layout baseline |
+| 10 | [ADR-010-Swift-Package-and-Module-Layout.md](ADR-010-Swift-Package-and-Module-Layout.md) | accepted | LB-DEC-054 | Accepted 2026-07-21; M1 module paths stable | SwiftPM targets, dependency rules, CI ownership, and experiment/device boundaries |
+| 11 | ADR-011-SwiftUI-State-Observation-Navigation-and-Dependency-Composition.md | planned | LB-DEC-058 | M0; hard gate M1 start | Minimal native composition root that supports unit, view, and application tests |
 
 ## Current decision queue
 
 Resolve in this order unless a dependency changes:
 
-1. LB-DEC-055 and ADR-002: Flutter state management and dependency injection.
-2. LB-DEC-041 and ADR-003: SQLite/query/migration stack.
+1. LB-DEC-058 and ADR-011: SwiftUI observation/state, navigation, and dependency composition.
+2. LB-DEC-059 and revised ADR-003: native Swift persistence/query/migration stack.
 3. LB-DEC-005, LB-DEC-006, LB-DEC-009, LB-DEC-042, and ADR-007: local data protection and recovery.
 4. LB-DEC-056 and ADR-006: domain events and transactional outbox.
 5. LB-DEC-018: single versus conflicting active missions for the MVP.
@@ -216,6 +227,7 @@ At every milestone review:
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 0.2.0 | 2026-07-21 | Recorded the native Apple architecture pivot; superseded Flutter-specific decisions and ADRs; accepted ADR-009/ADR-010; added LB-DEC-057 through LB-DEC-059; and advanced the active queue to ADR-011. |
 | 0.1.2 | 2026-07-20 | Accepted ADR-008, closed LB-DEC-037 and LB-DEC-053, and advanced the active queue to ADR-002. |
 | 0.1.1 | 2026-07-19 | Accepted ADR-001, closed LB-DEC-054, recorded the experiment disposition, and advanced the active decision queue. |
 | 0.1.0 | 2026-07-15 | Registered all 53 source open questions and three supplemental architecture decisions; assigned class, status, owner, gate, and required artifact. |

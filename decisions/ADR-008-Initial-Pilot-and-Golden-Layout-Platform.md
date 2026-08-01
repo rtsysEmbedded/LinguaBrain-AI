@@ -1,7 +1,9 @@
 ---
 title: "ADR-008: Initial Pilot and Golden Layout Platform"
-status: accepted
+status: superseded
 date: 2026-07-20
+superseded_by: ADR-009
+superseded_date: 2026-07-21
 decision_makers:
   - Product Owner
   - Flutter Architecture Lead
@@ -12,6 +14,9 @@ decision_ids:
 work_items:
   - LB-WI-M0-12
 ---
+
+> [!IMPORTANT]
+> This ADR is historical and was superseded by [ADR-009: Native Apple Client and Platform Baseline](ADR-009-Native-Apple-Client-and-Platform-Baseline.md) on 2026-07-21. Its original decision and rationale are preserved below.
 
 # ADR-008: Initial Pilot and Golden Layout Platform
 

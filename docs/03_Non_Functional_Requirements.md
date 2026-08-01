@@ -1,9 +1,9 @@
 ---
 title: Non-Functional Requirements
 document_id: LB-DOC-03
-version: 0.2.1
+version: 0.3.0
 status: Draft
-last_updated: 2026-07-11
+last_updated: 2026-07-21
 ---
 
 # Non-Functional Requirements
@@ -19,6 +19,12 @@ LinguaBrain is a deterministic, offline-first Learning Engine with an optional A
 > The application must remain useful when a network connection or AI provider is unavailable.
 
 AI generation may be delayed or unavailable. Existing knowledge items, review scheduling, cached exercises, learner history, and core progress tracking must continue to work.
+
+### Native Apple platform baseline
+
+The active MVP is implemented in native Swift 6.4 and SwiftUI for iOS/iPadOS 27 and macOS 27 Golden Gate. The iPhone app is the primary controlled-pilot surface; iPad and Mac are first-class local-only MVP surfaces. Cross-device synchronization remains a separate post-MVP capability, so installing the app on several Apple devices does not imply shared learner state.
+
+Xcode 27 and the OS 27 SDKs are beta at the time of this decision. Development may use the pinned beta toolchain, but production distribution, authoritative performance baselines, and release screenshots require a stable Xcode 27 toolchain and final OS 27 verification. Beta-only behavior must never become an undocumented product contract.
 
 ## Performance
 
@@ -39,10 +45,10 @@ AI generation may be delayed or unavailable. Existing knowledge items, review sc
 
 - The application must avoid blocking the UI during database access, media processing, AI requests, or synchronization.
 - Scrolling lists of cards, decks, review history, and search results must use paging or virtualization.
-- The primary mobile experience should target smooth interaction on a mid-range device.
+- The primary iPhone experience must remain responsive on the pinned iOS 27 pilot device; iPad and Mac use separate named window/device fixtures.
 - Expensive graph visualizations must load on demand and must not block a review session.
 
-Performance acceptance uses a named benchmark device class, a fixed 10,000-item/50,000-event dataset, cold/warm conditions, and p50/p95 results. The exact pilot device is recorded in the implementation test plan.
+Performance acceptance uses named iPhone, iPad, and Apple-silicon Mac configurations, a fixed 10,000-item/50,000-event dataset, cold/warm conditions, and p50/p95 results. Exact hardware, OS build, Xcode build, power state, and dataset versions are recorded in the implementation test plan.
 
 ### Capacity targets for the MVP
 
@@ -70,6 +76,8 @@ The following may degrade gracefully while offline:
 - AI-generated exercises or explanations;
 - cloud synchronization;
 - cloud text-to-speech and speech recognition.
+
+Apple Foundation Models, Translation, and Speech capabilities are optional runtime capabilities even on OS 27. Eligibility, installed assets, locale support, region, and model readiness are checked before use; their absence must select a deterministic, cached, manual, or explicitly configured provider fallback.
 
 ### Failure behavior
 
@@ -111,6 +119,8 @@ Users may provide their own keys for supported AI providers.
 - The application must make it clear whether a request uses a personal key, a project-managed service, or a local model.
 - Removing a provider configuration must securely remove associated local key material.
 
+For the Apple-native clients, Keychain is the candidate secret store and must be configured explicitly for local-only versus synchronized credentials. Learner databases, transcripts, and audio do not belong in Keychain. Final Keychain accessibility classes, Data Protection, macOS App Sandbox, backup, recovery, and lost-key behavior are owned by ADR-007 and remain blocking before private learner data is accepted.
+
 ### Secure engineering baseline
 
 - Validate and normalize external input, including imported text and OCR output.
@@ -130,6 +140,8 @@ Learners own their knowledge items, learning history, settings, AI usage configu
 - Collect only information necessary for learning features the user has enabled.
 - Telemetry must be opt-in and must not include raw API keys, full private learning content, or sensitive free-form notes.
 - The product must disclose what is sent to an AI provider before cloud generation is used.
+- Meeting or conversation capture requires an explicit start action, a persistent visible recording indicator, stop/delete controls, and disclosure before content is sent to any third-party model.
+- Background execution is not treated as consent. Continuous recording uses only platform-approved audio modes and must recover safely from interruptions and route changes.
 
 ### Export and deletion
 
@@ -179,7 +191,8 @@ Synchronization is not an MVP prerequisite, but the local architecture must rema
 
 - Domain and application logic must not assume a phone, touchscreen, physical keyboard, microphone, speaker, or permanent network connection.
 - Every client declares a versioned CapabilitySnapshot; unsupported activities are filtered before planning or rendering.
-- Mobile, desktop, and a future dedicated device reuse the same event, mastery, ReviewUnit, and synchronization contracts.
+- iPhone, iPad, and Mac reuse the same native Swift domain/application contracts and local data semantics.
+- A future non-Apple dedicated device may reuse versioned data and command contracts, but direct SwiftUI or Apple-framework reuse is not promised; its runtime/interoperability boundary requires a separate ADR.
 - Audio capture is an optional capability with explicit consent/recording state, not an always-present core dependency.
 
 ## Observability
@@ -209,7 +222,8 @@ Metrics must support product improvement, not surveillance or advertising profil
 
 ## Accessibility and localization
 
-- Support scalable text, screen readers, keyboard navigation where applicable, and high-contrast/dark modes.
+- Support Dynamic Type, VoiceOver, Full Keyboard Access where applicable, Reduce Motion, Increase Contrast, dark mode, and non-color status cues.
+- iPad layouts must remain usable in resizable and multitasking windows. macOS layouts must support keyboard, pointer, focus, menus, and resizable windows.
 - Persian interface and content flows must correctly support RTL rendering; German learning content must retain correct LTR behavior within mixed-language screens.
 - Audio controls must support replay and configurable speed.
 - Accessibility requirements are expanded in `14_Frontend_UX_UI.md`.
@@ -227,6 +241,8 @@ The MVP architecture satisfies this document when:
 - the project can add a language package or AI provider without a core-engine rewrite.
 
 ## Open questions
+
+The first source question below is preserved verbatim for traceability. Its original Flutter framing is now interpreted for the native Apple targets under LB-DEC-005 and ADR-007; it is still open.
 
 - Which platform-secure storage APIs are required for the initial Flutter targets?
 - Which encryption approach is justified for the local MVP database, given usability and recovery trade-offs?
@@ -246,6 +262,7 @@ The MVP architecture satisfies this document when:
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 0.3.0 | 2026-07-21 | Adopted the native Swift/SwiftUI OS 27 quality baseline, Apple capability fallbacks, recording privacy, and iPhone/iPad/macOS accessibility and performance matrices. |
 | 0.2.1 | 2026-07-11 | Added client-surface portability and capability-negotiation requirements. |
 | 0.2.0 | 2026-07-11 | Cross-document architecture review; resolved domain, validation, scheduling, privacy, and MVP consistency contracts. |
 | 0.1.0 | 2026-07-10 | Initial non-functional requirements specification. |

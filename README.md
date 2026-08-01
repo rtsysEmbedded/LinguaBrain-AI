@@ -13,7 +13,8 @@ AI may generate examples, explanations, cards, and exercises. The Learning Engin
 ## MVP focus
 
 - German ↔ Persian learning
-- Android-phone controlled MVP pilot
+- Native Swift/SwiftUI on iOS/iPadOS 27 and macOS 27 Golden Gate
+- iPhone controlled MVP pilot, with first-class local-only iPad and Mac surfaces
 - German–Persian word and phrase learning for general and professional missions
 - AI-enriched knowledge items and automatic classification
 - Basic knowledge graph and smart decks
@@ -26,24 +27,44 @@ Image-based Level 1 learning, OCR/document ingestion, speaking evaluation, and a
 
 ## Repository layout
 
-The normative monorepo paths and dependency boundaries are defined by [ADR-001](decisions/ADR-001-Repository-Package-and-Module-Layout.md). Directories are created when their approved milestone begins.
+The normative monorepo paths and dependency boundaries are defined by [ADR-010](decisions/ADR-010-Swift-Package-and-Module-Layout.md), which supersedes ADR-001. Directories are created when their approved milestone begins.
 
 ```text
 LinguaBrain AI/
 ├── apps/
-│   ├── mobile/                         # M1 Flutter reference client
-│   └── device/                         # Future; created only after approval
+│   └── learner/
+│       ├── LinguaBrain.xcworkspace/    # Native workspace; user state is ignored
+│       ├── LinguaBrain.xcodeproj/      # iOS/iPadOS and macOS app targets
+│       ├── App/                        # SwiftUI entry, scenes, navigation, presentation
+│       ├── Resources/                  # Localizations, assets, manifests, entitlements
+│       ├── Tests/                      # Composition and platform integration tests
+│       └── UITests/                    # Critical Apple-platform journeys
 ├── packages/
-│   ├── linguabrain_domain/             # Pure Dart domain model and contracts
-│   ├── linguabrain_application/        # Pure Dart use cases, ports, transactions
-│   ├── linguabrain_language_de/        # First-party German Language Package
-│   ├── linguabrain_language_fa/        # First-party Persian Language Package
-│   ├── linguabrain_persistence_sqlite/ # SQLite repositories, migrations, FTS, outbox
-│   ├── linguabrain_ai/                 # AI orchestration and provider adapters
-│   ├── linguabrain_review_fsrs/        # FSRS scheduler adapter and vectors
-│   ├── linguabrain_media/              # Media cache and playback adapters
-│   ├── linguabrain_platform_flutter/   # Secure storage, lifecycle, capabilities
-│   └── linguabrain_test_support/       # Synthetic fixtures, fakes, contract suites
+│   └── LinguaBrainKit/
+│       ├── Package.swift               # One local Swift package, bounded targets
+│       ├── Sources/
+│       │   ├── LinguaBrainDomain/
+│       │   ├── LinguaBrainApplication/
+│       │   ├── LinguaBrainPresentation/
+│       │   ├── LinguaBrainLanguageDE/
+│       │   ├── LinguaBrainLanguageFA/
+│       │   ├── LinguaBrainPersistence/
+│       │   ├── LinguaBrainReviewFSRS/
+│       │   ├── LinguaBrainAI/
+│       │   ├── LinguaBrainMedia/
+│       │   ├── LinguaBrainPlatformApple/
+│       │   └── LinguaBrainTestSupport/
+│       └── Tests/
+│           ├── LinguaBrainDomainTests/
+│           ├── LinguaBrainApplicationTests/
+│           ├── LinguaBrainPresentationTests/
+│           ├── LinguaBrainLanguageDETests/
+│           ├── LinguaBrainLanguageFATests/
+│           ├── LinguaBrainPersistenceTests/
+│           ├── LinguaBrainReviewFSRSTests/
+│           ├── LinguaBrainAITests/
+│           ├── LinguaBrainMediaTests/
+│           └── LinguaBrainPlatformAppleTests/
 ├── services/
 │   └── sync_api/                       # Post-MVP FastAPI service
 ├── contracts/                          # Future external API/event schemas
@@ -83,7 +104,7 @@ Track current progress and the next verified task in the [Project Status and Del
 
 ## Status
 
-Documents 01–15 remain reviewed drafts. [ADR-001](decisions/ADR-001-Repository-Package-and-Module-Layout.md) defines the repository boundary, and [ADR-008](decisions/ADR-008-Initial-Pilot-and-Golden-Layout-Platform.md) defines an Android-phone-only pilot and Android golden-layout baseline. The next gate is ADR-002 for Flutter state management and dependency injection (`LB-DEC-055`, `LB-WI-M0-04`).
+Documents 01–15 remain reviewed drafts. [ADR-009](decisions/ADR-009-Native-Apple-Client-and-Platform-Baseline.md) defines the native Apple OS 27 targets, and [ADR-010](decisions/ADR-010-Swift-Package-and-Module-Layout.md) defines the Swift/Xcode/SwiftPM repository boundary. They supersede the former Flutter ADRs 008 and 001. The next gate is planned ADR-011 for SwiftUI state, navigation, Observation, and dependency composition (`LB-DEC-058`, `LB-WI-M0-15`).
 
 ## Key resolved contracts
 
@@ -92,6 +113,7 @@ Documents 01–15 remain reviewed drafts. [ADR-001](decisions/ADR-001-Repository
 - FSRS schedules learner-specific ReviewUnits per LearningObjective.
 - Domain services validate/promote content; ALE makes educational decisions.
 - German and Persian Language Packages are built-in, first-party MVP components.
-- The shared core is client-surface neutral and can later support a focused dedicated device without forking learner data or learning logic.
-- Production code uses a modular monorepo with pure Dart domain/application packages and thin client shells; the Python vocabulary spike remains a non-production experiment.
-- The controlled MVP pilot targets Android phones only; iOS requires a separate re-entry decision while shared code remains portable.
+- The Swift domain/application core is independent of SwiftUI and Apple model/storage SDKs; a future non-Apple device must preserve its versioned semantics through a separately approved runtime or interoperability boundary.
+- Production code uses a modular monorepo, one local multi-target Swift package, and thin native Apple app hosts; the Python vocabulary spike remains a non-production experiment.
+- The controlled pilot targets iPhone on iOS 27. iPadOS 27 and macOS 27 are first-class local-only MVP surfaces; sync remains post-MVP.
+- Apple Foundation Models, SpeechAnalyzer, and Translation are capability- and locale-gated adapters. German–Persian learning retains validated cloud/local and no-AI fallbacks.

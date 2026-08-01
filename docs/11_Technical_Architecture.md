@@ -1,51 +1,55 @@
 ---
 title: Technical Architecture
 document_id: LB-DOC-11
-version: 0.2.3
+version: 0.3.0
 status: Draft
-last_updated: 2026-07-19
+last_updated: 2026-07-21
 ---
 
 # Technical Architecture
 
 ## Purpose
 
-This document maps the product and domain specifications to an implementable software architecture. The MVP is a modular, offline-first Flutter application with local persistence and optional cloud or local AI providers. Domain/application packages remain UI-surface neutral so a later dedicated Linux/embedded client can reuse them.
+This document maps the product and domain specifications to an implementable native Apple architecture. The MVP uses Swift 6.4, SwiftUI, and OS 27 SDKs for a universal iPhone/iPad app plus a native macOS 27 Golden Gate app. The deterministic learning core remains independent of presentation, storage, and model SDKs even though the production runtime is now intentionally Apple-first.
 
 ## Architecture principles
 
-- Domain logic is independent of Flutter, SQLite, and AI SDKs.
+- Domain logic is independent of SwiftUI, concrete persistence frameworks, and AI SDKs.
 - Dependencies point inward toward domain contracts.
 - The UI never writes directly to the database.
 - AI never mutates canonical content, mastery, or scheduling directly.
 - Local writes complete before optional synchronization.
 - Modules communicate through typed commands, queries, and domain events.
 - Every external dependency is behind an adapter interface.
+- Swift 6 strict concurrency is enabled; shared mutable infrastructure is actor-isolated and public cross-actor values conform to `Sendable` where appropriate.
 
 ## System context
 
 ```mermaid
 flowchart LR
-    U[Learner] --> CLIENT["Client Surface Adapter"]
+    U[Learner] --> IOS["SwiftUI iPhone / iPad App"]
+    U --> MAC["SwiftUI macOS App"]
+    IOS --> CLIENT["Apple Client Composition"]
+    MAC --> CLIENT
     CLIENT --> CORE["Shared Application / Domain Core"]
-    CORE --> DB[("Encrypted/Protected SQLite")]
+    CORE --> DB[("Protected Local Store")]
     CORE --> AI[AI Orchestration]
-    AI --> CLOUD[Cloud AI Provider]
-    AI --> LOCAL[Local OpenAI-compatible Model]
+    AI --> APPLE["Apple Foundation Models"]
+    AI --> CLOUD["Configured Cloud / Local Provider"]
     CORE --> MEDIA[Local Media Cache]
     CORE -. future .-> SYNC["Sync API / FastAPI"]
 ```
 
-Client Surface Adapters include the MVP Flutter mobile UI and future desktop/dedicated-device UIs. Each adapter exposes a CapabilitySnapshot and maps physical/touch controls to the same application commands.
+The iPhone, iPad, and Mac scenes expose a versioned `CapabilitySnapshot` and map touch, keyboard, pointer, window, microphone, speaker, and local-model capabilities to the same application commands. Each installation is local-only in the MVP; the diagram's future sync path is not an implied cross-device feature.
 
 ## Layer model
 
 | Layer | Responsibilities | Must not depend on |
 | --- | --- | --- |
-| Presentation | Screens, widgets, navigation, view state, accessibility | SQLite/AI provider implementations |
-| Application | Use cases, transactions, orchestration, authorization | Flutter widgets, concrete infrastructure |
+| Presentation | SwiftUI views/scenes, navigation, observable view state, accessibility | Persistence/model provider implementations |
+| Application | Use cases, transactions, orchestration, authorization | SwiftUI views and concrete infrastructure |
 | Domain | Entities, value objects, rules, events, repository interfaces | Frameworks, network, storage |
-| Infrastructure | SQLite repositories, secure storage, provider adapters, media | Presentation |
+| Infrastructure | Local-store repositories, Keychain/security, provider adapters, media | Presentation |
 
 ## Bounded modules
 
@@ -95,24 +99,44 @@ Client registration, surface type, CapabilitySnapshot, installation identity, pl
 
 ## Accepted repository structure
 
-Repository, package, dependency, CI, and experiment boundaries are governed by [ADR-001](../decisions/ADR-001-Repository-Package-and-Module-Layout.md). The following ownership/path map is normative. Directories are created only when their approved milestone begins.
+Repository, Swift Package Manager, dependency, CI, and experiment boundaries are governed by [ADR-010](../decisions/ADR-010-Swift-Package-and-Module-Layout.md), which supersedes ADR-001. The following ownership/path map is normative. Directories are created only when their approved milestone begins.
 
 ```text
 LinguaBrain AI/
 ├── apps/
-│   ├── mobile/                         # M1 Flutter reference client
-│   └── device/                         # Future; created only after approval
+│   └── learner/
+│       ├── LinguaBrain.xcworkspace/    # Native workspace; generated user state is ignored
+│       ├── LinguaBrain.xcodeproj/      # iOS/iPadOS and macOS app targets
+│       ├── App/                        # SwiftUI app entry, scenes, navigation, presentation
+│       ├── Resources/                  # Localizations, assets, privacy manifests, entitlements
+│       ├── Tests/                      # App composition and platform integration tests
+│       └── UITests/                    # Critical Apple-platform journeys
 ├── packages/
-│   ├── linguabrain_domain/             # Pure Dart domain model and contracts
-│   ├── linguabrain_application/        # Pure Dart use cases, ports, transactions
-│   ├── linguabrain_language_de/        # First-party German Language Package
-│   ├── linguabrain_language_fa/        # First-party Persian Language Package
-│   ├── linguabrain_persistence_sqlite/ # SQLite repositories, migrations, FTS, outbox
-│   ├── linguabrain_ai/                 # AI orchestration and provider adapters
-│   ├── linguabrain_review_fsrs/        # FSRS scheduler adapter and vectors
-│   ├── linguabrain_media/              # Media cache and playback adapters
-│   ├── linguabrain_platform_flutter/   # Secure storage, lifecycle, capabilities
-│   └── linguabrain_test_support/       # Synthetic fixtures, fakes, contract suites
+│   └── LinguaBrainKit/
+│       ├── Package.swift               # One local package, multiple bounded targets
+│       ├── Sources/
+│       │   ├── LinguaBrainDomain/
+│       │   ├── LinguaBrainApplication/
+│       │   ├── LinguaBrainPresentation/
+│       │   ├── LinguaBrainLanguageDE/
+│       │   ├── LinguaBrainLanguageFA/
+│       │   ├── LinguaBrainPersistence/
+│       │   ├── LinguaBrainReviewFSRS/
+│       │   ├── LinguaBrainAI/
+│       │   ├── LinguaBrainMedia/
+│       │   ├── LinguaBrainPlatformApple/
+│       │   └── LinguaBrainTestSupport/
+│       └── Tests/
+│           ├── LinguaBrainDomainTests/
+│           ├── LinguaBrainApplicationTests/
+│           ├── LinguaBrainPresentationTests/
+│           ├── LinguaBrainLanguageDETests/
+│           ├── LinguaBrainLanguageFATests/
+│           ├── LinguaBrainPersistenceTests/
+│           ├── LinguaBrainReviewFSRSTests/
+│           ├── LinguaBrainAITests/
+│           ├── LinguaBrainMediaTests/
+│           └── LinguaBrainPlatformAppleTests/
 ├── services/
 │   └── sync_api/                       # Post-MVP FastAPI service
 ├── contracts/                          # Future external API/event schemas
@@ -130,11 +154,13 @@ LinguaBrain AI/
 └── .gitignore
 ```
 
-The domain and application packages are pure Dart. Bounded modules remain named folders inside those coarse-grained packages until a distinct dependency, adapter, test, or runtime boundary justifies extraction. Domain owns aggregate repository contracts required by domain semantics; application owns use-case gateways such as AI, media, secure storage, transaction coordination, event dispatch, and external services. A generic `shared` or `utils` package is prohibited.
+`LinguaBrainKit` is one repository-local Swift package with separately compiled targets. `LinguaBrainDomain` and `LinguaBrainApplication` are native Swift targets that do not import SwiftUI, SwiftData/Core Data/SQLite implementations, Foundation Models, Speech, AVFoundation, Security, or CloudKit. Domain owns aggregate repository contracts required by semantics; Application owns use-case gateways for AI, media, secure storage, transactions, events, clocks, and external services. A generic catch-all shared or utils target is prohibited.
 
-The mobile app owns Flutter presentation and composition only. Infrastructure and Language Package implementations depend inward on application ports and domain types. Production packages cannot import `experiments/`; future services cannot become a requirement for offline learning.
+`LinguaBrainPresentation` owns reusable SwiftUI feature/view-state code and depends inward on Application/Domain. The app project owns `@main` entry points, scenes/windows, platform navigation composition, entitlements, signing, lifecycle, and adapter wiring. Infrastructure and Language Package targets depend inward on application ports and domain types. Production targets cannot import `experiments/`; future services cannot become a requirement for offline learning.
 
-Flutter state management, SQLite tooling, FSRS, event/outbox details, and data protection remain governed by their dedicated ADRs.
+Allowed dependencies are enforced in `Package.swift` and CI. The app may import Presentation, Application, and concrete adapter targets; Application imports Domain; Presentation imports Application/Domain; Language targets import Domain; Persistence/AI/Review/Media/Platform adapters import only the ports and types they implement. Dependency cycles are prohibited.
+
+SwiftUI state/navigation/dependency composition, persistence tooling, FSRS, event/outbox details, and Apple data protection remain governed by their dedicated ADRs. A future non-Apple dedicated device cannot assume direct SwiftUI/Apple-framework reuse; it must consume versioned contracts through a separately approved runtime or interoperability architecture.
 
 ## Application use cases
 
@@ -215,18 +241,19 @@ sequenceDiagram
 
 ## Persistence and transactions
 
-- SQLite is the local source of truth for MVP learner data.
-- Repository interfaces expose domain objects, not SQL rows.
+- A protected local store is the source of truth for each MVP installation; ADR-003 selects SwiftData/Core Data/SQLite/GRDB or another adapter.
+- Repository interfaces expose domain objects, not SwiftData models, Core Data managed objects, or SQL rows.
 - A completed attempt, LearningEvent, mastery projection, and review update use one atomic transaction or a recoverable outbox pattern.
 - Schema migrations are forward-tested and backup-aware.
 - Derived projections can be rebuilt from events where documented.
 
 ## Concurrency and background work
 
-- UI-bound operations remain asynchronous and cancellable.
-- AI, media, indexing, and expensive projections run outside the UI isolate/thread.
+- UI-bound operations run on `MainActor`, remain asynchronous where needed, and are cancellable.
+- Persistence, AI, speech/audio, media, indexing, and expensive projections use explicit actors or isolated services rather than blocking `MainActor`.
 - Idempotency keys protect enrichment and event-processing retries.
 - Cancellation never discards already committed learner events.
+- `SpeechAnalyzer`/`SpeechTranscriber` streams and AVFoundation capture are isolated behind application gateways; background-task APIs are used only for platform-appropriate deferred work, never as a promise of continuous execution.
 
 ## Configuration
 
@@ -251,13 +278,13 @@ Presentation translates errors into recoverable actions. Infrastructure details 
 | --- | --- |
 | Domain unit | invariants, scoring components, relation policies, mastery updates |
 | Contract | repository, language-package, AI provider, evaluator interfaces |
-| Integration | SQLite transactions, migrations, full review and ingestion flows |
-| Widget/UI | mixed RTL/LTR, accessibility, state restoration, offline states |
-| Golden | critical card and exercise layouts |
+| Integration | Local-store transactions, migrations, full review and ingestion flows |
+| SwiftUI view | mixed RTL/LTR, Observation state, accessibility, restoration, offline states |
+| Snapshot/UI | provisional visual snapshots plus XCUITest critical flows on iPhone, iPad, and Mac |
 | AI evaluation | schema compliance, level appropriateness, factual validation |
 | Performance | startup, search, planning, graph query, large review history |
 
-Tests use fake clocks, deterministic IDs, seeded randomness, and provider fakes to ensure reproducibility.
+Swift Testing is the default for package unit/contract tests; XCTest/XCUITest remains available for UI automation, launch, performance, and platform integration evidence. Tests use fake clocks, deterministic IDs, seeded randomness, synthetic learner content, and provider fakes.
 
 ## Security boundaries
 
@@ -273,7 +300,7 @@ FastAPI may later provide accounts, encrypted sync coordination, provider proxyi
 
 ## Acceptance criteria
 
-- Domain tests run without Flutter, SQLite, or network dependencies.
+- Domain tests run with Swift Package Manager without SwiftUI, concrete persistence, Apple model SDK, or network dependencies.
 - One provider adapter can be replaced by another without changing planning logic.
 - A full review transaction survives restart without partial state.
 - German rules live behind the Language Package interface.
@@ -284,11 +311,12 @@ FastAPI may later provide accounts, encrypted sync coordination, provider proxyi
 
 Before M1 work becomes `READY`:
 
-- Flutter state management and dependency injection.
-- SQLite library/ORM and migration tooling.
+- SwiftUI Observation/state, navigation, and dependency composition (planned ADR-011).
+- Native Swift persistence/query/migration tooling (revised ADR-003).
 - Domain event and transactional outbox approach.
-- Local database encryption/security strategy.
-- Package/module repository layout — [accepted in ADR-001](../decisions/ADR-001-Repository-Package-and-Module-Layout.md).
+- Apple local-store protection, Keychain, backup, and recovery strategy.
+- Native Apple platform baseline — [accepted in ADR-009](../decisions/ADR-009-Native-Apple-Client-and-Platform-Baseline.md).
+- Swift package/module repository layout — [accepted in ADR-010](../decisions/ADR-010-Swift-Package-and-Module-Layout.md).
 
 Before M3 review work becomes `READY`:
 
@@ -302,12 +330,14 @@ Before M3 review work becomes `READY`:
 - `13_AI_Agent_Pipeline.md` — Processing orchestration.
 - `14_Frontend_UX_UI.md` — Presentation behavior.
 - `../decisions/DECISION_REGISTER.md` — Decision ownership, status, and latest safe gates.
-- `../decisions/ADR-001-Repository-Package-and-Module-Layout.md` — Accepted monorepo, dependency, CI, and experiment boundaries.
+- `../decisions/ADR-009-Native-Apple-Client-and-Platform-Baseline.md` — Accepted Apple OS 27 targets and visual baseline.
+- `../decisions/ADR-010-Swift-Package-and-Module-Layout.md` — Accepted Swift/Xcode/SwiftPM topology and dependency boundaries.
 
 ## Revision history
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 0.3.0 | 2026-07-21 | Replaced the Flutter/Dart architecture with native Swift 6.4, SwiftUI OS 27 app targets, SwiftPM modules, Apple capability adapters, and native testing/concurrency boundaries. |
 | 0.2.3 | 2026-07-19 | Adopted ADR-001's modular monorepo topology, dependency rules, and non-production prototype classification. |
 | 0.2.2 | 2026-07-15 | Aligned required ADRs with their M1 and M3 implementation gates and linked the Decision Register. |
 | 0.2.1 | 2026-07-11 | Added shared-core Client Surface Adapter and capability contract for future dedicated hardware. |

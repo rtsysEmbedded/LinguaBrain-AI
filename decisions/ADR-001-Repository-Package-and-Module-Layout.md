@@ -1,7 +1,9 @@
 ---
 title: "ADR-001: Repository, Package, and Module Layout"
-status: accepted
+status: superseded
 date: 2026-07-19
+superseded_by: ADR-010
+superseded_date: 2026-07-21
 decision_makers:
   - Software Architect
 decision_ids:
@@ -9,6 +11,9 @@ decision_ids:
 work_items:
   - LB-WI-M0-03
 ---
+
+> [!IMPORTANT]
+> This ADR is historical and was superseded by [ADR-010: Swift Package and Module Layout](ADR-010-Swift-Package-and-Module-Layout.md) on 2026-07-21. Its original decision and rationale are preserved below.
 
 # ADR-001: Repository, Package, and Module Layout
 

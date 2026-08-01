@@ -47,12 +47,23 @@ htmlcov/
 /experiments/vocabulary-mvp/*.xlsx
 /experiments/vocabulary-mvp/*.xlsm
 
-# Flutter and Dart generated files
-.dart_tool/
-.packages
-.pub-cache/
-.flutter-plugins
-.flutter-plugins-dependencies
+# Swift, Swift Package Manager, and Xcode generated/local files
+.build/
+.swiftpm/xcode/package.xcworkspace/xcuserdata/
+DerivedData/
+xcuserdata/
+*.xcuserstate
+*.xccheckout
+*.xcscmblueprint
+*.moved-aside
+*.ipa
+*.dSYM
+*.dSYM.zip
+*.xcarchive
+*.xcodeproj/project.xcworkspace/xcuserdata/
+*.xcodeproj/xcuserdata/
+
+# Keep source projects, workspaces, entitlements, and app-level Package.resolved files tracked.
 
 # Generated documentation output
 site/
