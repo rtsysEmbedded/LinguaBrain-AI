@@ -15,6 +15,7 @@ Use [ADR_TEMPLATE.md](ADR_TEMPLATE.md) as the starting point for new records. Na
 
 - [ADR-009 — Native Apple Client and Platform Baseline](ADR-009-Native-Apple-Client-and-Platform-Baseline.md)
 - [ADR-010 — Swift Package and Module Layout](ADR-010-Swift-Package-and-Module-Layout.md)
+- [ADR-011 — SwiftUI State, Observation, Navigation, and Dependency Composition](ADR-011-SwiftUI-State-Observation-Navigation-and-Dependency-Composition.md)
 
 ## Superseded ADRs
 
@@ -27,7 +28,6 @@ Use [ADR_TEMPLATE.md](ADR_TEMPLATE.md) as the starting point for new records. Na
 
 ## Planned ADR queue
 
-- `ADR-011-SwiftUI-State-Observation-Navigation-and-Dependency-Composition.md`
 - `ADR-003-Swift-Persistence-and-Migration-Stack.md`
 - `ADR-004-FSRS-Implementation-and-Version.md`
 - `ADR-005-ReviewUnit-Retrieval-and-Evidence-Rating.md`

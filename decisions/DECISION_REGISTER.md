@@ -1,9 +1,9 @@
 ---
 title: Decision Register
 document_id: LB-DEC-REGISTER
-version: 0.2.0
+version: 0.3.0
 status: Active
-last_updated: 2026-07-21
+last_updated: 2026-08-01
 ---
 
 # Decision Register
@@ -62,8 +62,8 @@ Each register row names one accountable owner role. Other affected roles review 
 | MVP-blocking | 16 |
 | MVP-later | 31 |
 | post-MVP | 12 |
-| OPEN | 38 |
-| DECIDED | 4 |
+| OPEN | 37 |
+| DECIDED | 5 |
 | PROPOSED | 2 |
 | DEFERRED | 11 |
 | SUPERSEDED | 4 |
@@ -129,7 +129,7 @@ Each register row names one accountable owner role. Other affected roles review 
 | LB-DEC-055 | DOC-11 supplement | Which Flutter state-management and dependency-injection approach should the MVP adopt? | MVP-blocking | SUPERSEDED | Flutter Architecture Lead | M1 start | Superseded by LB-DEC-058; ADR-002 withdrawn before proposal |
 | LB-DEC-056 | DOC-11 supplement | Which in-process domain-event and transactional-outbox strategy should the MVP adopt? | MVP-blocking | OPEN | Application Architect | M1 start | ADR-006 and retry/replay contract |
 | LB-DEC-057 | Native Apple architecture supplement | Which native client stack and Apple platform scope should the MVP adopt? | MVP-blocking | DECIDED | Product Owner | M1 start | [ADR-009](ADR-009-Native-Apple-Client-and-Platform-Baseline.md) |
-| LB-DEC-058 | Native Apple architecture supplement | Which SwiftUI observation/state, navigation, and dependency-composition approach should the MVP adopt? | MVP-blocking | OPEN | Apple Client Architect | M1 start | ADR-011 and testable composition-root example |
+| LB-DEC-058 | Native Apple architecture supplement | Which SwiftUI observation/state, navigation, and dependency-composition approach should the MVP adopt? | MVP-blocking | DECIDED | Apple Client Architect | M1 start | [ADR-011](ADR-011-SwiftUI-State-Observation-Navigation-and-Dependency-Composition.md) |
 | LB-DEC-059 | Native Apple persistence supplement | Which native Swift persistence/query/migration stack best satisfies atomicity, testing, and migration needs? | MVP-blocking | OPEN | Persistence Lead | M1 start | Revised ADR-003 and transaction/migration spike |
 
 ## Existing scope, proposed, and deferred baseline
@@ -146,6 +146,7 @@ The following existing specification positions are recorded without losing their
 - LB-DEC-054 is DECIDED: LinguaBrain uses the Swift/Xcode/SwiftPM monorepo topology and inward dependencies defined by [ADR-010](ADR-010-Swift-Package-and-Module-Layout.md); the Python vocabulary prototype remains under `experiments/vocabulary-mvp/`.
 - LB-DEC-055 is SUPERSEDED by LB-DEC-058: the planned Flutter state-management ADR was withdrawn before proposal.
 - LB-DEC-057 is DECIDED: the MVP uses the native Apple client and platform scope defined by [ADR-009](ADR-009-Native-Apple-Client-and-Platform-Baseline.md).
+- LB-DEC-058 is DECIDED: native Observation, `@MainActor` feature models, typed scene-owned navigation, initializer injection, and an app composition root are defined by [ADR-011](ADR-011-SwiftUI-State-Observation-Navigation-and-Dependency-Composition.md).
 
 Deferred records remain visible and do not become active work until their named gate is approved.
 
@@ -166,12 +167,12 @@ Related source questions should share evidence and, where appropriate, one final
 
 ## ADR catalog and planned queue
 
-ADR-009 and ADR-010 are accepted. ADR-001 and ADR-008 are preserved as superseded history, and ADR-002 was withdrawn before proposal. The remaining filenames are reserved and do not represent accepted decisions. The first column is the stable ADR number, not execution priority; the Current decision queue below owns execution order.
+ADR-009 through ADR-011 are accepted. ADR-001 and ADR-008 are preserved as superseded history, and ADR-002 was withdrawn before proposal. The remaining filenames are reserved and do not represent accepted decisions. The first column is the stable ADR number, not execution priority; the Current decision queue below owns execution order.
 
 | ADR no. | ADR | Status | Decision references | Target and hard gate | Acceptance evidence |
 | ---: | --- | --- | --- | --- | --- |
 | 1 | [ADR-001-Repository-Package-and-Module-Layout.md](ADR-001-Repository-Package-and-Module-Layout.md) | superseded by ADR-010 | LB-DEC-054 | Superseded 2026-07-21 | Historical Flutter/Dart topology and experiment decision |
-| 2 | ADR-002-Flutter-State-Management-and-DI.md | withdrawn before proposal | LB-DEC-055 | Withdrawn 2026-07-21 | Replaced by LB-DEC-058 and planned ADR-011; number is not reused |
+| 2 | ADR-002-Flutter-State-Management-and-DI.md | withdrawn before proposal | LB-DEC-055 | Withdrawn 2026-07-21 | Replaced by LB-DEC-058 and accepted ADR-011; number is not reused |
 | 3 | ADR-003-Swift-Persistence-and-Migration-Stack.md | planned | LB-DEC-013, LB-DEC-059 | M0; hard gate M1 start | Atomic transaction, repository fake, forward migration, and restart spike |
 | 4 | ADR-004-FSRS-Implementation-and-Version.md | planned | LB-DEC-040 | Before M3 start | Pinned version, reference vectors, serialization, and upgrade policy |
 | 5 | ADR-005-ReviewUnit-Retrieval-and-Evidence-Rating.md | planned | LB-DEC-001, LB-DEC-014, LB-DEC-026, LB-DEC-043 | Before M3 review implementation | Retrieval contracts, raw evidence, derived rating, and deterministic replay |
@@ -180,18 +181,17 @@ ADR-009 and ADR-010 are accepted. ADR-001 and ADR-008 are preserved as supersede
 | 8 | [ADR-008-Initial-Pilot-and-Golden-Layout-Platform.md](ADR-008-Initial-Pilot-and-Golden-Layout-Platform.md) | superseded by ADR-009 | LB-DEC-037, LB-DEC-053 | Superseded 2026-07-21 | Historical Android/Flutter pilot and golden baseline |
 | 9 | [ADR-009-Native-Apple-Client-and-Platform-Baseline.md](ADR-009-Native-Apple-Client-and-Platform-Baseline.md) | accepted | LB-DEC-053, LB-DEC-057 | Accepted 2026-07-21; M1 platform/snapshot baseline stable | Native Swift/SwiftUI Apple targets, platform matrix, and current layout baseline |
 | 10 | [ADR-010-Swift-Package-and-Module-Layout.md](ADR-010-Swift-Package-and-Module-Layout.md) | accepted | LB-DEC-054 | Accepted 2026-07-21; M1 module paths stable | SwiftPM targets, dependency rules, CI ownership, and experiment/device boundaries |
-| 11 | ADR-011-SwiftUI-State-Observation-Navigation-and-Dependency-Composition.md | planned | LB-DEC-058 | M0; hard gate M1 start | Minimal native composition root that supports unit, view, and application tests |
+| 11 | [ADR-011-SwiftUI-State-Observation-Navigation-and-Dependency-Composition.md](ADR-011-SwiftUI-State-Observation-Navigation-and-Dependency-Composition.md) | accepted | LB-DEC-058 | Accepted 2026-08-01; M1 client-composition baseline stable | Native Observation, typed scene navigation, initializer injection, composition root, and test fixture contract |
 
 ## Current decision queue
 
 Resolve in this order unless a dependency changes:
 
-1. LB-DEC-058 and ADR-011: SwiftUI observation/state, navigation, and dependency composition.
-2. LB-DEC-059 and revised ADR-003: native Swift persistence/query/migration stack.
-3. LB-DEC-005, LB-DEC-006, LB-DEC-009, LB-DEC-042, and ADR-007: local data protection and recovery.
-4. LB-DEC-056 and ADR-006: domain events and transactional outbox.
-5. LB-DEC-018: single versus conflicting active missions for the MVP.
-6. LB-DEC-050: Persian/German typography and license baseline.
+1. LB-DEC-059 and revised ADR-003: native Swift persistence/query/migration stack.
+2. LB-DEC-005, LB-DEC-006, LB-DEC-009, LB-DEC-042, and ADR-007: local data protection and recovery.
+3. LB-DEC-056 and ADR-006: domain events and transactional outbox.
+4. LB-DEC-018: single versus conflicting active missions for the MVP.
+5. LB-DEC-050: Persian/German typography and license baseline.
 
 The M1 backlog cannot be approved until all still-open MVP-blocking entries are decided or an explicit scope change removes the dependency.
 
@@ -227,6 +227,7 @@ At every milestone review:
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 0.3.0 | 2026-08-01 | Accepted ADR-011, closed LB-DEC-058, and advanced the active queue to the native Swift persistence decision in ADR-003. |
 | 0.2.0 | 2026-07-21 | Recorded the native Apple architecture pivot; superseded Flutter-specific decisions and ADRs; accepted ADR-009/ADR-010; added LB-DEC-057 through LB-DEC-059; and advanced the active queue to ADR-011. |
 | 0.1.2 | 2026-07-20 | Accepted ADR-008, closed LB-DEC-037 and LB-DEC-053, and advanced the active queue to ADR-002. |
 | 0.1.1 | 2026-07-19 | Accepted ADR-001, closed LB-DEC-054, recorded the experiment disposition, and advanced the active decision queue. |

@@ -1,9 +1,9 @@
 ---
 title: MVP Definition and Roadmap
 document_id: LB-DOC-10
-version: 0.3.0
+version: 0.3.1
 status: Draft
-last_updated: 2026-07-21
+last_updated: 2026-08-01
 ---
 
 # MVP Definition and Roadmap
@@ -119,7 +119,7 @@ The shared domain/application contracts remain client-surface neutral even thoug
 | Language and UI framework | Swift 6.4 and SwiftUI |
 | Build toolchain | Xcode 27 beta is provisional during development; stable Xcode 27 and final OS SDKs are release gates |
 | Package/module layout | Swift Package Manager topology accepted in [ADR-010](../decisions/ADR-010-Swift-Package-and-Module-Layout.md) |
-| State, navigation, and dependency composition | Defined by planned `ADR-011-SwiftUI-State-Observation-Navigation-and-Dependency-Composition.md` before the native shell starts |
+| State, navigation, and dependency composition | Native Observation, typed per-scene navigation, initializer injection, and app composition root accepted in [ADR-011](../decisions/ADR-011-SwiftUI-State-Observation-Navigation-and-Dependency-Composition.md) |
 | Local persistence | Native local-store adapter selected by ADR-003, with migrations and repository/transaction abstraction |
 | Review algorithm | FSRS implementation behind a scheduler interface |
 | AI integration | Provider adapters; BYOK and OpenAI-compatible local endpoint |
@@ -282,12 +282,13 @@ LB-DEC-037 is `SUPERSEDED` by LB-DEC-057 and the native Apple baseline in [ADR-0
 - `14_Frontend_UX_UI.md` — MVP screens and journeys.
 - `../decisions/ADR-009-Native-Apple-Client-and-Platform-Baseline.md` — Supported Apple surfaces, pilot priority, and stable-toolchain release gate.
 - `../decisions/ADR-010-Swift-Package-and-Module-Layout.md` — Swift Package Manager and module topology.
-- `ADR-011-SwiftUI-State-Observation-Navigation-and-Dependency-Composition.md` — Planned SwiftUI composition decision; file is created when that decision is proposed.
+- `../decisions/ADR-011-SwiftUI-State-Observation-Navigation-and-Dependency-Composition.md` — Accepted SwiftUI state, typed navigation, concurrency, and composition decision.
 
 ## Revision history
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 0.3.1 | 2026-08-01 | Linked the accepted ADR-011 native Observation, typed-navigation, and composition baseline. |
 | 0.3.0 | 2026-07-21 | Replaced the superseded Android/Flutter pilot with native Swift 6.4/SwiftUI first-class iOS/iPadOS 27 and macOS 27 surfaces, an iPhone-primary pilot, independent local stores, and a stable Xcode 27 release gate. |
 | 0.2.2 | 2026-07-20 | Selected an Android-phone-only MVP pilot and linked the canonical Android golden-layout baseline from ADR-008. |
 | 0.2.1 | 2026-07-11 | Kept dedicated hardware out of MVP while preserving shared-core extension points. |

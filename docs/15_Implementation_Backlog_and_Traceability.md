@@ -1,9 +1,9 @@
 ---
 title: Implementation Backlog and Requirements Traceability
 document_id: LB-DOC-15
-version: 0.2.0
+version: 0.2.1
 status: Draft
-last_updated: 2026-07-21
+last_updated: 2026-08-01
 ---
 
 # Implementation Backlog and Requirements Traceability
@@ -239,7 +239,7 @@ Follow-up specifications are delivered at the latest safe gate, not all during M
 | `LB-WI-M0-01` | P0 | `DONE` | Publish Document 15 with requirement catalog, milestone backlog, test IDs, traceability, and governance; Markdown/link checks pass. | Documents 01–14 |
 | `LB-WI-M0-02` | P0 | `DONE` | Publish the Decision Register with all 53 source open questions and six supplemental architecture decisions (59 stable IDs); assign stable IDs, class, status, owner, due gate, and required decision artifact; coverage and count checks pass. | `LB-WI-M0-01` |
 | `LB-WI-M0-03` | P0 | `DONE` | Accepted historical [ADR-001](../decisions/ADR-001-Repository-Package-and-Module-Layout.md); its production package topology is superseded by ADR-010, while the accepted `experiments/vocabulary-mvp/` reference-only classification remains in force. | Decision Register; superseded by ADR-010 for production topology |
-| `LB-WI-M0-04` | P0 | `CANCELLED` | The planned Flutter state-management/dependency-injection ADR was cancelled by the native Apple pivot in ADR-009. Its replacement is `LB-WI-M0-15` and planned ADR-011. | [ADR-009](../decisions/ADR-009-Native-Apple-Client-and-Platform-Baseline.md) |
+| `LB-WI-M0-04` | P0 | `CANCELLED` | The planned Flutter state-management/dependency-injection ADR was cancelled by the native Apple pivot in ADR-009. Its replacement is completed by `LB-WI-M0-15` and accepted ADR-011. | [ADR-009](../decisions/ADR-009-Native-Apple-Client-and-Platform-Baseline.md), [ADR-011](../decisions/ADR-011-SwiftUI-State-Observation-Navigation-and-Dependency-Composition.md) |
 | `LB-WI-M0-05` | P0 | `PROPOSED` | Accept revised ADR-003 for the native Swift persistence/query/migration stack; compare SwiftData, Core Data, direct SQLite, GRDB, and viable alternatives, then demonstrate actor/concurrency, transaction, repository-contract, migration, restart, and testability requirements. | ADR-009, ADR-010, LB-DEC-059, threat/storage constraints |
 | `LB-WI-M0-06` | P1 | `PROPOSED` | Prepare and accept, no later than M3 start, the ADR for FSRS implementation/version with reproducible reference vectors and upgrade policy. | Review requirements |
 | `LB-WI-M0-07` | P1 | `PROPOSED` | Prepare and accept, before M3 review implementation, the ADR for ReviewUnit retrieval contracts and automatic evidence-to-rating mapping; raw evidence and derived rating remain auditable. | `LB-WI-M0-06` |
@@ -250,7 +250,7 @@ Follow-up specifications are delivered at the latest safe gate, not all during M
 | `LB-WI-M0-12` | P0 | `PROPOSED` | Resolve the font/license baseline and remaining M1 blocking decisions; convert approved specifications to a versioned baseline and create native Apple M1 Git issues. | `LB-WI-M0-02`–`05`, `LB-WI-M0-08`–`11`, `LB-WI-M0-13`–`15`; M3 ADRs `06`–`07` may remain scheduled |
 | `LB-WI-M0-13` | P0 | `DONE` | Accepted [ADR-009](../decisions/ADR-009-Native-Apple-Client-and-Platform-Baseline.md); iOS/iPadOS 27 and macOS 27 are first-class local-only surfaces, iPhone is the primary pilot, Swift 6.4/SwiftUI is selected, beta evidence is provisional, and stable Xcode 27/final SDKs gate release. | Decision Register |
 | `LB-WI-M0-14` | P0 | `DONE` | Accepted [ADR-010](../decisions/ADR-010-Swift-Package-and-Module-Layout.md); Swift Package Manager topology, dependency directions, app-target ownership, CI scope, and experiment boundaries are explicit. | `LB-WI-M0-13` |
-| `LB-WI-M0-15` | P0 | `READY` | Accept planned `ADR-011-SwiftUI-State-Observation-Navigation-and-Dependency-Composition.md` for SwiftUI state/observation, navigation, and dependency composition; include a minimal native composition-root example testable with fakes on iPhone, iPad, and macOS. | `LB-WI-M0-13`, `LB-WI-M0-14` |
+| `LB-WI-M0-15` | P0 | `DONE` | Accepted [ADR-011](../decisions/ADR-011-SwiftUI-State-Observation-Navigation-and-Dependency-Composition.md) for native Observation, `@MainActor` feature models, typed per-scene navigation, initializer injection, an app composition root, cancellation, and deterministic fake composition. | `LB-WI-M0-13`, `LB-WI-M0-14` |
 
 **M0 exit criterion:** The M1 backlog is approved; every M1 item is `READY`; blocking architectural choices are accepted ADRs; canonical contracts are versioned; and the specification baseline is tagged.
 
@@ -461,7 +461,7 @@ The [Decision Register](../decisions/DECISION_REGISTER.md) owns final status and
 | --- | --- | --- |
 | Native Swift package/module layout and experiment classification — resolved by [ADR-010](../decisions/ADR-010-Swift-Package-and-Module-Layout.md) | M1 start | Resolved; Swift package paths, dependency rules, application ownership, CI scope, and experiment boundaries are defined |
 | Native Apple client/platform baseline — resolved by [ADR-009](../decisions/ADR-009-Native-Apple-Client-and-Platform-Baseline.md) | M1 start | Resolved; first-class local iPhone/iPad/macOS surfaces, iPhone-primary pilot, provisional beta evidence, and stable Xcode 27 release gate are defined |
-| SwiftUI state observation, navigation, and dependency composition — planned `ADR-011-SwiftUI-State-Observation-Navigation-and-Dependency-Composition.md` | M1 start | Presentation/application composition remains undefined until accepted |
+| SwiftUI state observation, navigation, and dependency composition — resolved by [ADR-011](../decisions/ADR-011-SwiftUI-State-Observation-Navigation-and-Dependency-Composition.md) | M1 start | Resolved; native Observation, typed scene navigation, initializer injection, cancellation, and composition-root boundaries are defined |
 | Native Swift persistence/query/migration stack | M1 start | Persistence walking skeleton cannot begin safely |
 | Database protection and recovery baseline | Before private data in M1 | Threat model and backup behavior remain incomplete |
 | German/Persian lexical datasets and licenses | M2 start | Seed content and authoritative validation cannot ship |
@@ -524,13 +524,12 @@ One issue has one primary work-item ID. A pull request may close multiple small 
 
 The next batch is architecture and contract work, not production feature coding:
 
-1. accept ADR-011 for SwiftUI state observation, navigation, and dependency composition, including a minimal native composition-root example;
-2. accept revised ADR-003 for the native Swift persistence/query/migration stack;
-3. define the minimum database protection/backup baseline;
-4. accept the domain-event/transactional-outbox ADR;
-5. publish Document 16 application/domain contracts;
-6. add System Context, Module Architecture, and initial Domain ERD canonical diagrams;
-7. review and approve M1 issues, then tag the specification baseline.
+1. accept revised ADR-003 for the native Swift persistence/query/migration stack;
+2. define the minimum database protection/backup baseline;
+3. accept the domain-event/transactional-outbox ADR;
+4. publish Document 16 application/domain contracts;
+5. add System Context, Module Architecture, and initial Domain ERD canonical diagrams;
+6. review and approve M1 issues, then tag the specification baseline.
 
 The FSRS and evidence-mapping ADRs must be completed before M3; Language Package/data decisions before M2; full security/pilot specifications before their respective release gates.
 
@@ -578,7 +577,7 @@ Run these checks at least at every milestone review:
 - [Decision Register](../decisions/DECISION_REGISTER.md)
 - [ADR-009 — Native Apple Client and Platform Baseline](../decisions/ADR-009-Native-Apple-Client-and-Platform-Baseline.md)
 - [ADR-010 — Swift Package and Module Layout](../decisions/ADR-010-Swift-Package-and-Module-Layout.md)
-- `ADR-011-SwiftUI-State-Observation-Navigation-and-Dependency-Composition.md` — planned SwiftUI state, navigation, and dependency-composition decision
+- [ADR-011](../decisions/ADR-011-SwiftUI-State-Observation-Navigation-and-Dependency-Composition.md) — accepted SwiftUI state, navigation, and dependency-composition decision
 - [ADR-001 — Repository, Package, and Module Layout (superseded history)](../decisions/ADR-001-Repository-Package-and-Module-Layout.md)
 - [ADR-008 — Initial Pilot and Golden Layout Platform (superseded history)](../decisions/ADR-008-Initial-Pilot-and-Golden-Layout-Platform.md)
 - [ADR index](../decisions/README.md)
@@ -588,6 +587,7 @@ Run these checks at least at every milestone review:
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 0.2.1 | 2026-08-01 | Accepted ADR-011, completed LB-WI-M0-15, and advanced the execution batch to ADR-003 persistence selection. |
 | 0.2.0 | 2026-07-21 | Pivoted governance and traceability to the accepted native Apple baseline and Swift package topology, cancelled Flutter/Android work, added ADR-011 and native-shell work items, and introduced the stable Xcode 27 release gate. |
 | 0.1.3 | 2026-07-20 | Accepted ADR-008, resolved the platform/golden gate, made LB-WI-M0-04 READY, and advanced the execution queue to ADR-002. |
 | 0.1.2 | 2026-07-19 | Accepted ADR-001, closed LB-WI-M0-03, classified and relocated the vocabulary prototype, and advanced the execution queue. |

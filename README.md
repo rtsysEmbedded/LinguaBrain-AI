@@ -104,7 +104,7 @@ Track current progress and the next verified task in the [Project Status and Del
 
 ## Status
 
-Documents 01–15 remain reviewed drafts. [ADR-009](decisions/ADR-009-Native-Apple-Client-and-Platform-Baseline.md) defines the native Apple OS 27 targets, and [ADR-010](decisions/ADR-010-Swift-Package-and-Module-Layout.md) defines the Swift/Xcode/SwiftPM repository boundary. They supersede the former Flutter ADRs 008 and 001. The next gate is planned ADR-011 for SwiftUI state, navigation, Observation, and dependency composition (`LB-DEC-058`, `LB-WI-M0-15`).
+Documents 01–15 remain reviewed drafts. [ADR-009](decisions/ADR-009-Native-Apple-Client-and-Platform-Baseline.md) defines the native Apple OS 27 targets, [ADR-010](decisions/ADR-010-Swift-Package-and-Module-Layout.md) defines the Swift/Xcode/SwiftPM repository boundary, and [ADR-011](decisions/ADR-011-SwiftUI-State-Observation-Navigation-and-Dependency-Composition.md) defines presentation state, typed navigation, and dependency composition. The next gate is ADR-003 for native Swift persistence (`LB-DEC-059`, `LB-WI-M0-05`).
 
 ## Key resolved contracts
 
@@ -117,3 +117,4 @@ Documents 01–15 remain reviewed drafts. [ADR-009](decisions/ADR-009-Native-App
 - Production code uses a modular monorepo, one local multi-target Swift package, and thin native Apple app hosts; the Python vocabulary spike remains a non-production experiment.
 - The controlled pilot targets iPhone on iOS 27. iPadOS 27 and macOS 27 are first-class local-only MVP surfaces; sync remains post-MVP.
 - Apple Foundation Models, SpeechAnalyzer, and Translation are capability- and locale-gated adapters. German–Persian learning retains validated cloud/local and no-AI fallbacks.
+- SwiftUI presentation uses native Observation, `@MainActor` feature models, typed per-scene navigation, initializer injection, and an app-owned composition root; global service locators are prohibited.

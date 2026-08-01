@@ -1,9 +1,9 @@
 ---
 title: Frontend UX/UI
 document_id: LB-DOC-14
-version: 0.3.0
+version: 0.3.1
 status: Draft
-last_updated: 2026-07-21
+last_updated: 2026-08-01
 ---
 
 # Frontend UX/UI
@@ -378,12 +378,13 @@ LB-DEC-053 remains `DECIDED`, with its native Apple snapshot baseline now govern
 - `13_AI_Agent_Pipeline.md` — Approval preview and import states.
 - `../decisions/ADR-009-Native-Apple-Client-and-Platform-Baseline.md` — First-class surfaces, pilot priority, and stable-toolchain release gate.
 - `../decisions/ADR-010-Swift-Package-and-Module-Layout.md` — Shared Swift package and app-target boundaries.
-- `ADR-011-SwiftUI-State-Observation-Navigation-and-Dependency-Composition.md` — Planned SwiftUI state, navigation, and composition decision; file is created when that decision is proposed.
+- `../decisions/ADR-011-SwiftUI-State-Observation-Navigation-and-Dependency-Composition.md` — Accepted SwiftUI Observation, typed navigation, scene lifetime, and dependency-composition decision.
 
 ## Revision history
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 0.3.1 | 2026-08-01 | Linked the accepted ADR-011 scene-owned Observation and typed-navigation architecture. |
 | 0.3.0 | 2026-07-21 | Replaced the superseded Android/Flutter baseline with native SwiftUI first-class iPhone, iPad, and macOS adaptive UX, accessibility/input matrices, provisional beta snapshots, and a stable Xcode 27 release gate. |
 | 0.2.2 | 2026-07-20 | Adopted the Android-phone pilot and deterministic golden-layout fixture/matrix from ADR-008 while retaining a portable shared UI boundary. |
 | 0.2.1 | 2026-07-11 | Added capability-driven client-surface profiles without changing the mobile MVP. |

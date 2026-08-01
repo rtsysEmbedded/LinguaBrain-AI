@@ -1,9 +1,9 @@
 ---
 title: Technical Architecture
 document_id: LB-DOC-11
-version: 0.3.0
+version: 0.3.1
 status: Draft
-last_updated: 2026-07-21
+last_updated: 2026-08-01
 ---
 
 # Technical Architecture
@@ -311,7 +311,7 @@ FastAPI may later provide accounts, encrypted sync coordination, provider proxyi
 
 Before M1 work becomes `READY`:
 
-- SwiftUI Observation/state, navigation, and dependency composition (planned ADR-011).
+- SwiftUI Observation/state, navigation, and dependency composition — [accepted in ADR-011](../decisions/ADR-011-SwiftUI-State-Observation-Navigation-and-Dependency-Composition.md).
 - Native Swift persistence/query/migration tooling (revised ADR-003).
 - Domain event and transactional outbox approach.
 - Apple local-store protection, Keychain, backup, and recovery strategy.
@@ -332,11 +332,13 @@ Before M3 review work becomes `READY`:
 - `../decisions/DECISION_REGISTER.md` — Decision ownership, status, and latest safe gates.
 - `../decisions/ADR-009-Native-Apple-Client-and-Platform-Baseline.md` — Accepted Apple OS 27 targets and visual baseline.
 - `../decisions/ADR-010-Swift-Package-and-Module-Layout.md` — Accepted Swift/Xcode/SwiftPM topology and dependency boundaries.
+- `../decisions/ADR-011-SwiftUI-State-Observation-Navigation-and-Dependency-Composition.md` — Accepted Observation, typed navigation, dependency injection, and composition-root boundaries.
 
 ## Revision history
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 0.3.1 | 2026-08-01 | Adopted ADR-011 for native Observation, typed per-scene navigation, initializer injection, and composition-root boundaries. |
 | 0.3.0 | 2026-07-21 | Replaced the Flutter/Dart architecture with native Swift 6.4, SwiftUI OS 27 app targets, SwiftPM modules, Apple capability adapters, and native testing/concurrency boundaries. |
 | 0.2.3 | 2026-07-19 | Adopted ADR-001's modular monorepo topology, dependency rules, and non-production prototype classification. |
 | 0.2.2 | 2026-07-15 | Aligned required ADRs with their M1 and M3 implementation gates and linked the Decision Register. |

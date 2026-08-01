@@ -1,7 +1,7 @@
 ---
 title: Project Status and Delivery Checklist
 document_id: LB-STATUS
-version: 0.2.1
+version: 0.2.2
 status: Active
 last_updated: 2026-08-01
 ---
@@ -25,12 +25,12 @@ This file is the single progress checklist for LinguaBrain AI. It must be update
 | Current phase | M0 — Specification baseline and implementation preparation |
 | Product scope | German–Persian offline-first native Apple MVP (iOS/iPadOS/macOS 27) |
 | Documentation | Documents 01–15 complete as reviewed drafts |
-| Architecture baseline | Native Swift migration; DOC-10/DOC-11/DOC-14 at 0.3.0 and DOC-15 at 0.2.0 |
-| Local Apple toolchain | Apple silicon/macOS 27 and Swift 6.4 CLI detected; full Xcode 27 is not active (`xcode-select` points to Command Line Tools), so app-target builds remain blocked |
-| Latest accepted ADRs | [ADR-009](decisions/ADR-009-Native-Apple-Client-and-Platform-Baseline.md) and [ADR-010](decisions/ADR-010-Swift-Package-and-Module-Layout.md) |
+| Architecture baseline | Native Swift migration; DOC-10/DOC-11/DOC-14 at 0.3.1 and DOC-15 at 0.2.1 |
+| Local Apple toolchain | Xcode 27.0 (`27A5228h`) is active with Swift 6.4 and iOS/iPadOS/macOS 27 SDKs; beta-era evidence remains provisional |
+| Latest accepted ADRs | [ADR-009](decisions/ADR-009-Native-Apple-Client-and-Platform-Baseline.md), [ADR-010](decisions/ADR-010-Swift-Package-and-Module-Layout.md), and [ADR-011](decisions/ADR-011-SwiftUI-State-Observation-Navigation-and-Dependency-Composition.md) |
 | Active Git branch | `main` |
-| Last major architecture review commit | `4ff4da9` |
-| Next primary deliverable | Planned ADR-011 — SwiftUI state, Observation, navigation, and dependency composition (`LB-DEC-058`, `LB-WI-M0-15`) |
+| Native platform migration commit | `3c75a70` |
+| Next primary deliverable | ADR-003 — Native Swift persistence/query/migration stack (`LB-DEC-059`, `LB-WI-M0-05`) |
 
 ## Completed foundation
 
@@ -87,7 +87,7 @@ This file is the single progress checklist for LinguaBrain AI. It must be update
 - [x] [ADR-009 — Native Apple client and platform baseline](decisions/ADR-009-Native-Apple-Client-and-Platform-Baseline.md).
 - [x] [ADR-010 — Swift package and module layout](decisions/ADR-010-Swift-Package-and-Module-Layout.md).
 - [x] ADR-001 and ADR-008 retained as superseded historical decisions.
-- [ ] ADR-011 — SwiftUI Observation/state, navigation, and dependency composition.
+- [x] [ADR-011 — SwiftUI Observation/state, navigation, and dependency composition](decisions/ADR-011-SwiftUI-State-Observation-Navigation-and-Dependency-Composition.md).
 - [ ] ADR-003 — Native Swift persistence/query/migration stack.
 - [ ] ADR — Domain events and transactional outbox strategy.
 - [ ] ADR — Apple local-store protection, Keychain, backup, recovery, and key handling.
@@ -116,7 +116,7 @@ This file is the single progress checklist for LinguaBrain AI. It must be update
 
 ## M1 — Domain walking skeleton
 
-- [ ] Install and verify the pinned Xcode 27/Swift 6.4 toolchain; beta builds are provisional until stable Xcode and final OS 27 verification.
+- [x] Install and verify Xcode 27.0 build `27A5228h`, Swift 6.4, and version 27 Apple SDKs; beta builds remain provisional until stable Xcode and final OS 27 verification.
 - [ ] Create the native SwiftUI universal iPhone/iPadOS 27 application and macOS 27 Golden Gate target.
 - [ ] Create the local multi-target `LinguaBrainKit` Swift package and composition root.
 - [ ] Establish domain, application, infrastructure, and presentation boundaries.
@@ -237,6 +237,7 @@ Complete these actions with every milestone or architectural change:
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 0.2.2 | 2026-08-01 | Verified the active Xcode 27 toolchain, accepted ADR-011, and advanced the next decision gate to ADR-003. |
 | 0.2.1 | 2026-08-01 | Recorded the local Swift 6.4/macOS 27 toolchain audit and the remaining full-Xcode activation blocker. |
 | 0.2.0 | 2026-07-21 | Replaced the Flutter/Android implementation path with native Swift/SwiftUI on iOS, iPadOS, and macOS 27; accepted ADR-009/010 and advanced the next gate to ADR-011. |
 | 0.1.4 | 2026-07-20 | Accepted ADR-008, selected the Android-only pilot and golden baseline, and advanced the next gate to ADR-002. |

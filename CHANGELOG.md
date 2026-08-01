@@ -16,6 +16,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - ADR-008 preserving the now-superseded Android-phone pilot and golden-layout decision as historical evidence.
 - ADR-009 replacing ADR-008 with a native Swift/SwiftUI client baseline for iOS/iPadOS 27 and macOS 27 Golden Gate.
 - ADR-010 replacing ADR-001's Dart/Flutter topology with an Xcode and Swift Package Manager module layout.
+- ADR-011 defining native Observation state, typed scene-owned navigation, initializer injection, and the SwiftUI application composition root.
 - Experiment governance for non-production research spikes.
 - Product Vision specification.
 - Complete product and technical specifications for documents 02 through 14.
@@ -42,3 +43,5 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Replaced Flutter work items and decision gates with SwiftUI state/composition and native Swift persistence decisions; Xcode 27 beta work remains provisional until stable OS/toolchain verification.
 - Replaced Flutter/Dart generated-file ignores with SwiftPM/Xcode/DerivedData/archive ignores while keeping source projects and resolved dependencies trackable.
 - Recorded the local Apple-toolchain audit: macOS 27 on Apple silicon and Swift 6.4 are available, but full Xcode 27 is not yet the active developer directory.
+- Activated and verified Xcode 27.0 build `27A5228h` with Swift 6.4 and version 27 iPhoneOS, iPhone Simulator, and macOS SDKs.
+- Closed LB-DEC-058 and advanced the active architecture queue to ADR-003 for the native Swift persistence stack.

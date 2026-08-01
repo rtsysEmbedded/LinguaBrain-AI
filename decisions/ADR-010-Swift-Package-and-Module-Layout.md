@@ -266,7 +266,7 @@ Rejected as premature. The dedicated device is post-MVP, and no hardware/runtime
 - [ ] Create the workspace, native application targets, and local Swift package only when M1 begins.
 - [ ] Add forbidden-import and SwiftPM dependency-cycle checks to CI.
 - [x] Replace the active Flutter/Dart topology in the technical architecture and repository index.
-- [ ] Accept ADR-011 before implementing SwiftUI state and dependency composition.
+- [x] Accept ADR-011 before implementing SwiftUI state and dependency composition.
 - [ ] Accept the revised ADR-003 before implementing persistence.
 - [ ] Create a dedicated-device interoperability ADR before any non-Apple device implementation.
 
