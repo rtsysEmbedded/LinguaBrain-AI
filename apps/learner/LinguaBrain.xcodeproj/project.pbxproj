@@ -1,0 +1,328 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		100000000000000000000001 /* LinguaBrainPrototypeApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000001 /* LinguaBrainPrototypeApp.swift */; };
+		100000000000000000000002 /* PrototypeModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000002 /* PrototypeModels.swift */; };
+		100000000000000000000003 /* PrototypeComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000003 /* PrototypeComponents.swift */; };
+		100000000000000000000004 /* PrototypeRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000004 /* PrototypeRootView.swift */; };
+		100000000000000000000005 /* TodayPrototypeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000005 /* TodayPrototypeView.swift */; };
+		100000000000000000000006 /* LibraryPrototypeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000006 /* LibraryPrototypeView.swift */; };
+		100000000000000000000007 /* AddWordPrototypeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000007 /* AddWordPrototypeView.swift */; };
+		100000000000000000000008 /* ReviewPrototypeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000008 /* ReviewPrototypeView.swift */; };
+		100000000000000000000009 /* ProgressPrototypeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000009 /* ProgressPrototypeView.swift */; };
+		10000000000000000000000A /* SettingsPrototypeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20000000000000000000000A /* SettingsPrototypeView.swift */; };
+		10000000000000000000000B /* OnboardingPrototypeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20000000000000000000000B /* OnboardingPrototypeView.swift */; };
+		10000000000000000000000C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 20000000000000000000000C /* Assets.xcassets */; };
+		110000000000000000000001 /* LinguaBrainPrototypeApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000001 /* LinguaBrainPrototypeApp.swift */; };
+		110000000000000000000002 /* PrototypeModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000002 /* PrototypeModels.swift */; };
+		110000000000000000000003 /* PrototypeComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000003 /* PrototypeComponents.swift */; };
+		110000000000000000000004 /* PrototypeRootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000004 /* PrototypeRootView.swift */; };
+		110000000000000000000005 /* TodayPrototypeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000005 /* TodayPrototypeView.swift */; };
+		110000000000000000000006 /* LibraryPrototypeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000006 /* LibraryPrototypeView.swift */; };
+		110000000000000000000007 /* AddWordPrototypeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000007 /* AddWordPrototypeView.swift */; };
+		110000000000000000000008 /* ReviewPrototypeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000008 /* ReviewPrototypeView.swift */; };
+		110000000000000000000009 /* ProgressPrototypeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000009 /* ProgressPrototypeView.swift */; };
+		11000000000000000000000A /* SettingsPrototypeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20000000000000000000000A /* SettingsPrototypeView.swift */; };
+		11000000000000000000000B /* OnboardingPrototypeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20000000000000000000000B /* OnboardingPrototypeView.swift */; };
+		11000000000000000000000C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 20000000000000000000000C /* Assets.xcassets */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		200000000000000000000001 /* LinguaBrainPrototypeApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinguaBrainPrototypeApp.swift; sourceTree = "<group>"; };
+		200000000000000000000002 /* PrototypeModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrototypeModels.swift; sourceTree = "<group>"; };
+		200000000000000000000003 /* PrototypeComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrototypeComponents.swift; sourceTree = "<group>"; };
+		200000000000000000000004 /* PrototypeRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrototypeRootView.swift; sourceTree = "<group>"; };
+		200000000000000000000005 /* TodayPrototypeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayPrototypeView.swift; sourceTree = "<group>"; };
+		200000000000000000000006 /* LibraryPrototypeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryPrototypeView.swift; sourceTree = "<group>"; };
+		200000000000000000000007 /* AddWordPrototypeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddWordPrototypeView.swift; sourceTree = "<group>"; };
+		200000000000000000000008 /* ReviewPrototypeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewPrototypeView.swift; sourceTree = "<group>"; };
+		200000000000000000000009 /* ProgressPrototypeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressPrototypeView.swift; sourceTree = "<group>"; };
+		20000000000000000000000A /* SettingsPrototypeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsPrototypeView.swift; sourceTree = "<group>"; };
+		20000000000000000000000B /* OnboardingPrototypeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingPrototypeView.swift; sourceTree = "<group>"; };
+		20000000000000000000000C /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		20000000000000000000000D /* LinguaBrain.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LinguaBrain.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		20000000000000000000000E /* LinguaBrain Mac.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "LinguaBrain Mac.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		300000000000000000000001 /* Frameworks */ = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+		300000000000000000000002 /* Frameworks */ = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		400000000000000000000001 = {
+			isa = PBXGroup;
+			children = (
+				400000000000000000000002 /* App */,
+				400000000000000000000003 /* Resources */,
+				400000000000000000000004 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		400000000000000000000002 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				200000000000000000000001 /* LinguaBrainPrototypeApp.swift */,
+				200000000000000000000002 /* PrototypeModels.swift */,
+				200000000000000000000003 /* PrototypeComponents.swift */,
+				200000000000000000000004 /* PrototypeRootView.swift */,
+				200000000000000000000005 /* TodayPrototypeView.swift */,
+				200000000000000000000006 /* LibraryPrototypeView.swift */,
+				200000000000000000000007 /* AddWordPrototypeView.swift */,
+				200000000000000000000008 /* ReviewPrototypeView.swift */,
+				200000000000000000000009 /* ProgressPrototypeView.swift */,
+				20000000000000000000000A /* SettingsPrototypeView.swift */,
+				20000000000000000000000B /* OnboardingPrototypeView.swift */,
+			);
+			name = App;
+			path = App;
+			sourceTree = "<group>";
+		};
+		400000000000000000000003 /* Resources */ = {
+			isa = PBXGroup;
+			children = (20000000000000000000000C /* Assets.xcassets */,);
+			name = Resources;
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		400000000000000000000004 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				20000000000000000000000D /* LinguaBrain.app */,
+				20000000000000000000000E /* LinguaBrain Mac.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		500000000000000000000001 /* LinguaBrain */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 600000000000000000000002 /* Build configuration list for PBXNativeTarget "LinguaBrain" */;
+			buildPhases = (
+				700000000000000000000001 /* Sources */,
+				300000000000000000000001 /* Frameworks */,
+				800000000000000000000001 /* Resources */,
+			);
+			buildRules = ();
+			dependencies = ();
+			name = LinguaBrain;
+			productName = LinguaBrain;
+			productReference = 20000000000000000000000D /* LinguaBrain.app */;
+			productType = "com.apple.product-type.application";
+		};
+		500000000000000000000002 /* LinguaBrain Mac */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 600000000000000000000003 /* Build configuration list for PBXNativeTarget "LinguaBrain Mac" */;
+			buildPhases = (
+				700000000000000000000002 /* Sources */,
+				300000000000000000000002 /* Frameworks */,
+				800000000000000000000002 /* Resources */,
+			);
+			buildRules = ();
+			dependencies = ();
+			name = "LinguaBrain Mac";
+			productName = "LinguaBrain Mac";
+			productReference = 20000000000000000000000E /* LinguaBrain Mac.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		900000000000000000000001 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 2700;
+				LastUpgradeCheck = 2700;
+				TargetAttributes = {
+					500000000000000000000001 = {CreatedOnToolsVersion = 27.0;};
+					500000000000000000000002 = {CreatedOnToolsVersion = 27.0;};
+				};
+			};
+			buildConfigurationList = 600000000000000000000001 /* Build configuration list for PBXProject "LinguaBrain" */;
+			compatibilityVersion = "Xcode 16.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (en, fa, Base,);
+			mainGroup = 400000000000000000000001;
+			productRefGroup = 400000000000000000000004 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				500000000000000000000001 /* LinguaBrain */,
+				500000000000000000000002 /* LinguaBrain Mac */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		800000000000000000000001 /* Resources */ = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (10000000000000000000000C /* Assets.xcassets in Resources */,); runOnlyForDeploymentPostprocessing = 0; };
+		800000000000000000000002 /* Resources */ = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (11000000000000000000000C /* Assets.xcassets in Resources */,); runOnlyForDeploymentPostprocessing = 0; };
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		700000000000000000000001 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				100000000000000000000001, 100000000000000000000002, 100000000000000000000003,
+				100000000000000000000004, 100000000000000000000005, 100000000000000000000006,
+				100000000000000000000007, 100000000000000000000008, 100000000000000000000009,
+				10000000000000000000000A, 10000000000000000000000B,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		700000000000000000000002 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				110000000000000000000001, 110000000000000000000002, 110000000000000000000003,
+				110000000000000000000004, 110000000000000000000005, 110000000000000000000006,
+				110000000000000000000007, 110000000000000000000008, 110000000000000000000009,
+				11000000000000000000000A, 11000000000000000000000B,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		A00000000000000000000001 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_TESTABILITY = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				ONLY_ACTIVE_ARCH = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_STRICT_CONCURRENCY = complete;
+			};
+			name = Debug;
+		};
+		A00000000000000000000002 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_STRICT_CONCURRENCY = complete;
+			};
+			name = Release;
+		};
+		A00000000000000000000003 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = LinguaBrain;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 27.0;
+				MARKETING_VERSION = 0.1;
+				PRODUCT_BUNDLE_IDENTIFIER = ai.linguabrain.prototype;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		A00000000000000000000004 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = LinguaBrain;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 27.0;
+				MARKETING_VERSION = 0.1;
+				PRODUCT_BUNDLE_IDENTIFIER = ai.linguabrain.prototype;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		A00000000000000000000005 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = LinguaBrain;
+				MACOSX_DEPLOYMENT_TARGET = 27.0;
+				MARKETING_VERSION = 0.1;
+				PRODUCT_BUNDLE_IDENTIFIER = ai.linguabrain.prototype.mac;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_VERSION = 6.0;
+			};
+			name = Debug;
+		};
+		A00000000000000000000006 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = LinguaBrain;
+				MACOSX_DEPLOYMENT_TARGET = 27.0;
+				MARKETING_VERSION = 0.1;
+				PRODUCT_BUNDLE_IDENTIFIER = ai.linguabrain.prototype.mac;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_VERSION = 6.0;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		600000000000000000000001 /* Build configuration list for PBXProject "LinguaBrain" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (A00000000000000000000001, A00000000000000000000002,);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		600000000000000000000002 /* Build configuration list for PBXNativeTarget "LinguaBrain" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (A00000000000000000000003, A00000000000000000000004,);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		600000000000000000000003 /* Build configuration list for PBXNativeTarget "LinguaBrain Mac" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (A00000000000000000000005, A00000000000000000000006,);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 900000000000000000000001 /* Project object */;
+}

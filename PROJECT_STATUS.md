@@ -1,7 +1,7 @@
 ---
 title: Project Status and Delivery Checklist
 document_id: LB-STATUS
-version: 0.2.2
+version: 0.2.3
 status: Active
 last_updated: 2026-08-01
 ---
@@ -30,6 +30,7 @@ This file is the single progress checklist for LinguaBrain AI. It must be update
 | Latest accepted ADRs | [ADR-009](decisions/ADR-009-Native-Apple-Client-and-Platform-Baseline.md), [ADR-010](decisions/ADR-010-Swift-Package-and-Module-Layout.md), and [ADR-011](decisions/ADR-011-SwiftUI-State-Observation-Navigation-and-Dependency-Composition.md) |
 | Active Git branch | `main` |
 | Native platform migration commit | `3c75a70` |
+| Visual prototype | Buildable SwiftUI mock for iPhone, iPad, and Mac; production data and learning logic are not connected |
 | Next primary deliverable | ADR-003 — Native Swift persistence/query/migration stack (`LB-DEC-059`, `LB-WI-M0-05`) |
 
 ## Completed foundation
@@ -44,6 +45,7 @@ This file is the single progress checklist for LinguaBrain AI. It must be update
 - [x] Add an ADR template.
 - [x] Add this project-status checklist.
 - [x] Harden `.gitignore` for local projects, secrets, Python, local stores, SwiftPM, Xcode, archives, and generated files.
+- [x] Add a buildable static SwiftUI visual prototype for iPhone, iPad, and Mac, with mock data and no production dependencies.
 - [x] Classify and place the vocabulary prototype at `experiments/vocabulary-mvp/` according to [ADR-001](decisions/ADR-001-Repository-Package-and-Module-Layout.md).
 - [ ] Configure a Git remote and push `main`.
 - [ ] Create an annotated MVP specification baseline tag.
