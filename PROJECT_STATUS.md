@@ -46,6 +46,7 @@ This file is the single progress checklist for LinguaBrain AI. It must be update
 - [x] Add this project-status checklist.
 - [x] Harden `.gitignore` for local projects, secrets, Python, local stores, SwiftPM, Xcode, archives, and generated files.
 - [x] Add a buildable static SwiftUI visual prototype for iPhone, iPad, and Mac, with mock data and no production dependencies.
+- [x] Define and prototype the ten minimum MVP card surfaces required before final visual-design approval.
 - [x] Classify and place the vocabulary prototype at `experiments/vocabulary-mvp/` according to [ADR-001](decisions/ADR-001-Repository-Package-and-Module-Layout.md).
 - [ ] Configure a Git remote and push `main`.
 - [ ] Create an annotated MVP specification baseline tag.

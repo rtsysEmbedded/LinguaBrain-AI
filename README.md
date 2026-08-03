@@ -102,6 +102,10 @@ Track current progress and the next verified task in the [Project Status and Del
 14. [Frontend UX/UI](docs/14_Frontend_UX_UI.md)
 15. [Implementation Backlog and Requirements Traceability](docs/15_Implementation_Backlog_and_Traceability.md)
 
+Supporting product artifacts:
+
+- [MVP Card Inventory and Interaction Requirements](docs/supporting/Card_Inventory_and_Interaction_Requirements.md)
+
 ## Status
 
 Documents 01–15 remain reviewed drafts. [ADR-009](decisions/ADR-009-Native-Apple-Client-and-Platform-Baseline.md) defines the native Apple OS 27 targets, [ADR-010](decisions/ADR-010-Swift-Package-and-Module-Layout.md) defines the Swift/Xcode/SwiftPM repository boundary, and [ADR-011](decisions/ADR-011-SwiftUI-State-Observation-Navigation-and-Dependency-Composition.md) defines presentation state, typed navigation, and dependency composition. The next gate is ADR-003 for native Swift persistence (`LB-DEC-059`, `LB-WI-M0-05`).
