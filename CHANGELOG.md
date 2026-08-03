@@ -28,6 +28,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- Made the visual prototype review session interactive: answer reveal now enables rating actions, each rating advances the queue, and session completion shows a rating summary with restart support.
 - Redesigned the SwiftUI settings experience as a clear Apple-style control center with a profile summary, learning-path overview, grouped navigation, and focused detail screens.
 - Hardened `.gitignore` for excluded local projects, environment secrets, Python artifacts, local databases, generated output, and runtime files.
 - Reviewed all specifications for cross-document consistency and implementation readiness.
