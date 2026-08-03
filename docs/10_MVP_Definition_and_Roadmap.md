@@ -1,9 +1,9 @@
 ---
 title: MVP Definition and Roadmap
 document_id: LB-DOC-10
-version: 0.3.1
+version: 0.4.0
 status: Draft
-last_updated: 2026-08-01
+last_updated: 2026-08-03
 ---
 
 # MVP Definition and Roadmap
@@ -15,6 +15,14 @@ This document defines the smallest production-quality release that can validate 
 > A deterministic Learning Engine using skill-level mastery, connected knowledge, FSRS, and controlled AI enrichment can provide a more relevant learning experience than manually organized flashcards.
 
 The MVP is intentionally narrow. It must prove the learning loop before the project invests in broad language coverage, real-time conversation, social features, or cloud scale.
+
+Per [ADR-012](../decisions/ADR-012-Anki-Core-First-and-APKG-Import-Boundary.md), delivery now begins with an **Anki Core validation release**. This changes implementation order, not the product vision: secure APKG import, durable offline review, and deterministic scheduling must work before AI card generation and final visual approval enter the critical path.
+
+## Anki Core validation gate
+
+The first executable product increment imports `.apkg` as untrusted external data through an adapter, maps supported content into LinguaBrain-owned records, and completes a restart-safe review session with Again, Hard, Good, and Easy. The extracted Anki collection is never used as LinguaBrain's live database.
+
+The detailed scope and acceptance matrix are defined in [Anki Core MVP Specification](supporting/Anki_Core_MVP_Specification.md). AI enrichment, Knowledge Graph expansion, adaptive planning, and final graphic polish resume after this gate passes.
 
 ## Target learner
 
@@ -50,6 +58,7 @@ flowchart TD
 
 3. **Knowledge-item ingestion**
    - Manual entry of a word or phrase.
+   - Secure import of supported `.apkg` decks through a transactional adapter, with preview, provenance, media handling, and deterministic re-import.
    - Duplicate detection and German lemma normalization.
    - Preview and approval before unverified enrichment becomes canonical.
 
@@ -144,6 +153,8 @@ Document 14 owns the adaptive-layout and SwiftUI snapshot matrix. Snapshot fixtu
 
 ## Delivery milestones
 
+Execution order is now: M0 → M1 persistence/domain slice → Anki Core import and review gate → remaining M2–M6 intelligence. Review infrastructure needed by Anki Core may be implemented earlier than its original milestone label; stable requirement IDs remain unchanged until Document 15 is formally rebased.
+
 ### M0 — Repository and specifications
 
 - Documents 01–14 completed.
@@ -155,6 +166,15 @@ Document 14 owns the adaptive-layout and SwiftUI snapshot matrix. Snapshot fixtu
 - Native Swift/SwiftUI iOS/iPadOS and macOS shells with local databases.
 - KnowledgeItem, learner profile, LearningEvent, and repository interfaces.
 - One manual German word can be stored and retrieved offline.
+- APKG importer port, import proposal, provenance identity, and safe temporary-file boundary.
+
+### Anki Core gate — Import and reliable review
+
+- Secure `.apkg` import with preview, supported text/image/audio, and re-import identity.
+- Deck library, due queue, question/answer reveal, and session summary.
+- Again, Hard, Good, and Easy connected to the pinned FSRS scheduler.
+- Atomic review history, restart durability, and adversarial import tests.
+- No AI provider required or invoked.
 
 ### M2 — Card and language foundation
 
@@ -162,9 +182,9 @@ Document 14 owns the adaptive-layout and SwiftUI snapshot matrix. Snapshot fixtu
 - Manual ingestion, duplicate detection, validation preview, smart card display.
 - Provider-independent enrichment with cache.
 
-### M3 — Review loop
+### M3 — Objective-level review expansion
 
-- LearningObjectives, FSRS state, rating flow, review history.
+- Extend the accepted Anki Core scheduler into independent LearningObjectives, retrieval contracts, and mastery evidence.
 - Recognition and reverse-recall exercises.
 - Complete offline review session survives restart.
 
@@ -244,7 +264,7 @@ The MVP cannot enter pilot until:
 
 | Phase | Candidate capabilities |
 | --- | --- |
-| 1.1 | Listening expansion, richer progress insights, import lists |
+| 1.1 | Listening expansion, richer progress insights, additional import/export formats |
 | 1.2 | OCR/text/PDF extraction with approval workflow |
 | 1.3 | Guided writing and speaking evaluation |
 | 2.0 | Account, encrypted sync, multiple devices |
@@ -288,6 +308,7 @@ LB-DEC-037 is `SUPERSEDED` by LB-DEC-057 and the native Apple baseline in [ADR-0
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 0.4.0 | 2026-08-03 | Added the Anki Core validation release, secure APKG adapter boundary, and import/review-first execution order from ADR-012. |
 | 0.3.1 | 2026-08-01 | Linked the accepted ADR-011 native Observation, typed-navigation, and composition baseline. |
 | 0.3.0 | 2026-07-21 | Replaced the superseded Android/Flutter pilot with native Swift 6.4/SwiftUI first-class iOS/iPadOS 27 and macOS 27 surfaces, an iPhone-primary pilot, independent local stores, and a stable Xcode 27 release gate. |
 | 0.2.2 | 2026-07-20 | Selected an Android-phone-only MVP pilot and linked the canonical Android golden-layout baseline from ADR-008. |

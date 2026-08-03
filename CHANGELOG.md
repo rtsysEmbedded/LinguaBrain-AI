@@ -8,6 +8,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- ADR-012 and the Anki Core MVP specification, establishing secure APKG import and durable offline review as the validation gate before AI card generation and final visual approval.
 - MVP card inventory and interactive SwiftUI gallery covering word, noun, verb, recognition, reverse translation, cloze, listening, feedback, daily-plan, and skill-mastery surfaces.
 - Buildable native SwiftUI visual prototype for iPhone, iPad, and Mac, covering onboarding, daily check-in, dashboard, library, mock word generation, review, progress, and settings.
 - Xcode workspace with separate `LinguaBrain` and `LinguaBrain Mac` schemes plus prototype run instructions.

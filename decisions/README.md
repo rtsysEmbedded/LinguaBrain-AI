@@ -16,6 +16,7 @@ Use [ADR_TEMPLATE.md](ADR_TEMPLATE.md) as the starting point for new records. Na
 - [ADR-009 — Native Apple Client and Platform Baseline](ADR-009-Native-Apple-Client-and-Platform-Baseline.md)
 - [ADR-010 — Swift Package and Module Layout](ADR-010-Swift-Package-and-Module-Layout.md)
 - [ADR-011 — SwiftUI State, Observation, Navigation, and Dependency Composition](ADR-011-SwiftUI-State-Observation-Navigation-and-Dependency-Composition.md)
+- [ADR-012 — Anki Core First and APKG Import Boundary](ADR-012-Anki-Core-First-and-APKG-Import-Boundary.md)
 
 ## Superseded ADRs
 

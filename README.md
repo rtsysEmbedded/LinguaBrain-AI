@@ -105,10 +105,11 @@ Track current progress and the next verified task in the [Project Status and Del
 Supporting product artifacts:
 
 - [MVP Card Inventory and Interaction Requirements](docs/supporting/Card_Inventory_and_Interaction_Requirements.md)
+- [Anki Core MVP Specification](docs/supporting/Anki_Core_MVP_Specification.md)
 
 ## Status
 
-Documents 01–15 remain reviewed drafts. [ADR-009](decisions/ADR-009-Native-Apple-Client-and-Platform-Baseline.md) defines the native Apple OS 27 targets, [ADR-010](decisions/ADR-010-Swift-Package-and-Module-Layout.md) defines the Swift/Xcode/SwiftPM repository boundary, and [ADR-011](decisions/ADR-011-SwiftUI-State-Observation-Navigation-and-Dependency-Composition.md) defines presentation state, typed navigation, and dependency composition. The next gate is ADR-003 for native Swift persistence (`LB-DEC-059`, `LB-WI-M0-05`).
+Documents 01–15 remain reviewed drafts. [ADR-009](decisions/ADR-009-Native-Apple-Client-and-Platform-Baseline.md) defines the native Apple OS 27 targets, [ADR-010](decisions/ADR-010-Swift-Package-and-Module-Layout.md) defines the Swift/Xcode/SwiftPM repository boundary, [ADR-011](decisions/ADR-011-SwiftUI-State-Observation-Navigation-and-Dependency-Composition.md) defines presentation composition, and [ADR-012](decisions/ADR-012-Anki-Core-First-and-APKG-Import-Boundary.md) establishes the Anki Core-first delivery gate. The next gate is ADR-003 for native Swift persistence (`LB-DEC-059`, `LB-WI-M0-05`).
 
 ## Key resolved contracts
 

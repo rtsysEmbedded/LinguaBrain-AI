@@ -1,9 +1,9 @@
 ---
 title: Decision Register
 document_id: LB-DEC-REGISTER
-version: 0.3.0
+version: 0.4.0
 status: Active
-last_updated: 2026-08-01
+last_updated: 2026-08-03
 ---
 
 # Decision Register
@@ -20,8 +20,8 @@ This version contains:
 
 - all 53 bullets under the Open questions sections of Documents 02–10 and 12–14;
 - no source questions from Documents 01, 11, or 15 because those documents have no Open questions section;
-- six supplemental architecture decisions required by Documents 11 and 15 and by the native Apple architecture pivot;
-- 59 stable decision IDs in total.
+- seven supplemental architecture/product decisions required by Documents 11 and 15, the native Apple architecture pivot, and the Anki Core sequencing decision;
+- 60 stable decision IDs in total.
 
 Source questions remain individually traceable even when several questions share one research package or ADR. IDs are never reused.
 
@@ -58,12 +58,12 @@ Each register row names one accountable owner role. Other affected roles review 
 
 | Dimension | Count |
 | --- | ---: |
-| Total decision records | 59 |
-| MVP-blocking | 16 |
+| Total decision records | 60 |
+| MVP-blocking | 17 |
 | MVP-later | 31 |
 | post-MVP | 12 |
 | OPEN | 37 |
-| DECIDED | 5 |
+| DECIDED | 6 |
 | PROPOSED | 2 |
 | DEFERRED | 11 |
 | SUPERSEDED | 4 |
@@ -131,6 +131,7 @@ Each register row names one accountable owner role. Other affected roles review 
 | LB-DEC-057 | Native Apple architecture supplement | Which native client stack and Apple platform scope should the MVP adopt? | MVP-blocking | DECIDED | Product Owner | M1 start | [ADR-009](ADR-009-Native-Apple-Client-and-Platform-Baseline.md) |
 | LB-DEC-058 | Native Apple architecture supplement | Which SwiftUI observation/state, navigation, and dependency-composition approach should the MVP adopt? | MVP-blocking | DECIDED | Apple Client Architect | M1 start | [ADR-011](ADR-011-SwiftUI-State-Observation-Navigation-and-Dependency-Composition.md) |
 | LB-DEC-059 | Native Apple persistence supplement | Which native Swift persistence/query/migration stack best satisfies atomicity, testing, and migration needs? | MVP-blocking | OPEN | Persistence Lead | M1 start | Revised ADR-003 and transaction/migration spike |
+| LB-DEC-060 | Anki Core sequencing supplement | Should LinguaBrain validate secure APKG import and a durable offline review loop before AI card generation and final visual approval? | MVP-blocking | DECIDED | Product Owner | Before implementation resumes | [ADR-012](ADR-012-Anki-Core-First-and-APKG-Import-Boundary.md) and Anki Core MVP specification |
 
 ## Existing scope, proposed, and deferred baseline
 
@@ -147,6 +148,7 @@ The following existing specification positions are recorded without losing their
 - LB-DEC-055 is SUPERSEDED by LB-DEC-058: the planned Flutter state-management ADR was withdrawn before proposal.
 - LB-DEC-057 is DECIDED: the MVP uses the native Apple client and platform scope defined by [ADR-009](ADR-009-Native-Apple-Client-and-Platform-Baseline.md).
 - LB-DEC-058 is DECIDED: native Observation, `@MainActor` feature models, typed scene-owned navigation, initializer injection, and an app composition root are defined by [ADR-011](ADR-011-SwiftUI-State-Observation-Navigation-and-Dependency-Composition.md).
+- LB-DEC-060 is DECIDED: secure APKG import and a durable offline review loop precede AI card generation and final visual approval, as defined by [ADR-012](ADR-012-Anki-Core-First-and-APKG-Import-Boundary.md).
 
 Deferred records remain visible and do not become active work until their named gate is approved.
 
@@ -167,7 +169,7 @@ Related source questions should share evidence and, where appropriate, one final
 
 ## ADR catalog and planned queue
 
-ADR-009 through ADR-011 are accepted. ADR-001 and ADR-008 are preserved as superseded history, and ADR-002 was withdrawn before proposal. The remaining filenames are reserved and do not represent accepted decisions. The first column is the stable ADR number, not execution priority; the Current decision queue below owns execution order.
+ADR-009 through ADR-012 are accepted. ADR-001 and ADR-008 are preserved as superseded history, and ADR-002 was withdrawn before proposal. The remaining filenames are reserved and do not represent accepted decisions. The first column is the stable ADR number, not execution priority; the Current decision queue below owns execution order.
 
 | ADR no. | ADR | Status | Decision references | Target and hard gate | Acceptance evidence |
 | ---: | --- | --- | --- | --- | --- |
@@ -182,6 +184,7 @@ ADR-009 through ADR-011 are accepted. ADR-001 and ADR-008 are preserved as super
 | 9 | [ADR-009-Native-Apple-Client-and-Platform-Baseline.md](ADR-009-Native-Apple-Client-and-Platform-Baseline.md) | accepted | LB-DEC-053, LB-DEC-057 | Accepted 2026-07-21; M1 platform/snapshot baseline stable | Native Swift/SwiftUI Apple targets, platform matrix, and current layout baseline |
 | 10 | [ADR-010-Swift-Package-and-Module-Layout.md](ADR-010-Swift-Package-and-Module-Layout.md) | accepted | LB-DEC-054 | Accepted 2026-07-21; M1 module paths stable | SwiftPM targets, dependency rules, CI ownership, and experiment/device boundaries |
 | 11 | [ADR-011-SwiftUI-State-Observation-Navigation-and-Dependency-Composition.md](ADR-011-SwiftUI-State-Observation-Navigation-and-Dependency-Composition.md) | accepted | LB-DEC-058 | Accepted 2026-08-01; M1 client-composition baseline stable | Native Observation, typed scene navigation, initializer injection, composition root, and test fixture contract |
+| 12 | [ADR-012-Anki-Core-First-and-APKG-Import-Boundary.md](ADR-012-Anki-Core-First-and-APKG-Import-Boundary.md) | accepted | LB-DEC-060 | Accepted 2026-08-03; gates AI/final visual work | Secure APKG adapter boundary and restart-safe Anki Core review acceptance criteria |
 
 ## Current decision queue
 
@@ -227,6 +230,7 @@ At every milestone review:
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 0.4.0 | 2026-08-03 | Added LB-DEC-060 and accepted ADR-012 for the Anki Core-first implementation sequence and APKG adapter boundary. |
 | 0.3.0 | 2026-08-01 | Accepted ADR-011, closed LB-DEC-058, and advanced the active queue to the native Swift persistence decision in ADR-003. |
 | 0.2.0 | 2026-07-21 | Recorded the native Apple architecture pivot; superseded Flutter-specific decisions and ADRs; accepted ADR-009/ADR-010; added LB-DEC-057 through LB-DEC-059; and advanced the active queue to ADR-011. |
 | 0.1.2 | 2026-07-20 | Accepted ADR-008, closed LB-DEC-037 and LB-DEC-053, and advanced the active queue to ADR-002. |

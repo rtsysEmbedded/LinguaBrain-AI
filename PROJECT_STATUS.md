@@ -1,9 +1,9 @@
 ---
 title: Project Status and Delivery Checklist
 document_id: LB-STATUS
-version: 0.2.3
+version: 0.3.0
 status: Active
-last_updated: 2026-08-01
+last_updated: 2026-08-03
 ---
 
 # Project Status and Delivery Checklist
@@ -25,13 +25,14 @@ This file is the single progress checklist for LinguaBrain AI. It must be update
 | Current phase | M0 — Specification baseline and implementation preparation |
 | Product scope | German–Persian offline-first native Apple MVP (iOS/iPadOS/macOS 27) |
 | Documentation | Documents 01–15 complete as reviewed drafts |
-| Architecture baseline | Native Swift migration; DOC-10/DOC-11/DOC-14 at 0.3.1 and DOC-15 at 0.2.1 |
+| Architecture baseline | Native Swift migration; DOC-10 at 0.4.0, DOC-11/DOC-14 at 0.3.1, and DOC-15 at 0.2.1 |
 | Local Apple toolchain | Xcode 27.0 (`27A5228h`) is active with Swift 6.4 and iOS/iPadOS/macOS 27 SDKs; beta-era evidence remains provisional |
-| Latest accepted ADRs | [ADR-009](decisions/ADR-009-Native-Apple-Client-and-Platform-Baseline.md), [ADR-010](decisions/ADR-010-Swift-Package-and-Module-Layout.md), and [ADR-011](decisions/ADR-011-SwiftUI-State-Observation-Navigation-and-Dependency-Composition.md) |
+| Latest accepted ADRs | [ADR-009](decisions/ADR-009-Native-Apple-Client-and-Platform-Baseline.md) through [ADR-012](decisions/ADR-012-Anki-Core-First-and-APKG-Import-Boundary.md) |
 | Active Git branch | `main` |
 | Native platform migration commit | `3c75a70` |
 | Visual prototype | Buildable SwiftUI mock for iPhone, iPad, and Mac; production data and learning logic are not connected |
 | Next primary deliverable | ADR-003 — Native Swift persistence/query/migration stack (`LB-DEC-059`, `LB-WI-M0-05`) |
+| Current delivery strategy | Anki Core first: secure APKG import and reliable offline review gate before AI and final visual approval |
 
 ## Completed foundation
 
@@ -91,6 +92,7 @@ This file is the single progress checklist for LinguaBrain AI. It must be update
 - [x] [ADR-010 — Swift package and module layout](decisions/ADR-010-Swift-Package-and-Module-Layout.md).
 - [x] ADR-001 and ADR-008 retained as superseded historical decisions.
 - [x] [ADR-011 — SwiftUI Observation/state, navigation, and dependency composition](decisions/ADR-011-SwiftUI-State-Observation-Navigation-and-Dependency-Composition.md).
+- [x] [ADR-012 — Anki Core first and APKG import boundary](decisions/ADR-012-Anki-Core-First-and-APKG-Import-Boundary.md).
 - [ ] ADR-003 — Native Swift persistence/query/migration stack.
 - [ ] ADR — Domain events and transactional outbox strategy.
 - [ ] ADR — Apple local-store protection, Keychain, backup, recovery, and key handling.
@@ -110,6 +112,8 @@ This file is the single progress checklist for LinguaBrain AI. It must be update
 - [ ] AI pipeline sequence diagram.
 
 ## Specification readiness gates
+
+- [x] Anki Core MVP supporting specification and acceptance gate.
 
 - [ ] Document 16 — Application and Domain Contracts, required before M1 implementation.
 - [ ] Document 18 — German–Persian Language Package, required before M2 implementation.
@@ -133,6 +137,19 @@ This file is the single progress checklist for LinguaBrain AI. It must be update
 
 **M1 exit criterion:** A manually entered German word can be saved, closed, reopened, and retrieved offline through domain/application interfaces rather than direct UI-to-database access.
 
+## Anki Core validation release — Current product priority
+
+- [ ] Implement sandboxed `.apkg` inspection and import preview.
+- [ ] Map supported decks, notes, cards, templates, tags, images, and audio into LinguaBrain-owned records.
+- [ ] Preserve import provenance and deterministic re-import identity.
+- [ ] Implement deck library, due queue, question/answer reveal, and session summary.
+- [ ] Connect Again, Hard, Good, and Easy to the pinned FSRS scheduler.
+- [ ] Persist review history and due state atomically across restart.
+- [ ] Add corrupt, traversal, archive-bomb, unsupported-template, duplicate, and large-deck fixtures.
+- [ ] Verify the same semantic flow on iPhone, iPad, and Mac without an AI provider.
+
+**Anki Core exit criterion:** A representative APKG imports safely, reviews offline with all four ratings, survives restart without lost progress, and re-imports without uncontrolled duplication. AI and final graphic approval remain gated until this passes.
+
 ## M2 — Card and language foundation
 
 - [ ] Implement minimum German and Persian Language Package capabilities.
@@ -149,7 +166,7 @@ This file is the single progress checklist for LinguaBrain AI. It must be update
 
 **M2 exit criterion:** A learner can create or enrich a German item, inspect and approve the result, avoid duplicates, and use the accepted content offline.
 
-## M3 — Review loop
+## M3 — Objective-level review expansion
 
 - [ ] Implement `LearningObjective`, `ReviewUnit`, and independent retrieval contracts.
 - [ ] Integrate the selected FSRS implementation behind a scheduler interface.
@@ -161,7 +178,7 @@ This file is the single progress checklist for LinguaBrain AI. It must be update
 - [ ] Provide component/rule-specific feedback and a corrective opportunity.
 - [ ] Add deterministic fake-clock and restart test vectors.
 
-**M3 exit criterion:** Recognition and recall for the same item are scheduled independently, survive restart, and produce reproducible FSRS history.
+**M3 exit criterion:** Building on the accepted Anki Core scheduler, recognition and recall for the same item are scheduled independently, survive restart, and produce reproducible FSRS history.
 
 ## M4 — Adaptive intelligence
 
