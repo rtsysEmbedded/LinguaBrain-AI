@@ -3,27 +3,32 @@ import SwiftUI
 struct ReviewPrototypeView: View {
     @Environment(PrototypeStore.self) private var store
     @State private var revealed = false
-    @State private var currentIndex = 0
+    @State private var queue: [UUID] = []
+    @State private var currentWordID: UUID?
     @State private var ratings: [PrototypeReviewGrade] = []
+    @State private var waitingUntil: Date?
     @State private var isComplete = false
+    @State private var hasStarted = false
 
-    private var words: [PrototypeWord] { store.words }
-
-    private var currentWord: PrototypeWord {
-        words[min(currentIndex, words.count - 1)]
+    private var currentWord: PrototypeWord? {
+        guard let currentWordID else { return nil }
+        return store.words.first { $0.id == currentWordID }
     }
 
     private var progress: Double {
-        guard !words.isEmpty else { return 0 }
-        return isComplete ? 1 : Double(currentIndex) / Double(words.count)
+        Double(store.reviewedCount) / Double(max(store.words.count, 1))
     }
 
     var body: some View {
         Group {
-            if isComplete {
+            if !hasStarted {
+                ProgressView("آماده‌کردن صف مرور…")
+            } else if isComplete {
                 completionView
-            } else {
-                reviewView
+            } else if let waitingUntil {
+                waitingView(until: waitingUntil)
+            } else if let currentWord {
+                reviewView(word: currentWord)
             }
         }
         .padding()
@@ -31,17 +36,20 @@ struct ReviewPrototypeView: View {
         .frame(maxWidth: .infinity)
         .background(PrototypeBackground())
         .navigationTitle("مرور هوشمند")
+        .task {
+            guard !hasStarted else { return }
+            startSession()
+        }
     }
 
-    private var reviewView: some View {
+    private func reviewView(word: PrototypeWord) -> some View {
         VStack(spacing: 22) {
             HStack {
-                Text("مرور \(currentIndex + 1) از \(words.count)")
+                Text("\(ratings.count) پاسخ ثبت‌شده")
                     .font(.subheadline.weight(.medium))
                 ProgressView(value: progress)
                     .tint(PrototypeTheme.accent)
-                    .animation(.snappy, value: currentIndex)
-                Text("آفلاین")
+                Text("\(queue.count) در صف")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -52,19 +60,16 @@ struct ReviewPrototypeView: View {
                 Text("این واژه به فارسی یعنی چه؟")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
-                Text(currentWord.german)
+                Text(word.german)
                     .font(.system(size: 38, weight: .bold, design: .rounded))
                     .environment(\.layoutDirection, .leftToRight)
                     .multilineTextAlignment(.center)
-                    .contentTransition(.numericText())
 
                 if revealed {
                     Divider()
-                    Text(currentWord.persian)
-                        .font(.title.bold())
-                    GermanText(text: currentWord.example, font: .title3)
-                    Text(currentWord.exampleTranslation)
-                        .foregroundStyle(.secondary)
+                    Text(word.persian).font(.title.bold())
+                    GermanText(text: word.example, font: .title3)
+                    Text(word.exampleTranslation).foregroundStyle(.secondary)
                 } else {
                     Button("نمایش پاسخ") {
                         withAnimation(.snappy) { revealed = true }
@@ -74,7 +79,7 @@ struct ReviewPrototypeView: View {
                     .keyboardShortcut(.space, modifiers: [])
                 }
             }
-            .id(currentWord.id)
+            .id(word.id)
             .padding(28)
             .frame(maxWidth: 650, minHeight: 360)
             .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 30, style: .continuous))
@@ -83,7 +88,6 @@ struct ReviewPrototypeView: View {
                     .stroke(PrototypeTheme.accent.opacity(0.18), lineWidth: 1)
             }
             .shadow(color: PrototypeTheme.accent.opacity(0.12), radius: 24, y: 12)
-            .transition(.opacity.combined(with: .scale(scale: 0.98)))
 
             if revealed {
                 VStack(spacing: 10) {
@@ -91,8 +95,8 @@ struct ReviewPrototypeView: View {
                         .font(.caption)
                         .foregroundStyle(.secondary)
                     HStack(spacing: 10) {
-                    ForEach(PrototypeReviewGrade.allCases) { rating in
-                            ratingButton(rating)
+                        ForEach(PrototypeReviewGrade.allCases) { rating in
+                            ratingButton(rating, word: word)
                         }
                     }
                 }
@@ -103,19 +107,41 @@ struct ReviewPrototypeView: View {
         }
     }
 
+    private func waitingView(until date: Date) -> some View {
+        VStack(spacing: 20) {
+            Spacer()
+            Image(systemName: "clock.badge.checkmark")
+                .font(.system(size: 60))
+                .foregroundStyle(PrototypeTheme.accent)
+            Text("کارت‌های سخت در زمان مقرر برمی‌گردند")
+                .font(.title2.bold())
+            TimelineView(.periodic(from: .now, by: 1)) { context in
+                let seconds = max(0, Int(date.timeIntervalSince(context.date).rounded(.up)))
+                Text("کارت بعدی تا \(seconds) ثانیهٔ دیگر")
+                    .font(.title3.monospacedDigit())
+                    .foregroundStyle(.secondary)
+            }
+            Text("می‌توانی این صفحه را باز نگه داری؛ صف به‌طور خودکار ادامه پیدا می‌کند.")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+            Spacer()
+        }
+        .task(id: date) {
+            let delay = max(0, date.timeIntervalSinceNow)
+            try? await Task.sleep(for: .seconds(delay))
+            selectNextCard()
+        }
+    }
+
     private var completionView: some View {
         VStack(spacing: 22) {
             Spacer()
             Image(systemName: "checkmark.seal.fill")
                 .font(.system(size: 64))
                 .foregroundStyle(PrototypeTheme.mint)
-
-            VStack(spacing: 7) {
-                Text("مرور امروز تمام شد")
-                    .font(.largeTitle.bold())
-                Text("\(ratings.count) کارت را مرور کردی")
-                    .foregroundStyle(.secondary)
-            }
+            Text("مرورهای فعلی تمام شد").font(.largeTitle.bold())
+            Text("\(ratings.count) پاسخ در این جلسه ثبت شد")
+                .foregroundStyle(.secondary)
 
             PrototypeCard {
                 VStack(spacing: 14) {
@@ -132,8 +158,8 @@ struct ReviewPrototypeView: View {
             }
             .frame(maxWidth: 440)
 
-            Button("مرور دوباره") {
-                resetSession()
+            Button("بررسی دوبارهٔ صف") {
+                startSession()
             }
             .buttonStyle(.borderedProminent)
             .controlSize(.large)
@@ -141,17 +167,14 @@ struct ReviewPrototypeView: View {
         }
     }
 
-    private func ratingButton(_ rating: PrototypeReviewGrade) -> some View {
+    private func ratingButton(_ rating: PrototypeReviewGrade, word: PrototypeWord) -> some View {
         Button {
-            submit(rating)
+            submit(rating, for: word)
         } label: {
             VStack(spacing: 5) {
                 Image(systemName: rating.symbol)
-                Text(rating.title)
-                    .font(.caption.weight(.semibold))
-                Text(rating.previewInterval)
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
+                Text(rating.title).font(.caption.weight(.semibold))
+                Text(rating.previewInterval).font(.caption2).foregroundStyle(.secondary)
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 10)
@@ -161,36 +184,70 @@ struct ReviewPrototypeView: View {
         .accessibilityLabel("\(rating.title)، مرور بعدی \(rating.previewInterval)")
     }
 
-    private func submit(_ rating: PrototypeReviewGrade) {
-        guard revealed, !isComplete else { return }
+    private func startSession() {
+        queue = store.words.filter { word in
+            store.isReviewable(word) || store.lastGrade(for: word)?.repeatsInCurrentSession == true
+        }.map(\.id)
+        currentWordID = nil
+        waitingUntil = nil
+        ratings = []
+        isComplete = false
+        hasStarted = true
+        selectNextCard()
+    }
+
+    private func submit(_ rating: PrototypeReviewGrade, for word: PrototypeWord) {
+        guard revealed, currentWordID == word.id else { return }
         ratings.append(rating)
-        store.record(rating, for: currentWord)
+        store.record(rating, for: word)
+
+        if rating.repeatsInCurrentSession {
+            queue.append(word.id)
+        }
 
         withAnimation(.snappy) {
-            if currentIndex + 1 < words.count {
-                currentIndex += 1
-                revealed = false
-            } else {
-                isComplete = true
-            }
+            revealed = false
+            currentWordID = nil
+            selectNextCard()
         }
     }
 
-    private func resetSession() {
-        withAnimation(.snappy) {
-            currentIndex = 0
-            ratings = []
-            revealed = false
-            isComplete = false
+    private func selectNextCard() {
+        let now = Date.now
+        // Repeated cards that are now due take priority over unseen cards.
+        let dueRepeatIndex = queue.firstIndex(where: { id in
+            guard let word = store.words.first(where: { $0.id == id }) else { return false }
+            return store.reviewCount(for: word) > 0 && store.isReviewable(word, at: now)
+        })
+        let nextIndex = dueRepeatIndex ?? queue.firstIndex(where: { id in
+            guard let word = store.words.first(where: { $0.id == id }) else { return false }
+            return store.isReviewable(word, at: now)
+        })
+
+        if let index = nextIndex {
+            currentWordID = queue.remove(at: index)
+            waitingUntil = nil
+            return
+        }
+
+        let futureDates = queue.compactMap { id in
+            store.words.first(where: { $0.id == id }).flatMap(store.dueDate(for:))
+        }
+
+        if let nextDate = futureDates.min() {
+            waitingUntil = nextDate
+            currentWordID = nil
+        } else {
+            waitingUntil = nil
+            currentWordID = nil
+            isComplete = true
         }
     }
 }
 
-#Preview("Interactive Review") {
-    NavigationStack {
-        ReviewPrototypeView()
-    }
-    .environment(PrototypeStore())
-    .environment(\.layoutDirection, .rightToLeft)
-    .tint(PrototypeTheme.accent)
+#Preview("Scheduled Review") {
+    NavigationStack { ReviewPrototypeView() }
+        .environment(PrototypeStore())
+        .environment(\.layoutDirection, .rightToLeft)
+        .tint(PrototypeTheme.accent)
 }

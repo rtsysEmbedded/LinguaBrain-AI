@@ -100,6 +100,19 @@ enum PrototypeReviewGrade: String, CaseIterable, Identifiable, Hashable {
         }
     }
 
+    var interval: TimeInterval {
+        switch self {
+        case .again: 20
+        case .hard: 6 * 60
+        case .good: 24 * 60 * 60
+        case .easy: 4 * 24 * 60 * 60
+        }
+    }
+
+    var repeatsInCurrentSession: Bool {
+        self == .again || self == .hard
+    }
+
     var strength: Double {
         switch self {
         case .again: 0.15
@@ -114,16 +127,14 @@ enum PrototypeReviewGrade: String, CaseIterable, Identifiable, Hashable {
 @Observable
 final class PrototypeStore {
     private(set) var grades: [UUID: [PrototypeReviewGrade]] = [:]
+    private(set) var dueDates: [UUID: Date] = [:]
 
     let words = PrototypeData.words
 
     var reviewedCount: Int { grades.values.filter { !$0.isEmpty }.count }
     var unreviewedCount: Int { words.count - reviewedCount }
     var dueCount: Int {
-        words.filter { word in
-            guard let last = grades[word.id]?.last else { return true }
-            return last == .again || last == .hard
-        }.count
+        words.filter { isReviewable($0) }.count
     }
     var weakCount: Int {
         words.filter { reviewCount(for: $0) > 0 && strength(for: $0) < 0.5 }.count
@@ -147,12 +158,24 @@ final class PrototypeStore {
         grades[word.id]?.last
     }
 
-    func record(_ grade: PrototypeReviewGrade, for word: PrototypeWord) {
+    func dueDate(for word: PrototypeWord) -> Date? {
+        dueDates[word.id]
+    }
+
+    func isReviewable(_ word: PrototypeWord, at date: Date = .now) -> Bool {
+        guard reviewCount(for: word) > 0 else { return true }
+        guard let dueDate = dueDates[word.id] else { return true }
+        return dueDate <= date
+    }
+
+    func record(_ grade: PrototypeReviewGrade, for word: PrototypeWord, at date: Date = .now) {
         grades[word.id, default: []].append(grade)
+        dueDates[word.id] = date.addingTimeInterval(grade.interval)
     }
 
     func reset() {
         grades.removeAll()
+        dueDates.removeAll()
     }
 }
 
