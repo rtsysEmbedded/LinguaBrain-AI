@@ -1,13 +1,14 @@
 import SwiftUI
 
 struct LibraryPrototypeView: View {
+    @Environment(PrototypeStore.self) private var store
     @State private var searchText = ""
     @State private var filter = "همه"
 
     private var filteredWords: [PrototypeWord] {
         PrototypeData.words.filter { word in
             let matchesSearch = searchText.isEmpty || word.german.localizedCaseInsensitiveContains(searchText) || word.persian.contains(searchText)
-            let matchesFilter = filter == "همه" || (filter == "ضعیف" && word.strength < 0.5) || filter == word.level
+            let matchesFilter = filter == "همه" || (filter == "ضعیف" && store.reviewCount(for: word) > 0 && store.strength(for: word) < 0.5) || filter == word.level
             return matchesSearch && matchesFilter
         }
     }
@@ -16,9 +17,9 @@ struct LibraryPrototypeView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
                 HStack(spacing: 12) {
-                    MetricPill(value: "۱٬۲۴۸", label: "واژه", symbol: "textformat.abc", color: PrototypeTheme.accent)
-                    MetricPill(value: "۳۲", label: "ضعیف", symbol: "exclamationmark.triangle.fill", color: .orange)
-                    MetricPill(value: "۶۸٪", label: "فعال", symbol: "bolt.fill", color: PrototypeTheme.mint)
+                    MetricPill(value: "\(store.words.count)", label: "واژه", symbol: "textformat.abc", color: PrototypeTheme.accent)
+                    MetricPill(value: "\(store.weakCount)", label: "ضعیف", symbol: "exclamationmark.triangle.fill", color: .orange)
+                    MetricPill(value: "\(store.reviewedCount)", label: "مرور شده", symbol: "bolt.fill", color: PrototypeTheme.mint)
                 }
 
                 NavigationLink {
@@ -88,7 +89,9 @@ struct LibraryPrototypeView: View {
                 Spacer()
                 VStack(alignment: .trailing, spacing: 6) {
                     Text(word.partOfSpeech).font(.caption).foregroundStyle(.secondary)
-                    ProgressView(value: word.strength).frame(width: 72).tint(word.strength < 0.5 ? .orange : PrototypeTheme.mint)
+                    ProgressView(value: store.strength(for: word))
+                        .frame(width: 72)
+                        .tint(store.strength(for: word) < 0.5 ? .orange : PrototypeTheme.mint)
                 }
                 Image(systemName: "chevron.left").font(.caption).foregroundStyle(.tertiary)
             }

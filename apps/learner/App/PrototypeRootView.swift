@@ -2,13 +2,17 @@ import SwiftUI
 
 struct PrototypeRootView: View {
     @State private var selection: PrototypeSection = .today
+    @State private var store = PrototypeStore()
 
     var body: some View {
-        #if os(macOS)
-        desktopLayout
-        #else
-        mobileLayout
-        #endif
+        Group {
+            #if os(macOS)
+            desktopLayout
+            #else
+            mobileLayout
+            #endif
+        }
+        .environment(store)
     }
 
     #if os(macOS)

@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct TodayPrototypeView: View {
+    @Environment(PrototypeStore.self) private var store
     @State private var energy = 6.0
     @State private var selectedTime = 20
 
@@ -44,9 +45,9 @@ struct TodayPrototypeView: View {
             }
 
             HStack(spacing: 10) {
-                MetricPill(value: "۱۲", label: "مرور", symbol: "arrow.clockwise", color: PrototypeTheme.accent)
-                MetricPill(value: "۵", label: "جدید", symbol: "sparkles", color: PrototypeTheme.pink)
-                MetricPill(value: "۸۲٪", label: "حافظه", symbol: "brain", color: PrototypeTheme.mint)
+                MetricPill(value: "\(store.dueCount)", label: "مرور", symbol: "arrow.clockwise", color: PrototypeTheme.accent)
+                MetricPill(value: "\(store.unreviewedCount)", label: "جدید", symbol: "sparkles", color: PrototypeTheme.pink)
+                MetricPill(value: store.averageStrength.formatted(.percent.precision(.fractionLength(0))), label: "حافظه", symbol: "brain", color: PrototypeTheme.mint)
             }
             .foregroundStyle(.primary)
         }
@@ -84,7 +85,7 @@ struct TodayPrototypeView: View {
             SectionHeader(title: "برنامه پیشنهادی", subtitle: "۲۰ دقیقه · حالت رشد")
             PrototypeCard {
                 VStack(spacing: 0) {
-                    planRow(symbol: "rectangle.stack.fill", color: PrototypeTheme.accent, title: "مرور هوشمند", detail: "۱۲ واژه نزدیک فراموشی", time: "۸ دقیقه")
+                    planRow(symbol: "rectangle.stack.fill", color: PrototypeTheme.accent, title: "مرور هوشمند", detail: "\(store.dueCount) واژه برای بررسی", time: "آزمایشی")
                     Divider().padding(.vertical, 12)
                     planRow(symbol: "text.book.closed.fill", color: PrototypeTheme.blue, title: "متن کوتاه", detail: "محیط کار · سطح B1", time: "۷ دقیقه")
                     Divider().padding(.vertical, 12)
@@ -130,7 +131,7 @@ struct TodayPrototypeView: View {
                     .background(PrototypeTheme.pink.opacity(0.12), in: Circle())
                 VStack(alignment: .leading, spacing: 4) {
                     Text("پیشنهاد مربی").font(.headline)
-                    Text("در شنیداری کمی ضعیف‌تری؛ فردا یک تمرین صوتی کوتاه اضافه می‌کنیم.")
+                    Text(store.reviewedCount == 0 ? "وضعیت کاربر ریست است. مرور را شروع کن تا همهٔ بخش‌ها هم‌زمان تغییر کنند." : "تا اینجا \(store.reviewedCount) واژه مرور شده و \(store.weakCount) واژه نیاز به تمرین بیشتر دارد.")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                 }

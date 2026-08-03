@@ -1,12 +1,13 @@
 import SwiftUI
 
 struct ReviewPrototypeView: View {
+    @Environment(PrototypeStore.self) private var store
     @State private var revealed = false
     @State private var currentIndex = 0
-    @State private var ratings: [ReviewRating] = []
+    @State private var ratings: [PrototypeReviewGrade] = []
     @State private var isComplete = false
 
-    private let words = PrototypeData.words
+    private var words: [PrototypeWord] { store.words }
 
     private var currentWord: PrototypeWord {
         words[min(currentIndex, words.count - 1)]
@@ -90,7 +91,7 @@ struct ReviewPrototypeView: View {
                         .font(.caption)
                         .foregroundStyle(.secondary)
                     HStack(spacing: 10) {
-                        ForEach(ReviewRating.allCases) { rating in
+                    ForEach(PrototypeReviewGrade.allCases) { rating in
                             ratingButton(rating)
                         }
                     }
@@ -118,7 +119,7 @@ struct ReviewPrototypeView: View {
 
             PrototypeCard {
                 VStack(spacing: 14) {
-                    ForEach(ReviewRating.allCases) { rating in
+                    ForEach(PrototypeReviewGrade.allCases) { rating in
                         HStack {
                             Label(rating.title, systemImage: rating.symbol)
                                 .foregroundStyle(rating.color)
@@ -140,7 +141,7 @@ struct ReviewPrototypeView: View {
         }
     }
 
-    private func ratingButton(_ rating: ReviewRating) -> some View {
+    private func ratingButton(_ rating: PrototypeReviewGrade) -> some View {
         Button {
             submit(rating)
         } label: {
@@ -160,9 +161,10 @@ struct ReviewPrototypeView: View {
         .accessibilityLabel("\(rating.title)، مرور بعدی \(rating.previewInterval)")
     }
 
-    private func submit(_ rating: ReviewRating) {
+    private func submit(_ rating: PrototypeReviewGrade) {
         guard revealed, !isComplete else { return }
         ratings.append(rating)
+        store.record(rating, for: currentWord)
 
         withAnimation(.snappy) {
             if currentIndex + 1 < words.count {
@@ -184,52 +186,11 @@ struct ReviewPrototypeView: View {
     }
 }
 
-private enum ReviewRating: String, CaseIterable, Identifiable {
-    case again, hard, good, easy
-
-    var id: Self { self }
-
-    var title: String {
-        switch self {
-        case .again: "دوباره"
-        case .hard: "سخت"
-        case .good: "خوب"
-        case .easy: "آسان"
-        }
-    }
-
-    var symbol: String {
-        switch self {
-        case .again: "arrow.counterclockwise"
-        case .hard: "flame.fill"
-        case .good: "checkmark"
-        case .easy: "bolt.fill"
-        }
-    }
-
-    var color: Color {
-        switch self {
-        case .again: .red
-        case .hard: .orange
-        case .good: PrototypeTheme.blue
-        case .easy: PrototypeTheme.mint
-        }
-    }
-
-    var previewInterval: String {
-        switch self {
-        case .again: "کمتر از ۱ دقیقه"
-        case .hard: "۶ دقیقه"
-        case .good: "۱ روز"
-        case .easy: "۴ روز"
-        }
-    }
-}
-
 #Preview("Interactive Review") {
     NavigationStack {
         ReviewPrototypeView()
     }
+    .environment(PrototypeStore())
     .environment(\.layoutDirection, .rightToLeft)
     .tint(PrototypeTheme.accent)
 }
