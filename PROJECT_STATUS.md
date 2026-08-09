@@ -1,9 +1,9 @@
 ---
 title: Project Status and Delivery Checklist
 document_id: LB-STATUS
-version: 0.3.0
+version: 0.3.1
 status: Active
-last_updated: 2026-08-03
+last_updated: 2026-08-09
 ---
 
 # Project Status and Delivery Checklist
@@ -30,7 +30,7 @@ This file is the single progress checklist for LinguaBrain AI. It must be update
 | Latest accepted ADRs | [ADR-009](decisions/ADR-009-Native-Apple-Client-and-Platform-Baseline.md) through [ADR-012](decisions/ADR-012-Anki-Core-First-and-APKG-Import-Boundary.md) |
 | Active Git branch | `main` |
 | Native platform migration commit | `3c75a70` |
-| Visual prototype | Buildable SwiftUI mock for iPhone, iPad, and Mac; production data and learning logic are not connected |
+| Visual prototype | Buildable SwiftUI prototype for iPhone, iPad, and Mac; prototype review events/due dates persist through SwiftData, while production repositories and FSRS remain pending |
 | Next primary deliverable | ADR-003 — Native Swift persistence/query/migration stack (`LB-DEC-059`, `LB-WI-M0-05`) |
 | Current delivery strategy | Anki Core first: secure APKG import and reliable offline review gate before AI and final visual approval |
 
@@ -48,6 +48,7 @@ This file is the single progress checklist for LinguaBrain AI. It must be update
 - [x] Harden `.gitignore` for local projects, secrets, Python, local stores, SwiftPM, Xcode, archives, and generated files.
 - [x] Add a buildable static SwiftUI visual prototype for iPhone, iPad, and Mac, with mock data and no production dependencies.
 - [x] Define and prototype the ten minimum MVP card surfaces required before final visual-design approval.
+- [x] Add a restart-durable SwiftData checkpoint for the 50-word prototype review history and due dates, including save-before-success and recoverable UI error reporting.
 - [x] Classify and place the vocabulary prototype at `experiments/vocabulary-mvp/` according to [ADR-001](decisions/ADR-001-Repository-Package-and-Module-Layout.md).
 - [ ] Configure a Git remote and push `main`.
 - [ ] Create an annotated MVP specification baseline tag.
@@ -257,6 +258,7 @@ Complete these actions with every milestone or architectural change:
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 0.3.1 | 2026-08-09 | Added the verified-build SwiftData persistence checkpoint for prototype ratings, progress, and due dates; production persistence ADR/repositories and FSRS remain open. |
 | 0.2.2 | 2026-08-01 | Verified the active Xcode 27 toolchain, accepted ADR-011, and advanced the next decision gate to ADR-003. |
 | 0.2.1 | 2026-08-01 | Recorded the local Swift 6.4/macOS 27 toolchain audit and the remaining full-Xcode activation blocker. |
 | 0.2.0 | 2026-07-21 | Replaced the Flutter/Android implementation path with native Swift/SwiftUI on iOS, iPadOS, and macOS 27; accepted ADR-009/010 and advanced the next gate to ADR-011. |

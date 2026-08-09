@@ -2,6 +2,8 @@ import SwiftUI
 
 struct ProgressPrototypeView: View {
     @Environment(PrototypeStore.self) private var store
+    @State private var isResetConfirmationPresented = false
+    @State private var persistenceError: String?
 
     private var week: [Int] { [0, 0, 0, 0, 0, 0, min(store.totalReviews, 50)] }
 
@@ -23,9 +25,29 @@ struct ProgressPrototypeView: View {
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button("ریست وضعیت", systemImage: "arrow.counterclockwise") {
-                    store.reset()
+                    isResetConfirmationPresented = true
                 }
             }
+        }
+        .confirmationDialog(
+            "همهٔ سابقه‌های مرور پاک شوند؟",
+            isPresented: $isResetConfirmationPresented,
+            titleVisibility: .visible
+        ) {
+            Button("پاک‌کردن کامل سابقه", role: .destructive) {
+                resetProgress()
+            }
+            Button("انصراف", role: .cancel) {}
+        } message: {
+            Text("این کار ۵۰ واژه را به حالت اولیه برمی‌گرداند و قابل بازگشت نیست.")
+        }
+        .alert("خطای ذخیره‌سازی", isPresented: persistenceErrorBinding) {
+            Button("باشه", role: .cancel) {
+                persistenceError = nil
+                store.clearPersistenceError()
+            }
+        } message: {
+            Text(persistenceError ?? "خطای ناشناخته")
         }
     }
 
@@ -118,11 +140,25 @@ struct ProgressPrototypeView: View {
                 }
                 Spacer()
                 Button("ریست") {
-                    store.reset()
+                    isResetConfirmationPresented = true
                 }
                 .buttonStyle(.bordered)
                 .tint(.red)
             }
         }
+    }
+
+    private func resetProgress() {
+        guard store.reset() else {
+            persistenceError = store.lastPersistenceError
+            return
+        }
+    }
+
+    private var persistenceErrorBinding: Binding<Bool> {
+        Binding(
+            get: { persistenceError != nil },
+            set: { if !$0 { persistenceError = nil } }
+        )
     }
 }

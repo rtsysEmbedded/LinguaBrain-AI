@@ -9,6 +9,7 @@ struct ReviewPrototypeView: View {
     @State private var waitingUntil: Date?
     @State private var isComplete = false
     @State private var hasStarted = false
+    @State private var persistenceError: String?
 
     private var currentWord: PrototypeWord? {
         guard let currentWordID else { return nil }
@@ -39,6 +40,14 @@ struct ReviewPrototypeView: View {
         .task {
             guard !hasStarted else { return }
             startSession()
+        }
+        .alert("خطای ذخیره‌سازی", isPresented: persistenceErrorBinding) {
+            Button("باشه", role: .cancel) {
+                persistenceError = nil
+                store.clearPersistenceError()
+            }
+        } message: {
+            Text(persistenceError ?? "خطای ناشناخته")
         }
     }
 
@@ -198,8 +207,11 @@ struct ReviewPrototypeView: View {
 
     private func submit(_ rating: PrototypeReviewGrade, for word: PrototypeWord) {
         guard revealed, currentWordID == word.id else { return }
+        guard store.record(rating, for: word) else {
+            persistenceError = store.lastPersistenceError
+            return
+        }
         ratings.append(rating)
-        store.record(rating, for: word)
 
         if rating.repeatsInCurrentSession {
             queue.append(word.id)
@@ -243,11 +255,18 @@ struct ReviewPrototypeView: View {
             isComplete = true
         }
     }
+
+    private var persistenceErrorBinding: Binding<Bool> {
+        Binding(
+            get: { persistenceError != nil },
+            set: { if !$0 { persistenceError = nil } }
+        )
+    }
 }
 
 #Preview("Scheduled Review") {
     NavigationStack { ReviewPrototypeView() }
-        .environment(PrototypeStore())
+        .environment(PrototypeStore(inMemory: true))
         .environment(\.layoutDirection, .rightToLeft)
         .tint(PrototypeTheme.accent)
 }

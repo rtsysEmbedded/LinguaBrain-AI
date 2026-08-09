@@ -1,6 +1,30 @@
 import Foundation
 import Observation
+import SwiftData
 import SwiftUI
+
+@Model
+final class PrototypeReviewRecord {
+    @Attribute(.unique) var id: UUID
+    var wordKey: String
+    var gradeRawValue: String
+    var reviewedAt: Date
+    var dueAt: Date
+
+    init(
+        id: UUID = UUID(),
+        wordKey: String,
+        gradeRawValue: String,
+        reviewedAt: Date,
+        dueAt: Date
+    ) {
+        self.id = id
+        self.wordKey = wordKey
+        self.gradeRawValue = gradeRawValue
+        self.reviewedAt = reviewedAt
+        self.dueAt = dueAt
+    }
+}
 
 enum PrototypeSection: String, CaseIterable, Identifiable, Hashable {
     case today, library, add, progress, settings
@@ -126,10 +150,28 @@ enum PrototypeReviewGrade: String, CaseIterable, Identifiable, Hashable {
 @MainActor
 @Observable
 final class PrototypeStore {
-    private(set) var grades: [UUID: [PrototypeReviewGrade]] = [:]
-    private(set) var dueDates: [UUID: Date] = [:]
+    private(set) var grades: [String: [PrototypeReviewGrade]] = [:]
+    private(set) var dueDates: [String: Date] = [:]
+    private(set) var lastPersistenceError: String?
+
+    private let modelContainer: ModelContainer
+    private let modelContext: ModelContext
 
     let words = PrototypeData.words
+
+    init(inMemory: Bool = false) {
+        do {
+            let configuration = ModelConfiguration(isStoredInMemoryOnly: inMemory)
+            modelContainer = try ModelContainer(
+                for: PrototypeReviewRecord.self,
+                configurations: configuration
+            )
+            modelContext = ModelContext(modelContainer)
+            restorePersistedReviews()
+        } catch {
+            fatalError("Unable to initialize the review store: \(error.localizedDescription)")
+        }
+    }
 
     var reviewedCount: Int { grades.values.filter { !$0.isEmpty }.count }
     var unreviewedCount: Int { words.count - reviewedCount }
@@ -147,35 +189,95 @@ final class PrototypeStore {
     }
 
     func strength(for word: PrototypeWord) -> Double {
-        grades[word.id]?.last?.strength ?? 0
+        grades[word.storageKey]?.last?.strength ?? 0
     }
 
     func reviewCount(for word: PrototypeWord) -> Int {
-        grades[word.id]?.count ?? 0
+        grades[word.storageKey]?.count ?? 0
     }
 
     func lastGrade(for word: PrototypeWord) -> PrototypeReviewGrade? {
-        grades[word.id]?.last
+        grades[word.storageKey]?.last
     }
 
     func dueDate(for word: PrototypeWord) -> Date? {
-        dueDates[word.id]
+        dueDates[word.storageKey]
     }
 
     func isReviewable(_ word: PrototypeWord, at date: Date = .now) -> Bool {
         guard reviewCount(for: word) > 0 else { return true }
-        guard let dueDate = dueDates[word.id] else { return true }
+        guard let dueDate = dueDates[word.storageKey] else { return true }
         return dueDate <= date
     }
 
-    func record(_ grade: PrototypeReviewGrade, for word: PrototypeWord, at date: Date = .now) {
-        grades[word.id, default: []].append(grade)
-        dueDates[word.id] = date.addingTimeInterval(grade.interval)
+    @discardableResult
+    func record(_ grade: PrototypeReviewGrade, for word: PrototypeWord, at date: Date = .now) -> Bool {
+        let dueAt = date.addingTimeInterval(grade.interval)
+        let record = PrototypeReviewRecord(
+            wordKey: word.storageKey,
+            gradeRawValue: grade.rawValue,
+            reviewedAt: date,
+            dueAt: dueAt
+        )
+        modelContext.insert(record)
+
+        do {
+            try modelContext.save()
+            grades[word.storageKey, default: []].append(grade)
+            dueDates[word.storageKey] = dueAt
+            lastPersistenceError = nil
+            return true
+        } catch {
+            modelContext.rollback()
+            lastPersistenceError = "ذخیره پاسخ انجام نشد: \(error.localizedDescription)"
+            return false
+        }
     }
 
-    func reset() {
-        grades.removeAll()
-        dueDates.removeAll()
+    @discardableResult
+    func reset() -> Bool {
+        do {
+            try modelContext.delete(model: PrototypeReviewRecord.self)
+            try modelContext.save()
+            grades.removeAll()
+            dueDates.removeAll()
+            lastPersistenceError = nil
+            return true
+        } catch {
+            modelContext.rollback()
+            lastPersistenceError = "بازنشانی اطلاعات انجام نشد: \(error.localizedDescription)"
+            return false
+        }
+    }
+
+    func clearPersistenceError() {
+        lastPersistenceError = nil
+    }
+
+    private func restorePersistedReviews() {
+        do {
+            let descriptor = FetchDescriptor<PrototypeReviewRecord>(
+                sortBy: [SortDescriptor(\.reviewedAt)]
+            )
+            let records = try modelContext.fetch(descriptor)
+
+            for record in records {
+                guard let grade = PrototypeReviewGrade(rawValue: record.gradeRawValue) else {
+                    continue
+                }
+                grades[record.wordKey, default: []].append(grade)
+                dueDates[record.wordKey] = record.dueAt
+            }
+            lastPersistenceError = nil
+        } catch {
+            lastPersistenceError = "بازیابی اطلاعات مرور انجام نشد: \(error.localizedDescription)"
+        }
+    }
+}
+
+private extension PrototypeWord {
+    var storageKey: String {
+        german.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
     }
 }
 

@@ -2,7 +2,11 @@ import SwiftUI
 
 struct PrototypeRootView: View {
     @State private var selection: PrototypeSection = .today
-    @State private var store = PrototypeStore()
+    @State private var store: PrototypeStore
+
+    init(store: PrototypeStore = PrototypeStore()) {
+        _store = State(initialValue: store)
+    }
 
     var body: some View {
         Group {
@@ -81,7 +85,7 @@ struct PrototypeRootView: View {
 }
 
 #Preview("Prototype Root") {
-    PrototypeRootView()
+    PrototypeRootView(store: PrototypeStore(inMemory: true))
         .environment(\.layoutDirection, .rightToLeft)
         .tint(PrototypeTheme.accent)
 }
