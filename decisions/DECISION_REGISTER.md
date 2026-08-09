@@ -111,7 +111,7 @@ Each register row names one accountable owner role. Other affected roles review 
 | LB-DEC-037 | DOC-10 | Which Flutter platforms are included in the first pilot: Android only or Android plus iOS? | MVP-blocking | SUPERSEDED | Product Owner | M1 start | Superseded by LB-DEC-057; historical answer preserved in [ADR-008](ADR-008-Initial-Pilot-and-Golden-Layout-Platform.md) |
 | LB-DEC-038 | DOC-10 | Which validated German lexical dataset is available under acceptable licensing? | MVP-later | OPEN | Language Data Lead | M2 start | Shared DOC-18 dataset/licensing research package |
 | LB-DEC-039 | DOC-10 | What pilot size and duration can provide meaningful retention evidence? | MVP-later | OPEN | Learning Research Lead | Before M6 enrollment | DOC-20 pre-registered pilot protocol |
-| LB-DEC-040 | DOC-10 | Which FSRS library/version will be adopted and independently tested? | MVP-later | OPEN | Review Engine Architect | M3 start | ADR-004 and reference-vector test report |
+| LB-DEC-040 | DOC-10 | Which FSRS library/version will be adopted and independently tested? | MVP-later | DECIDED | Review Engine Architect | Accepted 2026-08-09 | [ADR-004](ADR-004-FSRS-Implementation-and-Version.md): FSRS-6.0, canonical 21 parameters, pinned semantic reference, and reproducible vectors |
 | LB-DEC-041 | DOC-12 | Which Flutter SQLite library and migration framework best satisfy transaction/testing needs? | MVP-blocking | SUPERSEDED | Persistence Lead | M1 start | Superseded by LB-DEC-059; historical source question retained |
 | LB-DEC-042 | DOC-12 | Is SQLCipher justified for MVP platforms, and how will key recovery work? | MVP-blocking | OPEN | Security Lead | Before private learner data in M1 | ADR-007 and recovery test plan |
 | LB-DEC-043 | DOC-12 | Which deterministic evidence-to-rating thresholds should the ReviewUnit ADR adopt for each MVP exercise type? | MVP-later | OPEN | Learning Science Lead | M3 review completion | ADR-005 and versioned mapping/test vectors |
@@ -169,14 +169,14 @@ Related source questions should share evidence and, where appropriate, one final
 
 ## ADR catalog and planned queue
 
-ADR-009 through ADR-012 are accepted. ADR-001 and ADR-008 are preserved as superseded history, and ADR-002 was withdrawn before proposal. The remaining filenames are reserved and do not represent accepted decisions. The first column is the stable ADR number, not execution priority; the Current decision queue below owns execution order.
+ADR-004 and ADR-009 through ADR-012 are accepted. ADR-001 and ADR-008 are preserved as superseded history, and ADR-002 was withdrawn before proposal. The remaining filenames are reserved and do not represent accepted decisions. The first column is the stable ADR number, not execution priority; the Current decision queue below owns execution order.
 
 | ADR no. | ADR | Status | Decision references | Target and hard gate | Acceptance evidence |
 | ---: | --- | --- | --- | --- | --- |
 | 1 | [ADR-001-Repository-Package-and-Module-Layout.md](ADR-001-Repository-Package-and-Module-Layout.md) | superseded by ADR-010 | LB-DEC-054 | Superseded 2026-07-21 | Historical Flutter/Dart topology and experiment decision |
 | 2 | ADR-002-Flutter-State-Management-and-DI.md | withdrawn before proposal | LB-DEC-055 | Withdrawn 2026-07-21 | Replaced by LB-DEC-058 and accepted ADR-011; number is not reused |
 | 3 | ADR-003-Swift-Persistence-and-Migration-Stack.md | planned | LB-DEC-013, LB-DEC-059 | M0; hard gate M1 start | Atomic transaction, repository fake, forward migration, and restart spike |
-| 4 | ADR-004-FSRS-Implementation-and-Version.md | planned | LB-DEC-040 | Before M3 start | Pinned version, reference vectors, serialization, and upgrade policy |
+| 4 | [ADR-004-FSRS-Implementation-and-Version.md](ADR-004-FSRS-Implementation-and-Version.md) | accepted | LB-DEC-040 | Accepted 2026-08-09 | FSRS-6.0 pin, persisted version/state, reference vectors, and explicit upgrade policy |
 | 5 | ADR-005-ReviewUnit-Retrieval-and-Evidence-Rating.md | planned | LB-DEC-001, LB-DEC-014, LB-DEC-026, LB-DEC-043 | Before M3 review implementation | Retrieval contracts, raw evidence, derived rating, and deterministic replay |
 | 6 | ADR-006-Domain-Events-and-Transactional-Outbox.md | planned | LB-DEC-056 | M0; hard gate M1 start | Transaction boundary, ordering, idempotency, retry, and replay |
 | 7 | ADR-007-Local-Database-Protection-and-Recovery.md | planned | LB-DEC-005, LB-DEC-006, LB-DEC-009, LB-DEC-042 | Before private learner data in M1 | Apple-platform threat assumptions, secure key storage, backup/restore, lost-key behavior, and deletion verification |

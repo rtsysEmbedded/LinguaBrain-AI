@@ -177,25 +177,26 @@ struct ReviewPrototypeView: View {
     }
 
     private func ratingButton(_ rating: PrototypeReviewGrade, word: PrototypeWord) -> some View {
-        Button {
+        let interval = store.previewSchedule(for: rating, word: word).intervalLabel
+        return Button {
             submit(rating, for: word)
         } label: {
             VStack(spacing: 5) {
                 Image(systemName: rating.symbol)
                 Text(rating.title).font(.caption.weight(.semibold))
-                Text(rating.previewInterval).font(.caption2).foregroundStyle(.secondary)
+                Text(interval).font(.caption2).foregroundStyle(.secondary)
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 10)
         }
         .buttonStyle(.bordered)
         .tint(rating.color)
-        .accessibilityLabel("\(rating.title)، مرور بعدی \(rating.previewInterval)")
+        .accessibilityLabel("\(rating.title)، مرور بعدی \(interval)")
     }
 
     private func startSession() {
         queue = store.words.filter { word in
-            store.isReviewable(word) || store.lastGrade(for: word)?.repeatsInCurrentSession == true
+            store.isReviewable(word) || store.shouldRepeatInCurrentSession(word)
         }.map(\.id)
         currentWordID = nil
         waitingUntil = nil
@@ -207,13 +208,13 @@ struct ReviewPrototypeView: View {
 
     private func submit(_ rating: PrototypeReviewGrade, for word: PrototypeWord) {
         guard revealed, currentWordID == word.id else { return }
-        guard store.record(rating, for: word) else {
+        guard let schedule = store.record(rating, for: word) else {
             persistenceError = store.lastPersistenceError
             return
         }
         ratings.append(rating)
 
-        if rating.repeatsInCurrentSession {
+        if schedule.isShortTerm {
             queue.append(word.id)
         }
 

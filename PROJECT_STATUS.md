@@ -1,7 +1,7 @@
 ---
 title: Project Status and Delivery Checklist
 document_id: LB-STATUS
-version: 0.3.1
+version: 0.3.2
 status: Active
 last_updated: 2026-08-09
 ---
@@ -27,7 +27,7 @@ This file is the single progress checklist for LinguaBrain AI. It must be update
 | Documentation | Documents 01–15 complete as reviewed drafts |
 | Architecture baseline | Native Swift migration; DOC-10 at 0.4.0, DOC-11/DOC-14 at 0.3.1, and DOC-15 at 0.2.1 |
 | Local Apple toolchain | Xcode 27.0 (`27A5228h`) is active with Swift 6.4 and iOS/iPadOS/macOS 27 SDKs; beta-era evidence remains provisional |
-| Latest accepted ADRs | [ADR-009](decisions/ADR-009-Native-Apple-Client-and-Platform-Baseline.md) through [ADR-012](decisions/ADR-012-Anki-Core-First-and-APKG-Import-Boundary.md) |
+| Latest accepted ADRs | Native baseline ADR-009 through ADR-012, plus [ADR-004](decisions/ADR-004-FSRS-Implementation-and-Version.md) for the pinned scheduler |
 | Active Git branch | `main` |
 | Native platform migration commit | `3c75a70` |
 | Visual prototype | Buildable SwiftUI prototype for iPhone, iPad, and Mac; prototype review events/due dates persist through SwiftData, while production repositories and FSRS remain pending |
@@ -100,7 +100,7 @@ This file is the single progress checklist for LinguaBrain AI. It must be update
 
 ### ADRs required before M3
 
-- [ ] ADR — FSRS implementation and version.
+- [x] [ADR-004 — FSRS implementation and version](decisions/ADR-004-FSRS-Implementation-and-Version.md).
 - [ ] ADR — ReviewUnit retrieval contracts and evidence-to-rating mapping.
 
 ### Canonical diagrams
@@ -258,6 +258,7 @@ Complete these actions with every milestone or architectural change:
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 0.3.2 | 2026-08-09 | Accepted ADR-004 and replaced fixed prototype intervals with persistent, reference-checked FSRS-6 memory state and scheduling. |
 | 0.3.1 | 2026-08-09 | Added the verified-build SwiftData persistence checkpoint for prototype ratings, progress, and due dates; production persistence ADR/repositories and FSRS remain open. |
 | 0.2.2 | 2026-08-01 | Verified the active Xcode 27 toolchain, accepted ADR-011, and advanced the next decision gate to ADR-003. |
 | 0.2.1 | 2026-08-01 | Recorded the local Swift 6.4/macOS 27 toolchain audit and the remaining full-Xcode activation blocker. |

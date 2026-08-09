@@ -10,19 +10,263 @@ final class PrototypeReviewRecord {
     var gradeRawValue: String
     var reviewedAt: Date
     var dueAt: Date
+    var stability: Double = 0
+    var difficulty: Double = 0
+    var phaseRawValue: String = "new"
+    var learningStep: Int = 0
+    var scheduledDays: Double = 0
+    var elapsedDays: Double = 0
+    var algorithmVersion: String = "fixed-v0"
 
     init(
         id: UUID = UUID(),
         wordKey: String,
         gradeRawValue: String,
         reviewedAt: Date,
-        dueAt: Date
+        dueAt: Date,
+        stability: Double,
+        difficulty: Double,
+        phaseRawValue: String,
+        learningStep: Int,
+        scheduledDays: Double,
+        elapsedDays: Double,
+        algorithmVersion: String
     ) {
         self.id = id
         self.wordKey = wordKey
         self.gradeRawValue = gradeRawValue
         self.reviewedAt = reviewedAt
         self.dueAt = dueAt
+        self.stability = stability
+        self.difficulty = difficulty
+        self.phaseRawValue = phaseRawValue
+        self.learningStep = learningStep
+        self.scheduledDays = scheduledDays
+        self.elapsedDays = elapsedDays
+        self.algorithmVersion = algorithmVersion
+    }
+}
+
+enum PrototypeFSRSPhase: String, Codable {
+    case new, learning, review, relearning
+}
+
+struct PrototypeFSRSMemoryState: Equatable {
+    var stability: Double
+    var difficulty: Double
+    var phase: PrototypeFSRSPhase
+    var learningStep: Int
+    var lastReview: Date
+}
+
+struct PrototypeFSRSSchedule: Equatable {
+    let state: PrototypeFSRSMemoryState
+    let dueAt: Date
+    let scheduledDays: Double
+    let elapsedDays: Double
+    let isShortTerm: Bool
+
+    var intervalLabel: String {
+        let seconds = max(0, dueAt.timeIntervalSince(state.lastReview))
+        if seconds < 60 { return "کمتر از ۱ دقیقه" }
+        if seconds < 3_600 { return "\(Int((seconds / 60).rounded())) دقیقه" }
+        if seconds < 86_400 { return "\(Int((seconds / 3_600).rounded())) ساعت" }
+        return "\(Int((seconds / 86_400).rounded())) روز"
+    }
+}
+
+/// Deterministic FSRS-6 scheduler using the canonical 21 default parameters.
+/// Formulas and defaults follow open-spaced-repetition/swift-fsrs FSRS-6.0.
+struct PrototypeFSRS6Scheduler {
+    static let version = "FSRS-6.0/default-21"
+    static let desiredRetention = 0.9
+
+    private let w: [Double] = [
+        0.212, 1.2931, 2.3065, 8.2956, 6.4133,
+        0.8334, 3.0194, 0.001, 1.8722, 0.1666,
+        0.796, 1.4835, 0.0614, 0.2629, 1.6483,
+        0.6014, 1.8729, 0.5425, 0.0912, 0.0658,
+        0.1542
+    ]
+
+    static func passesReferenceVectors() -> Bool {
+        let scheduler = Self()
+        let now = Date(timeIntervalSince1970: 1_672_315_800)
+        let expectedStability = [0.212, 1.2931, 2.3065, 8.2956]
+        let expectedDifficulty = [6.4133, 5.11217071, 2.11810397, 1.0]
+
+        let firstReviewMatches = zip(PrototypeReviewGrade.allCases.indices, PrototypeReviewGrade.allCases).allSatisfy { index, grade in
+            let result = scheduler.schedule(previous: nil, grade: grade, now: now)
+            return abs(result.state.stability - expectedStability[index]) < 0.0000001
+                && abs(result.state.difficulty - expectedDifficulty[index]) < 0.0000001
+        }
+
+        let ratings: [PrototypeReviewGrade] = [
+            .good, .good, .good, .good, .good, .good,
+            .again, .again, .good, .good, .good, .good, .good
+        ]
+        var state: PrototypeFSRSMemoryState?
+        var reviewDate = now
+        var intervals: [Int] = []
+        for rating in ratings {
+            let result = scheduler.schedule(previous: state, grade: rating, now: reviewDate)
+            intervals.append(Int(result.scheduledDays))
+            state = result.state
+            reviewDate = result.dueAt
+        }
+
+        return firstReviewMatches
+            && intervals == [0, 2, 11, 46, 163, 498, 0, 0, 2, 4, 7, 12, 21]
+    }
+
+    func schedule(
+        previous: PrototypeFSRSMemoryState?,
+        grade: PrototypeReviewGrade,
+        now: Date
+    ) -> PrototypeFSRSSchedule {
+        let elapsedDays = previous.map {
+            calendarDayDifference(from: $0.lastReview, to: now)
+        } ?? 0
+        let nextMemory = nextMemoryState(previous: previous, elapsedDays: elapsedDays, grade: grade)
+        let timing = nextTiming(previousPhase: previous?.phase ?? .new, previousStep: previous?.learningStep ?? 0, grade: grade, stability: nextMemory.stability)
+        let dueAt = now.addingTimeInterval(timing.seconds)
+        let state = PrototypeFSRSMemoryState(
+            stability: nextMemory.stability,
+            difficulty: nextMemory.difficulty,
+            phase: timing.phase,
+            learningStep: timing.learningStep,
+            lastReview: now
+        )
+        return PrototypeFSRSSchedule(
+            state: state,
+            dueAt: dueAt,
+            scheduledDays: timing.seconds / 86_400,
+            elapsedDays: elapsedDays,
+            isShortTerm: timing.seconds < 86_400
+        )
+    }
+
+    func retrievability(state: PrototypeFSRSMemoryState, at date: Date) -> Double {
+        let elapsed = max(0, date.timeIntervalSince(state.lastReview) / 86_400)
+        return forgettingCurve(elapsedDays: elapsed, stability: state.stability)
+    }
+
+    private func nextMemoryState(
+        previous: PrototypeFSRSMemoryState?,
+        elapsedDays: Double,
+        grade: PrototypeReviewGrade
+    ) -> (stability: Double, difficulty: Double) {
+        guard let previous, previous.stability >= 0.001, previous.difficulty >= 1 else {
+            return (initialStability(grade), initialDifficulty(grade))
+        }
+
+        let rating = Double(grade.fsrsRating)
+        let retrievability = forgettingCurve(elapsedDays: elapsedDays, stability: previous.stability)
+        let difficulty = nextDifficulty(previous.difficulty, grade: grade)
+        // FSRS-6 treats all reviews in the same UTC calendar day as t = 0.
+        let shortTerm = elapsedDays == 0
+        let stability: Double
+
+        if shortTerm {
+            let increase = pow(previous.stability, -w[19]) * exp(w[17] * (rating - 3 + w[18]))
+            let bounded = grade == .again ? increase : max(increase, 1)
+            stability = clamp(previous.stability * bounded, 0.001, 36_500)
+        } else if grade == .again {
+            let failed = w[11]
+                * pow(previous.difficulty, -w[12])
+                * (pow(previous.stability + 1, w[13]) - 1)
+                * exp(w[14] * (1 - retrievability))
+            let minimum = previous.stability / exp(w[17] * w[18])
+            stability = clamp(minimum, 0.001, failed)
+        } else {
+            let hardPenalty = grade == .hard ? w[15] : 1
+            let easyBonus = grade == .easy ? w[16] : 1
+            let recalled = previous.stability * (
+                1 + exp(w[8])
+                    * (11 - previous.difficulty)
+                    * pow(previous.stability, -w[9])
+                    * (exp((1 - retrievability) * w[10]) - 1)
+                    * hardPenalty
+                    * easyBonus
+            )
+            stability = clamp(recalled, 0.001, 36_500)
+        }
+
+        return (stability, difficulty)
+    }
+
+    private func nextTiming(
+        previousPhase: PrototypeFSRSPhase,
+        previousStep: Int,
+        grade: PrototypeReviewGrade,
+        stability: Double
+    ) -> (seconds: TimeInterval, phase: PrototypeFSRSPhase, learningStep: Int) {
+        switch previousPhase {
+        case .new:
+            switch grade {
+            case .again: return (60, .learning, 0)
+            case .hard: return (6 * 60, .learning, 0)
+            case .good: return (10 * 60, .learning, 1)
+            case .easy: return (daysInterval(stability), .review, 0)
+            }
+        case .learning:
+            switch grade {
+            case .again: return (60, .learning, 0)
+            case .hard: return (6 * 60, .learning, previousStep)
+            case .good where previousStep == 0: return (10 * 60, .learning, 1)
+            case .good, .easy: return (daysInterval(stability), .review, 0)
+            }
+        case .review:
+            if grade == .again { return (10 * 60, .relearning, 0) }
+            return (daysInterval(stability), .review, 0)
+        case .relearning:
+            switch grade {
+            case .again: return (10 * 60, .relearning, 0)
+            case .hard: return (15 * 60, .relearning, 0)
+            case .good, .easy: return (daysInterval(stability), .review, 0)
+            }
+        }
+    }
+
+    private func initialStability(_ grade: PrototypeReviewGrade) -> Double {
+        max(w[grade.fsrsRating - 1], 0.1)
+    }
+
+    private func initialDifficulty(_ grade: PrototypeReviewGrade) -> Double {
+        clamp(w[4] - exp(Double(grade.fsrsRating - 1) * w[5]) + 1, 1, 10)
+    }
+
+    private func nextDifficulty(_ difficulty: Double, grade: PrototypeReviewGrade) -> Double {
+        let delta = -w[6] * Double(grade.fsrsRating - 3)
+        let damped = delta * (10 - difficulty) / 9
+        let initialEasy = w[4] - exp(3 * w[5]) + 1
+        return clamp(w[7] * initialEasy + (1 - w[7]) * (difficulty + damped), 1, 10)
+    }
+
+    private func forgettingCurve(elapsedDays: Double, stability: Double) -> Double {
+        let decay = -w[20]
+        let factor = exp(log(0.9) / decay) - 1
+        return pow(1 + factor * elapsedDays / stability, decay)
+    }
+
+    private func daysInterval(_ stability: Double) -> TimeInterval {
+        let decay = -w[20]
+        let factor = exp(log(0.9) / decay) - 1
+        let modifier = (pow(Self.desiredRetention, 1 / decay) - 1) / factor
+        let days = min(max(1, (stability * modifier).rounded()), 36_500)
+        return days * 86_400
+    }
+
+    private func calendarDayDifference(from start: Date, to end: Date) -> Double {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(secondsFromGMT: 0)!
+        let startDay = calendar.startOfDay(for: start)
+        let endDay = calendar.startOfDay(for: end)
+        return max(0, floor(endDay.timeIntervalSince(startDay) / 86_400))
+    }
+
+    private func clamp(_ value: Double, _ minimum: Double, _ maximum: Double) -> Double {
+        min(max(value, minimum), maximum)
     }
 }
 
@@ -115,26 +359,13 @@ enum PrototypeReviewGrade: String, CaseIterable, Identifiable, Hashable {
         }
     }
 
-    var previewInterval: String {
+    var fsrsRating: Int {
         switch self {
-        case .again: "کمتر از ۱ دقیقه"
-        case .hard: "۶ دقیقه"
-        case .good: "۱ روز"
-        case .easy: "۴ روز"
+        case .again: 1
+        case .hard: 2
+        case .good: 3
+        case .easy: 4
         }
-    }
-
-    var interval: TimeInterval {
-        switch self {
-        case .again: 20
-        case .hard: 6 * 60
-        case .good: 24 * 60 * 60
-        case .easy: 4 * 24 * 60 * 60
-        }
-    }
-
-    var repeatsInCurrentSession: Bool {
-        self == .again || self == .hard
     }
 
     var strength: Double {
@@ -152,14 +383,20 @@ enum PrototypeReviewGrade: String, CaseIterable, Identifiable, Hashable {
 final class PrototypeStore {
     private(set) var grades: [String: [PrototypeReviewGrade]] = [:]
     private(set) var dueDates: [String: Date] = [:]
+    private(set) var memoryStates: [String: PrototypeFSRSMemoryState] = [:]
     private(set) var lastPersistenceError: String?
 
     private let modelContainer: ModelContainer
     private let modelContext: ModelContext
+    private let scheduler = PrototypeFSRS6Scheduler()
 
     let words = PrototypeData.words
 
     init(inMemory: Bool = false) {
+        assert(
+            PrototypeFSRS6Scheduler.passesReferenceVectors(),
+            "FSRS-6 reference vectors do not match the pinned implementation."
+        )
         do {
             let configuration = ModelConfiguration(isStoredInMemoryOnly: inMemory)
             modelContainer = try ModelContainer(
@@ -189,7 +426,10 @@ final class PrototypeStore {
     }
 
     func strength(for word: PrototypeWord) -> Double {
-        grades[word.storageKey]?.last?.strength ?? 0
+        guard let state = memoryStates[word.storageKey] else {
+            return grades[word.storageKey]?.last?.strength ?? 0
+        }
+        return scheduler.retrievability(state: state, at: .now)
     }
 
     func reviewCount(for word: PrototypeWord) -> Int {
@@ -204,6 +444,22 @@ final class PrototypeStore {
         dueDates[word.storageKey]
     }
 
+    func previewSchedule(
+        for grade: PrototypeReviewGrade,
+        word: PrototypeWord,
+        at date: Date = .now
+    ) -> PrototypeFSRSSchedule {
+        scheduler.schedule(previous: memoryStates[word.storageKey], grade: grade, now: date)
+    }
+
+    func shouldRepeatInCurrentSession(_ word: PrototypeWord) -> Bool {
+        guard let state = memoryStates[word.storageKey], let dueDate = dueDates[word.storageKey] else {
+            return false
+        }
+        return (state.phase == .learning || state.phase == .relearning)
+            && dueDate.timeIntervalSince(state.lastReview) < 86_400
+    }
+
     func isReviewable(_ word: PrototypeWord, at date: Date = .now) -> Bool {
         guard reviewCount(for: word) > 0 else { return true }
         guard let dueDate = dueDates[word.storageKey] else { return true }
@@ -211,26 +467,38 @@ final class PrototypeStore {
     }
 
     @discardableResult
-    func record(_ grade: PrototypeReviewGrade, for word: PrototypeWord, at date: Date = .now) -> Bool {
-        let dueAt = date.addingTimeInterval(grade.interval)
+    func record(
+        _ grade: PrototypeReviewGrade,
+        for word: PrototypeWord,
+        at date: Date = .now
+    ) -> PrototypeFSRSSchedule? {
+        let schedule = previewSchedule(for: grade, word: word, at: date)
         let record = PrototypeReviewRecord(
             wordKey: word.storageKey,
             gradeRawValue: grade.rawValue,
             reviewedAt: date,
-            dueAt: dueAt
+            dueAt: schedule.dueAt,
+            stability: schedule.state.stability,
+            difficulty: schedule.state.difficulty,
+            phaseRawValue: schedule.state.phase.rawValue,
+            learningStep: schedule.state.learningStep,
+            scheduledDays: schedule.scheduledDays,
+            elapsedDays: schedule.elapsedDays,
+            algorithmVersion: PrototypeFSRS6Scheduler.version
         )
         modelContext.insert(record)
 
         do {
             try modelContext.save()
             grades[word.storageKey, default: []].append(grade)
-            dueDates[word.storageKey] = dueAt
+            dueDates[word.storageKey] = schedule.dueAt
+            memoryStates[word.storageKey] = schedule.state
             lastPersistenceError = nil
-            return true
+            return schedule
         } catch {
             modelContext.rollback()
             lastPersistenceError = "ذخیره پاسخ انجام نشد: \(error.localizedDescription)"
-            return false
+            return nil
         }
     }
 
@@ -241,6 +509,7 @@ final class PrototypeStore {
             try modelContext.save()
             grades.removeAll()
             dueDates.removeAll()
+            memoryStates.removeAll()
             lastPersistenceError = nil
             return true
         } catch {
@@ -267,6 +536,18 @@ final class PrototypeStore {
                 }
                 grades[record.wordKey, default: []].append(grade)
                 dueDates[record.wordKey] = record.dueAt
+                if record.algorithmVersion == PrototypeFSRS6Scheduler.version,
+                   let phase = PrototypeFSRSPhase(rawValue: record.phaseRawValue),
+                   record.stability >= 0.001,
+                   record.difficulty >= 1 {
+                    memoryStates[record.wordKey] = PrototypeFSRSMemoryState(
+                        stability: record.stability,
+                        difficulty: record.difficulty,
+                        phase: phase,
+                        learningStep: record.learningStep,
+                        lastReview: record.reviewedAt
+                    )
+                }
             }
             lastPersistenceError = nil
         } catch {
