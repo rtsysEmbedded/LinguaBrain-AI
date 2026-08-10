@@ -1,9 +1,9 @@
 ---
 title: Decision Register
 document_id: LB-DEC-REGISTER
-version: 0.4.0
+version: 0.5.0
 status: Active
-last_updated: 2026-08-03
+last_updated: 2026-08-10
 ---
 
 # Decision Register
@@ -132,6 +132,7 @@ Each register row names one accountable owner role. Other affected roles review 
 | LB-DEC-058 | Native Apple architecture supplement | Which SwiftUI observation/state, navigation, and dependency-composition approach should the MVP adopt? | MVP-blocking | DECIDED | Apple Client Architect | M1 start | [ADR-011](ADR-011-SwiftUI-State-Observation-Navigation-and-Dependency-Composition.md) |
 | LB-DEC-059 | Native Apple persistence supplement | Which native Swift persistence/query/migration stack best satisfies atomicity, testing, and migration needs? | MVP-blocking | OPEN | Persistence Lead | M1 start | Revised ADR-003 and transaction/migration spike |
 | LB-DEC-060 | Anki Core sequencing supplement | Should LinguaBrain validate secure APKG import and a durable offline review loop before AI card generation and final visual approval? | MVP-blocking | DECIDED | Product Owner | Before implementation resumes | [ADR-012](ADR-012-Anki-Core-First-and-APKG-Import-Boundary.md) and Anki Core MVP specification |
+| LB-DEC-061 | AI provider sequencing supplement | Which provider should be the first cloud AI integration, and how should Apple Foundation Models be positioned? | MVP-later | DECIDED | Product Owner | M2 AI enrichment | [ADR-013](ADR-013-Initial-AI-Provider-Strategy.md): OpenRouter first; Apple on-device adapter retained for future evaluation |
 
 ## Existing scope, proposed, and deferred baseline
 
@@ -185,6 +186,7 @@ ADR-004 and ADR-009 through ADR-012 are accepted. ADR-001 and ADR-008 are preser
 | 10 | [ADR-010-Swift-Package-and-Module-Layout.md](ADR-010-Swift-Package-and-Module-Layout.md) | accepted | LB-DEC-054 | Accepted 2026-07-21; M1 module paths stable | SwiftPM targets, dependency rules, CI ownership, and experiment/device boundaries |
 | 11 | [ADR-011-SwiftUI-State-Observation-Navigation-and-Dependency-Composition.md](ADR-011-SwiftUI-State-Observation-Navigation-and-Dependency-Composition.md) | accepted | LB-DEC-058 | Accepted 2026-08-01; M1 client-composition baseline stable | Native Observation, typed scene navigation, initializer injection, composition root, and test fixture contract |
 | 12 | [ADR-012-Anki-Core-First-and-APKG-Import-Boundary.md](ADR-012-Anki-Core-First-and-APKG-Import-Boundary.md) | accepted | LB-DEC-060 | Accepted 2026-08-03; gates AI/final visual work | Secure APKG adapter boundary and restart-safe Anki Core review acceptance criteria |
+| 13 | [ADR-013-Initial-AI-Provider-Strategy.md](ADR-013-Initial-AI-Provider-Strategy.md) | accepted | LB-DEC-061 | Accepted 2026-08-10; implemented after Anki Core gate | OpenRouter-first cloud integration and future no-key Apple Foundation Models adapter |
 
 ## Current decision queue
 
@@ -230,6 +232,7 @@ At every milestone review:
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 0.5.0 | 2026-08-10 | Added LB-DEC-061 and accepted ADR-013 for an OpenRouter-first cloud adapter with future capability-gated Apple Foundation Models support. |
 | 0.4.0 | 2026-08-03 | Added LB-DEC-060 and accepted ADR-012 for the Anki Core-first implementation sequence and APKG adapter boundary. |
 | 0.3.0 | 2026-08-01 | Accepted ADR-011, closed LB-DEC-058, and advanced the active queue to the native Swift persistence decision in ADR-003. |
 | 0.2.0 | 2026-07-21 | Recorded the native Apple architecture pivot; superseded Flutter-specific decisions and ADRs; accepted ADR-009/ADR-010; added LB-DEC-057 through LB-DEC-059; and advanced the active queue to ADR-011. |

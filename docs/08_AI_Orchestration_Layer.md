@@ -1,9 +1,9 @@
 ---
 title: AI Orchestration Layer
 document_id: LB-DOC-08
-version: 0.3.0
+version: 0.4.0
 status: Draft
-last_updated: 2026-07-21
+last_updated: 2026-08-10
 ---
 
 # AI Orchestration Layer
@@ -100,11 +100,25 @@ It also checks model/translation/speech locale support, installed assets, Apple 
 
 Execution targets are abstract (`ON_DEVICE`, `PRIVATE_CLOUD_COMPUTE`, `LOCAL_NETWORK`, `THIRD_PARTY_CLOUD`) rather than encoded as educational logic. The same task contract can therefore select an Apple model, a configured local endpoint, or a cloud provider without changing the Learning Engine.
 
-The native OS 27 clients prefer an eligible Apple on-device model when it satisfies the task and language contract. Bring Your Own Key cloud providers and OpenAI-compatible local endpoints remain required fallbacks, especially for German–Persian tasks. The application/domain core must not depend on a named provider SDK.
+The first cloud implementation uses OpenRouter with the learner's own API key, after the Anki Core acceptance gate. OpenRouter provides one adapter surface for multiple model families, but model choice, schema capability, retention policy, price, and provenance remain explicit per request. Apple Foundation Models is retained as a future preferred on-device option when availability, locale, and quality satisfy the task contract. OpenAI-compatible local endpoints and the no-AI path remain required fallbacks. The application/domain core must not depend on a named provider SDK.
+
+## Initial OpenRouter profile
+
+OpenRouter is the initial third-party cloud adapter because it exposes many model families through one API and supports strict JSON Schema output on compatible models. The adapter must:
+
+- require a learner-supplied API key stored only in Keychain;
+- retrieve or configure an explicit model identifier rather than silently relying on an unstable default;
+- request strict structured output and require provider parameter support for card schemas;
+- expose model/provider, token usage, estimated cost, latency, and failure details without logging prompt content by default;
+- default private requests to approved no-data-collection or zero-data-retention endpoints;
+- disclose that content passes through OpenRouter and the selected underlying provider;
+- validate every response before presenting it as a card proposal.
+
+OpenRouter simplifies integration but does not make every model equally accurate, private, or schema-capable. Model eligibility is controlled by LinguaBrain's evaluation registry, not merely by catalog availability.
 
 ## Native Apple intelligence profile
 
-The Apple adapter uses the Foundation Models framework behind LinguaBrain-owned provider protocols. `SystemLanguageModel.availability`, `supportsLocale`, declared capabilities, context size, and model version are recorded before execution. The OS model can change during system updates, so prompt evaluations and cache/provenance keys include the effective model/OS generation.
+The Apple adapter uses the Foundation Models framework behind LinguaBrain-owned provider protocols. On-device `SystemLanguageModel` access does not require an application or learner API key. `SystemLanguageModel.availability`, `supportsLocale`, declared capabilities, context size, and model version are recorded before execution. The OS model can change during system updates, so prompt evaluations and cache/provenance keys include the effective model/OS generation.
 
 Foundation Models does not currently make Persian a guaranteed supported language. German–Persian generation, explanation, and translation therefore cannot depend exclusively on `SystemLanguageModel` or the Translation framework. Unsupported language/pair, ineligible hardware, unavailable region, missing assets, or a model-not-ready state selects a validated external/local provider or the no-AI path.
 
@@ -192,6 +206,7 @@ On network failure, timeout, quota exhaustion, or invalid output:
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 0.4.0 | 2026-08-10 | Selected OpenRouter as the initial cloud adapter after Anki Core and retained Apple Foundation Models as a future no-API-key, capability/locale-gated on-device provider. |
 | 0.3.0 | 2026-07-21 | Added the OS 27 Foundation Models, SpeechAnalyzer, Translation, capability/locale routing, and Apple privacy boundaries while retaining replaceable providers for Persian support. |
 | 0.2.1 | 2026-07-11 | Added client-capability-aware execution targets for future dedicated hardware. |
 | 0.2.0 | 2026-07-11 | Cross-document architecture review; resolved domain, validation, scheduling, privacy, and MVP consistency contracts. |

@@ -1,7 +1,7 @@
 ---
 title: Project Status and Delivery Checklist
 document_id: LB-STATUS
-version: 0.3.6
+version: 0.3.7
 status: Active
 last_updated: 2026-08-10
 ---
@@ -27,7 +27,7 @@ This file is the single progress checklist for LinguaBrain AI. It must be update
 | Documentation | Documents 01–15 complete as reviewed drafts |
 | Architecture baseline | Native Swift migration; DOC-10 at 0.4.0, DOC-11/DOC-14 at 0.3.1, and DOC-15 at 0.2.1 |
 | Local Apple toolchain | Xcode 27.0 (`27A5228h`) is active with Swift 6.4 and iOS/iPadOS/macOS 27 SDKs; beta-era evidence remains provisional |
-| Latest accepted ADRs | Native baseline ADR-009 through ADR-012, plus [ADR-004](decisions/ADR-004-FSRS-Implementation-and-Version.md) for the pinned scheduler |
+| Latest accepted ADRs | Native baseline ADR-009 through ADR-013, plus [ADR-004](decisions/ADR-004-FSRS-Implementation-and-Version.md) for the pinned scheduler |
 | Active Git branch | `main` |
 | Native platform migration commit | `3c75a70` |
 | Visual prototype | Buildable SwiftUI prototype for iPhone, iPad, and Mac; prototype review events/due dates persist through SwiftData, while production repositories and FSRS remain pending |
@@ -98,6 +98,7 @@ This file is the single progress checklist for LinguaBrain AI. It must be update
 - [x] ADR-001 and ADR-008 retained as superseded historical decisions.
 - [x] [ADR-011 — SwiftUI Observation/state, navigation, and dependency composition](decisions/ADR-011-SwiftUI-State-Observation-Navigation-and-Dependency-Composition.md).
 - [x] [ADR-012 — Anki Core first and APKG import boundary](decisions/ADR-012-Anki-Core-First-and-APKG-Import-Boundary.md).
+- [x] [ADR-013 — OpenRouter-first cloud AI and future Apple Foundation Models adapter](decisions/ADR-013-Initial-AI-Provider-Strategy.md).
 - [ ] ADR-003 — Native Swift persistence/query/migration stack.
 - [ ] ADR — Domain events and transactional outbox strategy.
 - [ ] ADR — Apple local-store protection, Keychain, backup, recovery, and key handling.
@@ -262,6 +263,7 @@ Complete these actions with every milestone or architectural change:
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 0.3.7 | 2026-08-10 | Recorded OpenRouter as the first future cloud AI adapter and Apple Foundation Models as an optional no-API-key on-device provider requiring capability, locale, and quality gates. |
 | 0.3.6 | 2026-08-10 | Activated reverse translation with independent scheduling and realigned the current snapshot with the Anki Core validation path toward the original adaptive-learning product. |
 | 0.3.5 | 2026-08-10 | Added confirmed transactional import for legacy SQLite APKG cards and energy/time-aware daily new-card limits; modern collections and full-fidelity resources remain open. |
 | 0.3.4 | 2026-08-10 | Added the read-only APKG selection and archive-security preflight boundary before extraction or database writes. |
