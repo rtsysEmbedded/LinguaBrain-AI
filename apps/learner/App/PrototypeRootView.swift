@@ -3,6 +3,7 @@ import SwiftUI
 struct PrototypeRootView: View {
     @State private var selection: PrototypeSection = .today
     @State private var store: PrototypeStore
+    @State private var aiSettings = PrototypeAISettings()
 
     init(store: PrototypeStore = PrototypeStore()) {
         _store = State(initialValue: store)
@@ -17,6 +18,7 @@ struct PrototypeRootView: View {
             #endif
         }
         .environment(store)
+        .environment(aiSettings)
     }
 
     #if os(macOS)

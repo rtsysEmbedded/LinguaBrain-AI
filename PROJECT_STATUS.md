@@ -1,7 +1,7 @@
 ---
 title: Project Status and Delivery Checklist
 document_id: LB-STATUS
-version: 0.3.7
+version: 0.3.8
 status: Active
 last_updated: 2026-08-10
 ---
@@ -30,8 +30,8 @@ This file is the single progress checklist for LinguaBrain AI. It must be update
 | Latest accepted ADRs | Native baseline ADR-009 through ADR-013, plus [ADR-004](decisions/ADR-004-FSRS-Implementation-and-Version.md) for the pinned scheduler |
 | Active Git branch | `main` |
 | Native platform migration commit | `3c75a70` |
-| Visual prototype | Buildable SwiftUI prototype for iPhone, iPad, and Mac; prototype review events/due dates persist through SwiftData, while production repositories and FSRS remain pending |
-| Next primary deliverable | Complete the Anki Core data/import/review gate, then connect provider-independent AI enrichment without changing the Learning Engine boundary |
+| Visual prototype | Buildable SwiftUI prototype for iPhone, iPad, and Mac; review state persists, APKG cards can be imported, and an approved OpenRouter proposal can be stored locally |
+| Next primary deliverable | Complete the remaining Anki Core import/review gate, then harden the provider-independent AI boundary with budgets, provenance, cache, and evaluation |
 | Current delivery strategy | Anki Core first: secure APKG import and reliable offline review gate before AI and final visual approval |
 
 ## Completed foundation
@@ -53,6 +53,7 @@ This file is the single progress checklist for LinguaBrain AI. It must be update
 - [x] Add read-only APKG selection, bounded ZIP preflight, explicit confirmation, and transactional card import for legacy SQLite `collection.anki2`/`collection.anki21` packages; modern `collection.anki21b`, templates, tags, and media remain pending.
 - [x] Enforce a prototype daily new-card limit derived from the learner's selected energy and available time.
 - [x] Add Persian-to-German reverse translation with an independent persisted FSRS memory state.
+- [x] Add a functional OpenRouter prototype with Keychain-backed API-key storage, explicit cloud consent, configurable model ID, structured card proposals, preview, and local approval.
 - [x] Classify and place the vocabulary prototype at `experiments/vocabulary-mvp/` according to [ADR-001](decisions/ADR-001-Repository-Package-and-Module-Layout.md).
 - [ ] Configure a Git remote and push `main`.
 - [ ] Create an annotated MVP specification baseline tag.
@@ -263,6 +264,7 @@ Complete these actions with every milestone or architectural change:
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 0.3.8 | 2026-08-10 | Added the functional OpenRouter card-generation checkpoint with Keychain storage, explicit cloud consent, structured output validation, proposal preview, and approved local persistence. |
 | 0.3.7 | 2026-08-10 | Recorded OpenRouter as the first future cloud AI adapter and Apple Foundation Models as an optional no-API-key on-device provider requiring capability, locale, and quality gates. |
 | 0.3.6 | 2026-08-10 | Activated reverse translation with independent scheduling and realigned the current snapshot with the Anki Core validation path toward the original adaptive-learning product. |
 | 0.3.5 | 2026-08-10 | Added confirmed transactional import for legacy SQLite APKG cards and energy/time-aware daily new-card limits; modern collections and full-fidelity resources remain open. |

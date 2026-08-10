@@ -1,4 +1,6 @@
 import SwiftUI
+import Observation
+import Security
 
 struct SettingsPrototypeView: View {
     var body: some View {
@@ -23,7 +25,7 @@ struct SettingsPrototypeView: View {
                         title: "هوش مصنوعی و آفلاین",
                         subtitle: "مدل‌ها، دانلودها و هزینه",
                         items: [
-                            .init(title: "دستیار هوشمند", detail: "Apple Intelligence · آماده", symbol: "apple.intelligence", color: PrototypeTheme.accent, destination: .ai),
+                            .init(title: "دستیار هوشمند", detail: "OpenRouter · قابل تنظیم", symbol: "wand.and.stars", color: PrototypeTheme.accent, destination: .ai),
                             .init(title: "محتوای آفلاین", detail: "۱۸۴ مگابایت روی دستگاه", symbol: "arrow.down.circle.fill", color: .indigo, destination: .offline)
                         ]
                     )
@@ -222,14 +224,14 @@ private struct SettingsDetailPrototypeView: View {
                     LabeledContent("سرعت", value: audioSpeed.formatted(.number.precision(.fractionLength(1))) + "×")
                 }
             case .ai:
-                Section("روی دستگاه") {
-                    Label("Apple Foundation Models", systemImage: "apple.intelligence")
-                    Text("در صورت پشتیبانی دستگاه و زبان، اولویت با پردازش خصوصی روی دستگاه است.")
+                OpenRouterSettingsForm()
+                Section("Apple Intelligence — آینده") {
+                    Label("Apple Foundation Models · بدون API Key", systemImage: "apple.intelligence")
+                    Text("پس از ارزیابی پشتیبانی و کیفیت فارسی، پردازش محلی Apple به‌عنوان Provider اختیاری اضافه می‌شود.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
-                Section("ارائه‌دهندگان اختیاری") {
-                    Label("OpenAI / OpenRouter", systemImage: "cloud.fill")
+                Section("سایر ارائه‌دهندگان آینده") {
                     Label("LM Studio / Ollama", systemImage: "desktopcomputer")
                     Toggle("فقط حالت آفلاین", isOn: $offlineOnly)
                 }
@@ -263,6 +265,259 @@ private struct SettingsDetailPrototypeView: View {
         }
         .navigationTitle(section.title)
     }
+}
+
+private struct OpenRouterSettingsForm: View {
+    @Environment(PrototypeAISettings.self) private var settings
+    @State private var apiKey = ""
+    @State private var statusMessage: String?
+    @State private var isTesting = false
+
+    var body: some View {
+        @Bindable var settings = settings
+        Section("OpenRouter") {
+            SecureField(settings.hasAPIKey ? "کلید ذخیره شده؛ برای تغییر دوباره وارد کن" : "OpenRouter API Key", text: $apiKey)
+                .textContentType(.password)
+                .environment(\.layoutDirection, .leftToRight)
+            TextField("Model ID", text: $settings.modelID)
+                .environment(\.layoutDirection, .leftToRight)
+            Toggle("اجازهٔ ارسال واژه و تنظیمات کارت به OpenRouter", isOn: $settings.cloudConsent)
+            Text("کلید فقط در Keychain ذخیره می‌شود. متن درخواست از OpenRouter و Provider مدل انتخاب‌شده عبور می‌کند.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+
+            HStack {
+                Button("ذخیرهٔ امن کلید") {
+                    do {
+                        try settings.saveAPIKey(apiKey)
+                        apiKey = ""
+                        statusMessage = "کلید در Keychain ذخیره شد."
+                    } catch {
+                        statusMessage = error.localizedDescription
+                    }
+                }
+                .disabled(apiKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+
+                Button("تست اتصال") { testConnection() }
+                    .disabled(!settings.hasAPIKey || isTesting)
+
+                if settings.hasAPIKey {
+                    Button("حذف کلید", role: .destructive) {
+                        settings.deleteAPIKey()
+                        statusMessage = "کلید حذف شد."
+                    }
+                }
+            }
+
+            if isTesting { ProgressView("در حال آزمایش…") }
+            if let statusMessage {
+                Text(statusMessage)
+                    .font(.caption)
+                    .foregroundStyle(statusMessage.contains("موفق") ? PrototypeTheme.mint : .secondary)
+            }
+        }
+    }
+
+    private func testConnection() {
+        isTesting = true
+        Task {
+            do {
+                try await OpenRouterClient().testConnection(apiKey: try settings.apiKey())
+                statusMessage = "اتصال موفق بود."
+            } catch {
+                statusMessage = error.localizedDescription
+            }
+            isTesting = false
+        }
+    }
+}
+
+@MainActor
+@Observable
+final class PrototypeAISettings {
+    private static let modelKey = "prototype.openrouter.model"
+    private static let consentKey = "prototype.openrouter.cloudConsent"
+    private static let keychainService = "ai.linguabrain.openrouter"
+    private static let keychainAccount = "api-key"
+
+    var modelID: String {
+        didSet { UserDefaults.standard.set(modelID, forKey: Self.modelKey) }
+    }
+    var cloudConsent: Bool {
+        didSet { UserDefaults.standard.set(cloudConsent, forKey: Self.consentKey) }
+    }
+    private(set) var hasAPIKey: Bool
+
+    init() {
+        modelID = UserDefaults.standard.string(forKey: Self.modelKey) ?? "google/gemini-2.5-flash"
+        cloudConsent = UserDefaults.standard.bool(forKey: Self.consentKey)
+        hasAPIKey = (try? Self.readKey()) != nil
+    }
+
+    func saveAPIKey(_ value: String) throws {
+        let key = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !key.isEmpty else { throw OpenRouterError.missingAPIKey }
+        Self.deleteStoredKey()
+        let status = SecItemAdd([
+            kSecClass: kSecClassGenericPassword,
+            kSecAttrService: Self.keychainService,
+            kSecAttrAccount: Self.keychainAccount,
+            kSecValueData: Data(key.utf8),
+            kSecAttrAccessible: kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
+        ] as CFDictionary, nil)
+        guard status == errSecSuccess else { throw OpenRouterError.keychain(status) }
+        hasAPIKey = true
+    }
+
+    func apiKey() throws -> String {
+        guard let key = try Self.readKey() else { throw OpenRouterError.missingAPIKey }
+        return key
+    }
+
+    func deleteAPIKey() {
+        Self.deleteStoredKey()
+        hasAPIKey = false
+    }
+
+    private static func readKey() throws -> String? {
+        var result: CFTypeRef?
+        let status = SecItemCopyMatching([
+            kSecClass: kSecClassGenericPassword,
+            kSecAttrService: keychainService,
+            kSecAttrAccount: keychainAccount,
+            kSecReturnData: true,
+            kSecMatchLimit: kSecMatchLimitOne
+        ] as CFDictionary, &result)
+        if status == errSecItemNotFound { return nil }
+        guard status == errSecSuccess, let data = result as? Data,
+              let key = String(data: data, encoding: .utf8) else {
+            throw OpenRouterError.keychain(status)
+        }
+        return key
+    }
+
+    private static func deleteStoredKey() {
+        SecItemDelete([
+            kSecClass: kSecClassGenericPassword,
+            kSecAttrService: keychainService,
+            kSecAttrAccount: keychainAccount
+        ] as CFDictionary)
+    }
+}
+
+enum OpenRouterError: LocalizedError {
+    case missingAPIKey
+    case consentRequired
+    case invalidResponse
+    case service(Int, String)
+    case keychain(OSStatus)
+
+    var errorDescription: String? {
+        switch self {
+        case .missingAPIKey: "ابتدا API Key مربوط به OpenRouter را در تنظیمات ذخیره کن."
+        case .consentRequired: "در تنظیمات، اجازهٔ ارسال داده به OpenRouter را فعال کن."
+        case .invalidResponse: "پاسخ OpenRouter با ساختار کارت سازگار نبود."
+        case .service(let status, let message): "OpenRouter (\(status)): \(message)"
+        case .keychain(let status): "ذخیره یا خواندن Keychain انجام نشد (\(status))."
+        }
+    }
+}
+
+struct OpenRouterGeneratedCard: Codable, Sendable {
+    struct Example: Codable, Sendable {
+        let german: String
+        let persian: String
+    }
+
+    let german: String
+    let persianMeaning: String
+    let level: String
+    let partOfSpeech: String
+    let article: String
+    let example: Example
+
+    var prototypeWord: PrototypeWord {
+        PrototypeWord(
+            german: german,
+            persian: persianMeaning,
+            article: article.isEmpty ? nil : article,
+            level: level,
+            partOfSpeech: partOfSpeech,
+            example: example.german,
+            exampleTranslation: example.persian
+        )
+    }
+}
+
+struct OpenRouterClient: Sendable {
+    func testConnection(apiKey: String) async throws {
+        var request = URLRequest(url: URL(string: "https://openrouter.ai/api/v1/key")!)
+        request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        let (_, response) = try await URLSession.shared.data(for: request)
+        guard let http = response as? HTTPURLResponse else { throw OpenRouterError.invalidResponse }
+        guard (200..<300).contains(http.statusCode) else { throw OpenRouterError.service(http.statusCode, "کلید یا اتصال معتبر نیست.") }
+    }
+
+    func generateCard(word: String, domain: String, model: String, apiKey: String) async throws -> OpenRouterGeneratedCard {
+        let schema: [String: Any] = [
+            "type": "object",
+            "properties": [
+                "german": ["type": "string"],
+                "persianMeaning": ["type": "string"],
+                "level": ["type": "string"],
+                "partOfSpeech": ["type": "string"],
+                "article": ["type": "string"],
+                "example": [
+                    "type": "object",
+                    "properties": ["german": ["type": "string"], "persian": ["type": "string"]],
+                    "required": ["german", "persian"],
+                    "additionalProperties": false
+                ]
+            ],
+            "required": ["german", "persianMeaning", "level", "partOfSpeech", "article", "example"],
+            "additionalProperties": false
+        ]
+        let body: [String: Any] = [
+            "model": model,
+            "messages": [
+                ["role": "system", "content": "You create accurate German-to-Persian language-learning cards. Return only the requested structured result. Use an empty article for non-nouns."],
+                ["role": "user", "content": "Create one natural card for the German word or phrase '\(word)'. Domain: \(domain). Use a concise Persian meaning and one natural German example with accurate Persian translation."]
+            ],
+            "response_format": [
+                "type": "json_schema",
+                "json_schema": ["name": "linguabrain_card", "strict": true, "schema": schema]
+            ],
+            "provider": ["require_parameters": true, "data_collection": "deny"],
+            "temperature": 0.2,
+            "max_tokens": 700
+        ]
+        var request = URLRequest(url: URL(string: "https://openrouter.ai/api/v1/chat/completions")!)
+        request.httpMethod = "POST"
+        request.timeoutInterval = 45
+        request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("LinguaBrain", forHTTPHeaderField: "X-Title")
+        request.httpBody = try JSONSerialization.data(withJSONObject: body)
+        let (data, response) = try await URLSession.shared.data(for: request)
+        guard let http = response as? HTTPURLResponse else { throw OpenRouterError.invalidResponse }
+        guard (200..<300).contains(http.statusCode) else {
+            let message = (try? JSONSerialization.jsonObject(with: data) as? [String: Any])
+                .flatMap { $0["error"] as? [String: Any] }?["message"] as? String ?? "درخواست ناموفق بود."
+            throw OpenRouterError.service(http.statusCode, message)
+        }
+        let envelope = try JSONDecoder().decode(OpenRouterEnvelope.self, from: data)
+        guard let content = envelope.choices.first?.message.content,
+              let contentData = content.data(using: .utf8) else { throw OpenRouterError.invalidResponse }
+        return try JSONDecoder().decode(OpenRouterGeneratedCard.self, from: contentData)
+    }
+}
+
+private struct OpenRouterEnvelope: Decodable {
+    struct Choice: Decodable {
+        struct Message: Decodable { let content: String? }
+        let message: Message
+    }
+    let choices: [Choice]
 }
 
 #Preview("Settings") {

@@ -8,6 +8,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- A functional OpenRouter prototype integration with Keychain-only API-key storage, explicit cloud consent, model selection, connection testing, privacy-constrained structured card generation, learner preview, duplicate protection, and commit-on-approval.
 - ADR-013 selecting OpenRouter as the first post-Anki-Core cloud AI adapter while retaining Apple Foundation Models as a future capability-gated, no-API-key on-device option.
 - A functional Persian-to-German reverse-translation review mode with answer reveal, four FSRS ratings, due/relearning behavior, and memory state isolated from German-to-Persian recognition.
 - Imported-Anki package management in Library, including destructive confirmation and transactional removal of the package's cards, dependent review history, and empty deck records without deleting the learner's original APKG file.

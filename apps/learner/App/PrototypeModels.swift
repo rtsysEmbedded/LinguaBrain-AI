@@ -700,6 +700,32 @@ final class PrototypeStore {
     }
 
     @discardableResult
+    func addGeneratedCard(_ word: PrototypeWord) -> Bool {
+        do {
+            let cards = try modelContext.fetch(FetchDescriptor<PrototypeCardRecord>())
+            guard !cards.contains(where: { $0.word.storageKey == word.storageKey }) else {
+                lastPersistenceError = "این واژه از قبل در کتابخانه وجود دارد."
+                return false
+            }
+            let decks = try modelContext.fetch(FetchDescriptor<PrototypeDeckRecord>())
+            let deck = decks.first(where: { $0.name == "کارت‌های هوشمند" }) ?? {
+                let deck = PrototypeDeckRecord(name: "کارت‌های هوشمند")
+                modelContext.insert(deck)
+                return deck
+            }()
+            modelContext.insert(PrototypeCardRecord(word: word, deckID: deck.id, position: cards.count))
+            try modelContext.save()
+            try restoreCards()
+            lastPersistenceError = nil
+            return true
+        } catch {
+            modelContext.rollback()
+            lastPersistenceError = "ذخیرهٔ کارت انجام نشد: \(error.localizedDescription)"
+            return false
+        }
+    }
+
+    @discardableResult
     func deleteImportedPackage(named fileName: String) -> Bool {
         do {
             let allCards = try modelContext.fetch(FetchDescriptor<PrototypeCardRecord>())

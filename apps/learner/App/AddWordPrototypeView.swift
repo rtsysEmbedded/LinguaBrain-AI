@@ -5,6 +5,7 @@ import zlib
 
 struct AddWordPrototypeView: View {
     @Environment(PrototypeStore.self) private var store
+    @Environment(PrototypeAISettings.self) private var aiSettings
     @State private var word = "arbeiten"
     @State private var domain = "عمومی"
     @State private var showPreview = true
@@ -14,6 +15,9 @@ struct AddWordPrototypeView: View {
     @State private var packageError: String?
     @State private var isImportingPackage = false
     @State private var importResult: PrototypeImportResult?
+    @State private var generatedCard: OpenRouterGeneratedCard?
+    @State private var isGeneratingCard = false
+    @State private var generatedCardSaved = false
 
     var body: some View {
         ScrollView {
@@ -21,7 +25,7 @@ struct AddWordPrototypeView: View {
                 VStack(alignment: .leading, spacing: 6) {
                     Text("یک واژه اضافه کن")
                         .font(.largeTitle.bold())
-                    Text("نمونه کارت با داده Mock ساخته شده و هنوز به AI متصل نیست.")
+                    Text(aiSettings.hasAPIKey ? "کارت با مدل انتخاب‌شده در OpenRouter ساخته می‌شود و قبل از ذخیره قابل بررسی است." : "برای ساخت کارت هوشمند، ابتدا OpenRouter را در تنظیمات فعال کن.")
                         .foregroundStyle(.secondary)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -44,13 +48,18 @@ struct AddWordPrototypeView: View {
                         .pickerStyle(.segmented)
 
                         Button {
-                            withAnimation { showPreview = true }
+                            generateCard()
                         } label: {
-                            Label("ساخت پیش‌نمایش کارت", systemImage: "wand.and.stars")
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 10)
+                            if isGeneratingCard {
+                                ProgressView().frame(maxWidth: .infinity).padding(.vertical, 10)
+                            } else {
+                                Label("ساخت کارت با OpenRouter", systemImage: "wand.and.stars")
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 10)
+                            }
                         }
                         .buttonStyle(.borderedProminent)
+                        .disabled(isGeneratingCard || word.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                     }
                 }
 
@@ -65,6 +74,8 @@ struct AddWordPrototypeView: View {
         }
         .background(PrototypeBackground())
         .navigationTitle("افزودن")
+        .onChange(of: word) { _, _ in resetGeneratedPreview() }
+        .onChange(of: domain) { _, _ in resetGeneratedPreview() }
         .fileImporter(
             isPresented: $isImporterPresented,
             allowedContentTypes: [.ankiDeckPackage],
@@ -72,15 +83,48 @@ struct AddWordPrototypeView: View {
         ) { result in
             inspectSelectedPackage(result)
         }
-        .alert("فایل Anki قابل بررسی نیست", isPresented: packageErrorBinding) {
+        .alert("عملیات انجام نشد", isPresented: packageErrorBinding) {
             Button("باشه", role: .cancel) { packageError = nil }
         } message: {
             Text(packageError ?? "خطای ناشناخته")
         }
     }
 
+    private func generateCard() {
+        isGeneratingCard = true
+        generatedCard = nil
+        generatedCardSaved = false
+        Task {
+            do {
+                guard aiSettings.cloudConsent else { throw OpenRouterError.consentRequired }
+                let draft = try await OpenRouterClient().generateCard(
+                    word: word.trimmingCharacters(in: .whitespacesAndNewlines),
+                    domain: domain,
+                    model: aiSettings.modelID,
+                    apiKey: try aiSettings.apiKey()
+                )
+                guard !draft.german.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+                      !draft.persianMeaning.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+                      !draft.example.german.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+                      !draft.example.persian.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+                    throw OpenRouterError.invalidResponse
+                }
+                generatedCard = draft
+                withAnimation { showPreview = true }
+            } catch {
+                packageError = error.localizedDescription
+            }
+            isGeneratingCard = false
+        }
+    }
+
+    private func resetGeneratedPreview() {
+        generatedCard = nil
+        generatedCardSaved = false
+    }
+
     private var packageImporter: some View {
-        PrototypeCard {
+        return PrototypeCard {
             VStack(alignment: .leading, spacing: 14) {
                 HStack {
                     Label("ورود فایل Anki", systemImage: "square.and.arrow.down")
@@ -205,35 +249,51 @@ struct AddWordPrototypeView: View {
     }
 
     private var cardPreview: some View {
-        PrototypeCard {
+        let preview = generatedCard?.prototypeWord ?? PrototypeWord(
+            german: word.isEmpty ? "arbeiten" : word,
+            persian: "—",
+            level: "—",
+            partOfSpeech: "در انتظار AI",
+            example: "",
+            exampleTranslation: ""
+        )
+        return PrototypeCard {
             VStack(alignment: .leading, spacing: 18) {
                 HStack {
                     Label("پیشنهاد آماده بررسی", systemImage: "checkmark.seal.fill")
                         .font(.subheadline.weight(.semibold))
                         .foregroundStyle(PrototypeTheme.mint)
                     Spacer()
-                    Text("A1 · Verb").font(.caption).foregroundStyle(.secondary)
+                    Text("\(preview.level) · \(preview.partOfSpeech)").font(.caption).foregroundStyle(.secondary)
                 }
-                GermanText(text: word.isEmpty ? "arbeiten" : word, font: .largeTitle.bold())
-                Text("کار کردن").font(.title2)
+                GermanText(text: preview.german, font: .largeTitle.bold())
+                Text(preview.persian).font(.title2)
                 Divider()
                 VStack(alignment: .leading, spacing: 6) {
                     Text("مثال").font(.caption.weight(.semibold)).foregroundStyle(.secondary)
-                    GermanText(text: "Ich arbeite heute von zu Hause.", font: .title3)
-                    Text("من امروز از خانه کار می‌کنم.").foregroundStyle(.secondary)
+                    GermanText(text: preview.example.isEmpty ? "پس از تولید کارت نمایش داده می‌شود." : preview.example, font: .title3)
+                    Text(preview.exampleTranslation).foregroundStyle(.secondary)
                 }
                 HStack {
-                    Label("Verben", systemImage: "square.stack.3d.up.fill")
-                    Label("A1", systemImage: "graduationcap.fill")
+                    Label(preview.partOfSpeech, systemImage: "square.stack.3d.up.fill")
+                    Label(preview.level, systemImage: "graduationcap.fill")
                     Label(domain, systemImage: "tag.fill")
                 }
                 .font(.caption)
                 .foregroundStyle(PrototypeTheme.accent)
-                Button(action: {}) {
-                    Label("تأیید و افزودن", systemImage: "plus.circle.fill")
+                Button {
+                    guard generatedCard != nil else { return }
+                    if store.addGeneratedCard(preview) {
+                        generatedCardSaved = true
+                    } else {
+                        packageError = store.lastPersistenceError
+                    }
+                } label: {
+                    Label(generatedCardSaved ? "به کتابخانه اضافه شد" : "تأیید و افزودن", systemImage: generatedCardSaved ? "checkmark.circle.fill" : "plus.circle.fill")
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.borderedProminent)
+                .disabled(generatedCard == nil || generatedCardSaved)
             }
         }
     }
