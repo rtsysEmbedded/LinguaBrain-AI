@@ -4,6 +4,8 @@ struct LibraryPrototypeView: View {
     @Environment(PrototypeStore.self) private var store
     @State private var searchText = ""
     @State private var filter = "همه"
+    @State private var packagePendingDeletion: PrototypeImportedPackage?
+    @State private var deletionError: String?
 
     private var filteredWords: [PrototypeWord] {
         store.words.filter { word in
@@ -20,6 +22,11 @@ struct LibraryPrototypeView: View {
                     MetricPill(value: "\(store.words.count)", label: "واژه", symbol: "textformat.abc", color: PrototypeTheme.accent)
                     MetricPill(value: "\(store.weakCount)", label: "ضعیف", symbol: "exclamationmark.triangle.fill", color: .orange)
                     MetricPill(value: "\(store.reviewedCount)", label: "مرور شده", symbol: "bolt.fill", color: PrototypeTheme.mint)
+                }
+
+
+                if !store.importedPackages.isEmpty {
+                    importedPackagesSection
                 }
 
                 NavigationLink {
@@ -71,6 +78,80 @@ struct LibraryPrototypeView: View {
         .background(PrototypeBackground())
         .navigationTitle("کتابخانه")
         .searchable(text: $searchText, prompt: "جست‌وجوی فارسی یا آلمانی")
+        .confirmationDialog(
+            "حذف فایل Anki؟",
+            isPresented: deletionConfirmationBinding,
+            titleVisibility: .visible,
+            presenting: packagePendingDeletion
+        ) { package in
+            Button("حذف \(package.fileName) و \(package.cardCount) کارت", role: .destructive) {
+                deletePackage(package)
+            }
+            Button("انصراف", role: .cancel) {
+                packagePendingDeletion = nil
+            }
+        } message: { package in
+            Text("کارت‌های واردشده از این فایل و تاریخچهٔ مرور وابسته به آن‌ها از دیتابیس LinguaBrain حذف می‌شوند. این کار فایل اصلی روی دستگاه را پاک نمی‌کند.")
+        }
+        .alert("حذف انجام نشد", isPresented: deletionErrorBinding) {
+            Button("باشه", role: .cancel) { deletionError = nil }
+        } message: {
+            Text(deletionError ?? "خطای ناشناخته")
+        }
+    }
+
+    private var importedPackagesSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            SectionHeader(title: "فایل‌های Anki واردشده", subtitle: "مدیریت داده‌های اضافه‌شده به LinguaBrain")
+            PrototypeCard {
+                VStack(spacing: 0) {
+                    ForEach(Array(store.importedPackages.enumerated()), id: \.element.id) { index, package in
+                        if index > 0 { Divider().padding(.vertical, 10) }
+                        HStack(spacing: 12) {
+                            Image(systemName: "rectangle.stack.fill")
+                                .foregroundStyle(PrototypeTheme.accent)
+                                .frame(width: 38, height: 38)
+                                .background(PrototypeTheme.accent.opacity(0.1), in: RoundedRectangle(cornerRadius: 10))
+                            VStack(alignment: .leading, spacing: 3) {
+                                Text(package.fileName).font(.headline)
+                                Text("\(package.cardCount) کارت")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                            Spacer()
+                            Button(role: .destructive) {
+                                packagePendingDeletion = package
+                            } label: {
+                                Label("حذف", systemImage: "trash")
+                            }
+                            .buttonStyle(.bordered)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private var deletionConfirmationBinding: Binding<Bool> {
+        Binding(
+            get: { packagePendingDeletion != nil },
+            set: { if !$0 { packagePendingDeletion = nil } }
+        )
+    }
+
+    private var deletionErrorBinding: Binding<Bool> {
+        Binding(
+            get: { deletionError != nil },
+            set: { if !$0 { deletionError = nil } }
+        )
+    }
+
+    private func deletePackage(_ package: PrototypeImportedPackage) {
+        guard store.deleteImportedPackage(named: package.fileName) else {
+            deletionError = store.lastPersistenceError
+            return
+        }
+        packagePendingDeletion = nil
     }
 
     private func wordRow(_ word: PrototypeWord) -> some View {

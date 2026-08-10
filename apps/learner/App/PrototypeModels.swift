@@ -405,6 +405,12 @@ struct PrototypeImportResult: Sendable {
     let skippedCount: Int
 }
 
+struct PrototypeImportedPackage: Identifiable, Hashable, Sendable {
+    var id: String { fileName }
+    let fileName: String
+    let cardCount: Int
+}
+
 enum PrototypeReviewGrade: String, CaseIterable, Identifiable, Hashable {
     case again, hard, good, easy
 
@@ -463,6 +469,7 @@ final class PrototypeStore {
     private(set) var dueDates: [String: Date] = [:]
     private(set) var memoryStates: [String: PrototypeFSRSMemoryState] = [:]
     private(set) var lastPersistenceError: String?
+    private(set) var importedPackages: [PrototypeImportedPackage] = []
 
     private let modelContainer: ModelContainer
     private let modelContext: ModelContext
@@ -675,6 +682,49 @@ final class PrototypeStore {
         }
     }
 
+    @discardableResult
+    func deleteImportedPackage(named fileName: String) -> Bool {
+        do {
+            let allCards = try modelContext.fetch(FetchDescriptor<PrototypeCardRecord>())
+            let cardsToDelete = allCards.filter { $0.sourcePackage == fileName }
+            guard !cardsToDelete.isEmpty else {
+                lastPersistenceError = "بستهٔ واردشده پیدا نشد."
+                return false
+            }
+
+            let deletedWordKeys = Set(cardsToDelete.map { $0.word.storageKey })
+            let affectedDeckIDs = Set(cardsToDelete.map(\.deckID))
+            for card in cardsToDelete {
+                modelContext.delete(card)
+            }
+
+            let allReviews = try modelContext.fetch(FetchDescriptor<PrototypeReviewRecord>())
+            for review in allReviews where deletedWordKeys.contains(review.wordKey) {
+                modelContext.delete(review)
+            }
+
+            let remainingDeckIDs = Set(
+                allCards.lazy
+                    .filter { $0.sourcePackage != fileName }
+                    .map(\.deckID)
+            )
+            let allDecks = try modelContext.fetch(FetchDescriptor<PrototypeDeckRecord>())
+            for deck in allDecks where affectedDeckIDs.contains(deck.id) && !remainingDeckIDs.contains(deck.id) {
+                modelContext.delete(deck)
+            }
+
+            try modelContext.save()
+            try restoreCards()
+            restorePersistedReviews()
+            lastPersistenceError = nil
+            return true
+        } catch {
+            modelContext.rollback()
+            lastPersistenceError = "حذف بسته انجام نشد: \(error.localizedDescription)"
+            return false
+        }
+    }
+
     private func seedCardsIfNeeded() throws {
         var cardDescriptor = FetchDescriptor<PrototypeCardRecord>()
         cardDescriptor.fetchLimit = 1
@@ -694,11 +744,22 @@ final class PrototypeStore {
         let descriptor = FetchDescriptor<PrototypeCardRecord>(
             sortBy: [SortDescriptor(\.position), SortDescriptor(\.createdAt)]
         )
-        words = try modelContext.fetch(descriptor).map(\.word)
+        let records = try modelContext.fetch(descriptor)
+        words = records.map(\.word)
+        let grouped = Dictionary(grouping: records.compactMap { record in
+            record.sourcePackage.map { ($0, record.id) }
+        }, by: \.0)
+        importedPackages = grouped.map { fileName, records in
+            PrototypeImportedPackage(fileName: fileName, cardCount: records.count)
+        }
+        .sorted { $0.fileName.localizedCaseInsensitiveCompare($1.fileName) == .orderedAscending }
     }
 
     private func restorePersistedReviews() {
         do {
+            grades.removeAll()
+            dueDates.removeAll()
+            memoryStates.removeAll()
             let descriptor = FetchDescriptor<PrototypeReviewRecord>(
                 sortBy: [SortDescriptor(\.reviewedAt)]
             )
