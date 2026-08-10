@@ -401,6 +401,7 @@ struct PrototypeImportedCard: Sendable {
 struct PrototypeImportResult: Sendable {
     let deckName: String
     let addedCount: Int
+    let updatedCount: Int
     let skippedCount: Int
 }
 
@@ -611,29 +612,51 @@ final class PrototypeStore {
     ) -> PrototypeImportResult? {
         do {
             let existingRecords = try modelContext.fetch(FetchDescriptor<PrototypeCardRecord>())
-            var existingSources = Set(existingRecords.compactMap(\.sourceIdentifier))
+            var recordsBySource: [String: PrototypeCardRecord] = [:]
+            for record in existingRecords {
+                if let sourceIdentifier = record.sourceIdentifier {
+                    recordsBySource[sourceIdentifier] = recordsBySource[sourceIdentifier] ?? record
+                }
+            }
             var existingKeys = Set(existingRecords.map { $0.word.storageKey })
             let deck = PrototypeDeckRecord(name: deckName)
             modelContext.insert(deck)
 
             var added = 0
+            var updated = 0
             var skipped = 0
             for candidate in candidates {
-                guard !existingSources.contains(candidate.sourceIdentifier),
-                      !existingKeys.contains(candidate.word.storageKey) else {
+                if let record = recordsBySource[candidate.sourceIdentifier] {
+                    existingKeys.remove(record.word.storageKey)
+                    guard !existingKeys.contains(candidate.word.storageKey) else {
+                        skipped += 1
+                        continue
+                    }
+                    record.german = candidate.word.german
+                    record.persian = candidate.word.persian
+                    record.article = candidate.word.article
+                    record.level = candidate.word.level
+                    record.partOfSpeech = candidate.word.partOfSpeech
+                    record.example = candidate.word.example
+                    record.exampleTranslation = candidate.word.exampleTranslation
+                    record.sourcePackage = sourcePackage
+                    existingKeys.insert(candidate.word.storageKey)
+                    updated += 1
+                    continue
+                }
+                guard !existingKeys.contains(candidate.word.storageKey) else {
                     skipped += 1
                     continue
                 }
-                modelContext.insert(
-                    PrototypeCardRecord(
-                        word: candidate.word,
-                        deckID: deck.id,
-                        position: existingRecords.count + added,
-                        sourceIdentifier: candidate.sourceIdentifier,
-                        sourcePackage: sourcePackage
-                    )
+                let record = PrototypeCardRecord(
+                    word: candidate.word,
+                    deckID: deck.id,
+                    position: existingRecords.count + added,
+                    sourceIdentifier: candidate.sourceIdentifier,
+                    sourcePackage: sourcePackage
                 )
-                existingSources.insert(candidate.sourceIdentifier)
+                modelContext.insert(record)
+                recordsBySource[candidate.sourceIdentifier] = record
                 existingKeys.insert(candidate.word.storageKey)
                 added += 1
             }
@@ -644,7 +667,7 @@ final class PrototypeStore {
             try modelContext.save()
             try restoreCards()
             lastPersistenceError = nil
-            return PrototypeImportResult(deckName: deckName, addedCount: added, skippedCount: skipped)
+            return PrototypeImportResult(deckName: deckName, addedCount: added, updatedCount: updated, skippedCount: skipped)
         } catch {
             modelContext.rollback()
             lastPersistenceError = "ورود کارت‌ها انجام نشد: \(error.localizedDescription)"

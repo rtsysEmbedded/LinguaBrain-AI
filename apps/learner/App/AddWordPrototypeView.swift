@@ -104,7 +104,7 @@ struct AddWordPrototypeView: View {
                             .font(.caption)
                             .foregroundStyle(.secondary)
                         if let importResult {
-                            Label("\(importResult.addedCount) کارت وارد شد · \(importResult.skippedCount) تکراری رد شد", systemImage: "checkmark.circle.fill")
+                            Label("\(importResult.addedCount) جدید · \(importResult.updatedCount) اصلاح‌شده · \(importResult.skippedCount) تکراری", systemImage: "checkmark.circle.fill")
                                 .font(.caption.weight(.semibold))
                                 .foregroundStyle(PrototypeTheme.mint)
                         } else {
@@ -535,7 +535,8 @@ struct APKGCardReader: Sendable {
         }
         defer { sqlite3_close(database) }
 
-        let sql = "SELECT c.id, n.flds FROM cards c JOIN notes n ON n.id = c.nid ORDER BY c.id LIMIT \(maximumCards)"
+        let modelFields = try readModelFields(from: database)
+        let sql = "SELECT c.id, n.mid, n.flds FROM cards c JOIN notes n ON n.id = c.nid ORDER BY c.id LIMIT \(maximumCards)"
         var statement: OpaquePointer?
         guard sqlite3_prepare_v2(database, sql, -1, &statement, nil) == SQLITE_OK,
               let statement else {
@@ -546,23 +547,16 @@ struct APKGCardReader: Sendable {
         var cards: [PrototypeImportedCard] = []
         while sqlite3_step(statement) == SQLITE_ROW {
             let cardID = sqlite3_column_int64(statement, 0)
-            guard let fieldsText = sqlite3_column_text(statement, 1) else { continue }
+            let modelID = sqlite3_column_int64(statement, 1)
+            guard let fieldsText = sqlite3_column_text(statement, 2) else { continue }
             let fields = String(cString: fieldsText).split(separator: "\u{001F}", omittingEmptySubsequences: false)
-            guard let first = fields.first else { continue }
-            let front = sanitize(String(first))
-            let back = fields.count > 1 ? sanitize(String(fields[1])) : ""
-            guard !front.isEmpty else { continue }
+            let names = modelFields[String(modelID)] ?? []
+            let values = Dictionary(uniqueKeysWithValues: zip(names, fields.map(String.init)))
+            guard let word = mapWord(fields: fields.map(String.init), named: values) else { continue }
             cards.append(
                 PrototypeImportedCard(
                     sourceIdentifier: "\(packageName.lowercased())::\(cardID)",
-                    word: PrototypeWord(
-                        german: front,
-                        persian: back.isEmpty ? "—" : back,
-                        level: "—",
-                        partOfSpeech: "Imported",
-                        example: "",
-                        exampleTranslation: ""
-                    )
+                    word: word
                 )
             )
         }
@@ -571,6 +565,90 @@ struct APKGCardReader: Sendable {
         }
         guard !cards.isEmpty else { throw APKGImportError.noCards }
         return cards
+    }
+
+    private func readModelFields(from database: OpaquePointer) throws -> [String: [String]] {
+        var statement: OpaquePointer?
+        guard sqlite3_prepare_v2(database, "SELECT models FROM col LIMIT 1", -1, &statement, nil) == SQLITE_OK,
+              let statement else {
+            throw APKGImportError.databaseQueryFailed(String(cString: sqlite3_errmsg(database)))
+        }
+        defer { sqlite3_finalize(statement) }
+        guard sqlite3_step(statement) == SQLITE_ROW,
+              let text = sqlite3_column_text(statement, 0),
+              let data = String(cString: text).data(using: .utf8),
+              let models = try JSONSerialization.jsonObject(with: data) as? [String: [String: Any]] else {
+            throw APKGImportError.databaseQueryFailed("تعریف فیلدهای مدل کارت معتبر نیست.")
+        }
+        return models.mapValues { model in
+            guard let fields = model["flds"] as? [[String: Any]] else { return [] }
+            return fields.sorted { ($0["ord"] as? Int ?? 0) < ($1["ord"] as? Int ?? 0) }
+                .compactMap { $0["name"] as? String }
+        }
+    }
+
+    private func mapWord(fields: [String], named values: [String: String]) -> PrototypeWord? {
+        if let rawJSON = values["LinguaBrainJSON"],
+           let data = rawJSON.data(using: .utf8),
+           let payload = try? JSONDecoder().decode(LinguaBrainAnkiPayload.self, from: data) {
+            let rawWord = sanitize(payload.word)
+            let compactWord = sanitize(rawWord.components(separatedBy: "—").first ?? rawWord)
+            let german = compactWord.isEmpty ? sanitize(payload.headword) : compactWord
+            guard !german.isEmpty else { return nil }
+            let firstExample = payload.examples.first
+            return PrototypeWord(
+                german: german,
+                persian: payload.meaningFA.map(sanitize).filter { !$0.isEmpty }.joined(separator: "، "),
+                article: germanArticle(in: german),
+                level: sanitize(payload.level),
+                partOfSpeech: sanitize(payload.partOfSpeechFA),
+                example: firstExample.map { sanitize($0.de) } ?? "",
+                exampleTranslation: firstExample.map { sanitize($0.fa) } ?? ""
+            )
+        }
+
+        // Compatibility with APKG files produced by older anki_single builds:
+        // Front = Persian meaning + grammar, Back = German headword, Level/Stars.
+        if let front = values["Front"], let back = values["Back"] {
+            let persian = front.components(separatedBy: "\n\n").first.map(sanitize) ?? ""
+            let german = sanitize(back.components(separatedBy: "|").first ?? back)
+            guard !german.isEmpty else { return nil }
+            return PrototypeWord(
+                german: german,
+                persian: persian.isEmpty ? "—" : persian.replacingOccurrences(of: "\n", with: "، "),
+                article: germanArticle(in: back),
+                level: sanitize(values["Level"] ?? "—"),
+                partOfSpeech: extractPartOfSpeech(from: back) ?? "Imported",
+                example: "",
+                exampleTranslation: ""
+            )
+        }
+
+        guard let first = fields.first else { return nil }
+        let front = sanitize(first)
+        let back = fields.count > 1 ? sanitize(fields[1]) : ""
+        guard !front.isEmpty else { return nil }
+        return PrototypeWord(
+            german: front,
+            persian: back.isEmpty ? "—" : back,
+            level: "—",
+            partOfSpeech: "Imported",
+            example: "",
+            exampleTranslation: ""
+        )
+    }
+
+    private func germanArticle(in value: String) -> String? {
+        let normalized = sanitize(value).lowercased()
+        return ["der", "die", "das"].first { normalized.contains("\($0) ") }
+    }
+
+    private func extractPartOfSpeech(from value: String) -> String? {
+        guard let opening = value.lastIndex(of: "("), let closing = value.lastIndex(of: ")"), opening < closing else {
+            return nil
+        }
+        let result = sanitize(String(value[value.index(after: opening)..<closing]))
+        return result.isEmpty ? nil : result
     }
 
     private func sanitize(_ value: String) -> String {
@@ -582,6 +660,27 @@ struct APKGCardReader: Sendable {
             result = result.replacingOccurrences(of: entity, with: replacement)
         }
         return result.split(whereSeparator: \.isWhitespace).joined(separator: " ")
+    }
+}
+
+private struct LinguaBrainAnkiPayload: Decodable {
+    struct Example: Decodable {
+        let de: String
+        let fa: String
+        let en: String
+    }
+
+    let word: String
+    let headword: String
+    let partOfSpeechFA: String
+    let level: String
+    let meaningFA: [String]
+    let examples: [Example]
+
+    enum CodingKeys: String, CodingKey {
+        case word, headword, level, examples
+        case partOfSpeechFA = "part_of_speech_fa"
+        case meaningFA = "meaning_fa"
     }
 }
 
