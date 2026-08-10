@@ -2,6 +2,7 @@ import SwiftUI
 
 struct ReviewPrototypeView: View {
     let newCardLimit: Int?
+    let mode: PrototypeReviewMode
     @Environment(PrototypeStore.self) private var store
     @State private var revealed = false
     @State private var queue: [UUID] = []
@@ -12,8 +13,9 @@ struct ReviewPrototypeView: View {
     @State private var hasStarted = false
     @State private var persistenceError: String?
 
-    init(newCardLimit: Int? = nil) {
+    init(newCardLimit: Int? = nil, mode: PrototypeReviewMode = .recognition) {
         self.newCardLimit = newCardLimit
+        self.mode = mode
     }
 
     private var currentWord: PrototypeWord? {
@@ -41,7 +43,7 @@ struct ReviewPrototypeView: View {
         .frame(maxWidth: 820)
         .frame(maxWidth: .infinity)
         .background(PrototypeBackground())
-        .navigationTitle("مرور هوشمند")
+        .navigationTitle(mode.title)
         .task {
             guard !hasStarted else { return }
             startSession()
@@ -71,17 +73,27 @@ struct ReviewPrototypeView: View {
             Spacer(minLength: 10)
 
             VStack(spacing: 22) {
-                Text("این واژه به فارسی یعنی چه؟")
+                Text(mode == .recognition ? "این واژه به فارسی یعنی چه؟" : "معادل آلمانی این واژه چیست؟")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
-                Text(word.german)
-                    .font(.system(size: 38, weight: .bold, design: .rounded))
-                    .environment(\.layoutDirection, .leftToRight)
-                    .multilineTextAlignment(.center)
+                if mode == .recognition {
+                    Text(word.german)
+                        .font(.system(size: 38, weight: .bold, design: .rounded))
+                        .environment(\.layoutDirection, .leftToRight)
+                        .multilineTextAlignment(.center)
+                } else {
+                    Text(word.persian)
+                        .font(.system(size: 34, weight: .bold, design: .rounded))
+                        .multilineTextAlignment(.center)
+                }
 
                 if revealed {
                     Divider()
-                    Text(word.persian).font(.title.bold())
+                    if mode == .recognition {
+                        Text(word.persian).font(.title.bold())
+                    } else {
+                        GermanText(text: word.german, font: .title.bold())
+                    }
                     GermanText(text: word.example, font: .title3)
                     Text(word.exampleTranslation).foregroundStyle(.secondary)
                 } else {
@@ -182,7 +194,7 @@ struct ReviewPrototypeView: View {
     }
 
     private func ratingButton(_ rating: PrototypeReviewGrade, word: PrototypeWord) -> some View {
-        let interval = store.previewSchedule(for: rating, word: word).intervalLabel
+        let interval = store.previewSchedule(for: rating, word: word, mode: mode).intervalLabel
         return Button {
             submit(rating, for: word)
         } label: {
@@ -201,14 +213,14 @@ struct ReviewPrototypeView: View {
 
     private func startSession() {
         let due = store.words.filter {
-            store.reviewCount(for: $0) > 0 && store.isReviewable($0)
+            store.reviewCount(for: $0, mode: mode) > 0 && store.isReviewable($0, mode: mode)
         }
         let shortTerm = store.words.filter {
-            store.reviewCount(for: $0) > 0
-                && !store.isReviewable($0)
-                && store.shouldRepeatInCurrentSession($0)
+            store.reviewCount(for: $0, mode: mode) > 0
+                && !store.isReviewable($0, mode: mode)
+                && store.shouldRepeatInCurrentSession($0, mode: mode)
         }
-        let unseen = store.words.filter { store.reviewCount(for: $0) == 0 }
+        let unseen = store.words.filter { store.reviewCount(for: $0, mode: mode) == 0 }
         let newCards = Array(unseen.prefix(newCardLimit ?? unseen.count))
         queue = (due + newCards + shortTerm).map(\.id)
         currentWordID = nil
@@ -221,7 +233,7 @@ struct ReviewPrototypeView: View {
 
     private func submit(_ rating: PrototypeReviewGrade, for word: PrototypeWord) {
         guard revealed, currentWordID == word.id else { return }
-        guard let schedule = store.record(rating, for: word) else {
+        guard let schedule = store.record(rating, for: word, mode: mode) else {
             persistenceError = store.lastPersistenceError
             return
         }
@@ -243,11 +255,11 @@ struct ReviewPrototypeView: View {
         // Repeated cards that are now due take priority over unseen cards.
         let dueRepeatIndex = queue.firstIndex(where: { id in
             guard let word = store.words.first(where: { $0.id == id }) else { return false }
-            return store.reviewCount(for: word) > 0 && store.isReviewable(word, at: now)
+            return store.reviewCount(for: word, mode: mode) > 0 && store.isReviewable(word, mode: mode, at: now)
         })
         let nextIndex = dueRepeatIndex ?? queue.firstIndex(where: { id in
             guard let word = store.words.first(where: { $0.id == id }) else { return false }
-            return store.isReviewable(word, at: now)
+            return store.isReviewable(word, mode: mode, at: now)
         })
 
         if let index = nextIndex {
@@ -257,7 +269,7 @@ struct ReviewPrototypeView: View {
         }
 
         let futureDates = queue.compactMap { id in
-            store.words.first(where: { $0.id == id }).flatMap(store.dueDate(for:))
+            store.words.first(where: { $0.id == id }).flatMap { store.dueDate(for: $0, mode: mode) }
         }
 
         if let nextDate = futureDates.min() {

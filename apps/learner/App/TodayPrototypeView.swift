@@ -115,6 +115,17 @@ struct TodayPrototypeView: View {
             }
             .buttonStyle(.borderedProminent)
             .controlSize(.large)
+
+            NavigationLink {
+                ReviewPrototypeView(newCardLimit: newCardLimit, mode: .reverseTranslation)
+            } label: {
+                Label("تمرین ترجمهٔ معکوس", systemImage: "character.bubble.fill")
+                    .font(.headline)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 11)
+            }
+            .buttonStyle(.bordered)
+            .controlSize(.large)
         }
     }
 

@@ -8,6 +8,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- A functional Persian-to-German reverse-translation review mode with answer reveal, four FSRS ratings, due/relearning behavior, and memory state isolated from German-to-Persian recognition.
 - Imported-Anki package management in Library, including destructive confirmation and transactional removal of the package's cards, dependent review history, and empty deck records without deleting the learner's original APKG file.
 - A confirm-and-import APKG flow for legacy SQLite Anki collections (`collection.anki2` and `collection.anki21`) with bounded extraction, read-only SQLite mapping, plain-text sanitization, transactional SwiftData writes, provenance, and duplicate reporting.
 - Energy- and available-time-aware daily new-card limits, with the computed limit enforced by the review-session queue.

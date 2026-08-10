@@ -462,6 +462,18 @@ enum PrototypeReviewGrade: String, CaseIterable, Identifiable, Hashable {
     }
 }
 
+enum PrototypeReviewMode: String, Sendable {
+    case recognition
+    case reverseTranslation
+
+    var title: String {
+        switch self {
+        case .recognition: "مرور آلمانی به فارسی"
+        case .reverseTranslation: "ترجمهٔ معکوس"
+        }
+    }
+}
+
 @MainActor
 @Observable
 final class PrototypeStore {
@@ -499,7 +511,7 @@ final class PrototypeStore {
         }
     }
 
-    var reviewedCount: Int { grades.values.filter { !$0.isEmpty }.count }
+    var reviewedCount: Int { words.filter { reviewCount(for: $0) > 0 }.count }
     var unreviewedCount: Int { words.count - reviewedCount }
     var dueCount: Int {
         words.filter { reviewCount(for: $0) > 0 && isReviewable($0) }.count
@@ -514,44 +526,47 @@ final class PrototypeStore {
         return total / Double(reviewedCount)
     }
 
-    func strength(for word: PrototypeWord) -> Double {
-        guard let state = memoryStates[word.storageKey] else {
-            return grades[word.storageKey]?.last?.strength ?? 0
+    func strength(for word: PrototypeWord, mode: PrototypeReviewMode = .recognition) -> Double {
+        let key = reviewKey(for: word, mode: mode)
+        guard let state = memoryStates[key] else {
+            return grades[key]?.last?.strength ?? 0
         }
         return scheduler.retrievability(state: state, at: .now)
     }
 
-    func reviewCount(for word: PrototypeWord) -> Int {
-        grades[word.storageKey]?.count ?? 0
+    func reviewCount(for word: PrototypeWord, mode: PrototypeReviewMode = .recognition) -> Int {
+        grades[reviewKey(for: word, mode: mode)]?.count ?? 0
     }
 
-    func lastGrade(for word: PrototypeWord) -> PrototypeReviewGrade? {
-        grades[word.storageKey]?.last
+    func lastGrade(for word: PrototypeWord, mode: PrototypeReviewMode = .recognition) -> PrototypeReviewGrade? {
+        grades[reviewKey(for: word, mode: mode)]?.last
     }
 
-    func dueDate(for word: PrototypeWord) -> Date? {
-        dueDates[word.storageKey]
+    func dueDate(for word: PrototypeWord, mode: PrototypeReviewMode = .recognition) -> Date? {
+        dueDates[reviewKey(for: word, mode: mode)]
     }
 
     func previewSchedule(
         for grade: PrototypeReviewGrade,
         word: PrototypeWord,
+        mode: PrototypeReviewMode = .recognition,
         at date: Date = .now
     ) -> PrototypeFSRSSchedule {
-        scheduler.schedule(previous: memoryStates[word.storageKey], grade: grade, now: date)
+        scheduler.schedule(previous: memoryStates[reviewKey(for: word, mode: mode)], grade: grade, now: date)
     }
 
-    func shouldRepeatInCurrentSession(_ word: PrototypeWord) -> Bool {
-        guard let state = memoryStates[word.storageKey], let dueDate = dueDates[word.storageKey] else {
+    func shouldRepeatInCurrentSession(_ word: PrototypeWord, mode: PrototypeReviewMode = .recognition) -> Bool {
+        let key = reviewKey(for: word, mode: mode)
+        guard let state = memoryStates[key], let dueDate = dueDates[key] else {
             return false
         }
         return (state.phase == .learning || state.phase == .relearning)
             && dueDate.timeIntervalSince(state.lastReview) < 86_400
     }
 
-    func isReviewable(_ word: PrototypeWord, at date: Date = .now) -> Bool {
-        guard reviewCount(for: word) > 0 else { return true }
-        guard let dueDate = dueDates[word.storageKey] else { return true }
+    func isReviewable(_ word: PrototypeWord, mode: PrototypeReviewMode = .recognition, at date: Date = .now) -> Bool {
+        guard reviewCount(for: word, mode: mode) > 0 else { return true }
+        guard let dueDate = dueDates[reviewKey(for: word, mode: mode)] else { return true }
         return dueDate <= date
     }
 
@@ -559,11 +574,13 @@ final class PrototypeStore {
     func record(
         _ grade: PrototypeReviewGrade,
         for word: PrototypeWord,
+        mode: PrototypeReviewMode = .recognition,
         at date: Date = .now
     ) -> PrototypeFSRSSchedule? {
-        let schedule = previewSchedule(for: grade, word: word, at: date)
+        let key = reviewKey(for: word, mode: mode)
+        let schedule = previewSchedule(for: grade, word: word, mode: mode, at: date)
         let record = PrototypeReviewRecord(
-            wordKey: word.storageKey,
+            wordKey: key,
             gradeRawValue: grade.rawValue,
             reviewedAt: date,
             dueAt: schedule.dueAt,
@@ -579,9 +596,9 @@ final class PrototypeStore {
 
         do {
             try modelContext.save()
-            grades[word.storageKey, default: []].append(grade)
-            dueDates[word.storageKey] = schedule.dueAt
-            memoryStates[word.storageKey] = schedule.state
+            grades[key, default: []].append(grade)
+            dueDates[key] = schedule.dueAt
+            memoryStates[key] = schedule.state
             lastPersistenceError = nil
             return schedule
         } catch {
@@ -699,7 +716,9 @@ final class PrototypeStore {
             }
 
             let allReviews = try modelContext.fetch(FetchDescriptor<PrototypeReviewRecord>())
-            for review in allReviews where deletedWordKeys.contains(review.wordKey) {
+            for review in allReviews where deletedWordKeys.contains(where: {
+                review.wordKey == $0 || review.wordKey.hasPrefix("\($0)::")
+            }) {
                 modelContext.delete(review)
             }
 
@@ -787,6 +806,13 @@ final class PrototypeStore {
             lastPersistenceError = nil
         } catch {
             lastPersistenceError = "بازیابی اطلاعات مرور انجام نشد: \(error.localizedDescription)"
+        }
+    }
+
+    private func reviewKey(for word: PrototypeWord, mode: PrototypeReviewMode) -> String {
+        switch mode {
+        case .recognition: word.storageKey
+        case .reverseTranslation: "\(word.storageKey)::reverse"
         }
     }
 }
