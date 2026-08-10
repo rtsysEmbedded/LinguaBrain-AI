@@ -29,6 +29,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- Added the first APKG import boundary: native file selection and a read-only ZIP central-directory preflight that rejects traversal paths, symlinks, encrypted/unsupported entries, duplicates, excessive expansion, suspicious ratios, ZIP64, and packages without an Anki collection database.
 - Persisted the prototype deck and its 50 cards in SwiftData, seeding them only when the local card store is empty and restoring stable card identities on launch.
 - Replaced fixed prototype button intervals with deterministic FSRS-6 scheduling using persisted stability, difficulty, phase, elapsed time, algorithm version, and official reference vectors.
 - Persisted prototype review history and due dates with SwiftData so ratings, progress, and the review queue survive app restarts; review success is now shown only after the transaction is saved.

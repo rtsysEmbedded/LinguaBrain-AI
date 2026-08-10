@@ -1,7 +1,7 @@
 ---
 title: Project Status and Delivery Checklist
 document_id: LB-STATUS
-version: 0.3.3
+version: 0.3.4
 status: Active
 last_updated: 2026-08-09
 ---
@@ -50,6 +50,7 @@ This file is the single progress checklist for LinguaBrain AI. It must be update
 - [x] Define and prototype the ten minimum MVP card surfaces required before final visual-design approval.
 - [x] Add a restart-durable SwiftData checkpoint for the 50-word prototype review history and due dates, including save-before-success and recoverable UI error reporting.
 - [x] Persist a real local deck and 50 stable card records, seed only an empty installation, and restore card identity/content before review history is loaded.
+- [x] Add read-only APKG file selection and bounded ZIP preflight/preview; extraction, SQLite mapping, and transactional import remain pending.
 - [x] Classify and place the vocabulary prototype at `experiments/vocabulary-mvp/` according to [ADR-001](decisions/ADR-001-Repository-Package-and-Module-Layout.md).
 - [ ] Configure a Git remote and push `main`.
 - [ ] Create an annotated MVP specification baseline tag.
@@ -259,6 +260,7 @@ Complete these actions with every milestone or architectural change:
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 0.3.4 | 2026-08-10 | Added the read-only APKG selection and archive-security preflight boundary before extraction or database writes. |
 | 0.3.3 | 2026-08-10 | Added persistent prototype Deck/Card records and first-launch-only seeding as the storage boundary required before APKG import. |
 | 0.3.2 | 2026-08-09 | Accepted ADR-004 and replaced fixed prototype intervals with persistent, reference-checked FSRS-6 memory state and scheduling. |
 | 0.3.1 | 2026-08-09 | Added the verified-build SwiftData persistence checkpoint for prototype ratings, progress, and due dates; production persistence ADR/repositories and FSRS remain open. |
