@@ -8,6 +8,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- ADR-014 making optional Sign in with Apple/Google, guest-data merge, account deletion, and scoped learner-data synchronization part of Release 1.0 while preserving local-only use.
 - Domain-specific lexical-sense identity, allowing forms such as `entlassen` to have separate work and medical cards with independent recognition and reverse-translation review histories.
 - A functional OpenRouter prototype integration with Keychain-only API-key storage, explicit cloud consent, model selection, connection testing, privacy-constrained structured card generation, learner preview, duplicate protection, and commit-on-approval.
 - ADR-013 selecting OpenRouter as the first post-Anki-Core cloud AI adapter while retaining Apple Foundation Models as a future capability-gated, no-API-key on-device option.

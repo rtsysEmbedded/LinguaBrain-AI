@@ -1,7 +1,7 @@
 ---
 title: Project Status and Delivery Checklist
 document_id: LB-STATUS
-version: 0.3.9
+version: 0.4.0
 status: Active
 last_updated: 2026-08-10
 ---
@@ -27,7 +27,7 @@ This file is the single progress checklist for LinguaBrain AI. It must be update
 | Documentation | Documents 01–15 complete as reviewed drafts |
 | Architecture baseline | Native Swift migration; DOC-10 at 0.4.0, DOC-11/DOC-14 at 0.3.1, and DOC-15 at 0.2.1 |
 | Local Apple toolchain | Xcode 27.0 (`27A5228h`) is active with Swift 6.4 and iOS/iPadOS/macOS 27 SDKs; beta-era evidence remains provisional |
-| Latest accepted ADRs | Native baseline ADR-009 through ADR-013, plus [ADR-004](decisions/ADR-004-FSRS-Implementation-and-Version.md) for the pinned scheduler |
+| Latest accepted ADRs | Native baseline ADR-009 through ADR-014, plus [ADR-004](decisions/ADR-004-FSRS-Implementation-and-Version.md) for the pinned scheduler |
 | Active Git branch | `main` |
 | Native platform migration commit | `3c75a70` |
 | Visual prototype | Buildable SwiftUI prototype for iPhone, iPad, and Mac; review state persists, APKG cards can be imported, and an approved OpenRouter proposal can be stored locally |
@@ -55,6 +55,7 @@ This file is the single progress checklist for LinguaBrain AI. It must be update
 - [x] Add Persian-to-German reverse translation with an independent persisted FSRS memory state.
 - [x] Add a functional OpenRouter prototype with Keychain-backed API-key storage, explicit cloud consent, configurable model ID, structured card proposals, preview, and local approval.
 - [x] Model generated cards as domain-specific lexical senses so homographs can coexist and retain independent recognition/reverse-review schedules; migrate legacy review keys to stable card identities.
+- [x] Accept optional Sign in with Apple/Google and secure learner-data synchronization as Release 1.0 scope while preserving full local-only use.
 - [x] Classify and place the vocabulary prototype at `experiments/vocabulary-mvp/` according to [ADR-001](decisions/ADR-001-Repository-Package-and-Module-Layout.md).
 - [ ] Configure a Git remote and push `main`.
 - [ ] Create an annotated MVP specification baseline tag.
@@ -101,6 +102,7 @@ This file is the single progress checklist for LinguaBrain AI. It must be update
 - [x] [ADR-011 — SwiftUI Observation/state, navigation, and dependency composition](decisions/ADR-011-SwiftUI-State-Observation-Navigation-and-Dependency-Composition.md).
 - [x] [ADR-012 — Anki Core first and APKG import boundary](decisions/ADR-012-Anki-Core-First-and-APKG-Import-Boundary.md).
 - [x] [ADR-013 — OpenRouter-first cloud AI and future Apple Foundation Models adapter](decisions/ADR-013-Initial-AI-Provider-Strategy.md).
+- [x] [ADR-014 — Optional accounts and Release 1.0 synchronization](decisions/ADR-014-Optional-Accounts-and-Release-Sync.md).
 - [ ] ADR-003 — Native Swift persistence/query/migration stack.
 - [ ] ADR — Domain events and transactional outbox strategy.
 - [ ] ADR — Apple local-store protection, Keychain, backup, recovery, and key handling.
@@ -221,6 +223,9 @@ This file is the single progress checklist for LinguaBrain AI. It must be update
 - [ ] Finalize privacy disclosures, telemetry consent, and retention defaults.
 - [ ] Pre-register the 7-day and 14-day delayed-recall pilot protocol.
 - [ ] Run the pilot and evaluate stop/go thresholds.
+- [ ] Implement optional Sign in with Apple and Google behind a canonical learner-account identity.
+- [ ] Implement transactional guest-to-account merge and event-based multi-device synchronization.
+- [ ] Implement in-app account deletion, provider-token revocation, export, sign-out, and recovery tests.
 
 **M6 exit criterion:** All release gates in Document 10 pass and the MVP is ready for a controlled pilot.
 
@@ -265,6 +270,7 @@ Complete these actions with every milestone or architectural change:
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 0.4.0 | 2026-08-10 | Accepted optional Apple/Google accounts and secure learner-data synchronization as Release 1.0 scope while retaining complete local-only operation. |
 | 0.3.9 | 2026-08-10 | Replaced word-only duplicate and review identity with domain-aware lexical-sense deduplication and stable per-card review identity, including legacy review-key migration. |
 | 0.3.8 | 2026-08-10 | Added the functional OpenRouter card-generation checkpoint with Keychain storage, explicit cloud consent, structured output validation, proposal preview, and approved local persistence. |
 | 0.3.7 | 2026-08-10 | Recorded OpenRouter as the first future cloud AI adapter and Apple Foundation Models as an optional no-API-key on-device provider requiring capability, locale, and quality gates. |

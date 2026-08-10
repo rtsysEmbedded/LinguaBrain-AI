@@ -116,7 +116,7 @@ Learns language in a domain such as software engineering, embedded systems, busi
 
 The MVP validates the Learning Engine with German ↔ Persian learning, AI-enriched word cards, automatic classification, basic graph relations, FSRS reviews, adaptive daily plans, and translation/cloze exercises.
 
-The first production implementation is Apple-native: Swift 6.4 and SwiftUI targeting iOS/iPadOS 27 and macOS 27 Golden Gate. iPhone is the primary controlled-pilot surface; iPad and Mac are supported local-only MVP surfaces. Multi-device synchronization is not implied by this platform scope.
+The first production implementation is Apple-native: Swift 6.4 and SwiftUI targeting iOS/iPadOS 27 and macOS 27 Golden Gate. iPhone is the primary controlled-pilot surface; iPad and Mac are supported local-first surfaces. Optional Release 1.0 accounts may synchronize the approved learner-data scope under ADR-014, while signed-out use remains complete.
 
 The MVP explicitly excludes full social features, leaderboards, marketplaces, comprehensive real-time speaking evaluation, multi-language expansion, and complete OCR book ingestion.
 

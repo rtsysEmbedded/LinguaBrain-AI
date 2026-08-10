@@ -120,6 +120,6 @@ Documents 01–15 remain reviewed drafts. [ADR-009](decisions/ADR-009-Native-App
 - German and Persian Language Packages are built-in, first-party MVP components.
 - The Swift domain/application core is independent of SwiftUI and Apple model/storage SDKs; a future non-Apple device must preserve its versioned semantics through a separately approved runtime or interoperability boundary.
 - Production code uses a modular monorepo, one local multi-target Swift package, and thin native Apple app hosts; the Python vocabulary spike remains a non-production experiment.
-- The controlled pilot targets iPhone on iOS 27. iPadOS 27 and macOS 27 are first-class local-only MVP surfaces; sync remains post-MVP.
+- The controlled pilot targets iPhone on iOS 27. iPadOS 27 and macOS 27 are first-class local-first surfaces. Release 1.0 may optionally synchronize approved learner data through Apple/Google accounts under ADR-014; signed-out learning remains complete.
 - Apple Foundation Models, SpeechAnalyzer, and Translation are capability- and locale-gated adapters. German–Persian learning retains validated cloud/local and no-AI fallbacks.
 - SwiftUI presentation uses native Observation, `@MainActor` feature models, typed per-scene navigation, initializer injection, and an app-owned composition root; global service locators are prohibited.

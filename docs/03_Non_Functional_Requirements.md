@@ -1,9 +1,9 @@
 ---
 title: Non-Functional Requirements
 document_id: LB-DOC-03
-version: 0.3.0
+version: 0.4.0
 status: Draft
-last_updated: 2026-07-21
+last_updated: 2026-08-10
 ---
 
 # Non-Functional Requirements
@@ -102,12 +102,15 @@ Apple Foundation Models, Translation, and Speech capabilities are optional runti
 
 ### Authentication and authorization
 
-The MVP may operate in local-only mode without a cloud account. When accounts and synchronization are introduced:
+Release 1.0 provides optional Sign in with Apple and Google while preserving full local-only use. [ADR-014](../decisions/ADR-014-Optional-Accounts-and-Release-Sync.md) owns the identity and release-sync boundary. When an account is enabled:
 
 - authentication tokens must be short-lived and revocable;
 - authorization must enforce ownership of all user-scoped data;
 - server-side APIs must validate input and never trust client-side learning state blindly;
 - administrative access must be separated from normal learner access.
+- local guest data must merge transactionally into the account without silent replacement;
+- account creation must include an in-app permanent-deletion path and applicable provider-token revocation;
+- OpenRouter/BYOK keys and raw authentication credentials must never enter synchronized learner records.
 
 ### API keys and BYOK
 
@@ -257,11 +260,13 @@ The first source question below is preserved verbatim for traceability. Its orig
 - `08_AI_Orchestration_Layer.md` — Provider routing, prompts, validation, and caching.
 - `11_Technical_Architecture.md` — Module boundaries and deployment design.
 - `12_Database_Schema_and_Persistence.md` — Data model, migrations, and backups.
+- `../decisions/ADR-014-Optional-Accounts-and-Release-Sync.md` — Optional identity, synchronization scope, merge, and deletion boundary.
 
 ## Revision history
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 0.4.0 | 2026-08-10 | Added the optional Release 1.0 Apple/Google account, guest-merge, scoped-sync, secret exclusion, and in-app deletion requirements from ADR-014. |
 | 0.3.0 | 2026-07-21 | Adopted the native Swift/SwiftUI OS 27 quality baseline, Apple capability fallbacks, recording privacy, and iPhone/iPad/macOS accessibility and performance matrices. |
 | 0.2.1 | 2026-07-11 | Added client-surface portability and capability-negotiation requirements. |
 | 0.2.0 | 2026-07-11 | Cross-document architecture review; resolved domain, validation, scheduling, privacy, and MVP consistency contracts. |

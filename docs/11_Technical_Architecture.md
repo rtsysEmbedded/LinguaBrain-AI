@@ -40,7 +40,7 @@ flowchart LR
     CORE -. future .-> SYNC["Sync API / FastAPI"]
 ```
 
-The iPhone, iPad, and Mac scenes expose a versioned `CapabilitySnapshot` and map touch, keyboard, pointer, window, microphone, speaker, and local-model capabilities to the same application commands. Each installation is local-only in the MVP; the diagram's future sync path is not an implied cross-device feature.
+The iPhone, iPad, and Mac scenes expose a versioned `CapabilitySnapshot` and map touch, keyboard, pointer, window, microphone, speaker, and local-model capabilities to the same application commands. Each installation retains a complete local store; optional Release 1.0 synchronization is governed by ADR-014 and cannot become a prerequisite for local learning.
 
 ## Layer model
 
@@ -296,7 +296,7 @@ Swift Testing is the default for package unit/contract tests; XCTest/XCUITest re
 
 ## Future backend
 
-FastAPI may later provide accounts, encrypted sync coordination, provider proxying, and shared validated content. The local application remains functional without it. Backend introduction requires separate API, threat-model, and conflict-resolution specifications.
+A backend is required before the optional Release 1.0 account/sync capability can ship and may provide identity verification and encrypted sync coordination. The local application remains functional without it. Backend implementation still requires separate API, threat-model, operational, and conflict-resolution specifications.
 
 ## Acceptance criteria
 

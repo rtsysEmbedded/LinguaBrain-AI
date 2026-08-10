@@ -14,7 +14,7 @@ This document defines the MVP local persistence model, integrity rules, indexing
 
 Each iPhone, iPad, or Mac installation has a local source of truth behind domain repository and transaction protocols. The relational/table vocabulary below is the normative logical contract. ADR-003 decides whether its first physical adapter uses SwiftData/Core Data, direct SQLite, GRDB, or another native Swift stack. No SwiftUI view or `ModelContext` may become the domain repository boundary.
 
-Cross-device synchronization is not part of the MVP. The same schema and stable IDs on several Apple devices do not imply automatic continuity; CloudKit adoption requires a later sync, conflict, privacy, migration, and recovery decision.
+Cross-device synchronization is optional Release 1.0 scope under ADR-014, not an intrinsic behavior of the local schema. Stable IDs alone do not imply continuity; implementation still requires approved sync, conflict, privacy, migration, security, deletion, and recovery contracts.
 
 ## Principles
 

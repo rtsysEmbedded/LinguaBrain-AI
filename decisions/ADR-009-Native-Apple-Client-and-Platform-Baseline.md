@@ -18,6 +18,8 @@ supersedes:
 
 # ADR-009: Native Apple Client and Platform Baseline
 
+> **Scope amendment (2026-08-10):** [ADR-014](ADR-014-Optional-Accounts-and-Release-Sync.md) supersedes this record's local-only Release 1.0 account/synchronization exclusion. This ADR remains authoritative for native Apple platforms, capabilities, layout, and stable-toolchain gates.
+
 ## Context
 
 LinguaBrain's MVP direction has changed from an Android-first Flutter client to a native Apple-platform product. The learning hypothesis is now tested first on iPhone, while iPad and Mac are first-class MVP surfaces for the same local learning experience. The product is intentionally optimized for Apple platform capabilities such as SwiftUI, SpeechAnalyzer, Foundation Models, native accessibility, platform audio lifecycles, and future App Intents or watchOS extensions.

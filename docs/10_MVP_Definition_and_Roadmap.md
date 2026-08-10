@@ -1,9 +1,9 @@
 ---
 title: MVP Definition and Roadmap
 document_id: LB-DOC-10
-version: 0.4.0
+version: 0.5.0
 status: Draft
-last_updated: 2026-08-03
+last_updated: 2026-08-10
 ---
 
 # MVP Definition and Roadmap
@@ -107,8 +107,8 @@ flowchart TD
 - Full real-time AI conversation.
 - Automatic pronunciation scoring.
 - Complete OCR/PDF ingestion.
-- Multi-device cloud sync and accounts.
-- Cross-device synchronization between the first-class Apple applications; each application uses an independent local learner store until a post-MVP sync design is accepted.
+- Mandatory account creation; local-only learning remains a supported first-class mode.
+- Synchronization of raw AI-provider keys, recordings, meeting transcripts, or unapproved AI responses.
 - Social feeds, leaderboards, marketplace, or shared public decks.
 - Multiple target languages.
 - Fully general Learning OS support beyond the language-domain contracts.
@@ -132,7 +132,7 @@ The shared domain/application contracts remain client-surface neutral even thoug
 | Local persistence | Native local-store adapter selected by ADR-003, with migrations and repository/transaction abstraction |
 | Review algorithm | FSRS implementation behind a scheduler interface |
 | AI integration | Provider adapters; BYOK and OpenAI-compatible local endpoint |
-| Backend | Not required for local MVP; FastAPI reserved for later sync/services |
+| Backend | Required for optional Release 1.0 accounts and encrypted synchronization; it must not be required for local learning |
 | Audio | Cached TTS or validated media; offline playback |
 | Testing | Swift Testing/XCTest, repository and integration tests, SwiftUI view/snapshot tests, XCUITest, migration/recovery tests, and AI contract evaluations |
 
@@ -143,7 +143,7 @@ The shared domain/application contracts remain client-surface neutral even thoug
 - iOS/iPadOS 27 and macOS 27 are first-class, local-only MVP application surfaces.
 - iPhone is the primary controlled-pilot surface and the primary source of product-performance and learning-evidence measurements. iPad and macOS remain release-supported companion surfaces, not deferred ports.
 - The iPad experience ships from the universal iOS/iPadOS application with adaptive layouts. The macOS application is a native, first-class local companion using the same domain/application contracts.
-- Each application maintains an independent local learner store. “Companion” does not imply account, cloud, or cross-device synchronization; supported export/import is the only transfer path until post-MVP sync is separately designed.
+- Each application maintains a complete local learner store. Optional Apple/Google accounts may synchronize the approved scope under ADR-014; signed-out and offline learning remain fully functional.
 - Swift 6.4 and SwiftUI are the implementation baseline. [ADR-010](../decisions/ADR-010-Swift-Package-and-Module-Layout.md) owns the Swift Package Manager topology and framework-dependency boundaries.
 - Xcode 27 beta and beta OS SDKs are provisional development inputs. Builds, screenshots, snapshots, performance numbers, and platform behavior observed with beta tooling are non-authoritative until rerun with the stable/GM Xcode 27 toolchain and final iOS/iPadOS/macOS 27 SDKs.
 - Pilot enrollment and release require a clean stable-toolchain build plus a complete rerun of automated tests, approved snapshots, accessibility checks, security/privacy checks, migrations, backup/restore, and recovery scenarios on all first-class surfaces.
@@ -267,7 +267,8 @@ The MVP cannot enter pilot until:
 | 1.1 | Listening expansion, richer progress insights, additional import/export formats |
 | 1.2 | OCR/text/PDF extraction with approval workflow |
 | 1.3 | Guided writing and speaking evaluation |
-| 2.0 | Account, encrypted sync, multiple devices |
+| 1.0 | Optional Apple/Google account, secure merge, and approved learner-data synchronization |
+| 2.0 | Expanded encrypted sync, recovery, sharing, and additional device classes |
 | 2.x | Additional language packages and exam missions |
 | Future | Conversation coach, professional plugins, broader Learning OS |
 
@@ -303,11 +304,13 @@ LB-DEC-037 is `SUPERSEDED` by LB-DEC-057 and the native Apple baseline in [ADR-0
 - `../decisions/ADR-009-Native-Apple-Client-and-Platform-Baseline.md` — Supported Apple surfaces, pilot priority, and stable-toolchain release gate.
 - `../decisions/ADR-010-Swift-Package-and-Module-Layout.md` — Swift Package Manager and module topology.
 - `../decisions/ADR-011-SwiftUI-State-Observation-Navigation-and-Dependency-Composition.md` — Accepted SwiftUI state, typed navigation, concurrency, and composition decision.
+- `../decisions/ADR-014-Optional-Accounts-and-Release-Sync.md` — Optional Release 1.0 accounts, local-data merge, scoped sync, and deletion requirements.
 
 ## Revision history
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 0.5.0 | 2026-08-10 | Added optional Apple/Google accounts and scoped learner-data synchronization to Release 1.0 while preserving full signed-out and offline learning. |
 | 0.4.0 | 2026-08-03 | Added the Anki Core validation release, secure APKG adapter boundary, and import/review-first execution order from ADR-012. |
 | 0.3.1 | 2026-08-01 | Linked the accepted ADR-011 native Observation, typed-navigation, and composition baseline. |
 | 0.3.0 | 2026-07-21 | Replaced the superseded Android/Flutter pilot with native Swift 6.4/SwiftUI first-class iOS/iPadOS 27 and macOS 27 surfaces, an iPhone-primary pilot, independent local stores, and a stable Xcode 27 release gate. |

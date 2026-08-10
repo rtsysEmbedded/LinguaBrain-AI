@@ -1,7 +1,7 @@
 ---
 title: Decision Register
 document_id: LB-DEC-REGISTER
-version: 0.5.0
+version: 0.6.0
 status: Active
 last_updated: 2026-08-10
 ---
@@ -58,12 +58,12 @@ Each register row names one accountable owner role. Other affected roles review 
 
 | Dimension | Count |
 | --- | ---: |
-| Total decision records | 60 |
+| Total decision records | 61 |
 | MVP-blocking | 17 |
 | MVP-later | 31 |
 | post-MVP | 12 |
 | OPEN | 37 |
-| DECIDED | 6 |
+| DECIDED | 7 |
 | PROPOSED | 2 |
 | DEFERRED | 11 |
 | SUPERSEDED | 4 |
@@ -133,6 +133,7 @@ Each register row names one accountable owner role. Other affected roles review 
 | LB-DEC-059 | Native Apple persistence supplement | Which native Swift persistence/query/migration stack best satisfies atomicity, testing, and migration needs? | MVP-blocking | OPEN | Persistence Lead | M1 start | Revised ADR-003 and transaction/migration spike |
 | LB-DEC-060 | Anki Core sequencing supplement | Should LinguaBrain validate secure APKG import and a durable offline review loop before AI card generation and final visual approval? | MVP-blocking | DECIDED | Product Owner | Before implementation resumes | [ADR-012](ADR-012-Anki-Core-First-and-APKG-Import-Boundary.md) and Anki Core MVP specification |
 | LB-DEC-061 | AI provider sequencing supplement | Which provider should be the first cloud AI integration, and how should Apple Foundation Models be positioned? | MVP-later | DECIDED | Product Owner | M2 AI enrichment | [ADR-013](ADR-013-Initial-AI-Provider-Strategy.md): OpenRouter first; Apple on-device adapter retained for future evaluation |
+| LB-DEC-062 | Release identity and continuity supplement | Should Release 1.0 provide optional Apple/Google accounts and which data may synchronize? | MVP-blocking | DECIDED | Product Owner | Before Release 1.0 account implementation | [ADR-014](ADR-014-Optional-Accounts-and-Release-Sync.md): local-first optional accounts, scoped sync, guest merge, and in-app deletion |
 
 ## Existing scope, proposed, and deferred baseline
 
@@ -150,6 +151,7 @@ The following existing specification positions are recorded without losing their
 - LB-DEC-057 is DECIDED: the MVP uses the native Apple client and platform scope defined by [ADR-009](ADR-009-Native-Apple-Client-and-Platform-Baseline.md).
 - LB-DEC-058 is DECIDED: native Observation, `@MainActor` feature models, typed scene-owned navigation, initializer injection, and an app composition root are defined by [ADR-011](ADR-011-SwiftUI-State-Observation-Navigation-and-Dependency-Composition.md).
 - LB-DEC-060 is DECIDED: secure APKG import and a durable offline review loop precede AI card generation and final visual approval, as defined by [ADR-012](ADR-012-Anki-Core-First-and-APKG-Import-Boundary.md).
+- LB-DEC-062 is DECIDED: Release 1.0 offers optional Apple/Google accounts and scoped learner-data sync without making authentication or connectivity a learning prerequisite, as defined by [ADR-014](ADR-014-Optional-Accounts-and-Release-Sync.md).
 
 Deferred records remain visible and do not become active work until their named gate is approved.
 
@@ -167,6 +169,7 @@ Related source questions should share evidence and, where appropriate, one final
 | Adaptive policy and learner control | LB-DEC-003, LB-DEC-023, LB-DEC-024, LB-DEC-025, LB-DEC-027, LB-DEC-052 | Versioned ALE and UX policy |
 | Knowledge Graph policy | LB-DEC-008, LB-DEC-010, LB-DEC-011, LB-DEC-020, LB-DEC-021, LB-DEC-022 | Graph domain/validation decisions and future scaling policy |
 | AI and Language Package execution | LB-DEC-028, LB-DEC-030, LB-DEC-031, LB-DEC-034, LB-DEC-036 | Provider contract, evaluation gate, and package capability boundary |
+| Account, continuity, and deletion | LB-DEC-009, LB-DEC-042, LB-DEC-056, LB-DEC-059, LB-DEC-062 | ADR-014 plus the pending persistence, outbox, security, and sync threat-model decisions |
 
 ## ADR catalog and planned queue
 
@@ -187,6 +190,7 @@ ADR-004 and ADR-009 through ADR-012 are accepted. ADR-001 and ADR-008 are preser
 | 11 | [ADR-011-SwiftUI-State-Observation-Navigation-and-Dependency-Composition.md](ADR-011-SwiftUI-State-Observation-Navigation-and-Dependency-Composition.md) | accepted | LB-DEC-058 | Accepted 2026-08-01; M1 client-composition baseline stable | Native Observation, typed scene navigation, initializer injection, composition root, and test fixture contract |
 | 12 | [ADR-012-Anki-Core-First-and-APKG-Import-Boundary.md](ADR-012-Anki-Core-First-and-APKG-Import-Boundary.md) | accepted | LB-DEC-060 | Accepted 2026-08-03; gates AI/final visual work | Secure APKG adapter boundary and restart-safe Anki Core review acceptance criteria |
 | 13 | [ADR-013-Initial-AI-Provider-Strategy.md](ADR-013-Initial-AI-Provider-Strategy.md) | accepted | LB-DEC-061 | Accepted 2026-08-10; implemented after Anki Core gate | OpenRouter-first cloud integration and future no-key Apple Foundation Models adapter |
+| 14 | [ADR-014-Optional-Accounts-and-Release-Sync.md](ADR-014-Optional-Accounts-and-Release-Sync.md) | accepted | LB-DEC-062 | Accepted 2026-08-10; hard gate before Release 1.0 account implementation | Optional Apple/Google identity, guest merge, scoped sync, and in-app deletion boundary |
 
 ## Current decision queue
 
@@ -232,6 +236,7 @@ At every milestone review:
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 0.6.0 | 2026-08-10 | Added LB-DEC-062 and accepted ADR-014 for optional Apple/Google accounts and scoped Release 1.0 learner-data synchronization. |
 | 0.5.0 | 2026-08-10 | Added LB-DEC-061 and accepted ADR-013 for an OpenRouter-first cloud adapter with future capability-gated Apple Foundation Models support. |
 | 0.4.0 | 2026-08-03 | Added LB-DEC-060 and accepted ADR-012 for the Anki Core-first implementation sequence and APKG adapter boundary. |
 | 0.3.0 | 2026-08-01 | Accepted ADR-011, closed LB-DEC-058, and advanced the active queue to the native Swift persistence decision in ADR-003. |

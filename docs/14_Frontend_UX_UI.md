@@ -335,7 +335,7 @@ Tokens cover typography for Persian and German, spacing, elevation, semantic col
 The shared UX state and application commands are independent of the rendering surface. Each client profile declares display class, touch/keyboard/physical controls, microphone, speaker/headset, connectivity, and locally available services.
 
 - Native iPhone, iPad, and macOS profiles are first-class MVP surfaces; iPhone remains the primary pilot reference.
-- Each Apple application uses an independent local learner store. A companion surface does not imply cloud or cross-device synchronization; export/import is the only supported transfer path until post-MVP sync is accepted.
+- Each Apple application uses a complete local learner store. Optional Apple/Google accounts may synchronize the approved Release 1.0 scope under ADR-014; account creation is never required to learn offline.
 - A future dedicated device may expose a reduced focus-first navigation (Learn, Translate, Note) while using the same plans, ReviewUnits, events, and learner data.
 - Unsupported activities are hidden or replaced before session start; the UI never offers recording, playback, typing, or local inference that the active CapabilitySnapshot cannot provide.
 - Recording-capable surfaces require explicit start action, unmistakable active indicator, stop/delete controls, and consent guidance. Detailed device interaction and industrial design belong to separate post-MVP specifications.
