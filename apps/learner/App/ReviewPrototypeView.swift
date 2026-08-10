@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct ReviewPrototypeView: View {
+    let newCardLimit: Int?
     @Environment(PrototypeStore.self) private var store
     @State private var revealed = false
     @State private var queue: [UUID] = []
@@ -10,6 +11,10 @@ struct ReviewPrototypeView: View {
     @State private var isComplete = false
     @State private var hasStarted = false
     @State private var persistenceError: String?
+
+    init(newCardLimit: Int? = nil) {
+        self.newCardLimit = newCardLimit
+    }
 
     private var currentWord: PrototypeWord? {
         guard let currentWordID else { return nil }
@@ -195,9 +200,17 @@ struct ReviewPrototypeView: View {
     }
 
     private func startSession() {
-        queue = store.words.filter { word in
-            store.isReviewable(word) || store.shouldRepeatInCurrentSession(word)
-        }.map(\.id)
+        let due = store.words.filter {
+            store.reviewCount(for: $0) > 0 && store.isReviewable($0)
+        }
+        let shortTerm = store.words.filter {
+            store.reviewCount(for: $0) > 0
+                && !store.isReviewable($0)
+                && store.shouldRepeatInCurrentSession($0)
+        }
+        let unseen = store.words.filter { store.reviewCount(for: $0) == 0 }
+        let newCards = Array(unseen.prefix(newCardLimit ?? unseen.count))
+        queue = (due + newCards + shortTerm).map(\.id)
         currentWordID = nil
         waitingUntil = nil
         ratings = []

@@ -5,6 +5,18 @@ struct TodayPrototypeView: View {
     @State private var energy = 6.0
     @State private var selectedTime = 20
 
+    private var newCardLimit: Int {
+        let energyFactor = 0.45 + (energy / 12)
+        let timeCapacity = Double(selectedTime) / 1.8
+        return min(store.unreviewedCount, max(1, min(20, Int((timeCapacity * energyFactor).rounded()))))
+    }
+
+    private var learningMode: String {
+        if energy <= 3 { return "حالت بازیابی" }
+        if energy >= 8 { return "حالت چالش" }
+        return "حالت رشد"
+    }
+
     var body: some View {
         ScrollView {
             VStack(spacing: 20) {
@@ -82,10 +94,10 @@ struct TodayPrototypeView: View {
 
     private var todayPlan: some View {
         VStack(alignment: .leading, spacing: 12) {
-            SectionHeader(title: "برنامه پیشنهادی", subtitle: "۲۰ دقیقه · حالت رشد")
+            SectionHeader(title: "برنامه پیشنهادی", subtitle: "\(selectedTime) دقیقه · \(learningMode)")
             PrototypeCard {
                 VStack(spacing: 0) {
-                    planRow(symbol: "rectangle.stack.fill", color: PrototypeTheme.accent, title: "مرور هوشمند", detail: "\(store.dueCount) واژه برای بررسی", time: "آزمایشی")
+                    planRow(symbol: "rectangle.stack.fill", color: PrototypeTheme.accent, title: "مرور هوشمند", detail: "\(store.dueCount) مرور + \(newCardLimit) کارت جدید", time: "\(selectedTime) دقیقه")
                     Divider().padding(.vertical, 12)
                     planRow(symbol: "text.book.closed.fill", color: PrototypeTheme.blue, title: "متن کوتاه", detail: "محیط کار · سطح B1", time: "۷ دقیقه")
                     Divider().padding(.vertical, 12)
@@ -94,7 +106,7 @@ struct TodayPrototypeView: View {
             }
 
             NavigationLink {
-                ReviewPrototypeView()
+                ReviewPrototypeView(newCardLimit: newCardLimit)
             } label: {
                 Label("شروع جلسه امروز", systemImage: "play.fill")
                     .font(.headline)

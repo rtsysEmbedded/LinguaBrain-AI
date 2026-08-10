@@ -8,6 +8,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- A confirm-and-import APKG flow for legacy SQLite Anki collections (`collection.anki2` and `collection.anki21`) with bounded extraction, read-only SQLite mapping, plain-text sanitization, transactional SwiftData writes, provenance, and duplicate reporting.
+- Energy- and available-time-aware daily new-card limits, with the computed limit enforced by the review-session queue.
 - A 50-word German–Persian functional-test dataset and shared resettable prototype state across Today, Library, Review, and Progress.
 - ADR-012 and the Anki Core MVP specification, establishing secure APKG import and durable offline review as the validation gate before AI card generation and final visual approval.
 - MVP card inventory and interactive SwiftUI gallery covering word, noun, verb, recognition, reverse translation, cloze, listening, feedback, daily-plan, and skill-mastery surfaces.

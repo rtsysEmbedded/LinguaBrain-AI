@@ -1,7 +1,10 @@
 import SwiftUI
 import UniformTypeIdentifiers
+import SQLite3
+import zlib
 
 struct AddWordPrototypeView: View {
+    @Environment(PrototypeStore.self) private var store
     @State private var word = "arbeiten"
     @State private var domain = "عمومی"
     @State private var showPreview = true
@@ -9,6 +12,8 @@ struct AddWordPrototypeView: View {
     @State private var isInspectingPackage = false
     @State private var packagePreview: APKGImportPreview?
     @State private var packageError: String?
+    @State private var isImportingPackage = false
+    @State private var importResult: PrototypeImportResult?
 
     var body: some View {
         ScrollView {
@@ -98,9 +103,15 @@ struct AddWordPrototypeView: View {
                         Text("حجم بازشدهٔ اعلام‌شده: \(packagePreview.expandedBytes.formatted(.byteCount(style: .file)))")
                             .font(.caption)
                             .foregroundStyle(.secondary)
-                        Text("هنوز هیچ داده‌ای وارد LinguaBrain نشده است.")
-                            .font(.caption.weight(.semibold))
-                            .foregroundStyle(.orange)
+                        if let importResult {
+                            Label("\(importResult.addedCount) کارت وارد شد · \(importResult.skippedCount) تکراری رد شد", systemImage: "checkmark.circle.fill")
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(PrototypeTheme.mint)
+                        } else {
+                            Text("فایل آماده است؛ برای ثبت کارت‌ها دکمهٔ ورود را بزن.")
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(.orange)
+                        }
                     }
                 } else {
                     Text("فایل قبل از استخراج از نظر مسیرهای خطرناک، رمزگذاری، تعداد فایل، حجم بازشده و نسبت فشرده‌سازی بررسی می‌شود.")
@@ -115,7 +126,23 @@ struct AddWordPrototypeView: View {
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.bordered)
-                .disabled(isInspectingPackage)
+                .disabled(isInspectingPackage || isImportingPackage)
+
+                if let packagePreview, importResult == nil {
+                    Button {
+                        importPackage(packagePreview)
+                    } label: {
+                        if isImportingPackage {
+                            ProgressView()
+                                .frame(maxWidth: .infinity)
+                        } else {
+                            Label("تأیید و ورود به LinguaBrain", systemImage: "square.and.arrow.down.fill")
+                                .frame(maxWidth: .infinity)
+                        }
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .disabled(isImportingPackage)
+                }
             }
         }
     }
@@ -123,8 +150,12 @@ struct AddWordPrototypeView: View {
     private func inspectSelectedPackage(_ result: Result<[URL], Error>) {
         do {
             guard let url = try result.get().first else { return }
+            if let previousURL = packagePreview?.stagedPackageURL {
+                try? FileManager.default.removeItem(at: previousURL)
+            }
             isInspectingPackage = true
             packagePreview = nil
+            importResult = nil
             Task {
                 do {
                     let preview = try await Task.detached(priority: .userInitiated) {
@@ -140,6 +171,29 @@ struct AddWordPrototypeView: View {
             }
         } catch {
             packageError = error.localizedDescription
+        }
+    }
+
+    private func importPackage(_ preview: APKGImportPreview) {
+        isImportingPackage = true
+        Task {
+            do {
+                let candidates = try await Task.detached(priority: .userInitiated) {
+                    try APKGCardReader().readCards(from: preview)
+                }.value
+                guard let result = store.importCards(
+                    candidates,
+                    deckName: preview.deckName,
+                    sourcePackage: preview.fileName
+                ) else {
+                    throw APKGImportError.databaseWriteFailed(store.lastPersistenceError ?? "خطای ناشناخته")
+                }
+                importResult = result
+                try? FileManager.default.removeItem(at: preview.stagedPackageURL)
+            } catch {
+                packageError = error.localizedDescription
+            }
+            isImportingPackage = false
         }
     }
 
@@ -195,6 +249,20 @@ struct APKGImportPreview: Sendable {
     let mediaEntryCount: Int
     let expandedBytes: Int64
     let collectionName: String
+    let stagedPackageURL: URL
+    let collectionEntry: APKGCollectionEntry
+
+    var deckName: String {
+        URL(fileURLWithPath: fileName).deletingPathExtension().lastPathComponent
+    }
+}
+
+struct APKGCollectionEntry: Sendable {
+    let name: String
+    let compressionMethod: UInt16
+    let compressedSize: Int
+    let expandedSize: Int
+    let localHeaderOffset: UInt64
 }
 
 enum APKGInspectionError: LocalizedError {
@@ -277,6 +345,7 @@ struct APKGArchiveInspector: Sendable {
         var expandedBytes: UInt64 = 0
         var names = Set<String>()
         var collectionName: String?
+        var collectionEntry: APKGCollectionEntry?
         var mediaEntries = 0
 
         for _ in 0..<Int(entryCount) {
@@ -289,6 +358,7 @@ struct APKGArchiveInspector: Sendable {
             let compressed = UInt64(central.uint32LE(at: cursor + 20))
             let expanded = UInt64(central.uint32LE(at: cursor + 24))
             let externalAttributes = central.uint32LE(at: cursor + 38)
+            let localHeaderOffset = UInt64(central.uint32LE(at: cursor + 42))
             let nameLength = Int(central.uint16LE(at: cursor + 28))
             let extraLength = Int(central.uint16LE(at: cursor + 30))
             let commentLength = Int(central.uint16LE(at: cursor + 32))
@@ -315,22 +385,39 @@ struct APKGArchiveInspector: Sendable {
             }
 
             if ["collection.anki21b", "collection.anki21", "collection.anki2"].contains(name) {
-                collectionName = preferredCollection(current: collectionName, candidate: name)
+                let preferred = preferredCollection(current: collectionName, candidate: name)
+                if preferred != collectionName {
+                    collectionName = preferred
+                    collectionEntry = APKGCollectionEntry(
+                        name: name,
+                        compressionMethod: method,
+                        compressedSize: Int(compressed),
+                        expandedSize: Int(expanded),
+                        localHeaderOffset: localHeaderOffset
+                    )
+                }
             } else if name == "media" || name.allSatisfy(\.isNumber) {
                 mediaEntries += 1
             }
             cursor = end
         }
 
-        guard cursor == central.count, let collectionName else {
+        guard cursor == central.count, let collectionName, let collectionEntry else {
             throw APKGInspectionError.missingCollection
         }
+        let stagingDirectory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("LinguaBrain-APKG", isDirectory: true)
+        try FileManager.default.createDirectory(at: stagingDirectory, withIntermediateDirectories: true)
+        let stagedURL = stagingDirectory.appendingPathComponent("\(UUID().uuidString).apkg")
+        try FileManager.default.copyItem(at: url, to: stagedURL)
         return APKGImportPreview(
             fileName: url.lastPathComponent,
             entryCount: Int(entryCount),
             mediaEntryCount: mediaEntries,
             expandedBytes: Int64(expandedBytes),
-            collectionName: collectionName
+            collectionName: collectionName,
+            stagedPackageURL: stagedURL,
+            collectionEntry: collectionEntry
         )
     }
 
@@ -350,6 +437,151 @@ struct APKGArchiveInspector: Sendable {
         let priority = ["collection.anki2": 0, "collection.anki21": 1, "collection.anki21b": 2]
         guard let current else { return candidate }
         return (priority[candidate] ?? 0) > (priority[current] ?? 0) ? candidate : current
+    }
+}
+
+enum APKGImportError: LocalizedError {
+    case unsupportedModernCollection
+    case malformedCollection
+    case noCards
+    case databaseOpenFailed
+    case databaseQueryFailed(String)
+    case databaseWriteFailed(String)
+
+    var errorDescription: String? {
+        switch self {
+        case .unsupportedModernCollection:
+            "این بسته از فرمت جدید collection.anki21b استفاده می‌کند که هنوز پشتیبانی نمی‌شود. خروجی سازگار collection.anki21 یا collection.anki2 را وارد کن."
+        case .malformedCollection: "دیتابیس داخل بسته معتبر نیست."
+        case .noCards: "هیچ کارت قابل ورود در فایل پیدا نشد."
+        case .databaseOpenFailed: "دیتابیس Anki به‌صورت امن باز نشد."
+        case .databaseQueryFailed(let message): "خواندن کارت‌های Anki انجام نشد: \(message)"
+        case .databaseWriteFailed(let message): message
+        }
+    }
+}
+
+struct APKGCardReader: Sendable {
+    private let maximumCards = 100_000
+
+    func readCards(from preview: APKGImportPreview) throws -> [PrototypeImportedCard] {
+        guard preview.collectionName != "collection.anki21b" else {
+            throw APKGImportError.unsupportedModernCollection
+        }
+        let databaseURL = try extractCollection(from: preview)
+        defer { try? FileManager.default.removeItem(at: databaseURL) }
+        return try readSQLiteCards(at: databaseURL, packageName: preview.fileName)
+    }
+
+    private func extractCollection(from preview: APKGImportPreview) throws -> URL {
+        let handle = try FileHandle(forReadingFrom: preview.stagedPackageURL)
+        defer { try? handle.close() }
+        let entry = preview.collectionEntry
+        try handle.seek(toOffset: entry.localHeaderOffset)
+        guard let header = try handle.read(upToCount: 30), header.count == 30,
+              header.uint32LE(at: 0) == 0x04034B50 else {
+            throw APKGImportError.malformedCollection
+        }
+        let nameLength = Int(header.uint16LE(at: 26))
+        let extraLength = Int(header.uint16LE(at: 28))
+        try handle.seek(toOffset: entry.localHeaderOffset + UInt64(30 + nameLength + extraLength))
+        guard let compressed = try handle.read(upToCount: entry.compressedSize),
+              compressed.count == entry.compressedSize else {
+            throw APKGImportError.malformedCollection
+        }
+
+        let database: Data
+        switch entry.compressionMethod {
+        case 0: database = compressed
+        case 8: database = try inflateRaw(compressed, expandedSize: entry.expandedSize)
+        default: throw APKGImportError.malformedCollection
+        }
+        guard database.count == entry.expandedSize,
+              database.starts(with: Data("SQLite format 3\0".utf8)) else {
+            throw APKGImportError.malformedCollection
+        }
+        let url = FileManager.default.temporaryDirectory
+            .appendingPathComponent("LinguaBrain-\(UUID().uuidString).sqlite")
+        try database.write(to: url, options: .atomic)
+        return url
+    }
+
+    private func inflateRaw(_ input: Data, expandedSize: Int) throws -> Data {
+        var output = Data(count: expandedSize)
+        let status: Int32 = input.withUnsafeBytes { inputBuffer in
+            output.withUnsafeMutableBytes { outputBuffer in
+                var stream = z_stream()
+                stream.next_in = UnsafeMutablePointer<Bytef>(mutating: inputBuffer.bindMemory(to: Bytef.self).baseAddress)
+                stream.avail_in = uInt(input.count)
+                stream.next_out = outputBuffer.bindMemory(to: Bytef.self).baseAddress
+                stream.avail_out = uInt(expandedSize)
+                let initialized = inflateInit2_(&stream, -MAX_WBITS, ZLIB_VERSION, Int32(MemoryLayout<z_stream>.size))
+                guard initialized == Z_OK else { return initialized }
+                defer { inflateEnd(&stream) }
+                let result = inflate(&stream, Z_FINISH)
+                guard result == Z_STREAM_END, stream.total_out == expandedSize else { return Z_DATA_ERROR }
+                return Z_OK
+            }
+        }
+        guard status == Z_OK else { throw APKGImportError.malformedCollection }
+        return output
+    }
+
+    private func readSQLiteCards(at url: URL, packageName: String) throws -> [PrototypeImportedCard] {
+        var database: OpaquePointer?
+        guard sqlite3_open_v2(url.path, &database, SQLITE_OPEN_READONLY | SQLITE_OPEN_NOMUTEX, nil) == SQLITE_OK,
+              let database else {
+            throw APKGImportError.databaseOpenFailed
+        }
+        defer { sqlite3_close(database) }
+
+        let sql = "SELECT c.id, n.flds FROM cards c JOIN notes n ON n.id = c.nid ORDER BY c.id LIMIT \(maximumCards)"
+        var statement: OpaquePointer?
+        guard sqlite3_prepare_v2(database, sql, -1, &statement, nil) == SQLITE_OK,
+              let statement else {
+            throw APKGImportError.databaseQueryFailed(String(cString: sqlite3_errmsg(database)))
+        }
+        defer { sqlite3_finalize(statement) }
+
+        var cards: [PrototypeImportedCard] = []
+        while sqlite3_step(statement) == SQLITE_ROW {
+            let cardID = sqlite3_column_int64(statement, 0)
+            guard let fieldsText = sqlite3_column_text(statement, 1) else { continue }
+            let fields = String(cString: fieldsText).split(separator: "\u{001F}", omittingEmptySubsequences: false)
+            guard let first = fields.first else { continue }
+            let front = sanitize(String(first))
+            let back = fields.count > 1 ? sanitize(String(fields[1])) : ""
+            guard !front.isEmpty else { continue }
+            cards.append(
+                PrototypeImportedCard(
+                    sourceIdentifier: "\(packageName.lowercased())::\(cardID)",
+                    word: PrototypeWord(
+                        german: front,
+                        persian: back.isEmpty ? "—" : back,
+                        level: "—",
+                        partOfSpeech: "Imported",
+                        example: "",
+                        exampleTranslation: ""
+                    )
+                )
+            )
+        }
+        guard sqlite3_errcode(database) == SQLITE_OK || sqlite3_errcode(database) == SQLITE_DONE else {
+            throw APKGImportError.databaseQueryFailed(String(cString: sqlite3_errmsg(database)))
+        }
+        guard !cards.isEmpty else { throw APKGImportError.noCards }
+        return cards
+    }
+
+    private func sanitize(_ value: String) -> String {
+        var result = value
+            .replacingOccurrences(of: #"\[sound:[^\]]+\]"#, with: "", options: .regularExpression)
+            .replacingOccurrences(of: #"<[^>]+>"#, with: " ", options: .regularExpression)
+        let entities = ["&nbsp;": " ", "&amp;": "&", "&lt;": "<", "&gt;": ">", "&quot;": "\""]
+        for (entity, replacement) in entities {
+            result = result.replacingOccurrences(of: entity, with: replacement)
+        }
+        return result.split(whereSeparator: \.isWhitespace).joined(separator: " ")
     }
 }
 

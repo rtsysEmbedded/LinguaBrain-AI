@@ -1,9 +1,9 @@
 ---
 title: Project Status and Delivery Checklist
 document_id: LB-STATUS
-version: 0.3.4
+version: 0.3.5
 status: Active
-last_updated: 2026-08-09
+last_updated: 2026-08-10
 ---
 
 # Project Status and Delivery Checklist
@@ -50,7 +50,8 @@ This file is the single progress checklist for LinguaBrain AI. It must be update
 - [x] Define and prototype the ten minimum MVP card surfaces required before final visual-design approval.
 - [x] Add a restart-durable SwiftData checkpoint for the 50-word prototype review history and due dates, including save-before-success and recoverable UI error reporting.
 - [x] Persist a real local deck and 50 stable card records, seed only an empty installation, and restore card identity/content before review history is loaded.
-- [x] Add read-only APKG file selection and bounded ZIP preflight/preview; extraction, SQLite mapping, and transactional import remain pending.
+- [x] Add read-only APKG selection, bounded ZIP preflight, explicit confirmation, and transactional card import for legacy SQLite `collection.anki2`/`collection.anki21` packages; modern `collection.anki21b`, templates, tags, and media remain pending.
+- [x] Enforce a prototype daily new-card limit derived from the learner's selected energy and available time.
 - [x] Classify and place the vocabulary prototype at `experiments/vocabulary-mvp/` according to [ADR-001](decisions/ADR-001-Repository-Package-and-Module-Layout.md).
 - [ ] Configure a Git remote and push `main`.
 - [ ] Create an annotated MVP specification baseline tag.
@@ -142,7 +143,7 @@ This file is the single progress checklist for LinguaBrain AI. It must be update
 
 ## Anki Core validation release — Current product priority
 
-- [ ] Implement sandboxed `.apkg` inspection and import preview.
+- [x] Implement sandboxed `.apkg` inspection and import preview.
 - [ ] Map supported decks, notes, cards, templates, tags, images, and audio into LinguaBrain-owned records.
 - [ ] Preserve import provenance and deterministic re-import identity.
 - [ ] Implement deck library, due queue, question/answer reveal, and session summary.
@@ -260,6 +261,7 @@ Complete these actions with every milestone or architectural change:
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 0.3.5 | 2026-08-10 | Added confirmed transactional import for legacy SQLite APKG cards and energy/time-aware daily new-card limits; modern collections and full-fidelity resources remain open. |
 | 0.3.4 | 2026-08-10 | Added the read-only APKG selection and archive-security preflight boundary before extraction or database writes. |
 | 0.3.3 | 2026-08-10 | Added persistent prototype Deck/Card records and first-launch-only seeding as the storage boundary required before APKG import. |
 | 0.3.2 | 2026-08-09 | Accepted ADR-004 and replaced fixed prototype intervals with persistent, reference-checked FSRS-6 memory state and scheduling. |

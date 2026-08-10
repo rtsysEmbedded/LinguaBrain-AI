@@ -29,8 +29,17 @@ final class PrototypeCardRecord {
     var example: String
     var exampleTranslation: String
     var createdAt: Date
+    var sourceIdentifier: String?
+    var sourcePackage: String?
 
-    init(word: PrototypeWord, deckID: UUID, position: Int, createdAt: Date = .now) {
+    init(
+        word: PrototypeWord,
+        deckID: UUID,
+        position: Int,
+        createdAt: Date = .now,
+        sourceIdentifier: String? = nil,
+        sourcePackage: String? = nil
+    ) {
         id = word.id
         self.deckID = deckID
         self.position = position
@@ -42,6 +51,8 @@ final class PrototypeCardRecord {
         example = word.example
         exampleTranslation = word.exampleTranslation
         self.createdAt = createdAt
+        self.sourceIdentifier = sourceIdentifier
+        self.sourcePackage = sourcePackage
     }
 
     var word: PrototypeWord {
@@ -351,7 +362,7 @@ enum PrototypeSection: String, CaseIterable, Identifiable, Hashable {
     }
 }
 
-struct PrototypeWord: Identifiable, Hashable {
+struct PrototypeWord: Identifiable, Hashable, Sendable {
     let id: UUID
     let german: String
     let persian: String
@@ -380,6 +391,17 @@ struct PrototypeWord: Identifiable, Hashable {
         self.example = example
         self.exampleTranslation = exampleTranslation
     }
+}
+
+struct PrototypeImportedCard: Sendable {
+    let sourceIdentifier: String
+    let word: PrototypeWord
+}
+
+struct PrototypeImportResult: Sendable {
+    let deckName: String
+    let addedCount: Int
+    let skippedCount: Int
 }
 
 enum PrototypeReviewGrade: String, CaseIterable, Identifiable, Hashable {
@@ -472,7 +494,7 @@ final class PrototypeStore {
     var reviewedCount: Int { grades.values.filter { !$0.isEmpty }.count }
     var unreviewedCount: Int { words.count - reviewedCount }
     var dueCount: Int {
-        words.filter { isReviewable($0) }.count
+        words.filter { reviewCount(for: $0) > 0 && isReviewable($0) }.count
     }
     var weakCount: Int {
         words.filter { reviewCount(for: $0) > 0 && strength(for: $0) < 0.5 }.count
@@ -580,6 +602,54 @@ final class PrototypeStore {
 
     func clearPersistenceError() {
         lastPersistenceError = nil
+    }
+
+    func importCards(
+        _ candidates: [PrototypeImportedCard],
+        deckName: String,
+        sourcePackage: String
+    ) -> PrototypeImportResult? {
+        do {
+            let existingRecords = try modelContext.fetch(FetchDescriptor<PrototypeCardRecord>())
+            var existingSources = Set(existingRecords.compactMap(\.sourceIdentifier))
+            var existingKeys = Set(existingRecords.map { $0.word.storageKey })
+            let deck = PrototypeDeckRecord(name: deckName)
+            modelContext.insert(deck)
+
+            var added = 0
+            var skipped = 0
+            for candidate in candidates {
+                guard !existingSources.contains(candidate.sourceIdentifier),
+                      !existingKeys.contains(candidate.word.storageKey) else {
+                    skipped += 1
+                    continue
+                }
+                modelContext.insert(
+                    PrototypeCardRecord(
+                        word: candidate.word,
+                        deckID: deck.id,
+                        position: existingRecords.count + added,
+                        sourceIdentifier: candidate.sourceIdentifier,
+                        sourcePackage: sourcePackage
+                    )
+                )
+                existingSources.insert(candidate.sourceIdentifier)
+                existingKeys.insert(candidate.word.storageKey)
+                added += 1
+            }
+
+            if added == 0 {
+                modelContext.delete(deck)
+            }
+            try modelContext.save()
+            try restoreCards()
+            lastPersistenceError = nil
+            return PrototypeImportResult(deckName: deckName, addedCount: added, skippedCount: skipped)
+        } catch {
+            modelContext.rollback()
+            lastPersistenceError = "ورود کارت‌ها انجام نشد: \(error.localizedDescription)"
+            return nil
+        }
     }
 
     private func seedCardsIfNeeded() throws {
