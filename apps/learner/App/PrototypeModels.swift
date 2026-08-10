@@ -4,6 +4,61 @@ import SwiftData
 import SwiftUI
 
 @Model
+final class PrototypeDeckRecord {
+    @Attribute(.unique) var id: UUID
+    var name: String
+    var createdAt: Date
+
+    init(id: UUID = UUID(), name: String, createdAt: Date = .now) {
+        self.id = id
+        self.name = name
+        self.createdAt = createdAt
+    }
+}
+
+@Model
+final class PrototypeCardRecord {
+    @Attribute(.unique) var id: UUID
+    var deckID: UUID
+    var position: Int
+    var german: String
+    var persian: String
+    var article: String?
+    var level: String
+    var partOfSpeech: String
+    var example: String
+    var exampleTranslation: String
+    var createdAt: Date
+
+    init(word: PrototypeWord, deckID: UUID, position: Int, createdAt: Date = .now) {
+        id = word.id
+        self.deckID = deckID
+        self.position = position
+        german = word.german
+        persian = word.persian
+        article = word.article
+        level = word.level
+        partOfSpeech = word.partOfSpeech
+        example = word.example
+        exampleTranslation = word.exampleTranslation
+        self.createdAt = createdAt
+    }
+
+    var word: PrototypeWord {
+        PrototypeWord(
+            id: id,
+            german: german,
+            persian: persian,
+            article: article,
+            level: level,
+            partOfSpeech: partOfSpeech,
+            example: example,
+            exampleTranslation: exampleTranslation
+        )
+    }
+}
+
+@Model
 final class PrototypeReviewRecord {
     @Attribute(.unique) var id: UUID
     var wordKey: String
@@ -390,7 +445,7 @@ final class PrototypeStore {
     private let modelContext: ModelContext
     private let scheduler = PrototypeFSRS6Scheduler()
 
-    let words = PrototypeData.words
+    private(set) var words: [PrototypeWord] = []
 
     init(inMemory: Bool = false) {
         assert(
@@ -400,10 +455,14 @@ final class PrototypeStore {
         do {
             let configuration = ModelConfiguration(isStoredInMemoryOnly: inMemory)
             modelContainer = try ModelContainer(
-                for: PrototypeReviewRecord.self,
+                for: PrototypeDeckRecord.self,
+                PrototypeCardRecord.self,
+                PrototypeReviewRecord.self,
                 configurations: configuration
             )
             modelContext = ModelContext(modelContainer)
+            try seedCardsIfNeeded()
+            try restoreCards()
             restorePersistedReviews()
         } catch {
             fatalError("Unable to initialize the review store: \(error.localizedDescription)")
@@ -521,6 +580,28 @@ final class PrototypeStore {
 
     func clearPersistenceError() {
         lastPersistenceError = nil
+    }
+
+    private func seedCardsIfNeeded() throws {
+        var cardDescriptor = FetchDescriptor<PrototypeCardRecord>()
+        cardDescriptor.fetchLimit = 1
+        guard try modelContext.fetch(cardDescriptor).isEmpty else { return }
+
+        let deck = PrototypeDeckRecord(name: "واژگان پایه آلمانی–فارسی")
+        modelContext.insert(deck)
+        for (position, word) in PrototypeData.words.enumerated() {
+            modelContext.insert(
+                PrototypeCardRecord(word: word, deckID: deck.id, position: position)
+            )
+        }
+        try modelContext.save()
+    }
+
+    private func restoreCards() throws {
+        let descriptor = FetchDescriptor<PrototypeCardRecord>(
+            sortBy: [SortDescriptor(\.position), SortDescriptor(\.createdAt)]
+        )
+        words = try modelContext.fetch(descriptor).map(\.word)
     }
 
     private func restorePersistedReviews() {

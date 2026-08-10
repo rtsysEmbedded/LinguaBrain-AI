@@ -6,7 +6,7 @@ struct LibraryPrototypeView: View {
     @State private var filter = "همه"
 
     private var filteredWords: [PrototypeWord] {
-        PrototypeData.words.filter { word in
+        store.words.filter { word in
             let matchesSearch = searchText.isEmpty || word.german.localizedCaseInsensitiveContains(searchText) || word.persian.contains(searchText)
             let matchesFilter = filter == "همه" || (filter == "ضعیف" && store.reviewCount(for: word) > 0 && store.strength(for: word) < 0.5) || filter == word.level
             return matchesSearch && matchesFilter
