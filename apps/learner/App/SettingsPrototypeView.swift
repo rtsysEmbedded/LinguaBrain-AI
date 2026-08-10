@@ -436,7 +436,7 @@ struct OpenRouterGeneratedCard: Codable, Sendable {
     let article: String
     let example: Example
 
-    var prototypeWord: PrototypeWord {
+    func prototypeWord(domain: String) -> PrototypeWord {
         PrototypeWord(
             german: german,
             persian: persianMeaning,
@@ -444,7 +444,8 @@ struct OpenRouterGeneratedCard: Codable, Sendable {
             level: level,
             partOfSpeech: partOfSpeech,
             example: example.german,
-            exampleTranslation: example.persian
+            exampleTranslation: example.persian,
+            domain: domain
         )
     }
 }
@@ -480,8 +481,8 @@ struct OpenRouterClient: Sendable {
         let body: [String: Any] = [
             "model": model,
             "messages": [
-                ["role": "system", "content": "You create accurate German-to-Persian language-learning cards. Return only the requested structured result. Use an empty article for non-nouns."],
-                ["role": "user", "content": "Create one natural card for the German word or phrase '\(word)'. Domain: \(domain). Use a concise Persian meaning and one natural German example with accurate Persian translation."]
+                ["role": "system", "content": "You create accurate German-to-Persian language-learning cards. Treat each domain-specific meaning as a separate lexical sense. Return only the requested structured result. Use an empty article for non-nouns."],
+                ["role": "user", "content": "Create one card for the German word or phrase '\(word)' using specifically the sense that belongs to the domain '\(domain)'. Do not fall back to its most common meaning when another sense is natural in this domain. Use a concise Persian meaning and one domain-specific German example with an accurate Persian translation."]
             ],
             "response_format": [
                 "type": "json_schema",

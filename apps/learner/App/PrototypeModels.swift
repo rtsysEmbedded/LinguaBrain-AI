@@ -28,6 +28,7 @@ final class PrototypeCardRecord {
     var partOfSpeech: String
     var example: String
     var exampleTranslation: String
+    var domain: String = "عمومی"
     var createdAt: Date
     var sourceIdentifier: String?
     var sourcePackage: String?
@@ -50,6 +51,7 @@ final class PrototypeCardRecord {
         partOfSpeech = word.partOfSpeech
         example = word.example
         exampleTranslation = word.exampleTranslation
+        domain = word.domain
         self.createdAt = createdAt
         self.sourceIdentifier = sourceIdentifier
         self.sourcePackage = sourcePackage
@@ -64,7 +66,8 @@ final class PrototypeCardRecord {
             level: level,
             partOfSpeech: partOfSpeech,
             example: example,
-            exampleTranslation: exampleTranslation
+            exampleTranslation: exampleTranslation,
+            domain: domain
         )
     }
 }
@@ -371,6 +374,7 @@ struct PrototypeWord: Identifiable, Hashable, Sendable {
     let partOfSpeech: String
     let example: String
     let exampleTranslation: String
+    let domain: String
 
     init(
         id: UUID = UUID(),
@@ -380,7 +384,8 @@ struct PrototypeWord: Identifiable, Hashable, Sendable {
         level: String,
         partOfSpeech: String,
         example: String,
-        exampleTranslation: String
+        exampleTranslation: String,
+        domain: String = "عمومی"
     ) {
         self.id = id
         self.german = german
@@ -390,6 +395,7 @@ struct PrototypeWord: Identifiable, Hashable, Sendable {
         self.partOfSpeech = partOfSpeech
         self.example = example
         self.exampleTranslation = exampleTranslation
+        self.domain = domain
     }
 }
 
@@ -642,7 +648,7 @@ final class PrototypeStore {
                     recordsBySource[sourceIdentifier] = recordsBySource[sourceIdentifier] ?? record
                 }
             }
-            var existingKeys = Set(existingRecords.map { $0.word.storageKey })
+            var existingKeys = Set(existingRecords.map { $0.word.semanticKey })
             let deck = PrototypeDeckRecord(name: deckName)
             modelContext.insert(deck)
 
@@ -651,8 +657,8 @@ final class PrototypeStore {
             var skipped = 0
             for candidate in candidates {
                 if let record = recordsBySource[candidate.sourceIdentifier] {
-                    existingKeys.remove(record.word.storageKey)
-                    guard !existingKeys.contains(candidate.word.storageKey) else {
+                    existingKeys.remove(record.word.semanticKey)
+                    guard !existingKeys.contains(candidate.word.semanticKey) else {
                         skipped += 1
                         continue
                     }
@@ -663,12 +669,13 @@ final class PrototypeStore {
                     record.partOfSpeech = candidate.word.partOfSpeech
                     record.example = candidate.word.example
                     record.exampleTranslation = candidate.word.exampleTranslation
+                    record.domain = candidate.word.domain
                     record.sourcePackage = sourcePackage
-                    existingKeys.insert(candidate.word.storageKey)
+                    existingKeys.insert(candidate.word.semanticKey)
                     updated += 1
                     continue
                 }
-                guard !existingKeys.contains(candidate.word.storageKey) else {
+                guard !existingKeys.contains(candidate.word.semanticKey) else {
                     skipped += 1
                     continue
                 }
@@ -681,7 +688,7 @@ final class PrototypeStore {
                 )
                 modelContext.insert(record)
                 recordsBySource[candidate.sourceIdentifier] = record
-                existingKeys.insert(candidate.word.storageKey)
+                existingKeys.insert(candidate.word.semanticKey)
                 added += 1
             }
 
@@ -703,8 +710,8 @@ final class PrototypeStore {
     func addGeneratedCard(_ word: PrototypeWord) -> Bool {
         do {
             let cards = try modelContext.fetch(FetchDescriptor<PrototypeCardRecord>())
-            guard !cards.contains(where: { $0.word.storageKey == word.storageKey }) else {
-                lastPersistenceError = "این واژه از قبل در کتابخانه وجود دارد."
+            guard !cards.contains(where: { $0.word.semanticKey == word.semanticKey }) else {
+                lastPersistenceError = "این معنی از واژه در همین حوزه از قبل وجود دارد."
                 return false
             }
             let decks = try modelContext.fetch(FetchDescriptor<PrototypeDeckRecord>())
@@ -735,7 +742,7 @@ final class PrototypeStore {
                 return false
             }
 
-            let deletedWordKeys = Set(cardsToDelete.map { $0.word.storageKey })
+            let deletedWordKeys = Set(cardsToDelete.map { $0.word.reviewIdentityKey })
             let affectedDeckIDs = Set(cardsToDelete.map(\.deckID))
             for card in cardsToDelete {
                 modelContext.delete(card)
@@ -810,7 +817,20 @@ final class PrototypeStore {
             )
             let records = try modelContext.fetch(descriptor)
 
+            var migratedLegacyKeys = false
             for record in records {
+                if !record.wordKey.hasPrefix("card:") {
+                    let isReverse = record.wordKey.hasSuffix("::reverse")
+                    let legacyGerman = isReverse
+                        ? String(record.wordKey.dropLast("::reverse".count))
+                        : record.wordKey
+                    if let word = words.first(where: { $0.normalizedGerman == legacyGerman }) {
+                        record.wordKey = isReverse
+                            ? "\(word.reviewIdentityKey)::reverse"
+                            : word.reviewIdentityKey
+                        migratedLegacyKeys = true
+                    }
+                }
                 guard let grade = PrototypeReviewGrade(rawValue: record.gradeRawValue) else {
                     continue
                 }
@@ -829,6 +849,7 @@ final class PrototypeStore {
                     )
                 }
             }
+            if migratedLegacyKeys { try modelContext.save() }
             lastPersistenceError = nil
         } catch {
             lastPersistenceError = "بازیابی اطلاعات مرور انجام نشد: \(error.localizedDescription)"
@@ -837,15 +858,25 @@ final class PrototypeStore {
 
     private func reviewKey(for word: PrototypeWord, mode: PrototypeReviewMode) -> String {
         switch mode {
-        case .recognition: word.storageKey
-        case .reverseTranslation: "\(word.storageKey)::reverse"
+        case .recognition: word.reviewIdentityKey
+        case .reverseTranslation: "\(word.reviewIdentityKey)::reverse"
         }
     }
 }
 
 private extension PrototypeWord {
-    var storageKey: String {
+    var normalizedGerman: String {
         german.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+    }
+
+    var semanticKey: String {
+        [normalizedGerman, persian, domain]
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() }
+            .joined(separator: "::sense::")
+    }
+
+    var reviewIdentityKey: String {
+        "card:\(id.uuidString.lowercased())"
     }
 }
 

@@ -1,7 +1,7 @@
 ---
 title: Project Status and Delivery Checklist
 document_id: LB-STATUS
-version: 0.3.8
+version: 0.3.9
 status: Active
 last_updated: 2026-08-10
 ---
@@ -54,6 +54,7 @@ This file is the single progress checklist for LinguaBrain AI. It must be update
 - [x] Enforce a prototype daily new-card limit derived from the learner's selected energy and available time.
 - [x] Add Persian-to-German reverse translation with an independent persisted FSRS memory state.
 - [x] Add a functional OpenRouter prototype with Keychain-backed API-key storage, explicit cloud consent, configurable model ID, structured card proposals, preview, and local approval.
+- [x] Model generated cards as domain-specific lexical senses so homographs can coexist and retain independent recognition/reverse-review schedules; migrate legacy review keys to stable card identities.
 - [x] Classify and place the vocabulary prototype at `experiments/vocabulary-mvp/` according to [ADR-001](decisions/ADR-001-Repository-Package-and-Module-Layout.md).
 - [ ] Configure a Git remote and push `main`.
 - [ ] Create an annotated MVP specification baseline tag.
@@ -264,6 +265,7 @@ Complete these actions with every milestone or architectural change:
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 0.3.9 | 2026-08-10 | Replaced word-only duplicate and review identity with domain-aware lexical-sense deduplication and stable per-card review identity, including legacy review-key migration. |
 | 0.3.8 | 2026-08-10 | Added the functional OpenRouter card-generation checkpoint with Keychain storage, explicit cloud consent, structured output validation, proposal preview, and approved local persistence. |
 | 0.3.7 | 2026-08-10 | Recorded OpenRouter as the first future cloud AI adapter and Apple Foundation Models as an optional no-API-key on-device provider requiring capability, locale, and quality gates. |
 | 0.3.6 | 2026-08-10 | Activated reverse translation with independent scheduling and realigned the current snapshot with the Anki Core validation path toward the original adaptive-learning product. |

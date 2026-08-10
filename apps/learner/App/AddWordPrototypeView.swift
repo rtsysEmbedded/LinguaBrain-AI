@@ -249,13 +249,14 @@ struct AddWordPrototypeView: View {
     }
 
     private var cardPreview: some View {
-        let preview = generatedCard?.prototypeWord ?? PrototypeWord(
+        let preview = generatedCard?.prototypeWord(domain: domain) ?? PrototypeWord(
             german: word.isEmpty ? "arbeiten" : word,
             persian: "—",
             level: "—",
             partOfSpeech: "در انتظار AI",
             example: "",
-            exampleTranslation: ""
+            exampleTranslation: "",
+            domain: domain
         )
         return PrototypeCard {
             VStack(alignment: .leading, spacing: 18) {

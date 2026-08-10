@@ -169,7 +169,7 @@ struct LibraryPrototypeView: View {
                 }
                 Spacer()
                 VStack(alignment: .trailing, spacing: 6) {
-                    Text(word.partOfSpeech).font(.caption).foregroundStyle(.secondary)
+                    Text("\(word.partOfSpeech) · \(word.domain)").font(.caption).foregroundStyle(.secondary)
                     ProgressView(value: store.strength(for: word))
                         .frame(width: 72)
                         .tint(store.strength(for: word) < 0.5 ? .orange : PrototypeTheme.mint)
@@ -479,6 +479,9 @@ struct WordDetailPrototypeView: View {
                                 .padding(.vertical, 5)
                                 .background(PrototypeTheme.accent.opacity(0.12), in: Capsule())
                             Text(word.partOfSpeech).font(.caption).foregroundStyle(.secondary)
+                            Text(word.domain)
+                                .font(.caption)
+                                .foregroundStyle(PrototypeTheme.accent)
                             Spacer()
                             Button(action: {}) { Image(systemName: "speaker.wave.2.fill") }
                         }
