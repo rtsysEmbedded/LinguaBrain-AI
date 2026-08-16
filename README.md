@@ -73,6 +73,11 @@ LinguaBrain AI/
 ├── tooling/                            # Repository checks and developer commands
 ├── docs/
 ├── decisions/
+├── specs/                              # Spec Kit feature specifications/plans/tasks
+├── .specify/                           # Shared workflow, templates, and constitution
+├── .agents/                            # Codex Spec Kit skills
+├── .claude/                            # Claude Code Spec Kit skills
+├── .gemini/                            # Gemini CLI Spec Kit commands
 ├── diagrams/
 ├── assets/
 ├── README.md
@@ -106,6 +111,12 @@ Supporting product artifacts:
 
 - [MVP Card Inventory and Interaction Requirements](docs/supporting/Card_Inventory_and_Interaction_Requirements.md)
 - [Anki Core MVP Specification](docs/supporting/Anki_Core_MVP_Specification.md)
+
+## Spec-driven delivery
+
+Feature execution uses GitHub Spec Kit so Codex, Claude Code, and Gemini CLI can share one approved specification, plan, and task list. Read the [Spec Kit workflow](SPEC_KIT_WORKFLOW.md), [project constitution](.specify/memory/constitution.md), and active [Anki Core feature](specs/001-anki-core-modern-import/spec.md) before implementation.
+
+The existing `docs/` and accepted ADRs remain the product and architecture baseline. Feature-local artifacts translate that baseline into bounded work; they do not replace it.
 
 ## Status
 

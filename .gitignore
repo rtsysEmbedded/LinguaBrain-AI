@@ -20,6 +20,13 @@
 *.key
 *.pem
 
+# AI-agent local credentials and machine-specific settings
+.agents/.credentials/
+.agents/cache/
+.claude/settings.local.json
+.gemini/settings.json
+.gemini/.env
+
 # Python
 __pycache__/
 *.py[cod]

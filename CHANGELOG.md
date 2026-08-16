@@ -8,6 +8,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- GitHub Spec Kit infrastructure with a LinguaBrain constitution, agent-neutral workflow guide, Codex/Claude/Gemini integrations, and the first Anki Core feature specification, plan, and task backlog.
 - A repository/Xcode audit checkpoint confirming successful iOS and macOS builds, tracked signing/workspace configuration, accurate decision counts, and corrected Release 1.0 account/sync status.
 - ADR-014 making optional Sign in with Apple/Google, guest-data merge, account deletion, and scoped learner-data synchronization part of Release 1.0 while preserving local-only use.
 - Domain-specific lexical-sense identity, allowing forms such as `entlassen` to have separate work and medical cards with independent recognition and reverse-translation review histories.
