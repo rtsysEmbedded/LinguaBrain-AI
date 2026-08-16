@@ -1,9 +1,9 @@
 ---
 title: Project Status and Delivery Checklist
 document_id: LB-STATUS
-version: 0.4.0
+version: 0.4.1
 status: Active
-last_updated: 2026-08-10
+last_updated: 2026-08-16
 ---
 
 # Project Status and Delivery Checklist
@@ -23,9 +23,9 @@ This file is the single progress checklist for LinguaBrain AI. It must be update
 | Field | Current value |
 | --- | --- |
 | Current phase | Anki Core validation prototype on the path to the adaptive language-learning MVP |
-| Product scope | German–Persian offline-first native Apple MVP (iOS/iPadOS/macOS 27) |
+| Product scope | German–Persian local-first native Apple Release 1.0 (iOS/iPadOS/macOS 27), with optional Apple/Google account and scoped sync |
 | Documentation | Documents 01–15 complete as reviewed drafts |
-| Architecture baseline | Native Swift migration; DOC-10 at 0.4.0, DOC-11/DOC-14 at 0.3.1, and DOC-15 at 0.2.1 |
+| Architecture baseline | Native Swift migration; DOC-10 at 0.5.1, DOC-11 at 0.3.1, DOC-14 at 0.3.2, and DOC-15 at 0.2.2 |
 | Local Apple toolchain | Xcode 27.0 (`27A5228h`) is active with Swift 6.4 and iOS/iPadOS/macOS 27 SDKs; beta-era evidence remains provisional |
 | Latest accepted ADRs | Native baseline ADR-009 through ADR-014, plus [ADR-004](decisions/ADR-004-FSRS-Implementation-and-Version.md) for the pinned scheduler |
 | Active Git branch | `main` |
@@ -33,6 +33,7 @@ This file is the single progress checklist for LinguaBrain AI. It must be update
 | Visual prototype | Buildable SwiftUI prototype for iPhone, iPad, and Mac; review state persists, APKG cards can be imported, and an approved OpenRouter proposal can be stored locally |
 | Next primary deliverable | Complete the remaining Anki Core import/review gate, then harden the provider-independent AI boundary with budgets, provenance, cache, and evaluation |
 | Current delivery strategy | Anki Core first: secure APKG import and reliable offline review gate before AI and final visual approval |
+| Latest verification | 2026-08-16: iOS Simulator and macOS generic builds succeeded; Xcode personal workspace state remains ignored |
 
 ## Completed foundation
 
@@ -89,7 +90,7 @@ This file is the single progress checklist for LinguaBrain AI. It must be update
 
 - [x] Create Document 15 — Implementation Backlog and Requirements Traceability.
 - [x] Map every MVP requirement to a milestone, backlog item, acceptance criterion, and test level.
-- [x] Create a Decision Register for all 53 source open questions and six supplemental architecture decisions (59 stable IDs).
+- [x] Create and maintain the Decision Register; it currently contains 61 stable decision IDs, including later supplemental architecture decisions.
 - [x] Classify decisions as `MVP-blocking`, `MVP-later`, or `post-MVP`, with status, owner, due gate, and required artifact.
 - [x] Define issue labels, priorities, dependencies, and Definition of Done.
 - [ ] Approve the M1 implementation backlog.
@@ -134,7 +135,7 @@ This file is the single progress checklist for LinguaBrain AI. It must be update
 ## M1 — Domain walking skeleton
 
 - [x] Install and verify Xcode 27.0 build `27A5228h`, Swift 6.4, and version 27 Apple SDKs; beta builds remain provisional until stable Xcode and final OS 27 verification.
-- [ ] Create the native SwiftUI universal iPhone/iPadOS 27 application and macOS 27 Golden Gate target.
+- [x] Create and verify the native SwiftUI universal iPhone/iPadOS 27 application and macOS 27 Golden Gate target.
 - [ ] Create the local multi-target `LinguaBrainKit` Swift package and composition root.
 - [ ] Establish domain, application, infrastructure, and presentation boundaries.
 - [ ] Add the first native local-store schema and migration runner using the adapter selected by ADR-003.
@@ -234,7 +235,6 @@ This file is the single progress checklist for LinguaBrain AI. It must be update
 - [ ] Expanded listening and passive-listening modes.
 - [ ] OCR, text, and PDF ingestion with approval workflow.
 - [ ] Guided writing and speaking evaluation.
-- [ ] Account system and encrypted multi-device sync.
 - [ ] Additional language packages and exam missions.
 - [ ] Conversation coach and richer professional-domain packages.
 - [ ] Dedicated-device product specification.
@@ -270,6 +270,7 @@ Complete these actions with every milestone or architectural change:
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 0.4.1 | 2026-08-16 | Audited the real repository and Xcode state, verified iOS/macOS builds, corrected Release 1.0 account/sync scope, decision counts, and the completed native target checkpoint. |
 | 0.4.0 | 2026-08-10 | Accepted optional Apple/Google accounts and secure learner-data synchronization as Release 1.0 scope while retaining complete local-only operation. |
 | 0.3.9 | 2026-08-10 | Replaced word-only duplicate and review identity with domain-aware lexical-sense deduplication and stable per-card review identity, including legacy review-key migration. |
 | 0.3.8 | 2026-08-10 | Added the functional OpenRouter card-generation checkpoint with Keychain storage, explicit cloud consent, structured output validation, proposal preview, and approved local persistence. |

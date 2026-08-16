@@ -1,9 +1,9 @@
 ---
 title: MVP Definition and Roadmap
 document_id: LB-DOC-10
-version: 0.5.0
+version: 0.5.1
 status: Draft
-last_updated: 2026-08-10
+last_updated: 2026-08-16
 ---
 
 # MVP Definition and Roadmap
@@ -140,7 +140,7 @@ The shared domain/application contracts remain client-surface neutral even thoug
 
 [ADR-009](../decisions/ADR-009-Native-Apple-Client-and-Platform-Baseline.md) supersedes the earlier Android/Flutter pilot decision and establishes the native Apple MVP baseline.
 
-- iOS/iPadOS 27 and macOS 27 are first-class, local-only MVP application surfaces.
+- iOS/iPadOS 27 and macOS 27 are first-class, local-first MVP application surfaces; optional account synchronization is governed by ADR-014.
 - iPhone is the primary controlled-pilot surface and the primary source of product-performance and learning-evidence measurements. iPad and macOS remain release-supported companion surfaces, not deferred ports.
 - The iPad experience ships from the universal iOS/iPadOS application with adaptive layouts. The macOS application is a native, first-class local companion using the same domain/application contracts.
 - Each application maintains a complete local learner store. Optional Apple/Google accounts may synchronize the approved scope under ADR-014; signed-out and offline learning remain fully functional.
@@ -310,6 +310,7 @@ LB-DEC-037 is `SUPERSEDED` by LB-DEC-057 and the native Apple baseline in [ADR-0
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 0.5.1 | 2026-08-16 | Aligned the platform summary with the accepted local-first, optional-account Release 1.0 scope. |
 | 0.5.0 | 2026-08-10 | Added optional Apple/Google accounts and scoped learner-data synchronization to Release 1.0 while preserving full signed-out and offline learning. |
 | 0.4.0 | 2026-08-03 | Added the Anki Core validation release, secure APKG adapter boundary, and import/review-first execution order from ADR-012. |
 | 0.3.1 | 2026-08-01 | Linked the accepted ADR-011 native Observation, typed-navigation, and composition baseline. |

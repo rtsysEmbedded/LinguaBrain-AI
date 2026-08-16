@@ -14,7 +14,7 @@ AI may generate examples, explanations, cards, and exercises. The Learning Engin
 
 - German ↔ Persian learning
 - Native Swift/SwiftUI on iOS/iPadOS 27 and macOS 27 Golden Gate
-- iPhone controlled MVP pilot, with first-class local-only iPad and Mac surfaces
+- iPhone controlled MVP pilot, with first-class local-first iPad and Mac surfaces and optional Release 1.0 account sync
 - German–Persian word and phrase learning for general and professional missions
 - AI-enriched knowledge items and automatic classification
 - Basic knowledge graph and smart decks

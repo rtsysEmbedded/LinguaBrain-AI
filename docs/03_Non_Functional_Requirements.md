@@ -1,9 +1,9 @@
 ---
 title: Non-Functional Requirements
 document_id: LB-DOC-03
-version: 0.4.0
+version: 0.4.1
 status: Draft
-last_updated: 2026-08-10
+last_updated: 2026-08-16
 ---
 
 # Non-Functional Requirements
@@ -22,7 +22,7 @@ AI generation may be delayed or unavailable. Existing knowledge items, review sc
 
 ### Native Apple platform baseline
 
-The active MVP is implemented in native Swift 6.4 and SwiftUI for iOS/iPadOS 27 and macOS 27 Golden Gate. The iPhone app is the primary controlled-pilot surface; iPad and Mac are first-class local-only MVP surfaces. Cross-device synchronization remains a separate post-MVP capability, so installing the app on several Apple devices does not imply shared learner state.
+The active MVP is implemented in native Swift 6.4 and SwiftUI for iOS/iPadOS 27 and macOS 27 Golden Gate. The iPhone app is the primary controlled-pilot surface; iPad and Mac are first-class local-first surfaces. Cross-device continuity is available only after the learner explicitly enables the optional Release 1.0 account/sync capability governed by ADR-014.
 
 Xcode 27 and the OS 27 SDKs are beta at the time of this decision. Development may use the pinned beta toolchain, but production distribution, authoritative performance baselines, and release screenshots require a stable Xcode 27 toolchain and final OS 27 verification. Beta-only behavior must never become an undocumented product contract.
 
@@ -266,6 +266,7 @@ The first source question below is preserved verbatim for traceability. Its orig
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 0.4.1 | 2026-08-16 | Removed the stale post-MVP/local-only sync statement and aligned the platform summary with optional Release 1.0 accounts under ADR-014. |
 | 0.4.0 | 2026-08-10 | Added the optional Release 1.0 Apple/Google account, guest-merge, scoped-sync, secret exclusion, and in-app deletion requirements from ADR-014. |
 | 0.3.0 | 2026-07-21 | Adopted the native Swift/SwiftUI OS 27 quality baseline, Apple capability fallbacks, recording privacy, and iPhone/iPad/macOS accessibility and performance matrices. |
 | 0.2.1 | 2026-07-11 | Added client-surface portability and capability-negotiation requirements. |

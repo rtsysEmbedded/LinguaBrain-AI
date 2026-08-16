@@ -1,9 +1,9 @@
 ---
 title: Frontend UX/UI
 document_id: LB-DOC-14
-version: 0.3.1
+version: 0.3.2
 status: Draft
-last_updated: 2026-08-01
+last_updated: 2026-08-16
 ---
 
 # Frontend UX/UI
@@ -26,7 +26,7 @@ The interface should feel like a calm personal learning coach. It exposes contro
 
 ## Accepted MVP platform and golden baseline
 
-[ADR-009](../decisions/ADR-009-Native-Apple-Client-and-Platform-Baseline.md) supersedes the Android/Flutter pilot and makes iOS/iPadOS 27 and macOS 27 first-class, local-only MVP surfaces. iPhone is the primary controlled-pilot and evidence surface; iPad and macOS are release-supported companion surfaces with independent local learner stores. The UI is implemented in Swift 6.4 and SwiftUI. Flutter, Dart, Android, and Web are not active MVP targets.
+[ADR-009](../decisions/ADR-009-Native-Apple-Client-and-Platform-Baseline.md) supersedes the Android/Flutter pilot and makes iOS/iPadOS 27 and macOS 27 first-class, local-first MVP surfaces. iPhone is the primary controlled-pilot and evidence surface; iPad and macOS are release-supported companion surfaces with complete local learner stores. Optional Release 1.0 account synchronization is governed by ADR-014. The UI is implemented in Swift 6.4 and SwiftUI. Flutter, Dart, Android, and Web are not active MVP targets.
 
 Xcode 27 beta and the beta OS SDKs are provisional development inputs. The canonical SwiftUI snapshot fixture is:
 
@@ -384,6 +384,7 @@ LB-DEC-053 remains `DECIDED`, with its native Apple snapshot baseline now govern
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 0.3.2 | 2026-08-16 | Aligned the platform introduction with optional Release 1.0 accounts and local-first companion surfaces under ADR-014. |
 | 0.3.1 | 2026-08-01 | Linked the accepted ADR-011 scene-owned Observation and typed-navigation architecture. |
 | 0.3.0 | 2026-07-21 | Replaced the superseded Android/Flutter baseline with native SwiftUI first-class iPhone, iPad, and macOS adaptive UX, accessibility/input matrices, provisional beta snapshots, and a stable Xcode 27 release gate. |
 | 0.2.2 | 2026-07-20 | Adopted the Android-phone pilot and deterministic golden-layout fixture/matrix from ADR-008 while retaining a portable shared UI boundary. |

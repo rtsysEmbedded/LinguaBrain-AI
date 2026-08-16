@@ -1,9 +1,9 @@
 ---
 title: Implementation Backlog and Requirements Traceability
 document_id: LB-DOC-15
-version: 0.2.1
+version: 0.2.2
 status: Draft
-last_updated: 2026-08-01
+last_updated: 2026-08-16
 ---
 
 # Implementation Backlog and Requirements Traceability
@@ -237,7 +237,7 @@ Follow-up specifications are delivered at the latest safe gate, not all during M
 | Work item | Pri. | State | Deliverable and acceptance evidence | Dependencies |
 | --- | --- | --- | --- | --- |
 | `LB-WI-M0-01` | P0 | `DONE` | Publish Document 15 with requirement catalog, milestone backlog, test IDs, traceability, and governance; Markdown/link checks pass. | Documents 01–14 |
-| `LB-WI-M0-02` | P0 | `DONE` | Publish the Decision Register with all 53 source open questions and six supplemental architecture decisions (59 stable IDs); assign stable IDs, class, status, owner, due gate, and required decision artifact; coverage and count checks pass. | `LB-WI-M0-01` |
+| `LB-WI-M0-02` | P0 | `DONE` | Publish the initial Decision Register with all 53 source questions and six initial supplements, then maintain later supplemental decisions; the register currently contains 61 stable IDs with class, status, owner, due gate, and required artifact. | `LB-WI-M0-01` |
 | `LB-WI-M0-03` | P0 | `DONE` | Accepted historical [ADR-001](../decisions/ADR-001-Repository-Package-and-Module-Layout.md); its production package topology is superseded by ADR-010, while the accepted `experiments/vocabulary-mvp/` reference-only classification remains in force. | Decision Register; superseded by ADR-010 for production topology |
 | `LB-WI-M0-04` | P0 | `CANCELLED` | The planned Flutter state-management/dependency-injection ADR was cancelled by the native Apple pivot in ADR-009. Its replacement is completed by `LB-WI-M0-15` and accepted ADR-011. | [ADR-009](../decisions/ADR-009-Native-Apple-Client-and-Platform-Baseline.md), [ADR-011](../decisions/ADR-011-SwiftUI-State-Observation-Navigation-and-Dependency-Composition.md) |
 | `LB-WI-M0-05` | P0 | `PROPOSED` | Accept revised ADR-003 for the native Swift persistence/query/migration stack; compare SwiftData, Core Data, direct SQLite, GRDB, and viable alternatives, then demonstrate actor/concurrency, transaction, repository-contract, migration, restart, and testability requirements. | ADR-009, ADR-010, LB-DEC-059, threat/storage constraints |
@@ -587,6 +587,7 @@ Run these checks at least at every milestone review:
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 0.2.2 | 2026-08-16 | Updated Decision Register traceability from the initial 59-ID checkpoint to the current maintained set of 61 stable IDs. |
 | 0.2.1 | 2026-08-01 | Accepted ADR-011, completed LB-WI-M0-15, and advanced the execution batch to ADR-003 persistence selection. |
 | 0.2.0 | 2026-07-21 | Pivoted governance and traceability to the accepted native Apple baseline and Swift package topology, cancelled Flutter/Android work, added ADR-011 and native-shell work items, and introduced the stable Xcode 27 release gate. |
 | 0.1.3 | 2026-07-20 | Accepted ADR-008, resolved the platform/golden gate, made LB-WI-M0-04 READY, and advanced the execution queue to ADR-002. |

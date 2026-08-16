@@ -1,7 +1,7 @@
 ---
 title: Decision Register
 document_id: LB-DEC-REGISTER
-version: 0.6.0
+version: 0.6.1
 status: Active
 last_updated: 2026-08-10
 ---
@@ -21,7 +21,7 @@ This version contains:
 - all 53 bullets under the Open questions sections of Documents 02–10 and 12–14;
 - no source questions from Documents 01, 11, or 15 because those documents have no Open questions section;
 - seven supplemental architecture/product decisions required by Documents 11 and 15, the native Apple architecture pivot, and the Anki Core sequencing decision;
-- 60 stable decision IDs in total.
+- 61 stable decision IDs in total.
 
 Source questions remain individually traceable even when several questions share one research package or ADR. IDs are never reused.
 
@@ -236,6 +236,7 @@ At every milestone review:
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 0.6.1 | 2026-08-16 | Corrected the summary count to 61 stable decision IDs after the addition of LB-DEC-062. |
 | 0.6.0 | 2026-08-10 | Added LB-DEC-062 and accepted ADR-014 for optional Apple/Google accounts and scoped Release 1.0 learner-data synchronization. |
 | 0.5.0 | 2026-08-10 | Added LB-DEC-061 and accepted ADR-013 for an OpenRouter-first cloud adapter with future capability-gated Apple Foundation Models support. |
 | 0.4.0 | 2026-08-03 | Added LB-DEC-060 and accepted ADR-012 for the Anki Core-first implementation sequence and APKG adapter boundary. |
