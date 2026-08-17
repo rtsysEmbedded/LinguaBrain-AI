@@ -76,7 +76,7 @@ Until this package exists, implementation MUST avoid deepening view-owned busine
 
 - Implement the accepted ADR-003 production persistence boundary and compatibility-import contract.
 - Approve normalized reader, provenance identity, reconciliation, and conflict contracts.
-- Pin supported modern collection variants and fixture provenance.
+- Implement the modern package baseline pinned in [research.md](research.md): metadata version 3, `collection.anki21b`, schema 18, bounded inner Zstandard decoding, protobuf media mapping, and owned reproducible fixtures.
 
 ## Complexity Tracking
 

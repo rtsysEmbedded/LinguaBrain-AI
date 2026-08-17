@@ -8,7 +8,7 @@
 
 - [x] T001 Capture current legacy import and offline-review behavior with regression tests and sanitized fixtures.
 - [x] T002 [P] Decide and record the production Swift persistence/query/migration adapter in ADR-003.
-- [ ] T003 [P] Research supported `collection.anki21b` variants, constraints, and fixture provenance in `research.md`.
+- [x] T003 [P] Research supported `collection.anki21b` variants, constraints, and fixture provenance in `research.md`.
 - [ ] T004 Approve normalized reader, provenance identity, reconciliation, and conflict contracts in `data-model.md` and `contracts/`.
 
 ## Phase 2 — Safe modern inspection and reading
@@ -67,3 +67,13 @@ For each completed task record the agent/tool, date, changed files, commands/tes
 - **Deferred security boundary**: SQLCipher, Apple Data Protection, backup keys, and lost-key recovery remain explicitly owned by ADR-007.
 - **Consistency evidence**: Decision Register, ADR index, Documents 11/12/15, README, project status, and changelog were aligned; register counts were independently recomputed.
 - **Commit**: see the T002 completion commit in Git history; its SHA is included in the handoff response.
+
+### T003 — 2026-08-17
+
+- **Agent/tool**: Codex; official Anki source/manual research pinned to upstream commit `967aa0d578fc75181e292e95326f9b58698da25c`.
+- **Changed scope**: Added `research.md` with the version-selection contract, ZIP/Zstandard layers, schema-18 implications, protobuf media mapping, compatibility matrix, security requirements, and fixture provenance policy.
+- **Key finding**: Latest `collection.anki21b`, its protobuf media manifest, and each numbered media payload are internally Zstandard-compressed; outer ZIP limits alone cannot bound decoded expansion.
+- **Compatibility boundary**: Legacy schema 11 remains supported; metadata version 3/schema 18 is the next target; malformed, ambiguous, unknown/future, unsupported-schema, or unbounded variants remain rejected.
+- **Known boundary**: Decoder dependencies, numeric resource limits, normalized records, error taxonomy, and atomic partial/failure behavior require approval in T004 before implementation.
+- **Verification**: Markdown/reference audit and comparison against the pinned official source; no runtime code changed.
+- **Commit**: see the T003 completion commit in Git history; its SHA is included in the handoff response.

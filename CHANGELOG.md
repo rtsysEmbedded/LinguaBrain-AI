@@ -8,6 +8,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- A pinned modern Anki package research baseline covering metadata-driven variant selection, the inner Zstandard collection/media layers, schema-18 storage implications, protobuf media integrity, supported/rejected variants, security limits, and reproducible fixture provenance.
 - ADR-003 selecting GRDB 7 over system SQLite for production persistence, with `DatabasePool`, explicit ordered migrations and constraints, repository mapping, in-memory test stores, and a one-time verified SwiftData prototype compatibility import.
 - An iOS XCTest target and sanitized runtime-generated legacy APKG fixture with regression coverage for LinguaBrain field mapping, deterministic source-based re-import behavior, semantic duplicate rejection, due-time enforcement, and independent German-to-Persian/Persian-to-German review state.
 - GitHub Spec Kit infrastructure with a LinguaBrain constitution, agent-neutral workflow guide, Codex/Claude/Gemini integrations, and the first Anki Core feature specification, plan, and task backlog.
