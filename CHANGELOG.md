@@ -8,6 +8,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- Approved T004 import contracts separating Anki source identity from meaning/domain-specific `LexicalSense` identity, preserving learner overrides and FSRS evidence, and defining deterministic inserted/updated/skipped/linked/conflicted/rejected outcomes with `entlassen` polysemy coverage.
+- A normalized legacy/schema-18 reader contract with metadata-driven selection, bounded inner decompression, immutable output records, temporary-file ownership, validation order, error categories, versioned resource limits, official Zstandard 1.5.7 decoder source, and Apple SwiftProtobuf 1.38.1.
 - A pinned modern Anki package research baseline covering metadata-driven variant selection, the inner Zstandard collection/media layers, schema-18 storage implications, protobuf media integrity, supported/rejected variants, security limits, and reproducible fixture provenance.
 - ADR-003 selecting GRDB 7 over system SQLite for production persistence, with `DatabasePool`, explicit ordered migrations and constraints, repository mapping, in-memory test stores, and a one-time verified SwiftData prototype compatibility import.
 - An iOS XCTest target and sanitized runtime-generated legacy APKG fixture with regression coverage for LinguaBrain field mapping, deterministic source-based re-import behavior, semantic duplicate rejection, due-time enforcement, and independent German-to-Persian/Persian-to-German review state.

@@ -2,7 +2,7 @@
 
 **Feature**: `001-anki-core-modern-import`
 
-**Status**: Draft — requires architecture review before implementation
+**Status**: Active — foundational reader and reconciliation contracts approved
 
 **Specification**: [spec.md](spec.md)
 
@@ -75,7 +75,7 @@ Until this package exists, implementation MUST avoid deepening view-owned busine
 ## Required Decisions
 
 - Implement the accepted ADR-003 production persistence boundary and compatibility-import contract.
-- Approve normalized reader, provenance identity, reconciliation, and conflict contracts.
+- Implement the approved normalized reader, provenance identity, reconciliation, and conflict contracts in [data-model.md](data-model.md) and [contracts](contracts/).
 - Implement the modern package baseline pinned in [research.md](research.md): metadata version 3, `collection.anki21b`, schema 18, bounded inner Zstandard decoding, protobuf media mapping, and owned reproducible fixtures.
 
 ## Complexity Tracking

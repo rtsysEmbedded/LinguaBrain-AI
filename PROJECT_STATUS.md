@@ -1,7 +1,7 @@
 ---
 title: Project Status and Delivery Checklist
 document_id: LB-STATUS
-version: 0.4.5
+version: 0.4.6
 status: Active
 last_updated: 2026-08-17
 ---
@@ -31,7 +31,7 @@ This file is the single progress checklist for LinguaBrain AI. It must be update
 | Active Git branch | `main` |
 | Native platform migration commit | `3c75a70` |
 | Visual prototype | Buildable SwiftUI prototype for iPhone, iPad, and Mac; review state persists, APKG cards can be imported, and an approved OpenRouter proposal can be stored locally |
-| Next primary deliverable | Execute Spec Kit task T004: approve normalized reader, provenance identity, reconciliation, conflict, decoder, and resource-limit contracts |
+| Next primary deliverable | Execute Spec Kit task T005: create owned modern valid/corrupt/hostile golden fixtures from the approved format and reconciliation contracts |
 | Current delivery strategy | Anki Core first: secure APKG import and reliable offline review gate before AI and final visual approval |
 | Latest verification | 2026-08-17: three Anki Core regression tests passed on the iPhone 17 iOS 27 simulator and the macOS generic build succeeded; Xcode personal workspace state remains ignored |
 
@@ -51,6 +51,7 @@ This file is the single progress checklist for LinguaBrain AI. It must be update
 - [x] Complete Spec Kit task T001 with a real XCTest target, a sanitized runtime-generated legacy APKG fixture, and regression coverage for field mapping, re-import, and independent review directions.
 - [x] Complete Spec Kit task T002 with ADR-003 selecting the GRDB 7 persistence and migration boundary.
 - [x] Complete Spec Kit task T003 with a pinned modern Anki package compatibility, security, and fixture-provenance research baseline.
+- [x] Complete Spec Kit task T004 with approved normalized-reader, resource-policy, provenance, polysemy, reconciliation, conflict, and ownership contracts.
 - [x] Harden `.gitignore` for local projects, secrets, Python, local stores, SwiftPM, Xcode, archives, and generated files.
 - [x] Add a buildable static SwiftUI visual prototype for iPhone, iPad, and Mac, with mock data and no production dependencies.
 - [x] Define and prototype the ten minimum MVP card surfaces required before final visual-design approval.

@@ -1,6 +1,6 @@
 # Tasks: Anki Core Modern Import and Offline Review Gate
 
-**Status**: Draft — assign after plan approval.
+**Status**: Active
 
 **Format**: `[ID] [P?] [Story] Description (scope; verification)`
 
@@ -9,7 +9,7 @@
 - [x] T001 Capture current legacy import and offline-review behavior with regression tests and sanitized fixtures.
 - [x] T002 [P] Decide and record the production Swift persistence/query/migration adapter in ADR-003.
 - [x] T003 [P] Research supported `collection.anki21b` variants, constraints, and fixture provenance in `research.md`.
-- [ ] T004 Approve normalized reader, provenance identity, reconciliation, and conflict contracts in `data-model.md` and `contracts/`.
+- [x] T004 Approve normalized reader, provenance identity, reconciliation, and conflict contracts in `data-model.md` and `contracts/`.
 
 ## Phase 2 — Safe modern inspection and reading
 
@@ -77,3 +77,14 @@ For each completed task record the agent/tool, date, changed files, commands/tes
 - **Known boundary**: Decoder dependencies, numeric resource limits, normalized records, error taxonomy, and atomic partial/failure behavior require approval in T004 before implementation.
 - **Verification**: Markdown/reference audit and comparison against the pinned official source; no runtime code changed.
 - **Commit**: see the T003 completion commit in Git history; its SHA is included in the handoff response.
+
+### T004 — 2026-08-17
+
+- **Agent/tool**: Codex; domain/import contract design based on T003 and the accepted LexicalSense/ReviewUnit architecture.
+- **Changed scope**: Added the approved data model, normalized reader/resource contract, deterministic reconciliation/conflict contract, and pinned Zstandard/SwiftProtobuf implementation choices; strengthened feature requirements for sense and ownership identity.
+- **Identity decision**: Re-import matches by namespaced source identity; semantic candidate keys are non-unique suggestions and spelling alone is never identity.
+- **Conflict decision**: Source snapshots, learner overrides, and review evidence are separate; concurrent field changes retain the learner value and all review/FSRS state.
+- **Polysemy evidence**: Work, medical, and legal meanings of `entlassen` are specified as independent LexicalSense and ReviewUnit identities.
+- **Known boundary**: T005–T008 implement fixtures and readers; T010–T013 implement the approved reconciliation/transaction contracts in production code.
+- **Verification**: Markdown consistency, contract cross-links, task/status alignment, and staged diff validation; no runtime code changed.
+- **Commit**: see the T004 completion commit in Git history; its SHA is included in the handoff response.

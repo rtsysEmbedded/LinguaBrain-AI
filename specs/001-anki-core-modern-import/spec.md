@@ -4,7 +4,7 @@
 
 **Created**: 2026-08-16
 
-**Status**: Draft
+**Status**: Active — foundational contracts approved
 
 **Input**: Complete the Anki Core validation gate defined by ADR-012 and the supporting Anki Core MVP specification.
 
@@ -76,6 +76,8 @@ As a learner, I can review imported cards offline using reveal plus Again, Hard,
 - **FR-011**: Confirmed package removal MUST remove owned records according to the existing contract without deleting the original APKG file.
 - **FR-012**: The same semantic journey MUST function on iPhone, iPad, and Mac without AI or network access.
 - **FR-013**: Failures MUST provide recoverable feedback and MUST NOT claim success before persistence succeeds.
+- **FR-014**: Surface spelling MUST NOT be a uniqueness key; each meaning/domain-specific `LexicalSense` MUST retain an independent identity and review state.
+- **FR-015**: Source-owned values, learner overrides, and learner review evidence MUST have separate ownership and re-import MUST NOT silently overwrite learner-owned state.
 
 ### Key Entities
 

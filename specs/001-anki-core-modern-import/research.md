@@ -131,13 +131,16 @@ The prototype already preflights the outer ZIP for traversal, symlinks, encrypti
 - atomic cleanup on cancellation or any validation failure;
 - no database or media mutation before preview confirmation and the final LinguaBrain transaction.
 
-T004 must approve numeric limits. Current outer-package prototype values are evidence, not automatic inner-Zstandard limits; copying them without memory/disk and representative-deck tests would create a false security guarantee.
+T004 approves the version-1 numeric policy in [normalized-reader.md](contracts/normalized-reader.md), including independent inner-Zstandard limits. These are product limits and must be verified with memory/disk and representative-deck tests before the reader ships.
 
-## 7. Decoder dependency questions reserved for T004
+## 7. Decoder dependency decision resolved by T004
 
-Apple's native Compression framework does not provide Zstandard as one of its documented algorithms. Modern support therefore needs a reviewed decoder dependency or a separately isolated native implementation. T004 must record:
+Apple's native Compression framework does not provide Zstandard as one of its documented algorithms. T004 selects the official Zstandard 1.5.7 decoder source in a decoder-only `CZstd` SwiftPM C target under its BSD license, with the upstream license and notices retained. Compression/export support is not included.
 
-- exact dependency and pinned version;
+For Protocol Buffers, T004 selects Apple SwiftProtobuf 1.38.1 and clean LinguaBrain-owned message declarations containing only the pinned wire fields required by `PackageMetadata` and `MediaEntries`. Anki-generated source is not copied. Unknown metadata versions remain rejected even if the protobuf runtime preserves unknown fields.
+
+Before either dependency reaches production code, T006 must record and verify:
+
 - license compatibility and attribution;
 - iOS, iPadOS, and macOS build support;
 - streaming API, decoded-size and window-limit controls;
@@ -145,7 +148,7 @@ Apple's native Compression framework does not provide Zstandard as one of its do
 - maintenance and vulnerability-update process;
 - fallback behavior when the capability is unavailable.
 
-The same decision applies to Protocol Buffers: use a pinned SwiftProtobuf-based contract or a minimal audited decoder for only the required wire fields. Generated definitions copied from Anki cannot be presented as a stable public API, and upstream AGPL source must not be copied into the MIT repository without a license review.
+The selected versions are architectural pins, not permission to copy upstream Anki AGPL implementation. Dependency changes require an explicit contract update, license/security review, and fixture re-verification.
 
 ## 8. Fixture provenance policy
 
@@ -199,18 +202,15 @@ APKGInspector
 - The media reader validates all manifest/payload relationships before ownership transfer.
 - No layer writes learner records; reconciliation and commit remain later application services.
 
-## 10. Decisions for T004
+## 10. T004 resolution and remaining implementation details
 
-T004 must turn this research into approved contracts for:
+The approved contracts leave these implementation details to fixture/reader tasks:
 
-1. Zstandard and protobuf implementation choices;
-2. exact decoded byte/count/window limits;
-3. schema-18 tables, protobuf fields, and unsupported-feature behavior;
-4. package/source identity and fixture identity;
-5. all-or-nothing versus explicit partial behavior for unsupported templates/media;
-6. normalized deck/model/note/card/template/tag/media records;
-7. error taxonomy shown in preview and import reports;
-8. cleanup, cancellation, and temporary-file ownership.
+1. exact schema-18 protobuf fields and unsupported-feature behavior beyond package/media metadata;
+2. all-or-nothing versus explicit partial behavior for future unsupported templates;
+3. learner-facing wording for compatibility/resource/conflict errors.
+
+T004 resolved decoder/runtime choices, byte/count/window limits, normalized records, source/sense identity, reconciliation, error categories, cleanup, and temporary-file ownership in [data-model.md](data-model.md) and [contracts](contracts/).
 
 ## 11. Conclusion
 
@@ -228,3 +228,5 @@ Until those pieces land together, retaining the current user-visible modern-form
 - [Anki schema upgrades](https://github.com/ankitects/anki/tree/967aa0d578fc75181e292e95326f9b58698da25c/rslib/src/storage/upgrades)
 - [Anki architecture and protobuf stability statement](https://github.com/ankitects/anki/blob/967aa0d578fc75181e292e95326f9b58698da25c/docs/architecture.md)
 - [Anki manual: exporting](https://docs.ankiweb.net/exporting.html)
+- [Official Zstandard 1.5.7 release](https://github.com/facebook/zstd/releases/tag/v1.5.7)
+- [Apple SwiftProtobuf 1.38.1 release](https://github.com/apple/swift-protobuf/releases/tag/1.38.1)
