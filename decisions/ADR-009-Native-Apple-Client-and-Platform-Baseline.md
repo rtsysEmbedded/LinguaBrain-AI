@@ -53,7 +53,7 @@ The client is implemented natively with **Swift 6.4 and SwiftUI**.
 - SwiftUI is the presentation framework for iPhone, iPad, and Mac.
 - Shared domain and application behavior lives in one or more local Swift packages with no dependency on a concrete view, microphone, model provider, or persistence implementation.
 - Platform services are exposed to the application layer through Swift protocols and injected adapters.
-- Local persistence is accessed only through repository and transaction protocols. ADR-003 selects the concrete native Swift persistence stack after evaluating SwiftData, Core Data, direct SQLite, GRDB, and other viable adapters; this platform ADR does not preselect one.
+- Local persistence is accessed only through repository and transaction protocols. [ADR-003](ADR-003-Swift-Persistence-and-Migration-Stack.md) selects GRDB 7 over system SQLite behind those boundaries.
 - No Flutter or Dart runtime, package, source target, test harness, asset convention, or CI job is part of the accepted architecture.
 - Android and Web are not build, release, CI, QA, or support targets.
 

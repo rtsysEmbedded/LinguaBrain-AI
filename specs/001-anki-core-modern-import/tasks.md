@@ -7,7 +7,7 @@
 ## Phase 1 — Baseline and decisions
 
 - [x] T001 Capture current legacy import and offline-review behavior with regression tests and sanitized fixtures.
-- [ ] T002 [P] Decide and record the production Swift persistence/query/migration adapter in ADR-003.
+- [x] T002 [P] Decide and record the production Swift persistence/query/migration adapter in ADR-003.
 - [ ] T003 [P] Research supported `collection.anki21b` variants, constraints, and fixture provenance in `research.md`.
 - [ ] T004 Approve normalized reader, provenance identity, reconciliation, and conflict contracts in `data-model.md` and `contracts/`.
 
@@ -58,3 +58,12 @@ For each completed task record the agent/tool, date, changed files, commands/tes
 - **Compatibility check**: `LinguaBrain Mac` generic macOS build passed with signing disabled.
 - **Known boundary**: T001 locks the currently supported legacy path; modern `collection.anki21b`, hostile fixture expansion, restart persistence vectors, and full reconciliation remain assigned to later tasks.
 - **Commit**: see the T001 completion commit in Git history; its SHA is included in the handoff response.
+
+### T002 — 2026-08-17
+
+- **Agent/tool**: Codex; local architecture/specification audit plus official Apple SwiftData and GRDB project documentation.
+- **Decision**: Accepted ADR-003 selects GRDB 7 over system SQLite, production `DatabasePool`, in-memory `DatabaseQueue` tests, explicit `DatabaseMigrator` migrations, private persistence DTOs, and repository/transaction mapping.
+- **Compatibility**: The current SwiftData prototype receives a one-time verified, idempotent compatibility import; production dual-write is prohibited and learner data must never be silently reset.
+- **Deferred security boundary**: SQLCipher, Apple Data Protection, backup keys, and lost-key recovery remain explicitly owned by ADR-007.
+- **Consistency evidence**: Decision Register, ADR index, Documents 11/12/15, README, project status, and changelog were aligned; register counts were independently recomputed.
+- **Commit**: see the T002 completion commit in Git history; its SHA is included in the handoff response.

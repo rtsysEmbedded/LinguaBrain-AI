@@ -120,7 +120,7 @@ The existing `docs/` and accepted ADRs remain the product and architecture basel
 
 ## Status
 
-Documents 01–15 remain reviewed drafts. [ADR-009](decisions/ADR-009-Native-Apple-Client-and-Platform-Baseline.md) defines the native Apple OS 27 targets, [ADR-010](decisions/ADR-010-Swift-Package-and-Module-Layout.md) defines the Swift/Xcode/SwiftPM repository boundary, [ADR-011](decisions/ADR-011-SwiftUI-State-Observation-Navigation-and-Dependency-Composition.md) defines presentation composition, and [ADR-012](decisions/ADR-012-Anki-Core-First-and-APKG-Import-Boundary.md) establishes the Anki Core-first delivery gate. The next gate is ADR-003 for native Swift persistence (`LB-DEC-059`, `LB-WI-M0-05`).
+Documents 01–15 remain reviewed drafts. [ADR-003](decisions/ADR-003-Swift-Persistence-and-Migration-Stack.md) selects GRDB 7/system SQLite persistence, [ADR-009](decisions/ADR-009-Native-Apple-Client-and-Platform-Baseline.md) defines the native Apple OS 27 targets, [ADR-010](decisions/ADR-010-Swift-Package-and-Module-Layout.md) defines the Swift/Xcode/SwiftPM repository boundary, [ADR-011](decisions/ADR-011-SwiftUI-State-Observation-Navigation-and-Dependency-Composition.md) defines presentation composition, and [ADR-012](decisions/ADR-012-Anki-Core-First-and-APKG-Import-Boundary.md) establishes the Anki Core-first delivery gate. The active Spec Kit feature now advances to modern Anki format research and import contracts.
 
 ## Key resolved contracts
 

@@ -1,9 +1,9 @@
 ---
 title: Project Status and Delivery Checklist
 document_id: LB-STATUS
-version: 0.4.3
+version: 0.4.4
 status: Active
-last_updated: 2026-08-16
+last_updated: 2026-08-17
 ---
 
 # Project Status and Delivery Checklist
@@ -31,7 +31,7 @@ This file is the single progress checklist for LinguaBrain AI. It must be update
 | Active Git branch | `main` |
 | Native platform migration commit | `3c75a70` |
 | Visual prototype | Buildable SwiftUI prototype for iPhone, iPad, and Mac; review state persists, APKG cards can be imported, and an approved OpenRouter proposal can be stored locally |
-| Next primary deliverable | Execute Spec Kit feature `001-anki-core-modern-import`, beginning with regression tests, ADR-003, modern-format research, and import/reconciliation contracts |
+| Next primary deliverable | Execute Spec Kit task T003 for modern `collection.anki21b` research, then approve normalized import/reconciliation contracts in T004 |
 | Current delivery strategy | Anki Core first: secure APKG import and reliable offline review gate before AI and final visual approval |
 | Latest verification | 2026-08-17: three Anki Core regression tests passed on the iPhone 17 iOS 27 simulator and the macOS generic build succeeded; Xcode personal workspace state remains ignored |
 
@@ -93,7 +93,7 @@ This file is the single progress checklist for LinguaBrain AI. It must be update
 
 - [x] Create Document 15 — Implementation Backlog and Requirements Traceability.
 - [x] Map every MVP requirement to a milestone, backlog item, acceptance criterion, and test level.
-- [x] Create and maintain the Decision Register; it currently contains 61 stable decision IDs, including later supplemental architecture decisions.
+- [x] Create and maintain the Decision Register; it currently contains 62 stable decision IDs, including later supplemental architecture decisions.
 - [x] Classify decisions as `MVP-blocking`, `MVP-later`, or `post-MVP`, with status, owner, due gate, and required artifact.
 - [x] Define issue labels, priorities, dependencies, and Definition of Done.
 - [ ] Approve the M1 implementation backlog.
@@ -107,7 +107,7 @@ This file is the single progress checklist for LinguaBrain AI. It must be update
 - [x] [ADR-012 — Anki Core first and APKG import boundary](decisions/ADR-012-Anki-Core-First-and-APKG-Import-Boundary.md).
 - [x] [ADR-013 — OpenRouter-first cloud AI and future Apple Foundation Models adapter](decisions/ADR-013-Initial-AI-Provider-Strategy.md).
 - [x] [ADR-014 — Optional accounts and Release 1.0 synchronization](decisions/ADR-014-Optional-Accounts-and-Release-Sync.md).
-- [ ] ADR-003 — Native Swift persistence/query/migration stack.
+- [x] [ADR-003 — GRDB 7/system SQLite persistence and migration stack](decisions/ADR-003-Swift-Persistence-and-Migration-Stack.md).
 - [ ] ADR — Domain events and transactional outbox strategy.
 - [ ] ADR — Apple local-store protection, Keychain, backup, recovery, and key handling.
 
@@ -273,6 +273,7 @@ Complete these actions with every milestone or architectural change:
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 0.4.4 | 2026-08-17 | Accepted ADR-003 for GRDB 7/system SQLite, explicit migrations/transactions, and the one-time SwiftData compatibility import; completed Spec Kit task T002. |
 | 0.4.1 | 2026-08-16 | Audited the real repository and Xcode state, verified iOS/macOS builds, corrected Release 1.0 account/sync scope, decision counts, and the completed native target checkpoint. |
 | 0.4.0 | 2026-08-10 | Accepted optional Apple/Google accounts and secure learner-data synchronization as Release 1.0 scope while retaining complete local-only operation. |
 | 0.3.9 | 2026-08-10 | Replaced word-only duplicate and review identity with domain-aware lexical-sense deduplication and stable per-card review identity, including legacy review-key migration. |

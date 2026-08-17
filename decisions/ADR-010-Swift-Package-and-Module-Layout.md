@@ -163,7 +163,7 @@ The app target is the composition root. It selects concrete adapters and injects
 
 ### Persistence and transactions
 
-Persistence remains behind repository and transaction ports. The application layer defines atomic use-case boundaries; the selected persistence adapter implements them. A UI action is not reported as successful until its required local transaction commits. The precise native Swift persistence/query/migration stack remains governed by the revised ADR-003; the target name does not preselect SQLite, SwiftData, Core Data, GRDB, or another implementation.
+Persistence remains behind repository and transaction ports. The application layer defines atomic use-case boundaries; the selected persistence adapter implements them. A UI action is not reported as successful until its required local transaction commits. [ADR-003](ADR-003-Swift-Persistence-and-Migration-Stack.md) selects GRDB 7 over system SQLite inside `LinguaBrainPersistence`; that choice does not permit persistence types to leak inward.
 
 ### AI and external services
 
@@ -267,7 +267,7 @@ Rejected as premature. The dedicated device is post-MVP, and no hardware/runtime
 - [ ] Add forbidden-import and SwiftPM dependency-cycle checks to CI.
 - [x] Replace the active Flutter/Dart topology in the technical architecture and repository index.
 - [x] Accept ADR-011 before implementing SwiftUI state and dependency composition.
-- [ ] Accept the revised ADR-003 before implementing persistence.
+- [x] Accept the revised ADR-003 before implementing persistence.
 - [ ] Create a dedicated-device interoperability ADR before any non-Apple device implementation.
 
 ## References

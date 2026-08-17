@@ -153,8 +153,8 @@ sync, every template feature, or byte-for-byte scheduler compatibility.
 
 ## Follow-up actions
 
-- [ ] Accept ADR-003 for the native persistence and migration stack.
-- [ ] Accept ADR-004 for the pinned FSRS implementation and reference vectors.
+- [x] Accept ADR-003 for the native persistence and migration stack.
+- [x] Accept ADR-004 for the pinned FSRS implementation and reference vectors.
 - [ ] Define the APKG supported-format and rendering compatibility matrix.
 - [ ] Implement importer security limits and adversarial fixtures.
 - [ ] Implement the review transaction and restart integration suite.

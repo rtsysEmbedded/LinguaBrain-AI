@@ -1,9 +1,9 @@
 ---
 title: Database Schema and Persistence
 document_id: LB-DOC-12
-version: 0.3.0
+version: 0.4.0
 status: Draft
-last_updated: 2026-07-21
+last_updated: 2026-08-17
 ---
 
 # Database Schema and Persistence
@@ -12,7 +12,7 @@ last_updated: 2026-07-21
 
 This document defines the MVP local persistence model, integrity rules, indexing, migrations, backup/export behavior, and future synchronization readiness for the native Apple clients.
 
-Each iPhone, iPad, or Mac installation has a local source of truth behind domain repository and transaction protocols. The relational/table vocabulary below is the normative logical contract. ADR-003 decides whether its first physical adapter uses SwiftData/Core Data, direct SQLite, GRDB, or another native Swift stack. No SwiftUI view or `ModelContext` may become the domain repository boundary.
+Each iPhone, iPad, or Mac installation has a local source of truth behind domain repository and transaction protocols. The relational/table vocabulary below is the normative logical contract. [ADR-003](../decisions/ADR-003-Swift-Persistence-and-Migration-Stack.md) selects GRDB 7 over system SQLite for the first physical adapter, with `DatabasePool` in production, explicit migrations, and private persistence DTOs mapped through repository contracts. No SwiftUI view, `ModelContext`, GRDB row, or SQL handle may become the domain repository boundary.
 
 Cross-device synchronization is optional Release 1.0 scope under ADR-014, not an intrinsic behavior of the local schema. Stable IDs alone do not imply continuity; implementation still requires approved sync, conflict, privacy, migration, security, deletion, and recovery contracts.
 
@@ -217,7 +217,7 @@ Long AI/network work never holds a database transaction open.
 
 ## Search
 
-The MVP requires indexed search for titles, lemmas, translations, and approved textual content. ADR-003 selects the physical search adapter (for example SQLite FTS or a native index). Search indexing consumes domain events. Persian normalization and German canonicalization occur before indexing; raw and normalized forms may both be retained.
+The MVP requires indexed search for titles, lemmas, translations, and approved textual content. Ordinary SQLite indexes are used first; FTS5 is added through the GRDB adapter when approved by measured query requirements. Search indexing consumes domain events and remains rebuildable. Persian normalization and German canonicalization occur before indexing; raw and normalized forms may both be retained.
 
 ## Migrations
 
@@ -291,6 +291,7 @@ The first source question below is preserved verbatim for traceability. LB-DEC-0
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 0.4.0 | 2026-08-17 | Adopted ADR-003 with GRDB 7/system SQLite, explicit migrations/constraints, DatabasePool production access, and one-time verified SwiftData compatibility import. |
 | 0.3.0 | 2026-07-21 | Recast the schema as a native Apple local-store contract, deferred SwiftData/SQLite selection to ADR-003, and added Apple protection and no-implied-sync boundaries. |
 | 0.2.1 | 2026-07-11 | Added client installation and immutable capability-snapshot persistence contracts. |
 | 0.2.0 | 2026-07-11 | Cross-document architecture review; resolved domain, validation, scheduling, privacy, and MVP consistency contracts. |

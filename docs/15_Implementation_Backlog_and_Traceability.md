@@ -1,9 +1,9 @@
 ---
 title: Implementation Backlog and Requirements Traceability
 document_id: LB-DOC-15
-version: 0.2.2
+version: 0.2.3
 status: Draft
-last_updated: 2026-08-16
+last_updated: 2026-08-17
 ---
 
 # Implementation Backlog and Requirements Traceability
@@ -237,10 +237,10 @@ Follow-up specifications are delivered at the latest safe gate, not all during M
 | Work item | Pri. | State | Deliverable and acceptance evidence | Dependencies |
 | --- | --- | --- | --- | --- |
 | `LB-WI-M0-01` | P0 | `DONE` | Publish Document 15 with requirement catalog, milestone backlog, test IDs, traceability, and governance; Markdown/link checks pass. | Documents 01–14 |
-| `LB-WI-M0-02` | P0 | `DONE` | Publish the initial Decision Register with all 53 source questions and six initial supplements, then maintain later supplemental decisions; the register currently contains 61 stable IDs with class, status, owner, due gate, and required artifact. | `LB-WI-M0-01` |
+| `LB-WI-M0-02` | P0 | `DONE` | Publish the initial Decision Register with all 53 source questions and six initial supplements, then maintain later supplemental decisions; the register currently contains 62 stable IDs with class, status, owner, due gate, and required artifact. | `LB-WI-M0-01` |
 | `LB-WI-M0-03` | P0 | `DONE` | Accepted historical [ADR-001](../decisions/ADR-001-Repository-Package-and-Module-Layout.md); its production package topology is superseded by ADR-010, while the accepted `experiments/vocabulary-mvp/` reference-only classification remains in force. | Decision Register; superseded by ADR-010 for production topology |
 | `LB-WI-M0-04` | P0 | `CANCELLED` | The planned Flutter state-management/dependency-injection ADR was cancelled by the native Apple pivot in ADR-009. Its replacement is completed by `LB-WI-M0-15` and accepted ADR-011. | [ADR-009](../decisions/ADR-009-Native-Apple-Client-and-Platform-Baseline.md), [ADR-011](../decisions/ADR-011-SwiftUI-State-Observation-Navigation-and-Dependency-Composition.md) |
-| `LB-WI-M0-05` | P0 | `PROPOSED` | Accept revised ADR-003 for the native Swift persistence/query/migration stack; compare SwiftData, Core Data, direct SQLite, GRDB, and viable alternatives, then demonstrate actor/concurrency, transaction, repository-contract, migration, restart, and testability requirements. | ADR-009, ADR-010, LB-DEC-059, threat/storage constraints |
+| `LB-WI-M0-05` | P0 | `DONE` | Accepted [ADR-003](../decisions/ADR-003-Swift-Persistence-and-Migration-Stack.md): GRDB 7 over system SQLite, production `DatabasePool`, explicit migrations/constraints, repository mapping, and a one-time verified SwiftData compatibility import. | ADR-009, ADR-010, LB-DEC-059, threat/storage constraints |
 | `LB-WI-M0-06` | P1 | `DONE` | Accepted [ADR-004](../decisions/ADR-004-FSRS-Implementation-and-Version.md): FSRS-6.0 with canonical 21 parameters, persisted version/state, reproducible reference vectors, and an explicit upgrade policy. | Review requirements |
 | `LB-WI-M0-07` | P1 | `PROPOSED` | Prepare and accept, before M3 review implementation, the ADR for ReviewUnit retrieval contracts and automatic evidence-to-rating mapping; raw evidence and derived rating remain auditable. | `LB-WI-M0-06` |
 | `LB-WI-M0-08` | P0 | `PROPOSED` | Accept ADR for in-process domain events and transactional outbox behavior, including idempotency and replay. | Persistence ADR |
@@ -524,12 +524,11 @@ One issue has one primary work-item ID. A pull request may close multiple small 
 
 The next batch is architecture and contract work, not production feature coding:
 
-1. accept revised ADR-003 for the native Swift persistence/query/migration stack;
-2. define the minimum database protection/backup baseline;
-3. accept the domain-event/transactional-outbox ADR;
-4. publish Document 16 application/domain contracts;
-5. add System Context, Module Architecture, and initial Domain ERD canonical diagrams;
-6. review and approve M1 issues, then tag the specification baseline.
+1. define the minimum database protection/backup baseline in ADR-007;
+2. accept the domain-event/transactional-outbox ADR;
+3. publish Document 16 application/domain contracts;
+4. add System Context, Module Architecture, and initial Domain ERD canonical diagrams;
+5. review and approve M1 issues, then tag the specification baseline.
 
 The FSRS and evidence-mapping ADRs must be completed before M3; Language Package/data decisions before M2; full security/pilot specifications before their respective release gates.
 
@@ -587,6 +586,7 @@ Run these checks at least at every milestone review:
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 0.2.3 | 2026-08-17 | Accepted ADR-003, completed LB-WI-M0-05, and selected GRDB 7/system SQLite with explicit migrations and SwiftData compatibility import. |
 | 0.2.2 | 2026-08-16 | Updated Decision Register traceability from the initial 59-ID checkpoint to the current maintained set of 61 stable IDs. |
 | 0.2.1 | 2026-08-01 | Accepted ADR-011, completed LB-WI-M0-15, and advanced the execution batch to ADR-003 persistence selection. |
 | 0.2.0 | 2026-07-21 | Pivoted governance and traceability to the accepted native Apple baseline and Swift package topology, cancelled Flutter/Android work, added ADR-011 and native-shell work items, and introduced the stable Xcode 27 release gate. |

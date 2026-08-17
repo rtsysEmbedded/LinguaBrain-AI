@@ -1,9 +1,9 @@
 ---
 title: Technical Architecture
 document_id: LB-DOC-11
-version: 0.3.1
+version: 0.3.2
 status: Draft
-last_updated: 2026-08-01
+last_updated: 2026-08-17
 ---
 
 # Technical Architecture
@@ -241,7 +241,7 @@ sequenceDiagram
 
 ## Persistence and transactions
 
-- A protected local store is the source of truth for each MVP installation; ADR-003 selects SwiftData/Core Data/SQLite/GRDB or another adapter.
+- A protected local store is the source of truth for each MVP installation; [ADR-003](../decisions/ADR-003-Swift-Persistence-and-Migration-Stack.md) selects GRDB 7 over system SQLite, `DatabasePool` for production, explicit migrations, and repository mapping.
 - Repository interfaces expose domain objects, not SwiftData models, Core Data managed objects, or SQL rows.
 - A completed attempt, LearningEvent, mastery projection, and review update use one atomic transaction or a recoverable outbox pattern.
 - Schema migrations are forward-tested and backup-aware.
@@ -312,7 +312,7 @@ A backend is required before the optional Release 1.0 account/sync capability ca
 Before M1 work becomes `READY`:
 
 - SwiftUI Observation/state, navigation, and dependency composition — [accepted in ADR-011](../decisions/ADR-011-SwiftUI-State-Observation-Navigation-and-Dependency-Composition.md).
-- Native Swift persistence/query/migration tooling (revised ADR-003).
+- Native Swift persistence/query/migration tooling — [accepted in ADR-003](../decisions/ADR-003-Swift-Persistence-and-Migration-Stack.md).
 - Domain event and transactional outbox approach.
 - Apple local-store protection, Keychain, backup, and recovery strategy.
 - Native Apple platform baseline — [accepted in ADR-009](../decisions/ADR-009-Native-Apple-Client-and-Platform-Baseline.md).
@@ -338,6 +338,7 @@ Before M3 review work becomes `READY`:
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 0.3.2 | 2026-08-17 | Adopted ADR-003: GRDB 7/system SQLite production persistence, explicit migrations, repository mapping, and one-time SwiftData compatibility import. |
 | 0.3.1 | 2026-08-01 | Adopted ADR-011 for native Observation, typed per-scene navigation, initializer injection, and composition-root boundaries. |
 | 0.3.0 | 2026-07-21 | Replaced the Flutter/Dart architecture with native Swift 6.4, SwiftUI OS 27 app targets, SwiftPM modules, Apple capability adapters, and native testing/concurrency boundaries. |
 | 0.2.3 | 2026-07-19 | Adopted ADR-001's modular monorepo topology, dependency rules, and non-production prototype classification. |

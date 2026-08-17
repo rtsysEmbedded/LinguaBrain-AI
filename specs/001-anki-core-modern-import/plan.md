@@ -14,7 +14,7 @@ Extend the native APKG boundary to modern collections and complete a determinist
 
 - Swift 6.4 and SwiftUI on iOS/iPadOS 27 and macOS 27.
 - Current app: `apps/learner/LinguaBrain.xcodeproj`.
-- Existing SwiftData prototype pending ADR-003 production persistence decision.
+- Existing SwiftData prototype with a production transition to GRDB 7/system SQLite accepted by ADR-003.
 - Pinned FSRS-6 contract from ADR-004.
 - No network or AI dependency.
 - Unit fixtures, persistence integration tests, fake-clock vectors, and cross-target builds.
@@ -54,7 +54,7 @@ packages/LinguaBrainKit/Sources/
 └── LinguaBrainTestSupport/
 ```
 
-Until this package exists, implementation MUST avoid deepening view-owned business logic and SHOULD extract seams that migrate directly into it. ADR-003 blocks final persistence topology; format research and fixture work may proceed independently.
+Until this package exists, implementation MUST avoid deepening view-owned business logic and SHOULD extract seams that migrate directly into it. ADR-003 fixes the persistence topology; ADR-007 still gates production data protection/recovery, while format research and fixture work may proceed independently.
 
 ## Verification Strategy
 
@@ -67,14 +67,14 @@ Until this package exists, implementation MUST avoid deepening view-owned busine
 ## Risks and Mitigations
 
 - **Modern schema/compression variance**: isolate readers, pin fixtures, reject unsupported variants explicitly.
-- **Prototype persistence coupling**: accept ADR-003 and module boundaries before final implementation.
+- **Prototype persistence coupling**: follow ADR-003's one-time SwiftData compatibility-import and module boundaries; dual-write is prohibited.
 - **Identity collision**: combine provenance with stable source identifiers; never key senses by spelling alone.
 - **Media abuse**: validate name, type, size, count, and ownership before materialization.
 - **Review regression**: capture current behavior in tests before refactoring.
 
 ## Required Decisions
 
-- Accept ADR-003 for production persistence/query/migration.
+- Implement the accepted ADR-003 production persistence boundary and compatibility-import contract.
 - Approve normalized reader, provenance identity, reconciliation, and conflict contracts.
 - Pin supported modern collection variants and fixture provenance.
 

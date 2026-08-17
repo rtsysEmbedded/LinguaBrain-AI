@@ -1,9 +1,9 @@
 ---
 title: Decision Register
 document_id: LB-DEC-REGISTER
-version: 0.6.1
+version: 0.7.0
 status: Active
-last_updated: 2026-08-10
+last_updated: 2026-08-17
 ---
 
 # Decision Register
@@ -20,8 +20,8 @@ This version contains:
 
 - all 53 bullets under the Open questions sections of Documents 02–10 and 12–14;
 - no source questions from Documents 01, 11, or 15 because those documents have no Open questions section;
-- seven supplemental architecture/product decisions required by Documents 11 and 15, the native Apple architecture pivot, and the Anki Core sequencing decision;
-- 61 stable decision IDs in total.
+- nine supplemental architecture/product decisions required by Documents 11 and 15, the native Apple architecture pivot, Anki Core sequencing, AI-provider sequencing, and release identity/sync;
+- 62 stable decision IDs in total.
 
 Source questions remain individually traceable even when several questions share one research package or ADR. IDs are never reused.
 
@@ -58,12 +58,12 @@ Each register row names one accountable owner role. Other affected roles review 
 
 | Dimension | Count |
 | --- | ---: |
-| Total decision records | 61 |
-| MVP-blocking | 17 |
-| MVP-later | 31 |
+| Total decision records | 62 |
+| MVP-blocking | 18 |
+| MVP-later | 32 |
 | post-MVP | 12 |
-| OPEN | 37 |
-| DECIDED | 7 |
+| OPEN | 35 |
+| DECIDED | 10 |
 | PROPOSED | 2 |
 | DEFERRED | 11 |
 | SUPERSEDED | 4 |
@@ -130,7 +130,7 @@ Each register row names one accountable owner role. Other affected roles review 
 | LB-DEC-056 | DOC-11 supplement | Which in-process domain-event and transactional-outbox strategy should the MVP adopt? | MVP-blocking | OPEN | Application Architect | M1 start | ADR-006 and retry/replay contract |
 | LB-DEC-057 | Native Apple architecture supplement | Which native client stack and Apple platform scope should the MVP adopt? | MVP-blocking | DECIDED | Product Owner | M1 start | [ADR-009](ADR-009-Native-Apple-Client-and-Platform-Baseline.md) |
 | LB-DEC-058 | Native Apple architecture supplement | Which SwiftUI observation/state, navigation, and dependency-composition approach should the MVP adopt? | MVP-blocking | DECIDED | Apple Client Architect | M1 start | [ADR-011](ADR-011-SwiftUI-State-Observation-Navigation-and-Dependency-Composition.md) |
-| LB-DEC-059 | Native Apple persistence supplement | Which native Swift persistence/query/migration stack best satisfies atomicity, testing, and migration needs? | MVP-blocking | OPEN | Persistence Lead | M1 start | Revised ADR-003 and transaction/migration spike |
+| LB-DEC-059 | Native Apple persistence supplement | Which native Swift persistence/query/migration stack best satisfies atomicity, testing, and migration needs? | MVP-blocking | DECIDED | Persistence Lead | Accepted 2026-08-17 | [ADR-003](ADR-003-Swift-Persistence-and-Migration-Stack.md): GRDB 7 over system SQLite, explicit migrations, repository mapping, and one-time SwiftData compatibility import |
 | LB-DEC-060 | Anki Core sequencing supplement | Should LinguaBrain validate secure APKG import and a durable offline review loop before AI card generation and final visual approval? | MVP-blocking | DECIDED | Product Owner | Before implementation resumes | [ADR-012](ADR-012-Anki-Core-First-and-APKG-Import-Boundary.md) and Anki Core MVP specification |
 | LB-DEC-061 | AI provider sequencing supplement | Which provider should be the first cloud AI integration, and how should Apple Foundation Models be positioned? | MVP-later | DECIDED | Product Owner | M2 AI enrichment | [ADR-013](ADR-013-Initial-AI-Provider-Strategy.md): OpenRouter first; Apple on-device adapter retained for future evaluation |
 | LB-DEC-062 | Release identity and continuity supplement | Should Release 1.0 provide optional Apple/Google accounts and which data may synchronize? | MVP-blocking | DECIDED | Product Owner | Before Release 1.0 account implementation | [ADR-014](ADR-014-Optional-Accounts-and-Release-Sync.md): local-first optional accounts, scoped sync, guest merge, and in-app deletion |
@@ -150,6 +150,7 @@ The following existing specification positions are recorded without losing their
 - LB-DEC-055 is SUPERSEDED by LB-DEC-058: the planned Flutter state-management ADR was withdrawn before proposal.
 - LB-DEC-057 is DECIDED: the MVP uses the native Apple client and platform scope defined by [ADR-009](ADR-009-Native-Apple-Client-and-Platform-Baseline.md).
 - LB-DEC-058 is DECIDED: native Observation, `@MainActor` feature models, typed scene-owned navigation, initializer injection, and an app composition root are defined by [ADR-011](ADR-011-SwiftUI-State-Observation-Navigation-and-Dependency-Composition.md).
+- LB-DEC-059 is DECIDED: the production local store uses GRDB 7 over system SQLite behind repository/transaction ports, with explicit migrations and a one-time verified SwiftData compatibility import under [ADR-003](ADR-003-Swift-Persistence-and-Migration-Stack.md).
 - LB-DEC-060 is DECIDED: secure APKG import and a durable offline review loop precede AI card generation and final visual approval, as defined by [ADR-012](ADR-012-Anki-Core-First-and-APKG-Import-Boundary.md).
 - LB-DEC-062 is DECIDED: Release 1.0 offers optional Apple/Google accounts and scoped learner-data sync without making authentication or connectivity a learning prerequisite, as defined by [ADR-014](ADR-014-Optional-Accounts-and-Release-Sync.md).
 
@@ -173,13 +174,13 @@ Related source questions should share evidence and, where appropriate, one final
 
 ## ADR catalog and planned queue
 
-ADR-004 and ADR-009 through ADR-012 are accepted. ADR-001 and ADR-008 are preserved as superseded history, and ADR-002 was withdrawn before proposal. The remaining filenames are reserved and do not represent accepted decisions. The first column is the stable ADR number, not execution priority; the Current decision queue below owns execution order.
+ADR-003, ADR-004, and ADR-009 through ADR-014 are accepted. ADR-001 and ADR-008 are preserved as superseded history, and ADR-002 was withdrawn before proposal. The remaining filenames are reserved and do not represent accepted decisions. The first column is the stable ADR number, not execution priority; the Current decision queue below owns execution order.
 
 | ADR no. | ADR | Status | Decision references | Target and hard gate | Acceptance evidence |
 | ---: | --- | --- | --- | --- | --- |
 | 1 | [ADR-001-Repository-Package-and-Module-Layout.md](ADR-001-Repository-Package-and-Module-Layout.md) | superseded by ADR-010 | LB-DEC-054 | Superseded 2026-07-21 | Historical Flutter/Dart topology and experiment decision |
 | 2 | ADR-002-Flutter-State-Management-and-DI.md | withdrawn before proposal | LB-DEC-055 | Withdrawn 2026-07-21 | Replaced by LB-DEC-058 and accepted ADR-011; number is not reused |
-| 3 | ADR-003-Swift-Persistence-and-Migration-Stack.md | planned | LB-DEC-013, LB-DEC-059 | M0; hard gate M1 start | Atomic transaction, repository fake, forward migration, and restart spike |
+| 3 | [ADR-003-Swift-Persistence-and-Migration-Stack.md](ADR-003-Swift-Persistence-and-Migration-Stack.md) | accepted | LB-DEC-013, LB-DEC-059 | Accepted 2026-08-17; M1 persistence stack stable | GRDB 7/system SQLite selection, explicit migrations, transaction/repository boundary, and SwiftData compatibility-import policy |
 | 4 | [ADR-004-FSRS-Implementation-and-Version.md](ADR-004-FSRS-Implementation-and-Version.md) | accepted | LB-DEC-040 | Accepted 2026-08-09 | FSRS-6.0 pin, persisted version/state, reference vectors, and explicit upgrade policy |
 | 5 | ADR-005-ReviewUnit-Retrieval-and-Evidence-Rating.md | planned | LB-DEC-001, LB-DEC-014, LB-DEC-026, LB-DEC-043 | Before M3 review implementation | Retrieval contracts, raw evidence, derived rating, and deterministic replay |
 | 6 | ADR-006-Domain-Events-and-Transactional-Outbox.md | planned | LB-DEC-056 | M0; hard gate M1 start | Transaction boundary, ordering, idempotency, retry, and replay |
@@ -196,11 +197,10 @@ ADR-004 and ADR-009 through ADR-012 are accepted. ADR-001 and ADR-008 are preser
 
 Resolve in this order unless a dependency changes:
 
-1. LB-DEC-059 and revised ADR-003: native Swift persistence/query/migration stack.
-2. LB-DEC-005, LB-DEC-006, LB-DEC-009, LB-DEC-042, and ADR-007: local data protection and recovery.
-3. LB-DEC-056 and ADR-006: domain events and transactional outbox.
-4. LB-DEC-018: single versus conflicting active missions for the MVP.
-5. LB-DEC-050: Persian/German typography and license baseline.
+1. LB-DEC-005, LB-DEC-006, LB-DEC-009, LB-DEC-042, and ADR-007: local data protection and recovery.
+2. LB-DEC-056 and ADR-006: domain events and transactional outbox.
+3. LB-DEC-018: single versus conflicting active missions for the MVP.
+4. LB-DEC-050: Persian/German typography and license baseline.
 
 The M1 backlog cannot be approved until all still-open MVP-blocking entries are decided or an explicit scope change removes the dependency.
 
@@ -236,6 +236,7 @@ At every milestone review:
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 0.7.0 | 2026-08-17 | Accepted ADR-003, closed LB-DEC-059 with GRDB 7/system SQLite, corrected the maintained register to 62 IDs, and advanced the queue to local-store protection/recovery. |
 | 0.6.1 | 2026-08-16 | Corrected the summary count to 61 stable decision IDs after the addition of LB-DEC-062. |
 | 0.6.0 | 2026-08-10 | Added LB-DEC-062 and accepted ADR-014 for optional Apple/Google accounts and scoped Release 1.0 learner-data synchronization. |
 | 0.5.0 | 2026-08-10 | Added LB-DEC-061 and accepted ADR-013 for an OpenRouter-first cloud adapter with future capability-gated Apple Foundation Models support. |
