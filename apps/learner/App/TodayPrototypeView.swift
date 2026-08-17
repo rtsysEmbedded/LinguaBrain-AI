@@ -2,6 +2,7 @@ import SwiftUI
 
 struct TodayPrototypeView: View {
     @Environment(PrototypeStore.self) private var store
+    @Environment(PrototypeLocalization.self) private var localization
     @State private var energy = 6.0
     @State private var selectedTime = 20
 
@@ -12,9 +13,9 @@ struct TodayPrototypeView: View {
     }
 
     private var learningMode: String {
-        if energy <= 3 { return "حالت بازیابی" }
-        if energy >= 8 { return "حالت چالش" }
-        return "حالت رشد"
+        if energy <= 3 { return localization.localized("حالت بازیابی") }
+        if energy >= 8 { return localization.localized("حالت چالش") }
+        return localization.localized("حالت رشد")
     }
 
     var body: some View {
@@ -94,14 +95,14 @@ struct TodayPrototypeView: View {
 
     private var todayPlan: some View {
         VStack(alignment: .leading, spacing: 12) {
-            SectionHeader(title: "برنامه پیشنهادی", subtitle: "\(selectedTime) دقیقه · \(learningMode)")
+            SectionHeader(title: "برنامه پیشنهادی", subtitle: "\(localization.minutes(selectedTime)) · \(learningMode)")
             PrototypeCard {
                 VStack(spacing: 0) {
-                    planRow(symbol: "rectangle.stack.fill", color: PrototypeTheme.accent, title: "مرور هوشمند", detail: "\(store.dueCount) مرور + \(newCardLimit) کارت جدید", time: "\(selectedTime) دقیقه")
+                    planRow(symbol: "rectangle.stack.fill", color: PrototypeTheme.accent, title: "مرور هوشمند", detail: localization.reviewSummary(due: store.dueCount, new: newCardLimit), time: localization.minutes(selectedTime))
                     Divider().padding(.vertical, 12)
-                    planRow(symbol: "text.book.closed.fill", color: PrototypeTheme.blue, title: "متن کوتاه", detail: "محیط کار · سطح B1", time: "۷ دقیقه")
+                    planRow(symbol: "text.book.closed.fill", color: PrototypeTheme.blue, title: "متن کوتاه", detail: "محیط کار · سطح B1", time: localization.minutes(7))
                     Divider().padding(.vertical, 12)
-                    planRow(symbol: "character.bubble.fill", color: PrototypeTheme.pink, title: "ترجمه معکوس", detail: "فارسی به آلمانی", time: "۵ دقیقه")
+                    planRow(symbol: "character.bubble.fill", color: PrototypeTheme.pink, title: "ترجمه معکوس", detail: "فارسی به آلمانی", time: localization.minutes(5))
                 }
             }
 
@@ -136,11 +137,11 @@ struct TodayPrototypeView: View {
                 .frame(width: 38, height: 38)
                 .background(color.opacity(0.12), in: RoundedRectangle(cornerRadius: 11))
             VStack(alignment: .leading, spacing: 3) {
-                Text(title).font(.headline)
-                Text(detail).font(.subheadline).foregroundStyle(.secondary)
+                Text(localization.localized(title)).font(.headline)
+                Text(localization.localized(detail)).font(.subheadline).foregroundStyle(.secondary)
             }
             Spacer()
-            Text(time).font(.caption.weight(.medium)).foregroundStyle(.secondary)
+            Text(localization.localized(time)).font(.caption.weight(.medium)).foregroundStyle(.secondary)
         }
     }
 

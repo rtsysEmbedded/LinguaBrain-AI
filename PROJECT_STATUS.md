@@ -1,7 +1,7 @@
 ---
 title: Project Status and Delivery Checklist
 document_id: LB-STATUS
-version: 0.4.7
+version: 0.4.8
 status: Active
 last_updated: 2026-08-17
 ---
@@ -33,7 +33,7 @@ This file is the single progress checklist for LinguaBrain AI. It must be update
 | Visual prototype | Buildable SwiftUI prototype for iPhone, iPad, and Mac; review state persists, APKG cards can be imported, and an approved OpenRouter proposal can be stored locally |
 | Next primary deliverable | Execute Spec Kit task T005: create owned modern valid/corrupt/hostile golden fixtures from the approved format and reconciliation contracts |
 | Current delivery strategy | Anki Core first: secure APKG import and reliable offline review gate before AI and final visual approval |
-| Latest verification | 2026-08-17: five tests passed on iPhone 17 / iOS 27, including persisted three-language interface switching and `fa→de`/`en→de`/`de→en` APKG fixtures; the macOS 27 build succeeded |
+| Latest verification | 2026-08-17: five tests passed on iPhone 17 / iOS 27; English, German, and Persian were visually smoke-tested with localized core screens and correct LTR/RTL direction; the macOS 27 build succeeded |
 
 ## Completed foundation
 
@@ -52,7 +52,7 @@ This file is the single progress checklist for LinguaBrain AI. It must be update
 - [x] Complete Spec Kit task T002 with ADR-003 selecting the GRDB 7 persistence and migration boundary.
 - [x] Complete Spec Kit task T003 with a pinned modern Anki package compatibility, security, and fixture-provenance research baseline.
 - [x] Complete Spec Kit task T004 with approved normalized-reader, resource-policy, provenance, polysemy, reconciliation, conflict, and ownership contracts.
-- [x] Complete pre-T005 task T004A with independent English/German/Persian interface selection, dynamic RTL/LTR behavior, persisted source/target roles, and three generated language-pair APKG fixtures.
+- [x] Complete pre-T005 task T004A with independent English/German/Persian interface selection, dynamic RTL/LTR behavior, a 265-entry Apple String Catalog for prototype screens, persisted source/target roles, and three generated language-pair APKG fixtures.
 - [x] Harden `.gitignore` for local projects, secrets, Python, local stores, SwiftPM, Xcode, archives, and generated files.
 - [x] Add a buildable static SwiftUI visual prototype for iPhone, iPad, and Mac, with mock data and no production dependencies.
 - [x] Define and prototype the ten minimum MVP card surfaces required before final visual-design approval.

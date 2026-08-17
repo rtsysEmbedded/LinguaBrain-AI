@@ -47,6 +47,32 @@ final class PrototypeLocalization {
         Self.text(key, language: language)
     }
 
+    /// Resolves view copy from the String Catalog using the language selected
+    /// inside LinguaBrain, independently of the device language.
+    func localized(_ key: String) -> String {
+        guard
+            let path = Bundle.main.path(forResource: language.rawValue, ofType: "lproj"),
+            let bundle = Bundle(path: path)
+        else { return key }
+        return bundle.localizedString(forKey: key, value: key, table: nil)
+    }
+
+    func minutes(_ count: Int) -> String {
+        switch language {
+        case .english: "\(count) min"
+        case .german: "\(count) Min."
+        case .persian: "\(count) دقیقه"
+        }
+    }
+
+    func reviewSummary(due: Int, new: Int) -> String {
+        switch language {
+        case .english: "\(due) reviews + \(new) new cards"
+        case .german: "\(due) Wiederholungen + \(new) neue Karten"
+        case .persian: "\(due) مرور + \(new) کارت جدید"
+        }
+    }
+
     static func text(_ key: PrototypeTextKey, language: PrototypeAppLanguage) -> String {
         translations[language]?[key] ?? translations[.english]![key]!
     }
@@ -64,7 +90,7 @@ final class PrototypeLocalization {
             .deviceOnlySync: "On-device sync only", .edit: "Edit"
         ],
         .german: [
-            .today: "Heute", .library: "Bibliothek", .add: "Hinzufügen", .progress: "Fortschritt", .settings: "Einstellungen",
+            .today: "Heute", .library: "Karten", .add: "Neu", .progress: "Status", .settings: "Optionen",
             .settingsTitle: "Einstellungen", .learningAndLanguage: "Lernen und Sprachen",
             .learningAndLanguageSubtitle: "Lernweg und Übungseinstellungen",
             .languagesAndLevel: "Sprachen und Niveau", .goalsAndDailyPlan: "Ziele und Tagesplan",

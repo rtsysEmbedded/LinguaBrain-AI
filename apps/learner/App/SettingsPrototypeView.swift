@@ -137,6 +137,7 @@ struct SettingsPrototypeView: View {
 }
 
 private struct SettingsRow: View {
+    @Environment(PrototypeLocalization.self) private var localization
     let item: SettingsItem
 
     var body: some View {
@@ -147,10 +148,10 @@ private struct SettingsRow: View {
                 .frame(width: 36, height: 36)
                 .background(item.color.gradient, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
             VStack(alignment: .leading, spacing: 3) {
-                Text(item.title)
+                Text(localization.localized(item.title))
                     .font(.body.weight(.medium))
                     .foregroundStyle(.primary)
-                Text(item.detail)
+                Text(localization.localized(item.detail))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }

@@ -20,15 +20,16 @@ struct PrototypeCard<Content: View>: View {
 }
 
 struct SectionHeader: View {
+    @Environment(PrototypeLocalization.self) private var localization
     let title: String
     var subtitle: String?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 3) {
-            Text(title)
+            Text(localization.localized(title))
                 .font(.title3.weight(.bold))
             if let subtitle {
-                Text(subtitle)
+                Text(localization.localized(subtitle))
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
             }
@@ -38,6 +39,7 @@ struct SectionHeader: View {
 }
 
 struct MetricPill: View {
+    @Environment(PrototypeLocalization.self) private var localization
     let value: String
     let label: String
     let symbol: String
@@ -51,8 +53,12 @@ struct MetricPill: View {
                 .frame(width: 34, height: 34)
                 .background(color.opacity(0.12), in: Circle())
             VStack(alignment: .leading, spacing: 1) {
-                Text(value).font(.headline)
-                Text(label).font(.caption).foregroundStyle(.secondary)
+                Text(localization.localized(value)).font(.headline)
+                Text(localization.localized(label))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.72)
             }
         }
         .padding(.vertical, 10)
@@ -76,6 +82,7 @@ struct GermanText: View {
 }
 
 struct SkillProgressRow: View {
+    @Environment(PrototypeLocalization.self) private var localization
     let label: String
     let value: Double
     let color: Color
@@ -83,7 +90,7 @@ struct SkillProgressRow: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
-                Text(label).font(.subheadline.weight(.medium))
+                Text(localization.localized(label)).font(.subheadline.weight(.medium))
                 Spacer()
                 Text(value, format: .percent.precision(.fractionLength(0)))
                     .font(.caption.monospacedDigit())

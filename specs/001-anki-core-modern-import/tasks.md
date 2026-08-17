@@ -93,9 +93,9 @@ For each completed task record the agent/tool, date, changed files, commands/tes
 ### T004A — 2026-08-17
 
 - **Agent/tool**: Codex with SwiftUI, XCTest, Xcode 27.0, iOS 27 Simulator, and macOS 27 SDK.
-- **Changed scope**: Added persisted `PrototypeAppLanguage` and independent source/target settings, dynamic RTL/LTR shell behavior, a functional settings picker, explicit imported-card language tags, and a synthetic three-direction fixture catalog/runtime APKG generator.
+- **Changed scope**: Added persisted `PrototypeAppLanguage` and independent source/target settings, dynamic RTL/LTR shell behavior, an Apple String Catalog covering 265 prototype-screen strings, locale-aware dynamic time/review summaries, a functional settings picker, explicit imported-card language tags, and a synthetic three-direction fixture catalog/runtime APKG generator.
 - **Language-independence decision**: Interface `en`/`de`/`fa` is not the learning pair; source/target tags survive interface changes and reject identical roles.
 - **Fixture evidence**: Runtime-generated owned APKG packages cover `fa→de`, `en→de`, and `de→en`, with asserted words and examples.
-- **Verification**: Five tests passed on iPhone 17 / iOS 27; `LinguaBrain Mac` built successfully with signing disabled.
-- **Known boundary**: This validates the app shell/settings and import metadata; complete professional translation of every prototype string remains DOC-18/M2 scope.
+- **Verification**: Five tests passed on iPhone 17 / iOS 27; English, German, and Persian core-screen renders were visually smoke-tested; `LinguaBrain Mac` built successfully with signing disabled.
+- **Known boundary**: Functional localization now covers the prototype screens; professional editorial review of the generated English/German copy and complete language-package terminology remain DOC-18/M2 scope.
 - **Commit**: see the T004A completion commit in Git history; its SHA is included in the handoff response.

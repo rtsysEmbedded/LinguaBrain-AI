@@ -20,14 +20,18 @@ final class AnkiCoreRegressionTests: XCTestCase {
         localization.language = .english
         XCTAssertEqual(localization.text(.settingsTitle), "Settings")
         XCTAssertEqual(localization.language.layoutDirection, .leftToRight)
+        XCTAssertEqual(localization.minutes(20), "20 min")
+        XCTAssertEqual(localization.reviewSummary(due: 3, new: 4), "3 reviews + 4 new cards")
 
         localization.language = .german
         XCTAssertEqual(localization.text(.settingsTitle), "Einstellungen")
         XCTAssertEqual(localization.language.layoutDirection, .leftToRight)
+        XCTAssertEqual(localization.minutes(20), "20 Min.")
 
         localization.language = .persian
         XCTAssertEqual(localization.text(.settingsTitle), "تنظیمات")
         XCTAssertEqual(localization.language.layoutDirection, .rightToLeft)
+        XCTAssertEqual(localization.minutes(20), "20 دقیقه")
 
         let restoredLocalization = PrototypeLocalization(defaults: defaults)
         let restoredPair = PrototypeLanguageSettings(defaults: defaults)

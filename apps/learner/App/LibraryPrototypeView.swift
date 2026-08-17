@@ -2,6 +2,7 @@ import SwiftUI
 
 struct LibraryPrototypeView: View {
     @Environment(PrototypeStore.self) private var store
+    @Environment(PrototypeLocalization.self) private var localization
     @State private var searchText = ""
     @State private var filter = "همه"
     @State private var packagePendingDeletion: PrototypeImportedPackage?
@@ -242,6 +243,8 @@ private enum MVPCardKind: String, CaseIterable, Identifiable {
 }
 
 struct CardGalleryPrototypeView: View {
+    @Environment(PrototypeLocalization.self) private var localization
+
     var body: some View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: 16) {
@@ -262,8 +265,8 @@ struct CardGalleryPrototypeView: View {
                                     .frame(width: 44, height: 44)
                                     .background(kind.color.opacity(0.12), in: RoundedRectangle(cornerRadius: 13, style: .continuous))
                                 VStack(alignment: .leading, spacing: 4) {
-                                    Text(kind.title).font(.headline)
-                                    Text(kind.purpose).font(.subheadline).foregroundStyle(.secondary)
+                                    Text(localization.localized(kind.title)).font(.headline)
+                                    Text(localization.localized(kind.purpose)).font(.subheadline).foregroundStyle(.secondary)
                                 }
                                 Spacer()
                                 Image(systemName: "chevron.left").font(.caption.bold()).foregroundStyle(.tertiary)
@@ -284,6 +287,7 @@ struct CardGalleryPrototypeView: View {
 
 private struct CardSpecPrototypeView: View {
     let kind: MVPCardKind
+    @Environment(PrototypeLocalization.self) private var localization
     @State private var isRevealed = false
     @State private var selectedAnswer: String?
 
@@ -307,7 +311,7 @@ private struct CardSpecPrototypeView: View {
                 PrototypeCard {
                     VStack(alignment: .leading, spacing: 8) {
                         Text("هدف این کارت").font(.headline)
-                        Text(kind.purpose).foregroundStyle(.secondary)
+                        Text(localization.localized(kind.purpose)).foregroundStyle(.secondary)
                         Text("در بازبینی، وضوح سؤال، اطلاعات ضروری، پاسخ مورد انتظار و بازخورد را بررسی می‌کنیم؛ تزئینات بصری بعداً نهایی می‌شوند.")
                             .font(.subheadline)
                             .foregroundStyle(.secondary)

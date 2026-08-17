@@ -20,6 +20,7 @@
 		10000000000000000000000B /* OnboardingPrototypeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20000000000000000000000B /* OnboardingPrototypeView.swift */; };
 		10000000000000000000000C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 20000000000000000000000C /* Assets.xcassets */; };
 		10000000000000000000000D /* AppLocalization.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20000000000000000000000F /* AppLocalization.swift */; };
+		10000000000000000000000E /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000010 /* Localizable.xcstrings */; };
 		110000000000000000000001 /* LinguaBrainPrototypeApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000001 /* LinguaBrainPrototypeApp.swift */; };
 		110000000000000000000002 /* PrototypeModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000002 /* PrototypeModels.swift */; };
 		110000000000000000000003 /* PrototypeComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000003 /* PrototypeComponents.swift */; };
@@ -33,6 +34,7 @@
 		11000000000000000000000B /* OnboardingPrototypeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20000000000000000000000B /* OnboardingPrototypeView.swift */; };
 		11000000000000000000000C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 20000000000000000000000C /* Assets.xcassets */; };
 		11000000000000000000000D /* AppLocalization.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20000000000000000000000F /* AppLocalization.swift */; };
+		11000000000000000000000E /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000010 /* Localizable.xcstrings */; };
 		120000000000000000000001 /* AnkiCoreRegressionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 220000000000000000000001 /* AnkiCoreRegressionTests.swift */; };
 		120000000000000000000002 /* APKGFixtureFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 220000000000000000000002 /* APKGFixtureFactory.swift */; };
 		120000000000000000000003 /* legacy-linguabrain.json in Resources */ = {isa = PBXBuildFile; fileRef = 220000000000000000000003 /* legacy-linguabrain.json */; };
@@ -65,6 +67,7 @@
 		20000000000000000000000D /* LinguaBrain.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LinguaBrain.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		20000000000000000000000E /* LinguaBrain Mac.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "LinguaBrain Mac.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		20000000000000000000000F /* AppLocalization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLocalization.swift; sourceTree = "<group>"; };
+		200000000000000000000010 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 		220000000000000000000001 /* AnkiCoreRegressionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnkiCoreRegressionTests.swift; sourceTree = "<group>"; };
 		220000000000000000000002 /* APKGFixtureFactory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APKGFixtureFactory.swift; sourceTree = "<group>"; };
 		220000000000000000000003 /* legacy-linguabrain.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "legacy-linguabrain.json"; sourceTree = "<group>"; };
@@ -130,6 +133,7 @@
 			isa = PBXGroup;
 			children = (
 				20000000000000000000000C /* Assets.xcassets */,
+				200000000000000000000010 /* Localizable.xcstrings */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
@@ -268,6 +272,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				10000000000000000000000C /* Assets.xcassets in Resources */,
+				10000000000000000000000E /* Localizable.xcstrings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -276,6 +281,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				11000000000000000000000C /* Assets.xcassets in Resources */,
+				11000000000000000000000E /* Localizable.xcstrings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

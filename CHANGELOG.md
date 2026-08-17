@@ -45,6 +45,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- Repaired the incomplete interface-language switch by adding an Apple String Catalog for 265 prototype-screen strings, resolving variable component copy through the selected in-app locale, localizing dynamic minute/review summaries, shortening German tab labels, and visually smoke-testing English/German/Persian LTR/RTL renders.
 - Corrected APKG field mapping by reading Anki model field names instead of assuming positional German/Persian fields; `anki_single` payloads now restore level, part of speech, meanings, example, and Persian example translation, and deterministic re-import updates previously incomplete records.
 - Added the first APKG import boundary: native file selection and a read-only ZIP central-directory preflight that rejects traversal paths, symlinks, encrypted/unsupported entries, duplicates, excessive expansion, suspicious ratios, ZIP64, and packages without an Anki collection database.
 - Persisted the prototype deck and its 50 cards in SwiftData, seeding them only when the local card store is empty and restoring stable card identities on launch.
