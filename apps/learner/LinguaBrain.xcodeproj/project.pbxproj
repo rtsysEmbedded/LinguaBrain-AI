@@ -31,7 +31,20 @@
 		11000000000000000000000A /* SettingsPrototypeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20000000000000000000000A /* SettingsPrototypeView.swift */; };
 		11000000000000000000000B /* OnboardingPrototypeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20000000000000000000000B /* OnboardingPrototypeView.swift */; };
 		11000000000000000000000C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 20000000000000000000000C /* Assets.xcassets */; };
+		120000000000000000000001 /* AnkiCoreRegressionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 220000000000000000000001 /* AnkiCoreRegressionTests.swift */; };
+		120000000000000000000002 /* APKGFixtureFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 220000000000000000000002 /* APKGFixtureFactory.swift */; };
+		120000000000000000000003 /* legacy-linguabrain.json in Resources */ = {isa = PBXBuildFile; fileRef = 220000000000000000000003 /* legacy-linguabrain.json */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		230000000000000000000001 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 900000000000000000000001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 500000000000000000000001;
+			remoteInfo = LinguaBrain;
+		};
+/* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
 		200000000000000000000001 /* LinguaBrainPrototypeApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinguaBrainPrototypeApp.swift; sourceTree = "<group>"; };
@@ -48,6 +61,10 @@
 		20000000000000000000000C /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		20000000000000000000000D /* LinguaBrain.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LinguaBrain.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		20000000000000000000000E /* LinguaBrain Mac.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "LinguaBrain Mac.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		220000000000000000000001 /* AnkiCoreRegressionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnkiCoreRegressionTests.swift; sourceTree = "<group>"; };
+		220000000000000000000002 /* APKGFixtureFactory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APKGFixtureFactory.swift; sourceTree = "<group>"; };
+		220000000000000000000003 /* legacy-linguabrain.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "legacy-linguabrain.json"; sourceTree = "<group>"; };
+		220000000000000000000004 /* LinguaBrainTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = LinguaBrainTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -65,6 +82,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		320000000000000000000001 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -73,6 +97,7 @@
 			children = (
 				400000000000000000000002 /* App */,
 				400000000000000000000003 /* Resources */,
+				420000000000000000000001 /* Tests */,
 				400000000000000000000004 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -108,8 +133,27 @@
 			children = (
 				20000000000000000000000D /* LinguaBrain.app */,
 				20000000000000000000000E /* LinguaBrain Mac.app */,
+				220000000000000000000004 /* LinguaBrainTests.xctest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		420000000000000000000001 /* Tests */ = {
+			isa = PBXGroup;
+			children = (
+				220000000000000000000001 /* AnkiCoreRegressionTests.swift */,
+				220000000000000000000002 /* APKGFixtureFactory.swift */,
+				420000000000000000000002 /* Fixtures */,
+			);
+			path = Tests;
+			sourceTree = "<group>";
+		};
+		420000000000000000000002 /* Fixtures */ = {
+			isa = PBXGroup;
+			children = (
+				220000000000000000000003 /* legacy-linguabrain.json */,
+			);
+			path = Fixtures;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -149,6 +193,24 @@
 			productReference = 20000000000000000000000E /* LinguaBrain Mac.app */;
 			productType = "com.apple.product-type.application";
 		};
+		520000000000000000000001 /* LinguaBrainTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 620000000000000000000001 /* Build configuration list for PBXNativeTarget "LinguaBrainTests" */;
+			buildPhases = (
+				720000000000000000000001 /* Sources */,
+				320000000000000000000001 /* Frameworks */,
+				820000000000000000000001 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				530000000000000000000001 /* PBXTargetDependency */,
+			);
+			name = LinguaBrainTests;
+			productName = LinguaBrainTests;
+			productReference = 220000000000000000000004 /* LinguaBrainTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -164,6 +226,10 @@
 					};
 					500000000000000000000002 = {
 						CreatedOnToolsVersion = 27.0;
+					};
+					520000000000000000000001 = {
+						CreatedOnToolsVersion = 27.0;
+						TestTargetID = 500000000000000000000001;
 					};
 				};
 			};
@@ -183,6 +249,7 @@
 			targets = (
 				500000000000000000000001 /* LinguaBrain */,
 				500000000000000000000002 /* LinguaBrain Mac */,
+				520000000000000000000001 /* LinguaBrainTests */,
 			);
 		};
 /* End PBXProject section */
@@ -201,6 +268,14 @@
 			buildActionMask = 2147483647;
 			files = (
 				11000000000000000000000C /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		820000000000000000000001 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				120000000000000000000003 /* legacy-linguabrain.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -243,7 +318,24 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		720000000000000000000001 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				120000000000000000000001 /* AnkiCoreRegressionTests.swift in Sources */,
+				120000000000000000000002 /* APKGFixtureFactory.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		530000000000000000000001 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 500000000000000000000001 /* LinguaBrain */;
+			targetProxy = 230000000000000000000001 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		A00000000000000000000001 /* Debug */ = {
@@ -354,6 +446,40 @@
 			};
 			name = Release;
 		};
+		A20000000000000000000001 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 44JPFD4X2P;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 27.0;
+				PRODUCT_BUNDLE_IDENTIFIER = ai.linguabrain.prototype.tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/LinguaBrain.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/LinguaBrain";
+			};
+			name = Debug;
+		};
+		A20000000000000000000002 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 44JPFD4X2P;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 27.0;
+				PRODUCT_BUNDLE_IDENTIFIER = ai.linguabrain.prototype.tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/LinguaBrain.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/LinguaBrain";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -380,6 +506,15 @@
 			buildConfigurations = (
 				A00000000000000000000005 /* Debug */,
 				A00000000000000000000006 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		620000000000000000000001 /* Build configuration list for PBXNativeTarget "LinguaBrainTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A20000000000000000000001 /* Debug */,
+				A20000000000000000000002 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

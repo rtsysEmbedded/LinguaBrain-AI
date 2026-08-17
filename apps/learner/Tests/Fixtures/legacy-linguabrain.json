@@ -1,0 +1,27 @@
+{
+  "packageName": "sanitized-legacy.apkg",
+  "modelID": 1700000000000,
+  "cardID": 1700000000001,
+  "noteID": 1700000000002,
+  "fields": [
+    "LinguaBrainJSON",
+    "Front",
+    "Back"
+  ],
+  "payload": {
+    "word": "arbeiten",
+    "headword": "arbeiten",
+    "part_of_speech_fa": "فعل",
+    "level": "A1",
+    "meaning_fa": [
+      "کار کردن"
+    ],
+    "examples": [
+      {
+        "de": "Ich arbeite heute.",
+        "fa": "من امروز کار می‌کنم.",
+        "en": "I work today."
+      }
+    ]
+  }
+}

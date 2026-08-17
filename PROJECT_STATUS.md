@@ -1,7 +1,7 @@
 ---
 title: Project Status and Delivery Checklist
 document_id: LB-STATUS
-version: 0.4.2
+version: 0.4.3
 status: Active
 last_updated: 2026-08-16
 ---
@@ -33,7 +33,7 @@ This file is the single progress checklist for LinguaBrain AI. It must be update
 | Visual prototype | Buildable SwiftUI prototype for iPhone, iPad, and Mac; review state persists, APKG cards can be imported, and an approved OpenRouter proposal can be stored locally |
 | Next primary deliverable | Execute Spec Kit feature `001-anki-core-modern-import`, beginning with regression tests, ADR-003, modern-format research, and import/reconciliation contracts |
 | Current delivery strategy | Anki Core first: secure APKG import and reliable offline review gate before AI and final visual approval |
-| Latest verification | 2026-08-16: iOS Simulator and macOS generic builds succeeded; Xcode personal workspace state remains ignored |
+| Latest verification | 2026-08-17: three Anki Core regression tests passed on the iPhone 17 iOS 27 simulator and the macOS generic build succeeded; Xcode personal workspace state remains ignored |
 
 ## Completed foundation
 
@@ -48,6 +48,7 @@ This file is the single progress checklist for LinguaBrain AI. It must be update
 - [x] Add this project-status checklist.
 - [x] Adopt GitHub Spec Kit with a project constitution and Codex, Claude Code, and Gemini CLI integrations.
 - [x] Create the first Spec Kit feature for the Anki Core modern-import and offline-review gate.
+- [x] Complete Spec Kit task T001 with a real XCTest target, a sanitized runtime-generated legacy APKG fixture, and regression coverage for field mapping, re-import, and independent review directions.
 - [x] Harden `.gitignore` for local projects, secrets, Python, local stores, SwiftPM, Xcode, archives, and generated files.
 - [x] Add a buildable static SwiftUI visual prototype for iPhone, iPad, and Mac, with mock data and no production dependencies.
 - [x] Define and prototype the ten minimum MVP card surfaces required before final visual-design approval.

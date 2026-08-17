@@ -6,7 +6,7 @@
 
 ## Phase 1 — Baseline and decisions
 
-- [ ] T001 Capture current legacy import and offline-review behavior with regression tests and sanitized fixtures.
+- [x] T001 Capture current legacy import and offline-review behavior with regression tests and sanitized fixtures.
 - [ ] T002 [P] Decide and record the production Swift persistence/query/migration adapter in ADR-003.
 - [ ] T003 [P] Research supported `collection.anki21b` variants, constraints, and fixture provenance in `research.md`.
 - [ ] T004 Approve normalized reader, provenance identity, reconciliation, and conflict contracts in `data-model.md` and `contracts/`.
@@ -49,3 +49,12 @@
 ## Agent Handoff Evidence
 
 For each completed task record the agent/tool, date, changed files, commands/tests, result, known risks, and commit SHA. Never include credentials, private APKG data, or raw learner content.
+
+### T001 — 2026-08-17
+
+- **Agent/tool**: Codex with Xcode 27.0 and XCTest.
+- **Changed scope**: iOS unit-test target, sanitized JSON fixture, runtime SQLite/APKG fixture factory, regression tests, and project/status documentation.
+- **Evidence**: Three tests passed on the iPhone 17 iOS 27 simulator: legacy APKG inspection/field mapping, source-identity re-import update plus semantic duplicate skip, and independent direct/reverse review scheduling with due-time enforcement.
+- **Compatibility check**: `LinguaBrain Mac` generic macOS build passed with signing disabled.
+- **Known boundary**: T001 locks the currently supported legacy path; modern `collection.anki21b`, hostile fixture expansion, restart persistence vectors, and full reconciliation remain assigned to later tasks.
+- **Commit**: see the T001 completion commit in Git history; its SHA is included in the handoff response.
