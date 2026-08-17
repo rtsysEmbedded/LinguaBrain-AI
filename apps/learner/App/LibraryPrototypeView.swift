@@ -3,13 +3,21 @@ import SwiftUI
 struct LibraryPrototypeView: View {
     @Environment(PrototypeStore.self) private var store
     @Environment(PrototypeLocalization.self) private var localization
+    @Environment(PrototypeLanguageSettings.self) private var languageSettings
     @State private var searchText = ""
     @State private var filter = "همه"
     @State private var packagePendingDeletion: PrototypeImportedPackage?
     @State private var deletionError: String?
 
+    private var activeWords: [PrototypeWord] {
+        store.words(
+            sourceLanguageTag: languageSettings.sourceLanguageTag,
+            targetLanguageTag: languageSettings.targetLanguageTag
+        )
+    }
+
     private var filteredWords: [PrototypeWord] {
-        store.words.filter { word in
+        activeWords.filter { word in
             let matchesSearch = searchText.isEmpty || word.german.localizedCaseInsensitiveContains(searchText) || word.persian.contains(searchText)
             let matchesFilter = filter == "همه" || (filter == "ضعیف" && store.reviewCount(for: word) > 0 && store.strength(for: word) < 0.5) || filter == word.level
             return matchesSearch && matchesFilter
@@ -20,9 +28,9 @@ struct LibraryPrototypeView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
                 HStack(spacing: 12) {
-                    MetricPill(value: "\(store.words.count)", label: "واژه", symbol: "textformat.abc", color: PrototypeTheme.accent)
-                    MetricPill(value: "\(store.weakCount)", label: "ضعیف", symbol: "exclamationmark.triangle.fill", color: .orange)
-                    MetricPill(value: "\(store.reviewedCount)", label: "مرور شده", symbol: "bolt.fill", color: PrototypeTheme.mint)
+                    MetricPill(value: "\(activeWords.count)", label: "واژه", symbol: "textformat.abc", color: PrototypeTheme.accent)
+                    MetricPill(value: "\(store.weakCount(in: activeWords))", label: "ضعیف", symbol: "exclamationmark.triangle.fill", color: .orange)
+                    MetricPill(value: "\(store.reviewedCount(in: activeWords))", label: "مرور شده", symbol: "bolt.fill", color: PrototypeTheme.mint)
                 }
 
 
@@ -165,8 +173,8 @@ struct LibraryPrototypeView: View {
                 .frame(width: 46, height: 46)
 
                 VStack(alignment: .leading, spacing: 4) {
-                    GermanText(text: word.german, font: .headline)
-                    Text(word.persian).font(.subheadline).foregroundStyle(.secondary)
+                    LanguageText(text: word.german, languageTag: word.targetLanguageTag, font: .headline)
+                    LanguageText(text: word.persian, languageTag: word.sourceLanguageTag, font: .subheadline, color: .secondary)
                 }
                 Spacer()
                 VStack(alignment: .trailing, spacing: 6) {
@@ -489,16 +497,16 @@ struct WordDetailPrototypeView: View {
                             Spacer()
                             Button(action: {}) { Image(systemName: "speaker.wave.2.fill") }
                         }
-                        GermanText(text: word.german, font: .largeTitle.weight(.bold))
-                        Text(word.persian).font(.title3)
+                        LanguageText(text: word.german, languageTag: word.targetLanguageTag, font: .largeTitle.weight(.bold))
+                        LanguageText(text: word.persian, languageTag: word.sourceLanguageTag, font: .title3)
                     }
                 }
 
                 PrototypeCard {
                     VStack(alignment: .leading, spacing: 10) {
                         Text("مثال").font(.headline)
-                        GermanText(text: word.example, font: .title3)
-                        Text(word.exampleTranslation).foregroundStyle(.secondary)
+                        LanguageText(text: word.example, languageTag: word.targetLanguageTag, font: .title3)
+                        LanguageText(text: word.exampleTranslation, languageTag: word.sourceLanguageTag, color: .secondary)
                     }
                 }
 

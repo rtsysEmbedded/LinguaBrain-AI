@@ -8,6 +8,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- Thirty stable multilingual learning cards covering all six directed pairs among Persian, German, and English, with pair-scoped library, dashboard, progress, and review queues.
 - A pre-T005 multilingual smoke gate with persisted English/German/Persian interface selection, dynamic RTL/LTR shell behavior, source/target settings independent from interface language, explicit imported-card BCP 47 tags, and owned runtime-generated `fa→de`, `en→de`, and `de→en` APKG fixtures.
 - Approved T004 import contracts separating Anki source identity from meaning/domain-specific `LexicalSense` identity, preserving learner overrides and FSRS evidence, and defining deterministic inserted/updated/skipped/linked/conflicted/rejected outcomes with `entlassen` polysemy coverage.
 - A normalized legacy/schema-18 reader contract with metadata-driven selection, bounded inner decompression, immutable output records, temporary-file ownership, validation order, error categories, versioned resource limits, official Zstandard 1.5.7 decoder source, and Apple SwiftProtobuf 1.38.1.
@@ -45,6 +46,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- Persist language-pair metadata on every prototype card, include the pair in semantic duplicate identity, correct generic APKG source/target mapping, swap conflicting language selections safely, and render card sides with their own RTL/LTR direction.
 - Repaired the incomplete interface-language switch by adding an Apple String Catalog for 265 prototype-screen strings, resolving variable component copy through the selected in-app locale, localizing dynamic minute/review summaries, shortening German tab labels, and visually smoke-testing English/German/Persian LTR/RTL renders.
 - Corrected APKG field mapping by reading Anki model field names instead of assuming positional German/Persian fields; `anki_single` payloads now restore level, part of speech, meanings, example, and Persian example translation, and deterministic re-import updates previously incomplete records.
 - Added the first APKG import boundary: native file selection and a read-only ZIP central-directory preflight that rejects traversal paths, symlinks, encrypted/unsupported entries, duplicates, excessive expansion, suspicious ratios, ZIP64, and packages without an Anki collection database.

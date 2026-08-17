@@ -2,10 +2,20 @@ import SwiftUI
 
 struct ProgressPrototypeView: View {
     @Environment(PrototypeStore.self) private var store
+    @Environment(PrototypeLanguageSettings.self) private var languageSettings
     @State private var isResetConfirmationPresented = false
     @State private var persistenceError: String?
 
-    private var week: [Int] { [0, 0, 0, 0, 0, 0, min(store.totalReviews, 50)] }
+    private var activeWords: [PrototypeWord] {
+        store.words(
+            sourceLanguageTag: languageSettings.sourceLanguageTag,
+            targetLanguageTag: languageSettings.targetLanguageTag
+        )
+    }
+    private var reviewedCount: Int { store.reviewedCount(in: activeWords) }
+    private var averageStrength: Double { store.averageStrength(in: activeWords) }
+    private var totalReviews: Int { store.totalReviews(in: activeWords) }
+    private var week: [Int] { [0, 0, 0, 0, 0, 0, min(totalReviews, 50)] }
 
     var body: some View {
         ScrollView {
@@ -39,7 +49,7 @@ struct ProgressPrototypeView: View {
             }
             Button("انصراف", role: .cancel) {}
         } message: {
-            Text("این کار ۵۰ واژه را به حالت اولیه برمی‌گرداند و قابل بازگشت نیست.")
+            Text("این کار تمام واژه‌ها را به حالت اولیه برمی‌گرداند و قابل بازگشت نیست.")
         }
         .alert("خطای ذخیره‌سازی", isPresented: persistenceErrorBinding) {
             Button("باشه", role: .cancel) {
@@ -56,17 +66,17 @@ struct ProgressPrototypeView: View {
             Text("رشد این ماه").font(.title2.bold()).foregroundStyle(.white)
             HStack(spacing: 12) {
                 VStack(alignment: .leading) {
-                    Text("\(store.reviewedCount)").font(.largeTitle.bold())
+                    Text("\(reviewedCount)").font(.largeTitle.bold())
                     Text("واژه مرورشده").font(.caption).foregroundStyle(.white.opacity(0.8))
                 }
                 Spacer()
                 VStack(alignment: .leading) {
-                    Text(store.averageStrength.formatted(.percent.precision(.fractionLength(0)))).font(.largeTitle.bold())
+                    Text(averageStrength.formatted(.percent.precision(.fractionLength(0)))).font(.largeTitle.bold())
                     Text("قدرت میانگین").font(.caption).foregroundStyle(.white.opacity(0.8))
                 }
                 Spacer()
                 VStack(alignment: .leading) {
-                    Text("\(store.totalReviews)").font(.largeTitle.bold())
+                    Text("\(totalReviews)").font(.largeTitle.bold())
                     Text("کل پاسخ‌ها").font(.caption).foregroundStyle(.white.opacity(0.8))
                 }
             }
@@ -102,8 +112,8 @@ struct ProgressPrototypeView: View {
         PrototypeCard {
             VStack(spacing: 17) {
                 SectionHeader(title: "نقشه مهارت‌ها", subtitle: "تسلط واقعی، نه فقط تعداد واژه‌ها")
-                SkillProgressRow(label: "تشخیص واژه", value: store.averageStrength, color: PrototypeTheme.mint)
-                SkillProgressRow(label: "یادآوری فعال", value: store.averageStrength * 0.72, color: PrototypeTheme.accent)
+                SkillProgressRow(label: "تشخیص واژه", value: averageStrength, color: PrototypeTheme.mint)
+                SkillProgressRow(label: "یادآوری فعال", value: averageStrength * 0.72, color: PrototypeTheme.accent)
                 SkillProgressRow(label: "شنیداری", value: 0, color: PrototypeTheme.pink)
                 SkillProgressRow(label: "نوشتن", value: 0, color: PrototypeTheme.blue)
                 SkillProgressRow(label: "استفاده در جمله", value: 0, color: .orange)
@@ -119,7 +129,7 @@ struct ProgressPrototypeView: View {
                     .foregroundStyle(.yellow)
                 VStack(alignment: .leading, spacing: 5) {
                     Text("بینش این هفته").font(.headline)
-                    Text(store.reviewedCount == 0 ? "هنوز هیچ داده‌ای ثبت نشده است. پس از مرور، این بخش باید تغییر کند." : "داده‌های فعلی از \(store.totalReviews) پاسخ روی \(store.reviewedCount) واژه ساخته شده‌اند؛ شنیداری و نوشتن هنوز داده ندارند.")
+                    Text(reviewedCount == 0 ? "هنوز هیچ داده‌ای ثبت نشده است. پس از مرور، این بخش باید تغییر کند." : "داده‌های فعلی از \(totalReviews) پاسخ روی \(reviewedCount) واژه ساخته شده‌اند؛ شنیداری و نوشتن هنوز داده ندارند.")
                         .foregroundStyle(.secondary)
                 }
             }
@@ -134,7 +144,7 @@ struct ProgressPrototypeView: View {
                     .foregroundStyle(PrototypeTheme.accent)
                 VStack(alignment: .leading, spacing: 4) {
                     Text("حالت آزمایش عملکرد").font(.headline)
-                    Text("همهٔ ۵۰ واژه را به وضعیت اولیه و بدون مرور برگردان.")
+                    Text("همهٔ واژه‌ها را به وضعیت اولیه و بدون مرور برگردان.")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                 }

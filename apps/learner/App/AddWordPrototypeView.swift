@@ -6,6 +6,7 @@ import zlib
 struct AddWordPrototypeView: View {
     @Environment(PrototypeStore.self) private var store
     @Environment(PrototypeAISettings.self) private var aiSettings
+    @Environment(PrototypeLanguageSettings.self) private var languageSettings
     @State private var word = "arbeiten"
     @State private var domain = "عمومی"
     @State private var showPreview = true
@@ -249,7 +250,7 @@ struct AddWordPrototypeView: View {
     }
 
     private var cardPreview: some View {
-        let preview = generatedCard?.prototypeWord(domain: domain) ?? PrototypeWord(
+        let rawPreview = generatedCard?.prototypeWord(domain: domain) ?? PrototypeWord(
             german: word.isEmpty ? "arbeiten" : word,
             persian: "—",
             level: "—",
@@ -257,6 +258,10 @@ struct AddWordPrototypeView: View {
             example: "",
             exampleTranslation: "",
             domain: domain
+        )
+        let preview = rawPreview.withLanguagePair(
+            source: languageSettings.sourceLanguageTag,
+            target: languageSettings.targetLanguageTag
         )
         return PrototypeCard {
             VStack(alignment: .leading, spacing: 18) {
@@ -655,14 +660,18 @@ struct APKGCardReader: Sendable {
             let normalizedSource = sanitize(source)
             let normalizedTarget = sanitize(target)
             guard !normalizedSource.isEmpty, !normalizedTarget.isEmpty else { return nil }
+            let sourceTag = sanitize(values["SourceLanguageTag"] ?? "fa")
+            let targetTag = sanitize(values["TargetLanguageTag"] ?? "de")
             return PrototypeWord(
-                german: normalizedSource,
-                persian: normalizedTarget,
+                german: normalizedTarget,
+                persian: normalizedSource,
                 level: sanitize(values["Level"] ?? "A1"),
                 partOfSpeech: sanitize(values["PartOfSpeech"] ?? "Imported"),
-                example: sanitize(values["SourceExample"] ?? ""),
-                exampleTranslation: sanitize(values["TargetExample"] ?? ""),
-                domain: sanitize(values["Domain"] ?? "General")
+                example: sanitize(values["TargetExample"] ?? ""),
+                exampleTranslation: sanitize(values["SourceExample"] ?? ""),
+                domain: sanitize(values["Domain"] ?? "General"),
+                sourceLanguageTag: sourceTag,
+                targetLanguageTag: targetTag
             )
         }
 

@@ -32,6 +32,8 @@ final class PrototypeCardRecord {
     var createdAt: Date
     var sourceIdentifier: String?
     var sourcePackage: String?
+    var sourceLanguageTag: String = "fa"
+    var targetLanguageTag: String = "de"
 
     init(
         word: PrototypeWord,
@@ -55,6 +57,8 @@ final class PrototypeCardRecord {
         self.createdAt = createdAt
         self.sourceIdentifier = sourceIdentifier
         self.sourcePackage = sourcePackage
+        sourceLanguageTag = word.sourceLanguageTag
+        targetLanguageTag = word.targetLanguageTag
     }
 
     var word: PrototypeWord {
@@ -67,7 +71,9 @@ final class PrototypeCardRecord {
             partOfSpeech: partOfSpeech,
             example: example,
             exampleTranslation: exampleTranslation,
-            domain: domain
+            domain: domain,
+            sourceLanguageTag: sourceLanguageTag,
+            targetLanguageTag: targetLanguageTag
         )
     }
 }
@@ -376,6 +382,8 @@ struct PrototypeWord: Identifiable, Hashable, Sendable {
     let example: String
     let exampleTranslation: String
     let domain: String
+    let sourceLanguageTag: String
+    let targetLanguageTag: String
 
     init(
         id: UUID = UUID(),
@@ -386,7 +394,9 @@ struct PrototypeWord: Identifiable, Hashable, Sendable {
         partOfSpeech: String,
         example: String,
         exampleTranslation: String,
-        domain: String = "عمومی"
+        domain: String = "عمومی",
+        sourceLanguageTag: String = "fa",
+        targetLanguageTag: String = "de"
     ) {
         self.id = id
         self.german = german
@@ -397,6 +407,8 @@ struct PrototypeWord: Identifiable, Hashable, Sendable {
         self.example = example
         self.exampleTranslation = exampleTranslation
         self.domain = domain
+        self.sourceLanguageTag = sourceLanguageTag
+        self.targetLanguageTag = targetLanguageTag
     }
 }
 
@@ -409,8 +421,8 @@ struct PrototypeImportedCard: Sendable {
     init(
         sourceIdentifier: String,
         word: PrototypeWord,
-        sourceLanguageTag: String = "de",
-        targetLanguageTag: String = "fa"
+        sourceLanguageTag: String = "fa",
+        targetLanguageTag: String = "de"
     ) {
         self.sourceIdentifier = sourceIdentifier
         self.word = word
@@ -525,6 +537,7 @@ final class PrototypeStore {
             )
             modelContext = ModelContext(modelContainer)
             try seedCardsIfNeeded()
+            try ensureMultilingualSampleCards()
             try restoreCards()
             restorePersistedReviews()
         } catch {
@@ -545,6 +558,38 @@ final class PrototypeStore {
         guard reviewedCount > 0 else { return 0 }
         let total = words.reduce(0.0) { $0 + strength(for: $1) }
         return total / Double(reviewedCount)
+    }
+
+    func words(sourceLanguageTag: String, targetLanguageTag: String) -> [PrototypeWord] {
+        words.filter {
+            $0.sourceLanguageTag == sourceLanguageTag && $0.targetLanguageTag == targetLanguageTag
+        }
+    }
+
+    func reviewedCount(in words: [PrototypeWord]) -> Int {
+        words.filter { reviewCount(for: $0) > 0 }.count
+    }
+
+    func unreviewedCount(in words: [PrototypeWord]) -> Int {
+        words.count - reviewedCount(in: words)
+    }
+
+    func dueCount(in words: [PrototypeWord]) -> Int {
+        words.filter { reviewCount(for: $0) > 0 && isReviewable($0) }.count
+    }
+
+    func weakCount(in words: [PrototypeWord]) -> Int {
+        words.filter { reviewCount(for: $0) > 0 && strength(for: $0) < 0.5 }.count
+    }
+
+    func averageStrength(in words: [PrototypeWord]) -> Double {
+        let reviewed = reviewedCount(in: words)
+        guard reviewed > 0 else { return 0 }
+        return words.reduce(0.0) { $0 + strength(for: $1) } / Double(reviewed)
+    }
+
+    func totalReviews(in words: [PrototypeWord]) -> Int {
+        words.reduce(0) { $0 + reviewCount(for: $1) }
     }
 
     func strength(for word: PrototypeWord, mode: PrototypeReviewMode = .recognition) -> Double {
@@ -685,6 +730,8 @@ final class PrototypeStore {
                     record.example = candidate.word.example
                     record.exampleTranslation = candidate.word.exampleTranslation
                     record.domain = candidate.word.domain
+                    record.sourceLanguageTag = candidate.sourceLanguageTag
+                    record.targetLanguageTag = candidate.targetLanguageTag
                     record.sourcePackage = sourcePackage
                     existingKeys.insert(candidate.word.semanticKey)
                     updated += 1
@@ -695,7 +742,10 @@ final class PrototypeStore {
                     continue
                 }
                 let record = PrototypeCardRecord(
-                    word: candidate.word,
+                    word: candidate.word.withLanguagePair(
+                        source: candidate.sourceLanguageTag,
+                        target: candidate.targetLanguageTag
+                    ),
                     deckID: deck.id,
                     position: existingRecords.count + added,
                     sourceIdentifier: candidate.sourceIdentifier,
@@ -807,6 +857,23 @@ final class PrototypeStore {
         try modelContext.save()
     }
 
+    private func ensureMultilingualSampleCards() throws {
+        let existingRecords = try modelContext.fetch(FetchDescriptor<PrototypeCardRecord>())
+        let existingIDs = Set(existingRecords.map(\.id))
+        let missing = PrototypeData.multilingualSamples.filter { !existingIDs.contains($0.id) }
+        guard !missing.isEmpty else { return }
+
+        let deck = PrototypeDeckRecord(name: "Multilingual Test Cards")
+        modelContext.insert(deck)
+        let offset = existingRecords.count
+        for (index, word) in missing.enumerated() {
+            modelContext.insert(
+                PrototypeCardRecord(word: word, deckID: deck.id, position: offset + index)
+            )
+        }
+        try modelContext.save()
+    }
+
     private func restoreCards() throws {
         let descriptor = FetchDescriptor<PrototypeCardRecord>(
             sortBy: [SortDescriptor(\.position), SortDescriptor(\.createdAt)]
@@ -879,13 +946,29 @@ final class PrototypeStore {
     }
 }
 
-private extension PrototypeWord {
+extension PrototypeWord {
+    func withLanguagePair(source: String, target: String) -> PrototypeWord {
+        PrototypeWord(
+            id: id,
+            german: german,
+            persian: persian,
+            article: article,
+            level: level,
+            partOfSpeech: partOfSpeech,
+            example: example,
+            exampleTranslation: exampleTranslation,
+            domain: domain,
+            sourceLanguageTag: source,
+            targetLanguageTag: target
+        )
+    }
+
     var normalizedGerman: String {
         german.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
     }
 
     var semanticKey: String {
-        [normalizedGerman, persian, domain]
+        [sourceLanguageTag, targetLanguageTag, normalizedGerman, persian, domain]
             .map { $0.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() }
             .joined(separator: "::sense::")
     }
@@ -948,6 +1031,70 @@ enum PrototypeData {
         word("die Zusammenarbeit", "همکاری", "B2", "Nomen", "Danke für die gute Zusammenarbeit.", "از همکاری خوبتان متشکرم.", article: "die"),
         word("die Rückmeldung", "بازخورد", "B2", "Nomen", "Ich warte auf Ihre Rückmeldung.", "منتظر بازخورد شما هستم.", article: "die")
     ]
+
+    /// Five owned test cards for every directed pair among Persian, German,
+    /// and English. `german` temporarily stores target-side text and `persian`
+    /// stores source-side text until the neutral field-name migration in M1.
+    static let multilingualSamples: [PrototypeWord] = [
+        sample(1, "fa", "de", "کتاب", "das Buch", "این یک کتاب است.", "Das ist ein Buch."),
+        sample(2, "fa", "de", "آب", "das Wasser", "من آب می‌نوشم.", "Ich trinke Wasser."),
+        sample(3, "fa", "de", "دوست", "der Freund", "او دوست من است.", "Er ist mein Freund."),
+        sample(4, "fa", "de", "یاد گرفتن", "lernen", "من هر روز یاد می‌گیرم.", "Ich lerne jeden Tag."),
+        sample(5, "fa", "de", "سریع", "schnell", "قطار سریع است.", "Der Zug ist schnell."),
+
+        sample(6, "fa", "en", "خانه", "house", "این خانه بزرگ است.", "This house is large."),
+        sample(7, "fa", "en", "کتاب", "book", "کتاب روی میز است.", "The book is on the table."),
+        sample(8, "fa", "en", "کار کردن", "work", "من امروز کار می‌کنم.", "I work today."),
+        sample(9, "fa", "en", "پرسش", "question", "من یک پرسش دارم.", "I have a question."),
+        sample(10, "fa", "en", "مهم", "important", "این موضوع مهم است.", "This topic is important."),
+
+        sample(11, "de", "fa", "das Haus", "خانه", "Das Haus ist alt.", "خانه قدیمی است."),
+        sample(12, "de", "fa", "das Buch", "کتاب", "Ich lese ein Buch.", "من یک کتاب می‌خوانم."),
+        sample(13, "de", "fa", "arbeiten", "کار کردن", "Wir arbeiten zusammen.", "ما با هم کار می‌کنیم."),
+        sample(14, "de", "fa", "die Frage", "پرسش", "Das ist eine gute Frage.", "این پرسش خوبی است."),
+        sample(15, "de", "fa", "wichtig", "مهم", "Deutsch ist für mich wichtig.", "آلمانی برای من مهم است."),
+
+        sample(16, "de", "en", "das Haus", "house", "Das Haus ist neu.", "The house is new."),
+        sample(17, "de", "en", "das Buch", "book", "Das Buch liegt hier.", "The book is here."),
+        sample(18, "de", "en", "arbeiten", "work", "Ich arbeite in Berlin.", "I work in Berlin."),
+        sample(19, "de", "en", "die Antwort", "answer", "Die Antwort ist richtig.", "The answer is correct."),
+        sample(20, "de", "en", "freundlich", "friendly", "Sie ist sehr freundlich.", "She is very friendly."),
+
+        sample(21, "en", "fa", "home", "خانه", "My home is nearby.", "خانهٔ من نزدیک است."),
+        sample(22, "en", "fa", "water", "آب", "I need some water.", "من کمی آب نیاز دارم."),
+        sample(23, "en", "fa", "learn", "یاد گرفتن", "We learn together.", "ما با هم یاد می‌گیریم."),
+        sample(24, "en", "fa", "friend", "دوست", "She is my friend.", "او دوست من است."),
+        sample(25, "en", "fa", "important", "مهم", "This meeting is important.", "این جلسه مهم است."),
+
+        sample(26, "en", "de", "house", "das Haus", "The house is old.", "Das Haus ist alt."),
+        sample(27, "en", "de", "book", "das Buch", "I am reading a book.", "Ich lese ein Buch."),
+        sample(28, "en", "de", "work", "arbeiten", "We work together.", "Wir arbeiten zusammen."),
+        sample(29, "en", "de", "question", "die Frage", "I have a question.", "Ich habe eine Frage."),
+        sample(30, "en", "de", "friendly", "freundlich", "The doctor is friendly.", "Die Ärztin ist freundlich.")
+    ]
+
+    private static func sample(
+        _ number: Int,
+        _ source: String,
+        _ target: String,
+        _ sourceText: String,
+        _ targetText: String,
+        _ sourceExample: String,
+        _ targetExample: String
+    ) -> PrototypeWord {
+        PrototypeWord(
+            id: UUID(uuidString: String(format: "71000000-0000-4000-8000-%012d", number))!,
+            german: targetText,
+            persian: sourceText,
+            level: "A1",
+            partOfSpeech: "Test",
+            example: targetExample,
+            exampleTranslation: sourceExample,
+            domain: "Multilingual Test",
+            sourceLanguageTag: source,
+            targetLanguageTag: target
+        )
+    }
 
     private static func word(
         _ german: String,

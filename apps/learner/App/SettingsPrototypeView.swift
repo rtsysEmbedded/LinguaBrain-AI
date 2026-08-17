@@ -302,11 +302,11 @@ private struct SettingsDetailPrototypeView: View {
     }
 
     private var sourceLanguageBinding: Binding<String> {
-        Binding(get: { languageSettings.sourceLanguageTag }, set: { languageSettings.sourceLanguageTag = $0 })
+        Binding(get: { languageSettings.sourceLanguageTag }, set: { languageSettings.selectSource($0) })
     }
 
     private var targetLanguageBinding: Binding<String> {
-        Binding(get: { languageSettings.targetLanguageTag }, set: { languageSettings.targetLanguageTag = $0 })
+        Binding(get: { languageSettings.targetLanguageTag }, set: { languageSettings.selectTarget($0) })
     }
 }
 

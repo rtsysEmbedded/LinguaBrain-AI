@@ -11,6 +11,7 @@
 - [x] T003 [P] Research supported `collection.anki21b` variants, constraints, and fixture provenance in `research.md`.
 - [x] T004 Approve normalized reader, provenance identity, reconciliation, and conflict contracts in `data-model.md` and `contracts/`.
 - [x] T004A [P] Verify persisted English/German/Persian interface switching independently from learning source/target roles, with generated multilingual APKG fixtures.
+- [x] T004B [P] Seed and isolate learning cards for all six directed English/German/Persian language pairs before T005.
 
 ## Phase 2 — Safe modern inspection and reading
 
@@ -41,7 +42,7 @@
 
 ## Dependencies and Parallel Work
 
-- T001–T004A are foundational. T005 starts only after the localization/language-pair smoke gate remains green.
+- T001–T004B are foundational. T005 starts only after the localization/language-pair smoke gate remains green.
 - T006 precedes T007. T008 may run with T007 only with separate file ownership.
 - T010 precedes T011/T013. T007, T008, T010, and T011 precede T012.
 - T012 and T014 precede T015; all implementation precedes T016–T019.
@@ -99,3 +100,12 @@ For each completed task record the agent/tool, date, changed files, commands/tes
 - **Verification**: Five tests passed on iPhone 17 / iOS 27; English, German, and Persian core-screen renders were visually smoke-tested; `LinguaBrain Mac` built successfully with signing disabled.
 - **Known boundary**: Functional localization now covers the prototype screens; professional editorial review of the generated English/German copy and complete language-package terminology remain DOC-18/M2 scope.
 - **Commit**: see the T004A completion commit in Git history; its SHA is included in the handoff response.
+
+### T004B — 2026-08-17
+
+- **Agent/tool**: Codex with SwiftData, SwiftUI, XCTest, Xcode 27.0, and iPhone 17 / iOS 27 Simulator.
+- **Changed scope**: Added five stable cards for each of the six directed pairs among `fa`, `de`, and `en`; persisted pair tags on cards; filtered Today, Library, Review, and Progress by the active pair; corrected generic APKG target/source mapping and per-side text direction.
+- **Selection rule**: Explanation/source and learning/target remain distinct. Choosing a language already used by the other role swaps the roles instead of creating an invalid same-language pair.
+- **Verification**: Six tests passed, including exhaustive pair isolation. An existing simulator database migrated successfully and the `fa→en` dashboard exposed exactly five new cards without cards from other pairs.
+- **Known boundary**: The 30 cards are owned smoke-test content, not the final DOC-18 language package or a production curriculum.
+- **Commit**: see the T004B completion commit in Git history; its SHA is included in the handoff response.

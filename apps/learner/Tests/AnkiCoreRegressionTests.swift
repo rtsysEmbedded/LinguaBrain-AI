@@ -39,6 +39,12 @@ final class AnkiCoreRegressionTests: XCTestCase {
         XCTAssertEqual(restoredPair.sourceLanguageTag, "en")
         XCTAssertEqual(restoredPair.targetLanguageTag, "de")
         XCTAssertTrue(restoredPair.isValidPair)
+
+        restoredPair.selectTarget("en")
+        restoredPair.selectSource("en")
+        XCTAssertEqual(restoredPair.sourceLanguageTag, "en")
+        XCTAssertEqual(restoredPair.targetLanguageTag, "de")
+        XCTAssertTrue(restoredPair.isValidPair)
     }
 
     func testSanitizedLanguagePairAnkiFixturesCarryExplicitDirection() throws {
@@ -54,10 +60,28 @@ final class AnkiCoreRegressionTests: XCTestCase {
             let card = try XCTUnwrap(APKGCardReader().readCards(from: preview).first)
             XCTAssertEqual(card.sourceLanguageTag, fixture.sourceLanguageTag)
             XCTAssertEqual(card.targetLanguageTag, fixture.targetLanguageTag)
-            XCTAssertEqual(card.word.german, fixture.sourceText)
-            XCTAssertEqual(card.word.persian, fixture.targetText)
-            XCTAssertEqual(card.word.example, fixture.sourceExample)
-            XCTAssertEqual(card.word.exampleTranslation, fixture.targetExample)
+            XCTAssertEqual(card.word.german, fixture.targetText)
+            XCTAssertEqual(card.word.persian, fixture.sourceText)
+            XCTAssertEqual(card.word.example, fixture.targetExample)
+            XCTAssertEqual(card.word.exampleTranslation, fixture.sourceExample)
+            XCTAssertEqual(card.word.sourceLanguageTag, fixture.sourceLanguageTag)
+            XCTAssertEqual(card.word.targetLanguageTag, fixture.targetLanguageTag)
+        }
+    }
+
+    @MainActor
+    func testEverySupportedDirectedLanguagePairHasIsolatedLearningCards() {
+        let store = PrototypeStore(inMemory: true)
+        let languages = ["fa", "de", "en"]
+
+        for source in languages {
+            for target in languages where target != source {
+                let cards = store.words(sourceLanguageTag: source, targetLanguageTag: target)
+                XCTAssertGreaterThanOrEqual(cards.count, 5, "Missing test cards for \(source)→\(target)")
+                XCTAssertTrue(cards.allSatisfy {
+                    $0.sourceLanguageTag == source && $0.targetLanguageTag == target
+                })
+            }
         }
     }
 
@@ -110,6 +134,9 @@ final class AnkiCoreRegressionTests: XCTestCase {
         XCTAssertEqual(second.addedCount, 0)
         XCTAssertEqual(second.updatedCount, 1)
         XCTAssertTrue(store.words.contains { $0.persian == "مرخص کردن" && $0.domain == "پزشکی" })
+        XCTAssertTrue(store.words.contains {
+            $0.persian == "مرخص کردن" && $0.sourceLanguageTag == "fa" && $0.targetLanguageTag == "de"
+        })
 
         let duplicateSense = PrototypeImportedCard(sourceIdentifier: "regression.apkg::43", word: changed.word)
         let third = try XCTUnwrap(store.importCards([duplicateSense], deckName: "Regression", sourcePackage: "regression.apkg"))

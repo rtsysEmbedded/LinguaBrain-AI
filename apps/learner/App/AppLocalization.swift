@@ -138,4 +138,14 @@ final class PrototypeLanguageSettings {
     }
 
     var isValidPair: Bool { sourceLanguageTag != targetLanguageTag }
+
+    func selectSource(_ tag: String) {
+        if tag == targetLanguageTag { targetLanguageTag = sourceLanguageTag }
+        sourceLanguageTag = tag
+    }
+
+    func selectTarget(_ tag: String) {
+        if tag == sourceLanguageTag { sourceLanguageTag = targetLanguageTag }
+        targetLanguageTag = tag
+    }
 }

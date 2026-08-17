@@ -81,6 +81,25 @@ struct GermanText: View {
     }
 }
 
+struct LanguageText: View {
+    let text: String
+    let languageTag: String
+    var font: Font = .body
+    var color: Color = .primary
+
+    private var direction: LayoutDirection {
+        languageTag == "fa" ? .rightToLeft : .leftToRight
+    }
+
+    var body: some View {
+        Text(text)
+            .font(font)
+            .foregroundStyle(color)
+            .environment(\.layoutDirection, direction)
+            .multilineTextAlignment(.center)
+    }
+}
+
 struct SkillProgressRow: View {
     @Environment(PrototypeLocalization.self) private var localization
     let label: String

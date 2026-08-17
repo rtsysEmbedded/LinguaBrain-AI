@@ -3,13 +3,26 @@ import SwiftUI
 struct TodayPrototypeView: View {
     @Environment(PrototypeStore.self) private var store
     @Environment(PrototypeLocalization.self) private var localization
+    @Environment(PrototypeLanguageSettings.self) private var languageSettings
     @State private var energy = 6.0
     @State private var selectedTime = 20
+
+    private var activeWords: [PrototypeWord] {
+        store.words(
+            sourceLanguageTag: languageSettings.sourceLanguageTag,
+            targetLanguageTag: languageSettings.targetLanguageTag
+        )
+    }
+
+    private var reviewedCount: Int { store.reviewedCount(in: activeWords) }
+    private var unreviewedCount: Int { store.unreviewedCount(in: activeWords) }
+    private var dueCount: Int { store.dueCount(in: activeWords) }
+    private var weakCount: Int { store.weakCount(in: activeWords) }
 
     private var newCardLimit: Int {
         let energyFactor = 0.45 + (energy / 12)
         let timeCapacity = Double(selectedTime) / 1.8
-        return min(store.unreviewedCount, max(1, min(20, Int((timeCapacity * energyFactor).rounded()))))
+        return min(unreviewedCount, max(0, min(20, Int((timeCapacity * energyFactor).rounded()))))
     }
 
     private var learningMode: String {
@@ -58,9 +71,9 @@ struct TodayPrototypeView: View {
             }
 
             HStack(spacing: 10) {
-                MetricPill(value: "\(store.dueCount)", label: "مرور", symbol: "arrow.clockwise", color: PrototypeTheme.accent)
-                MetricPill(value: "\(store.unreviewedCount)", label: "جدید", symbol: "sparkles", color: PrototypeTheme.pink)
-                MetricPill(value: store.averageStrength.formatted(.percent.precision(.fractionLength(0))), label: "حافظه", symbol: "brain", color: PrototypeTheme.mint)
+                MetricPill(value: "\(dueCount)", label: "مرور", symbol: "arrow.clockwise", color: PrototypeTheme.accent)
+                MetricPill(value: "\(unreviewedCount)", label: "جدید", symbol: "sparkles", color: PrototypeTheme.pink)
+                MetricPill(value: store.averageStrength(in: activeWords).formatted(.percent.precision(.fractionLength(0))), label: "حافظه", symbol: "brain", color: PrototypeTheme.mint)
             }
             .foregroundStyle(.primary)
         }
@@ -98,7 +111,7 @@ struct TodayPrototypeView: View {
             SectionHeader(title: "برنامه پیشنهادی", subtitle: "\(localization.minutes(selectedTime)) · \(learningMode)")
             PrototypeCard {
                 VStack(spacing: 0) {
-                    planRow(symbol: "rectangle.stack.fill", color: PrototypeTheme.accent, title: "مرور هوشمند", detail: localization.reviewSummary(due: store.dueCount, new: newCardLimit), time: localization.minutes(selectedTime))
+                    planRow(symbol: "rectangle.stack.fill", color: PrototypeTheme.accent, title: "مرور هوشمند", detail: localization.reviewSummary(due: dueCount, new: newCardLimit), time: localization.minutes(selectedTime))
                     Divider().padding(.vertical, 12)
                     planRow(symbol: "text.book.closed.fill", color: PrototypeTheme.blue, title: "متن کوتاه", detail: "محیط کار · سطح B1", time: localization.minutes(7))
                     Divider().padding(.vertical, 12)
@@ -155,7 +168,7 @@ struct TodayPrototypeView: View {
                     .background(PrototypeTheme.pink.opacity(0.12), in: Circle())
                 VStack(alignment: .leading, spacing: 4) {
                     Text("پیشنهاد مربی").font(.headline)
-                    Text(store.reviewedCount == 0 ? "وضعیت کاربر ریست است. مرور را شروع کن تا همهٔ بخش‌ها هم‌زمان تغییر کنند." : "تا اینجا \(store.reviewedCount) واژه مرور شده و \(store.weakCount) واژه نیاز به تمرین بیشتر دارد.")
+                    Text(reviewedCount == 0 ? "وضعیت کاربر ریست است. مرور را شروع کن تا همهٔ بخش‌ها هم‌زمان تغییر کنند." : "تا اینجا \(reviewedCount) واژه مرور شده و \(weakCount) واژه نیاز به تمرین بیشتر دارد.")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                 }

@@ -4,6 +4,7 @@ struct ReviewPrototypeView: View {
     let newCardLimit: Int?
     let mode: PrototypeReviewMode
     @Environment(PrototypeStore.self) private var store
+    @Environment(PrototypeLanguageSettings.self) private var languageSettings
     @State private var revealed = false
     @State private var queue: [UUID] = []
     @State private var currentWordID: UUID?
@@ -23,8 +24,15 @@ struct ReviewPrototypeView: View {
         return store.words.first { $0.id == currentWordID }
     }
 
+    private var activeWords: [PrototypeWord] {
+        store.words(
+            sourceLanguageTag: languageSettings.sourceLanguageTag,
+            targetLanguageTag: languageSettings.targetLanguageTag
+        )
+    }
+
     private var progress: Double {
-        Double(store.reviewedCount) / Double(max(store.words.count, 1))
+        Double(store.reviewedCount(in: activeWords)) / Double(max(activeWords.count, 1))
     }
 
     var body: some View {
@@ -73,29 +81,32 @@ struct ReviewPrototypeView: View {
             Spacer(minLength: 10)
 
             VStack(spacing: 22) {
-                Text(mode == .recognition ? "این واژه به فارسی یعنی چه؟" : "معادل آلمانی این واژه چیست؟")
+                Text(mode == .recognition ? "معنی این واژه چیست؟" : "معادل آن در زبان یادگیری چیست؟")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                 if mode == .recognition {
-                    Text(word.german)
-                        .font(.system(size: 38, weight: .bold, design: .rounded))
-                        .environment(\.layoutDirection, .leftToRight)
-                        .multilineTextAlignment(.center)
+                    LanguageText(
+                        text: word.german,
+                        languageTag: word.targetLanguageTag,
+                        font: .system(size: 38, weight: .bold, design: .rounded)
+                    )
                 } else {
-                    Text(word.persian)
-                        .font(.system(size: 34, weight: .bold, design: .rounded))
-                        .multilineTextAlignment(.center)
+                    LanguageText(
+                        text: word.persian,
+                        languageTag: word.sourceLanguageTag,
+                        font: .system(size: 34, weight: .bold, design: .rounded)
+                    )
                 }
 
                 if revealed {
                     Divider()
                     if mode == .recognition {
-                        Text(word.persian).font(.title.bold())
+                        LanguageText(text: word.persian, languageTag: word.sourceLanguageTag, font: .title.bold())
                     } else {
-                        GermanText(text: word.german, font: .title.bold())
+                        LanguageText(text: word.german, languageTag: word.targetLanguageTag, font: .title.bold())
                     }
-                    GermanText(text: word.example, font: .title3)
-                    Text(word.exampleTranslation).foregroundStyle(.secondary)
+                    LanguageText(text: word.example, languageTag: word.targetLanguageTag, font: .title3)
+                    LanguageText(text: word.exampleTranslation, languageTag: word.sourceLanguageTag, color: .secondary)
                 } else {
                     Button("نمایش پاسخ") {
                         withAnimation(.snappy) { revealed = true }
@@ -212,15 +223,15 @@ struct ReviewPrototypeView: View {
     }
 
     private func startSession() {
-        let due = store.words.filter {
+        let due = activeWords.filter {
             store.reviewCount(for: $0, mode: mode) > 0 && store.isReviewable($0, mode: mode)
         }
-        let shortTerm = store.words.filter {
+        let shortTerm = activeWords.filter {
             store.reviewCount(for: $0, mode: mode) > 0
                 && !store.isReviewable($0, mode: mode)
                 && store.shouldRepeatInCurrentSession($0, mode: mode)
         }
-        let unseen = store.words.filter { store.reviewCount(for: $0, mode: mode) == 0 }
+        let unseen = activeWords.filter { store.reviewCount(for: $0, mode: mode) == 0 }
         let newCards = Array(unseen.prefix(newCardLimit ?? unseen.count))
         queue = (due + newCards + shortTerm).map(\.id)
         currentWordID = nil
