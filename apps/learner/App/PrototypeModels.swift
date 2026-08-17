@@ -344,14 +344,15 @@ enum PrototypeSection: String, CaseIterable, Identifiable, Hashable {
 
     var id: Self { self }
 
-    var title: String {
-        switch self {
-        case .today: "امروز"
-        case .library: "کتابخانه"
-        case .add: "افزودن"
-        case .progress: "پیشرفت"
-        case .settings: "تنظیمات"
+    func title(for language: PrototypeAppLanguage) -> String {
+        let key: PrototypeTextKey = switch self {
+        case .today: .today
+        case .library: .library
+        case .add: .add
+        case .progress: .progress
+        case .settings: .settings
         }
+        return PrototypeLocalization.text(key, language: language)
     }
 
     var symbol: String {
@@ -402,6 +403,20 @@ struct PrototypeWord: Identifiable, Hashable, Sendable {
 struct PrototypeImportedCard: Sendable {
     let sourceIdentifier: String
     let word: PrototypeWord
+    let sourceLanguageTag: String
+    let targetLanguageTag: String
+
+    init(
+        sourceIdentifier: String,
+        word: PrototypeWord,
+        sourceLanguageTag: String = "de",
+        targetLanguageTag: String = "fa"
+    ) {
+        self.sourceIdentifier = sourceIdentifier
+        self.word = word
+        self.sourceLanguageTag = sourceLanguageTag
+        self.targetLanguageTag = targetLanguageTag
+    }
 }
 
 struct PrototypeImportResult: Sendable {

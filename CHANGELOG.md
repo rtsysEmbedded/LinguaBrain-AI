@@ -8,6 +8,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- A pre-T005 multilingual smoke gate with persisted English/German/Persian interface selection, dynamic RTL/LTR shell behavior, source/target settings independent from interface language, explicit imported-card BCP 47 tags, and owned runtime-generated `fa→de`, `en→de`, and `de→en` APKG fixtures.
 - Approved T004 import contracts separating Anki source identity from meaning/domain-specific `LexicalSense` identity, preserving learner overrides and FSRS evidence, and defining deterministic inserted/updated/skipped/linked/conflicted/rejected outcomes with `entlassen` polysemy coverage.
 - A normalized legacy/schema-18 reader contract with metadata-driven selection, bounded inner decompression, immutable output records, temporary-file ownership, validation order, error categories, versioned resource limits, official Zstandard 1.5.7 decoder source, and Apple SwiftProtobuf 1.38.1.
 - A pinned modern Anki package research baseline covering metadata-driven variant selection, the inner Zstandard collection/media layers, schema-18 storage implications, protobuf media integrity, supported/rejected variants, security limits, and reproducible fixture provenance.

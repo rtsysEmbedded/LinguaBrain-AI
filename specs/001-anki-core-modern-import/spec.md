@@ -78,6 +78,8 @@ As a learner, I can review imported cards offline using reveal plus Again, Hard,
 - **FR-013**: Failures MUST provide recoverable feedback and MUST NOT claim success before persistence succeeds.
 - **FR-014**: Surface spelling MUST NOT be a uniqueness key; each meaning/domain-specific `LexicalSense` MUST retain an independent identity and review state.
 - **FR-015**: Source-owned values, learner overrides, and learner review evidence MUST have separate ownership and re-import MUST NOT silently overwrite learner-owned state.
+- **FR-016**: Interface language and learning source/target language roles MUST be independently persisted BCP 47 values; changing English/German/Persian interface language MUST NOT alter the learning pair.
+- **FR-017**: Import fixtures and normalized records MUST carry explicit source and target language tags rather than assuming German-to-Persian from field position.
 
 ### Key Entities
 

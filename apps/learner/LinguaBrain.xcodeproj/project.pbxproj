@@ -19,6 +19,7 @@
 		10000000000000000000000A /* SettingsPrototypeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20000000000000000000000A /* SettingsPrototypeView.swift */; };
 		10000000000000000000000B /* OnboardingPrototypeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20000000000000000000000B /* OnboardingPrototypeView.swift */; };
 		10000000000000000000000C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 20000000000000000000000C /* Assets.xcassets */; };
+		10000000000000000000000D /* AppLocalization.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20000000000000000000000F /* AppLocalization.swift */; };
 		110000000000000000000001 /* LinguaBrainPrototypeApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000001 /* LinguaBrainPrototypeApp.swift */; };
 		110000000000000000000002 /* PrototypeModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000002 /* PrototypeModels.swift */; };
 		110000000000000000000003 /* PrototypeComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000003 /* PrototypeComponents.swift */; };
@@ -31,9 +32,11 @@
 		11000000000000000000000A /* SettingsPrototypeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20000000000000000000000A /* SettingsPrototypeView.swift */; };
 		11000000000000000000000B /* OnboardingPrototypeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20000000000000000000000B /* OnboardingPrototypeView.swift */; };
 		11000000000000000000000C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 20000000000000000000000C /* Assets.xcassets */; };
+		11000000000000000000000D /* AppLocalization.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20000000000000000000000F /* AppLocalization.swift */; };
 		120000000000000000000001 /* AnkiCoreRegressionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 220000000000000000000001 /* AnkiCoreRegressionTests.swift */; };
 		120000000000000000000002 /* APKGFixtureFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 220000000000000000000002 /* APKGFixtureFactory.swift */; };
 		120000000000000000000003 /* legacy-linguabrain.json in Resources */ = {isa = PBXBuildFile; fileRef = 220000000000000000000003 /* legacy-linguabrain.json */; };
+		120000000000000000000004 /* multilingual-language-pairs.json in Resources */ = {isa = PBXBuildFile; fileRef = 220000000000000000000005 /* multilingual-language-pairs.json */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -61,10 +64,12 @@
 		20000000000000000000000C /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		20000000000000000000000D /* LinguaBrain.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LinguaBrain.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		20000000000000000000000E /* LinguaBrain Mac.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "LinguaBrain Mac.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		20000000000000000000000F /* AppLocalization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLocalization.swift; sourceTree = "<group>"; };
 		220000000000000000000001 /* AnkiCoreRegressionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnkiCoreRegressionTests.swift; sourceTree = "<group>"; };
 		220000000000000000000002 /* APKGFixtureFactory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APKGFixtureFactory.swift; sourceTree = "<group>"; };
 		220000000000000000000003 /* legacy-linguabrain.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "legacy-linguabrain.json"; sourceTree = "<group>"; };
 		220000000000000000000004 /* LinguaBrainTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = LinguaBrainTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		220000000000000000000005 /* multilingual-language-pairs.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "multilingual-language-pairs.json"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -106,6 +111,7 @@
 			isa = PBXGroup;
 			children = (
 				200000000000000000000001 /* LinguaBrainPrototypeApp.swift */,
+				20000000000000000000000F /* AppLocalization.swift */,
 				200000000000000000000002 /* PrototypeModels.swift */,
 				200000000000000000000003 /* PrototypeComponents.swift */,
 				200000000000000000000004 /* PrototypeRootView.swift */,
@@ -152,6 +158,7 @@
 			isa = PBXGroup;
 			children = (
 				220000000000000000000003 /* legacy-linguabrain.json */,
+				220000000000000000000005 /* multilingual-language-pairs.json */,
 			);
 			path = Fixtures;
 			sourceTree = "<group>";
@@ -239,6 +246,7 @@
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				en,
+				de,
 				fa,
 				Base,
 			);
@@ -276,6 +284,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				120000000000000000000003 /* legacy-linguabrain.json in Resources */,
+				120000000000000000000004 /* multilingual-language-pairs.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -287,6 +296,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				100000000000000000000001 /* LinguaBrainPrototypeApp.swift in Sources */,
+				10000000000000000000000D /* AppLocalization.swift in Sources */,
 				100000000000000000000002 /* PrototypeModels.swift in Sources */,
 				100000000000000000000003 /* PrototypeComponents.swift in Sources */,
 				100000000000000000000004 /* PrototypeRootView.swift in Sources */,
@@ -305,6 +315,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				110000000000000000000001 /* LinguaBrainPrototypeApp.swift in Sources */,
+				11000000000000000000000D /* AppLocalization.swift in Sources */,
 				110000000000000000000002 /* PrototypeModels.swift in Sources */,
 				110000000000000000000003 /* PrototypeComponents.swift in Sources */,
 				110000000000000000000004 /* PrototypeRootView.swift in Sources */,

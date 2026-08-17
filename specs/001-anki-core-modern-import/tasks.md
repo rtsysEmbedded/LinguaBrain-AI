@@ -10,6 +10,7 @@
 - [x] T002 [P] Decide and record the production Swift persistence/query/migration adapter in ADR-003.
 - [x] T003 [P] Research supported `collection.anki21b` variants, constraints, and fixture provenance in `research.md`.
 - [x] T004 Approve normalized reader, provenance identity, reconciliation, and conflict contracts in `data-model.md` and `contracts/`.
+- [x] T004A [P] Verify persisted English/German/Persian interface switching independently from learning source/target roles, with generated multilingual APKG fixtures.
 
 ## Phase 2 — Safe modern inspection and reading
 
@@ -40,7 +41,7 @@
 
 ## Dependencies and Parallel Work
 
-- T001–T004 are foundational. T005 may run with decision work if its format is not treated as final.
+- T001–T004A are foundational. T005 starts only after the localization/language-pair smoke gate remains green.
 - T006 precedes T007. T008 may run with T007 only with separate file ownership.
 - T010 precedes T011/T013. T007, T008, T010, and T011 precede T012.
 - T012 and T014 precede T015; all implementation precedes T016–T019.
@@ -88,3 +89,13 @@ For each completed task record the agent/tool, date, changed files, commands/tes
 - **Known boundary**: T005–T008 implement fixtures and readers; T010–T013 implement the approved reconciliation/transaction contracts in production code.
 - **Verification**: Markdown consistency, contract cross-links, task/status alignment, and staged diff validation; no runtime code changed.
 - **Commit**: see the T004 completion commit in Git history; its SHA is included in the handoff response.
+
+### T004A — 2026-08-17
+
+- **Agent/tool**: Codex with SwiftUI, XCTest, Xcode 27.0, iOS 27 Simulator, and macOS 27 SDK.
+- **Changed scope**: Added persisted `PrototypeAppLanguage` and independent source/target settings, dynamic RTL/LTR shell behavior, a functional settings picker, explicit imported-card language tags, and a synthetic three-direction fixture catalog/runtime APKG generator.
+- **Language-independence decision**: Interface `en`/`de`/`fa` is not the learning pair; source/target tags survive interface changes and reject identical roles.
+- **Fixture evidence**: Runtime-generated owned APKG packages cover `fa→de`, `en→de`, and `de→en`, with asserted words and examples.
+- **Verification**: Five tests passed on iPhone 17 / iOS 27; `LinguaBrain Mac` built successfully with signing disabled.
+- **Known boundary**: This validates the app shell/settings and import metadata; complete professional translation of every prototype string remains DOC-18/M2 scope.
+- **Commit**: see the T004A completion commit in Git history; its SHA is included in the handoff response.

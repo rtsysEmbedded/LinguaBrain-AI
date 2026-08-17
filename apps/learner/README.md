@@ -13,11 +13,14 @@ Apple-platform experience before production architecture is implemented.
 - Review-session interface
 - Progress dashboard
 - Settings and onboarding
+- Persisted interface-language switching for the shell/settings surface (`en`, `de`, `fa`) with automatic LTR/RTL direction
+- Independent persisted explanation/source and learning/target language roles
+- Runtime-generated sanitized APKG smoke fixtures for `fa→de`, `en→de`, and `de→en`
 - Adaptive layouts for iPhone, iPad, and Mac
 
-All vocabulary, progress, and recommendations are mock data. The prototype has
-no persistence, AI-provider calls, synchronization, recording, or production
-learning logic.
+The prototype includes local persistence and selected functional Anki/OpenRouter
+validation paths, but it is not the production architecture. Vocabulary,
+progress, recommendations, and untranslated feature copy remain prototype data.
 
 ## Run in Xcode
 
@@ -25,6 +28,8 @@ learning logic.
 2. Select the `LinguaBrain` scheme for an iPhone or iPad simulator, or select
    `LinguaBrain Mac` for macOS.
 3. Press **Run** (`Command-R`).
+4. Open **Settings → Languages and level** to switch the interface independently
+   from the explanation and learning languages.
 
 The production walking skeleton remains tracked separately in
 `PROJECT_STATUS.md`; completion of this prototype does not complete milestone

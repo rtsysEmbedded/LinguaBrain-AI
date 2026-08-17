@@ -1,0 +1,40 @@
+{
+  "fixtures": [
+    {
+      "packageName": "sanitized-fa-de.apkg",
+      "modelID": 1710000000000,
+      "cardID": 1710000000001,
+      "noteID": 1710000000002,
+      "sourceLanguageTag": "fa",
+      "targetLanguageTag": "de",
+      "sourceText": "کتاب",
+      "targetText": "das Buch",
+      "sourceExample": "این یک کتاب است.",
+      "targetExample": "Das ist ein Buch."
+    },
+    {
+      "packageName": "sanitized-en-de.apkg",
+      "modelID": 1720000000000,
+      "cardID": 1720000000001,
+      "noteID": 1720000000002,
+      "sourceLanguageTag": "en",
+      "targetLanguageTag": "de",
+      "sourceText": "appointment",
+      "targetText": "der Termin",
+      "sourceExample": "I have an appointment tomorrow.",
+      "targetExample": "Ich habe morgen einen Termin."
+    },
+    {
+      "packageName": "sanitized-de-en.apkg",
+      "modelID": 1730000000000,
+      "cardID": 1730000000001,
+      "noteID": 1730000000002,
+      "sourceLanguageTag": "de",
+      "targetLanguageTag": "en",
+      "sourceText": "die Entscheidung",
+      "targetText": "decision",
+      "sourceExample": "Wir treffen eine Entscheidung.",
+      "targetExample": "We make a decision."
+    }
+  ]
+}

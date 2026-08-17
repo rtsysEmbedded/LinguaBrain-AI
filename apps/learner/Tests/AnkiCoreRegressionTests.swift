@@ -2,6 +2,61 @@ import XCTest
 @testable import LinguaBrain
 
 final class AnkiCoreRegressionTests: XCTestCase {
+    func testInterfaceLanguageSwitchPersistsWithoutChangingLearningPair() throws {
+        let suiteName = "LinguaBrain.LocalizationTests.\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+
+        let pair = PrototypeLanguageSettings(defaults: defaults)
+        pair.sourceLanguageTag = "en"
+        pair.targetLanguageTag = "de"
+
+        let localization = PrototypeLocalization(defaults: defaults)
+        for language in PrototypeAppLanguage.allCases {
+            for key in PrototypeTextKey.allCases {
+                XCTAssertFalse(PrototypeLocalization.text(key, language: language).isEmpty)
+            }
+        }
+        localization.language = .english
+        XCTAssertEqual(localization.text(.settingsTitle), "Settings")
+        XCTAssertEqual(localization.language.layoutDirection, .leftToRight)
+
+        localization.language = .german
+        XCTAssertEqual(localization.text(.settingsTitle), "Einstellungen")
+        XCTAssertEqual(localization.language.layoutDirection, .leftToRight)
+
+        localization.language = .persian
+        XCTAssertEqual(localization.text(.settingsTitle), "تنظیمات")
+        XCTAssertEqual(localization.language.layoutDirection, .rightToLeft)
+
+        let restoredLocalization = PrototypeLocalization(defaults: defaults)
+        let restoredPair = PrototypeLanguageSettings(defaults: defaults)
+        XCTAssertEqual(restoredLocalization.language, .persian)
+        XCTAssertEqual(restoredPair.sourceLanguageTag, "en")
+        XCTAssertEqual(restoredPair.targetLanguageTag, "de")
+        XCTAssertTrue(restoredPair.isValidPair)
+    }
+
+    func testSanitizedLanguagePairAnkiFixturesCarryExplicitDirection() throws {
+        let fixtures = try APKGFixtureFactory.loadLanguagePairFixtures()
+        XCTAssertEqual(Set(fixtures.map { "\($0.sourceLanguageTag)->\($0.targetLanguageTag)" }), ["fa->de", "en->de", "de->en"])
+
+        for fixture in fixtures {
+            let packageURL = try APKGFixtureFactory.makeLanguagePairPackage(from: fixture)
+            defer { try? FileManager.default.removeItem(at: packageURL.deletingLastPathComponent()) }
+            let preview = try APKGArchiveInspector().inspect(url: packageURL)
+            defer { try? FileManager.default.removeItem(at: preview.stagedPackageURL) }
+
+            let card = try XCTUnwrap(APKGCardReader().readCards(from: preview).first)
+            XCTAssertEqual(card.sourceLanguageTag, fixture.sourceLanguageTag)
+            XCTAssertEqual(card.targetLanguageTag, fixture.targetLanguageTag)
+            XCTAssertEqual(card.word.german, fixture.sourceText)
+            XCTAssertEqual(card.word.persian, fixture.targetText)
+            XCTAssertEqual(card.word.example, fixture.sourceExample)
+            XCTAssertEqual(card.word.exampleTranslation, fixture.targetExample)
+        }
+    }
+
     func testSanitizedLegacyPackageInspectsAndMapsLinguaBrainFields() throws {
         let fixture = try APKGFixtureFactory.loadFixture()
         let packageURL = try APKGFixtureFactory.makeLegacyPackage(from: fixture)

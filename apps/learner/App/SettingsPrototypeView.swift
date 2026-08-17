@@ -3,6 +3,9 @@ import Observation
 import Security
 
 struct SettingsPrototypeView: View {
+    @Environment(PrototypeLocalization.self) private var localization
+    @Environment(PrototypeLanguageSettings.self) private var languageSettings
+
     var body: some View {
         ZStack {
             PrototypeBackground()
@@ -12,13 +15,17 @@ struct SettingsPrototypeView: View {
                     profileCard
                     learningSummary
                     settingsGroup(
-                        title: "یادگیری و زبان",
-                        subtitle: "مسیر آموزشی و شیوهٔ تمرین",
+                        title: localization.text(.learningAndLanguage),
+                        subtitle: localization.text(.learningAndLanguageSubtitle),
                         items: [
-                            .init(title: "زبان‌ها و سطح", detail: "فارسی ← آلمانی · B1", symbol: "character.book.closed.fill", color: .blue, destination: .languages),
-                            .init(title: "هدف‌ها و برنامهٔ روزانه", detail: "کار در آلمان · ۲۰ دقیقه", symbol: "target", color: PrototypeTheme.pink, destination: .learning),
-                            .init(title: "مرور و تمرین", detail: "مرور تطبیقی · حالت متعادل", symbol: "rectangle.stack.fill", color: .orange, destination: .review),
-                            .init(title: "صدا و تلفظ", detail: "صدای آلمانی · سرعت عادی", symbol: "waveform", color: PrototypeTheme.mint, destination: .audio)
+                            .init(
+                                title: localization.text(.languagesAndLevel),
+                                detail: "\(languageName(languageSettings.sourceLanguageTag)) → \(languageName(languageSettings.targetLanguageTag)) · B1",
+                                symbol: "character.book.closed.fill", color: .blue, destination: .languages
+                            ),
+                            .init(title: localization.text(.goalsAndDailyPlan), detail: "کار در آلمان · ۲۰ دقیقه", symbol: "target", color: PrototypeTheme.pink, destination: .learning),
+                            .init(title: localization.text(.reviewAndPractice), detail: "مرور تطبیقی · حالت متعادل", symbol: "rectangle.stack.fill", color: .orange, destination: .review),
+                            .init(title: localization.text(.audioAndPronunciation), detail: "صدای آلمانی · سرعت عادی", symbol: "waveform", color: PrototypeTheme.mint, destination: .audio)
                         ]
                     )
                     settingsGroup(
@@ -45,7 +52,7 @@ struct SettingsPrototypeView: View {
                 .frame(maxWidth: .infinity)
             }
         }
-        .navigationTitle("تنظیمات")
+        .navigationTitle(localization.text(.settingsTitle))
     }
 
     private var profileCard: some View {
@@ -74,18 +81,22 @@ struct SettingsPrototypeView: View {
                 VStack(alignment: .leading, spacing: 5) {
                     Text("سعید رضایی")
                         .font(.title3.weight(.bold))
-                    Text("یادگیرندهٔ آلمانی · سطح B1")
+                    Text(localization.text(.learnerSubtitle))
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
-                    Label("همگام‌سازی فقط روی دستگاه", systemImage: "iphone.gen3")
+                    Label(localization.text(.deviceOnlySync), systemImage: "iphone.gen3")
                         .font(.caption)
                         .foregroundStyle(PrototypeTheme.mint)
                 }
                 Spacer()
-                Button("ویرایش") { }
+                Button(localization.text(.edit)) { }
                     .buttonStyle(.bordered)
             }
         }
+    }
+
+    private func languageName(_ tag: String) -> String {
+        PrototypeAppLanguage(rawValue: tag)?.nativeName ?? tag
     }
 
     private var learningSummary: some View {
@@ -183,6 +194,8 @@ private enum SettingsSection {
 
 private struct SettingsDetailPrototypeView: View {
     let section: SettingsSection
+    @Environment(PrototypeLocalization.self) private var localization
+    @Environment(PrototypeLanguageSettings.self) private var languageSettings
     @State private var dailyGoal = 20
     @State private var notifications = true
     @State private var offlineOnly = false
@@ -192,11 +205,28 @@ private struct SettingsDetailPrototypeView: View {
         Form {
             switch section {
             case .languages:
-                Section("زبان اصلی") {
-                    LabeledContent("زبان رابط", value: "فارسی")
-                    LabeledContent("زبان مقصد", value: "آلمانی")
-                    LabeledContent("سطح فعلی", value: "B1")
-                    LabeledContent("سطح هدف", value: "B2")
+                Section(localization.text(.languageSettings)) {
+                    Picker(localization.text(.interfaceLanguage), selection: interfaceLanguageBinding) {
+                        ForEach(PrototypeAppLanguage.allCases) { language in
+                            Text(language.nativeName).tag(language)
+                        }
+                    }
+                    Picker(localization.text(.explanationLanguage), selection: sourceLanguageBinding) {
+                        ForEach(PrototypeAppLanguage.allCases) { language in
+                            Text(language.nativeName).tag(language.rawValue)
+                        }
+                    }
+                    Picker(localization.text(.learningLanguage), selection: targetLanguageBinding) {
+                        ForEach(PrototypeAppLanguage.allCases) { language in
+                            Text(language.nativeName).tag(language.rawValue)
+                        }
+                    }
+                    LabeledContent(localization.text(.currentLevel), value: "B1")
+                    LabeledContent(localization.text(.targetLevel), value: "B2")
+                    if !languageSettings.isValidPair {
+                        Label("Source and learning languages must be different.", systemImage: "exclamationmark.triangle.fill")
+                            .foregroundStyle(.orange)
+                    }
                 }
             case .learning:
                 Section("برنامهٔ روزانه") {
@@ -263,7 +293,19 @@ private struct SettingsDetailPrototypeView: View {
                 }
             }
         }
-        .navigationTitle(section.title)
+        .navigationTitle(section == .languages ? localization.text(.languageSettings) : section.title)
+    }
+
+    private var interfaceLanguageBinding: Binding<PrototypeAppLanguage> {
+        Binding(get: { localization.language }, set: { localization.language = $0 })
+    }
+
+    private var sourceLanguageBinding: Binding<String> {
+        Binding(get: { languageSettings.sourceLanguageTag }, set: { languageSettings.sourceLanguageTag = $0 })
+    }
+
+    private var targetLanguageBinding: Binding<String> {
+        Binding(get: { languageSettings.targetLanguageTag }, set: { languageSettings.targetLanguageTag = $0 })
     }
 }
 

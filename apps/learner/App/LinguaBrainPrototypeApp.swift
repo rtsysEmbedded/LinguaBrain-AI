@@ -5,7 +5,6 @@ struct LinguaBrainPrototypeApp: App {
     var body: some Scene {
         WindowGroup {
             PrototypeRootView()
-                .environment(\.layoutDirection, .rightToLeft)
                 .tint(PrototypeTheme.accent)
         }
         #if os(macOS)

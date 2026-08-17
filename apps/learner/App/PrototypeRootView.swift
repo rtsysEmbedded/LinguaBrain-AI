@@ -4,9 +4,17 @@ struct PrototypeRootView: View {
     @State private var selection: PrototypeSection = .today
     @State private var store: PrototypeStore
     @State private var aiSettings = PrototypeAISettings()
+    @State private var localization: PrototypeLocalization
+    @State private var languageSettings: PrototypeLanguageSettings
 
-    init(store: PrototypeStore = PrototypeStore()) {
+    init(
+        store: PrototypeStore = PrototypeStore(),
+        localization: PrototypeLocalization = PrototypeLocalization(),
+        languageSettings: PrototypeLanguageSettings = PrototypeLanguageSettings()
+    ) {
         _store = State(initialValue: store)
+        _localization = State(initialValue: localization)
+        _languageSettings = State(initialValue: languageSettings)
     }
 
     var body: some View {
@@ -19,13 +27,17 @@ struct PrototypeRootView: View {
         }
         .environment(store)
         .environment(aiSettings)
+        .environment(localization)
+        .environment(languageSettings)
+        .environment(\.locale, localization.language.locale)
+        .environment(\.layoutDirection, localization.language.layoutDirection)
     }
 
     #if os(macOS)
     private var desktopLayout: some View {
         NavigationSplitView {
             List(PrototypeSection.allCases, selection: $selection) { section in
-                Label(section.title, systemImage: section.symbol)
+                Label(section.title(for: localization.language), systemImage: section.symbol)
                     .tag(section)
                     .padding(.vertical, 4)
             }
@@ -40,7 +52,7 @@ struct PrototypeRootView: View {
                                 .foregroundStyle(.white)
                         }
                     VStack(alignment: .leading, spacing: 1) {
-                        Text("سعید").font(.subheadline.weight(.semibold))
+                        Text("Saeid").font(.subheadline.weight(.semibold))
                         Text("Deutsch · B1").font(.caption).foregroundStyle(.secondary)
                     }
                     Spacer()
@@ -62,7 +74,7 @@ struct PrototypeRootView: View {
                     destination(for: section)
                 }
                 .tabItem {
-                    Label(section.title, systemImage: section.symbol)
+                    Label(section.title(for: localization.language), systemImage: section.symbol)
                 }
                 .tag(section)
             }
@@ -88,6 +100,5 @@ struct PrototypeRootView: View {
 
 #Preview("Prototype Root") {
     PrototypeRootView(store: PrototypeStore(inMemory: true))
-        .environment(\.layoutDirection, .rightToLeft)
         .tint(PrototypeTheme.accent)
 }

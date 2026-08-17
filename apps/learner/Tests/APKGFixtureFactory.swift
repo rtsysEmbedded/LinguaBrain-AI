@@ -34,6 +34,23 @@ struct SanitizedLegacyFixture: Decodable {
     let payload: Payload
 }
 
+struct SanitizedLanguagePairFixtureCatalog: Decodable {
+    let fixtures: [SanitizedLanguagePairFixture]
+}
+
+struct SanitizedLanguagePairFixture: Decodable {
+    let packageName: String
+    let modelID: Int64
+    let cardID: Int64
+    let noteID: Int64
+    let sourceLanguageTag: String
+    let targetLanguageTag: String
+    let sourceText: String
+    let targetText: String
+    let sourceExample: String
+    let targetExample: String
+}
+
 enum APKGFixtureFactory {
     static func loadFixture() throws -> SanitizedLegacyFixture {
         let url = try XCTUnwrapResource(named: "legacy-linguabrain", extension: "json")
@@ -46,6 +63,24 @@ enum APKGFixtureFactory {
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         let databaseURL = directory.appendingPathComponent("collection.anki21")
         try makeCollection(at: databaseURL, fixture: fixture)
+        let packageURL = directory.appendingPathComponent(fixture.packageName)
+        let database = try Data(contentsOf: databaseURL)
+        let media = try JSONSerialization.data(withJSONObject: [String: String](), options: [.sortedKeys])
+        try makeStoredZIP(entries: [("collection.anki21", database), ("media", media)], at: packageURL)
+        return packageURL
+    }
+
+    static func loadLanguagePairFixtures() throws -> [SanitizedLanguagePairFixture] {
+        let url = try XCTUnwrapResource(named: "multilingual-language-pairs", extension: "json")
+        return try JSONDecoder().decode(SanitizedLanguagePairFixtureCatalog.self, from: Data(contentsOf: url)).fixtures
+    }
+
+    static func makeLanguagePairPackage(from fixture: SanitizedLanguagePairFixture) throws -> URL {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("LinguaBrainLanguagePairTests-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        let databaseURL = directory.appendingPathComponent("collection.anki21")
+        try makeLanguagePairCollection(at: databaseURL, fixture: fixture)
         let packageURL = directory.appendingPathComponent(fixture.packageName)
         let database = try Data(contentsOf: databaseURL)
         let media = try JSONSerialization.data(withJSONObject: [String: String](), options: [.sortedKeys])
@@ -73,6 +108,46 @@ enum APKGFixtureFactory {
         let payloadData = try JSONEncoder().encode(fixture.payload)
         let payloadJSON = try XCTString(payloadData)
         let fieldValues = [payloadJSON, "کار کردن", "arbeiten"].joined(separator: "\u{001F}")
+        try insert(
+            "INSERT INTO notes(id, mid, flds) VALUES (?, ?, ?)",
+            values: [.integer(fixture.noteID), .integer(fixture.modelID), .text(fieldValues)],
+            database: database
+        )
+        try insert(
+            "INSERT INTO cards(id, nid) VALUES (?, ?)",
+            values: [.integer(fixture.cardID), .integer(fixture.noteID)],
+            database: database
+        )
+    }
+
+    private static func makeLanguagePairCollection(at url: URL, fixture: SanitizedLanguagePairFixture) throws {
+        var database: OpaquePointer?
+        guard sqlite3_open(url.path, &database) == SQLITE_OK, let database else {
+            throw FixtureError.sqlite("open")
+        }
+        defer { sqlite3_close(database) }
+
+        try execute("CREATE TABLE col (models TEXT NOT NULL)", database: database)
+        try execute("CREATE TABLE notes (id INTEGER PRIMARY KEY, mid INTEGER NOT NULL, flds TEXT NOT NULL)", database: database)
+        try execute("CREATE TABLE cards (id INTEGER PRIMARY KEY, nid INTEGER NOT NULL)", database: database)
+
+        let fields = [
+            "SourceLanguageTag", "TargetLanguageTag", "SourceText", "TargetText",
+            "SourceExample", "TargetExample", "Level", "PartOfSpeech", "Domain"
+        ]
+        let modelFields = fields.enumerated().map { ["name": $0.element, "ord": $0.offset] as [String: Any] }
+        let models = [String(fixture.modelID): ["flds": modelFields]]
+        let modelsData = try JSONSerialization.data(withJSONObject: models, options: [.sortedKeys])
+        try insert(
+            "INSERT INTO col(models) VALUES (?)",
+            values: [.text(try XCTString(modelsData))],
+            database: database
+        )
+
+        let fieldValues = [
+            fixture.sourceLanguageTag, fixture.targetLanguageTag, fixture.sourceText, fixture.targetText,
+            fixture.sourceExample, fixture.targetExample, "A1", "Word", "General"
+        ].joined(separator: "\u{001F}")
         try insert(
             "INSERT INTO notes(id, mid, flds) VALUES (?, ?, ?)",
             values: [.integer(fixture.noteID), .integer(fixture.modelID), .text(fieldValues)],

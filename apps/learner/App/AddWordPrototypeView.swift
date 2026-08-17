@@ -617,7 +617,9 @@ struct APKGCardReader: Sendable {
             cards.append(
                 PrototypeImportedCard(
                     sourceIdentifier: "\(packageName.lowercased())::\(cardID)",
-                    word: word
+                    word: word,
+                    sourceLanguageTag: sanitize(values["SourceLanguageTag"] ?? "de"),
+                    targetLanguageTag: sanitize(values["TargetLanguageTag"] ?? "fa")
                 )
             )
         }
@@ -649,6 +651,21 @@ struct APKGCardReader: Sendable {
     }
 
     private func mapWord(fields: [String], named values: [String: String]) -> PrototypeWord? {
+        if let source = values["SourceText"], let target = values["TargetText"] {
+            let normalizedSource = sanitize(source)
+            let normalizedTarget = sanitize(target)
+            guard !normalizedSource.isEmpty, !normalizedTarget.isEmpty else { return nil }
+            return PrototypeWord(
+                german: normalizedSource,
+                persian: normalizedTarget,
+                level: sanitize(values["Level"] ?? "A1"),
+                partOfSpeech: sanitize(values["PartOfSpeech"] ?? "Imported"),
+                example: sanitize(values["SourceExample"] ?? ""),
+                exampleTranslation: sanitize(values["TargetExample"] ?? ""),
+                domain: sanitize(values["Domain"] ?? "General")
+            )
+        }
+
         if let rawJSON = values["LinguaBrainJSON"],
            let data = rawJSON.data(using: .utf8),
            let payload = try? JSONDecoder().decode(LinguaBrainAnkiPayload.self, from: data) {
