@@ -1,4 +1,5 @@
 import SwiftUI
+import CryptoKit
 import Observation
 import Security
 
@@ -23,26 +24,26 @@ struct SettingsPrototypeView: View {
                                 detail: "\(languageName(languageSettings.sourceLanguageTag)) → \(languageName(languageSettings.targetLanguageTag)) · B1",
                                 symbol: "character.book.closed.fill", color: .blue, destination: .languages
                             ),
-                            .init(title: localization.text(.goalsAndDailyPlan), detail: "کار در آلمان · ۲۰ دقیقه", symbol: "target", color: PrototypeTheme.pink, destination: .learning),
-                            .init(title: localization.text(.reviewAndPractice), detail: "مرور تطبیقی · حالت متعادل", symbol: "rectangle.stack.fill", color: .orange, destination: .review),
-                            .init(title: localization.text(.audioAndPronunciation), detail: "صدای آلمانی · سرعت عادی", symbol: "waveform", color: PrototypeTheme.mint, destination: .audio)
+                            .init(title: localization.text(.goalsAndDailyPlan), detail: localization.localized("کار در آلمان · ۲۰ دقیقه"), symbol: "target", color: PrototypeTheme.pink, destination: .learning),
+                            .init(title: localization.text(.reviewAndPractice), detail: localization.localized("مرور تطبیقی · حالت متعادل"), symbol: "rectangle.stack.fill", color: .orange, destination: .review),
+                            .init(title: localization.text(.audioAndPronunciation), detail: localization.localized("صدای آلمانی · سرعت عادی"), symbol: "waveform", color: PrototypeTheme.mint, destination: .audio)
                         ]
                     )
                     settingsGroup(
-                        title: "هوش مصنوعی و آفلاین",
-                        subtitle: "مدل‌ها، دانلودها و هزینه",
+                        title: localization.localized("هوش مصنوعی و آفلاین"),
+                        subtitle: localization.localized("مدل‌ها، دانلودها و هزینه"),
                         items: [
-                            .init(title: "دستیار هوشمند", detail: "OpenRouter · قابل تنظیم", symbol: "wand.and.stars", color: PrototypeTheme.accent, destination: .ai),
-                            .init(title: "محتوای آفلاین", detail: "۱۸۴ مگابایت روی دستگاه", symbol: "arrow.down.circle.fill", color: .indigo, destination: .offline)
+                            .init(title: localization.localized("دستیار هوشمند"), detail: localization.localized("provider.configurable"), symbol: "wand.and.stars", color: PrototypeTheme.accent, destination: .ai),
+                            .init(title: localization.localized("محتوای آفلاین"), detail: localization.localized("۱۸۴ مگابایت روی دستگاه"), symbol: "arrow.down.circle.fill", color: .indigo, destination: .offline)
                         ]
                     )
                     settingsGroup(
-                        title: "برنامه و حساب",
+                        title: localization.localized("برنامه و حساب"),
                         subtitle: nil,
                         items: [
-                            .init(title: "حریم خصوصی و داده‌ها", detail: "ذخیرهٔ محلی", symbol: "lock.shield.fill", color: .green, destination: .privacy),
-                            .init(title: "دسترس‌پذیری و ظاهر", detail: "هماهنگ با سیستم", symbol: "accessibility", color: .teal, destination: .accessibility),
-                            .init(title: "دربارهٔ LinguaBrain", detail: "Visual Prototype 0.2", symbol: "info.circle.fill", color: .gray, destination: .about)
+                            .init(title: localization.localized("حریم خصوصی و داده‌ها"), detail: localization.localized("ذخیرهٔ محلی"), symbol: "lock.shield.fill", color: .green, destination: .privacy),
+                            .init(title: localization.localized("دسترس‌پذیری و ظاهر"), detail: localization.localized("هماهنگ با سیستم"), symbol: "accessibility", color: .teal, destination: .accessibility),
+                            .init(title: localization.localized("دربارهٔ LinguaBrain"), detail: localization.localized("Visual Prototype 0.2"), symbol: "info.circle.fill", color: .gray, destination: .about)
                         ]
                     )
                 }
@@ -178,17 +179,24 @@ private struct SettingsItem: Identifiable {
 private enum SettingsSection {
     case languages, learning, review, audio, ai, offline, privacy, accessibility, about
 
-    var title: String {
+    func title(for localization: PrototypeLocalization) -> String {
         switch self {
-        case .languages: "زبان‌ها و سطح"
-        case .learning: "هدف‌ها و برنامهٔ روزانه"
-        case .review: "مرور و تمرین"
-        case .audio: "صدا و تلفظ"
-        case .ai: "دستیار هوشمند"
-        case .offline: "محتوای آفلاین"
-        case .privacy: "حریم خصوصی و داده‌ها"
-        case .accessibility: "دسترس‌پذیری و ظاهر"
-        case .about: "دربارهٔ LinguaBrain"
+        case .languages: localization.text(.languagesAndLevel)
+        case .learning: localization.text(.goalsAndDailyPlan)
+        case .review: localization.text(.reviewAndPractice)
+        case .audio: localization.text(.audioAndPronunciation)
+        case .ai, .offline, .privacy, .accessibility, .about: localization.localized(rawValue)
+        }
+    }
+
+    private var rawValue: String {
+        switch self {
+        case .ai: "settings.ai"
+        case .offline: "settings.offline"
+        case .privacy: "settings.privacy"
+        case .accessibility: "settings.accessibility"
+        case .about: "settings.about"
+        default: ""
         }
     }
 }
@@ -225,37 +233,37 @@ private struct SettingsDetailPrototypeView: View {
                     LabeledContent(localization.text(.currentLevel), value: "B1")
                     LabeledContent(localization.text(.targetLevel), value: "B2")
                     if !languageSettings.isValidPair {
-                        Label("Source and learning languages must be different.", systemImage: "exclamationmark.triangle.fill")
+                        Label(localization.localized("Source and learning languages must be different."), systemImage: "exclamationmark.triangle.fill")
                             .foregroundStyle(.orange)
                     }
                 }
             case .learning:
-                Section("برنامهٔ روزانه") {
-                    Picker("هدف روزانه", selection: $dailyGoal) {
-                        Text("۱۰ دقیقه").tag(10)
-                        Text("۲۰ دقیقه").tag(20)
-                        Text("۳۰ دقیقه").tag(30)
-                        Text("۶۰ دقیقه").tag(60)
+                Section(localization.localized("برنامهٔ روزانه")) {
+                    Picker(localization.localized("هدف روزانه"), selection: $dailyGoal) {
+                        Text(localization.localized("۱۰ دقیقه")).tag(10)
+                        Text(localization.localized("۲۰ دقیقه")).tag(20)
+                        Text(localization.localized("۳۰ دقیقه")).tag(30)
+                        Text(localization.localized("۶۰ دقیقه")).tag(60)
                     }
-                    LabeledContent("مأموریت فعال", value: "کار در آلمان")
-                    Toggle("یادآوری روزانه", isOn: $notifications)
+                    LabeledContent(localization.localized("مأموریت فعال"), value: localization.localized("کار در آلمان"))
+                    Toggle(localization.localized("یادآوری روزانه"), isOn: $notifications)
                 }
             case .review:
-                Section("روش تمرین") {
-                    LabeledContent("الگوریتم مرور", value: "تطبیقی")
-                    LabeledContent("جهت ترجمه", value: "هر دو جهت")
-                    Toggle("مرور شنیداری", isOn: $notifications)
+                Section(localization.localized("روش تمرین")) {
+                    LabeledContent(localization.localized("الگوریتم مرور"), value: localization.localized("تطبیقی"))
+                    LabeledContent(localization.localized("جهت ترجمه"), value: localization.localized("هر دو جهت"))
+                    Toggle(localization.localized("مرور شنیداری"), isOn: $notifications)
                 }
             case .audio:
-                Section("پخش") {
-                    LabeledContent("صدای آلمانی", value: "Anna")
+                Section(localization.localized("پخش")) {
+                    LabeledContent(localization.localized("صدای آلمانی"), value: "Anna")
                     Slider(value: $audioSpeed, in: 0.5...1.5, step: 0.1) {
-                        Text("سرعت پخش")
+                        Text(localization.localized("سرعت پخش"))
                     }
                     LabeledContent("سرعت", value: audioSpeed.formatted(.number.precision(.fractionLength(1))) + "×")
                 }
             case .ai:
-                OpenRouterSettingsForm()
+                ProviderMenuIndex()
                 Section("Apple Intelligence — آینده") {
                     Label("Apple Foundation Models · بدون API Key", systemImage: "apple.intelligence")
                     Text("پس از ارزیابی پشتیبانی و کیفیت فارسی، پردازش محلی Apple به‌عنوان Provider اختیاری اضافه می‌شود.")
@@ -294,7 +302,7 @@ private struct SettingsDetailPrototypeView: View {
                 }
             }
         }
-        .navigationTitle(section == .languages ? localization.text(.languageSettings) : section.title)
+        .navigationTitle(section == .languages ? localization.text(.languageSettings) : section.title(for: localization))
     }
 
     private var interfaceLanguageBinding: Binding<PrototypeAppLanguage> {
@@ -310,7 +318,8 @@ private struct SettingsDetailPrototypeView: View {
     }
 }
 
-private struct OpenRouterSettingsForm: View {
+private struct LegacyProviderSettingsForm: View {
+    @Environment(PrototypeLocalization.self) private var localization
     @Environment(PrototypeAISettings.self) private var settings
     @State private var apiKey = ""
     @State private var statusMessage: String?
@@ -318,19 +327,19 @@ private struct OpenRouterSettingsForm: View {
 
     var body: some View {
         @Bindable var settings = settings
-        Section("OpenRouter") {
-            SecureField(settings.hasAPIKey ? "کلید ذخیره شده؛ برای تغییر دوباره وارد کن" : "OpenRouter API Key", text: $apiKey)
+        Section(localization.localized("provider.text")) {
+            SecureField(settings.hasAPIKey ? localization.localized("provider.savedKeyChange") : localization.localized("provider.apiKey"), text: $apiKey)
                 .textContentType(.password)
                 .environment(\.layoutDirection, .leftToRight)
             TextField("Model ID", text: $settings.modelID)
                 .environment(\.layoutDirection, .leftToRight)
-            Toggle("اجازهٔ ارسال واژه و تنظیمات کارت به OpenRouter", isOn: $settings.cloudConsent)
-            Text("کلید فقط در Keychain ذخیره می‌شود. متن درخواست از OpenRouter و Provider مدل انتخاب‌شده عبور می‌کند.")
+            Toggle(localization.localized("provider.cloudConsent"), isOn: $settings.cloudConsent)
+            Text(localization.localized("provider.keychainNotice"))
                 .font(.caption)
                 .foregroundStyle(.secondary)
 
             HStack {
-                Button("ذخیرهٔ امن کلید") {
+                Button(localization.localized("ذخیرهٔ امن کلید")) {
                     do {
                         try settings.saveAPIKey(apiKey)
                         apiKey = ""
@@ -341,18 +350,18 @@ private struct OpenRouterSettingsForm: View {
                 }
                 .disabled(apiKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
 
-                Button("تست اتصال") { testConnection() }
+                Button(localization.localized("تست اتصال")) { testConnection() }
                     .disabled(!settings.hasAPIKey || isTesting)
 
                 if settings.hasAPIKey {
-                    Button("حذف کلید", role: .destructive) {
+                    Button(localization.localized("حذف کلید"), role: .destructive) {
                         settings.deleteAPIKey()
                         statusMessage = "کلید حذف شد."
                     }
                 }
             }
 
-            if isTesting { ProgressView("در حال آزمایش…") }
+            if isTesting { ProgressView(localization.localized("در حال آزمایش…")) }
             if let statusMessage {
                 Text(statusMessage)
                     .font(.caption)
@@ -365,7 +374,7 @@ private struct OpenRouterSettingsForm: View {
         isTesting = true
         Task {
             do {
-                try await OpenRouterClient().testConnection(apiKey: try settings.apiKey())
+                try await ConfiguredProviderClient(baseURL: settings.endpoint, protocolName: settings.protocolName).testConnection(apiKey: try settings.apiKey())
                 statusMessage = "اتصال موفق بود."
             } catch {
                 statusMessage = error.localizedDescription
@@ -378,10 +387,31 @@ private struct OpenRouterSettingsForm: View {
 @MainActor
 @Observable
 final class PrototypeAISettings {
-    private static let modelKey = "prototype.openrouter.model"
-    private static let consentKey = "prototype.openrouter.cloudConsent"
-    private static let keychainService = "ai.linguabrain.openrouter"
+    private static let modelKey = "prototype.provider.text.model"
+    private static let consentKey = "prototype.provider.cloudConsent"
+    private static let keychainService = "ai.linguabrain.provider"
     private static let keychainAccount = "api-key"
+    private static let textModeKey = "prototype.provider.text.mode"
+    private static let audioModeKey = "prototype.provider.audio.mode"
+    private static let imageModeKey = "prototype.provider.image.mode"
+    private static let endpointKey = "prototype.provider.endpoint"
+    private static let audioEndpointKey = "prototype.provider.audio.endpoint"
+    private static let imageEndpointKey = "prototype.provider.image.endpoint"
+    private static let protocolKey = "prototype.provider.protocol"
+    private static let audioVoiceKey = "prototype.provider.audio.voice"
+    private static let imageModelKey = "prototype.provider.image.model"
+    private static let audioModelKey = "prototype.provider.audio.model"
+
+    var textMode: PrototypeProviderMode { didSet { UserDefaults.standard.set(textMode.rawValue, forKey: Self.textModeKey) } }
+    var audioMode: PrototypeProviderMode { didSet { UserDefaults.standard.set(audioMode.rawValue, forKey: Self.audioModeKey) } }
+    var imageMode: PrototypeProviderMode { didSet { UserDefaults.standard.set(imageMode.rawValue, forKey: Self.imageModeKey) } }
+    var endpoint: String { didSet { UserDefaults.standard.set(endpoint, forKey: Self.endpointKey) } }
+    var audioEndpoint: String { didSet { UserDefaults.standard.set(audioEndpoint, forKey: Self.audioEndpointKey) } }
+    var imageEndpoint: String { didSet { UserDefaults.standard.set(imageEndpoint, forKey: Self.imageEndpointKey) } }
+    var protocolName: String { didSet { UserDefaults.standard.set(protocolName, forKey: Self.protocolKey) } }
+    var audioVoice: String { didSet { UserDefaults.standard.set(audioVoice, forKey: Self.audioVoiceKey) } }
+    var imageModelID: String { didSet { UserDefaults.standard.set(imageModelID, forKey: Self.imageModelKey) } }
+    var audioModelID: String { didSet { UserDefaults.standard.set(audioModelID, forKey: Self.audioModelKey) } }
 
     var modelID: String {
         didSet { UserDefaults.standard.set(modelID, forKey: Self.modelKey) }
@@ -392,34 +422,132 @@ final class PrototypeAISettings {
     private(set) var hasAPIKey: Bool
 
     init() {
-        modelID = UserDefaults.standard.string(forKey: Self.modelKey) ?? "google/gemini-2.5-flash"
+        textMode = PrototypeProviderMode(rawValue: UserDefaults.standard.string(forKey: Self.textModeKey) ?? "cloud") ?? .cloud
+        audioMode = PrototypeProviderMode(rawValue: UserDefaults.standard.string(forKey: Self.audioModeKey) ?? "cloud") ?? .cloud
+        imageMode = PrototypeProviderMode(rawValue: UserDefaults.standard.string(forKey: Self.imageModeKey) ?? "cloud") ?? .cloud
+        let storedTextEndpoint = UserDefaults.standard.string(forKey: Self.endpointKey) ?? ""
+        if storedTextEndpoint.localizedCaseInsensitiveContains("openrouter.ai") {
+            endpoint = "https://api.openai.com/v1"
+            UserDefaults.standard.set("https://api.openai.com/v1", forKey: Self.endpointKey)
+        } else {
+            endpoint = storedTextEndpoint.isEmpty ? "https://api.openai.com/v1" : storedTextEndpoint
+        }
+        audioEndpoint = UserDefaults.standard.string(forKey: Self.audioEndpointKey) ?? "https://api.openai.com/v1"
+        imageEndpoint = UserDefaults.standard.string(forKey: Self.imageEndpointKey) ?? "https://api.openai.com/v1"
+        let storedProtocol = UserDefaults.standard.string(forKey: Self.protocolKey) ?? ""
+        protocolName = storedProtocol == "google-native" ? "google-native" : "openai-compatible"
+        audioVoice = UserDefaults.standard.string(forKey: Self.audioVoiceKey) ?? "de-DE-Standard-A"
+        imageModelID = UserDefaults.standard.string(forKey: Self.imageModelKey) ?? "gpt-image-1-mini"
+        audioModelID = UserDefaults.standard.string(forKey: Self.audioModelKey) ?? "gpt-4o-mini-tts"
+        modelID = UserDefaults.standard.string(forKey: Self.modelKey) ?? "gpt-4o-mini"
         cloudConsent = UserDefaults.standard.bool(forKey: Self.consentKey)
-        hasAPIKey = (try? Self.readKey()) != nil
+        hasAPIKey = (try? Self.readTextOrLegacyKey()) != nil
     }
 
     func saveAPIKey(_ value: String) throws {
         let key = value.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !key.isEmpty else { throw OpenRouterError.missingAPIKey }
-        Self.deleteStoredKey()
-        let status = SecItemAdd([
+        guard !key.isEmpty else { throw ProviderError.missingAPIKey }
+        let attributes: [CFString: Any] = [
             kSecClass: kSecClassGenericPassword,
             kSecAttrService: Self.keychainService,
             kSecAttrAccount: Self.keychainAccount,
             kSecValueData: Data(key.utf8),
             kSecAttrAccessible: kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
-        ] as CFDictionary, nil)
-        guard status == errSecSuccess else { throw OpenRouterError.keychain(status) }
+        ]
+        var status = SecItemUpdate([
+            kSecClass: kSecClassGenericPassword,
+            kSecAttrService: Self.keychainService,
+            kSecAttrAccount: Self.keychainAccount
+        ] as CFDictionary, [kSecValueData: Data(key.utf8)] as CFDictionary)
+        if status == errSecItemNotFound {
+            status = SecItemAdd(attributes as CFDictionary, nil)
+        }
+        guard status == errSecSuccess else { throw ProviderError.keychain(status) }
         hasAPIKey = true
     }
 
     func apiKey() throws -> String {
-        guard let key = try Self.readKey() else { throw OpenRouterError.missingAPIKey }
+        guard let key = try Self.readTextOrLegacyKey() else { throw ProviderError.missingAPIKey }
         return key
     }
 
     func deleteAPIKey() {
+        #if DEBUG
+        print("[ProviderDebug] delete requested: service=\(Self.keychainService) accounts=\(Self.keychainAccount),\(Self.keychainAccount).text")
+        #endif
         Self.deleteStoredKey()
+        Self.deleteStoredKey(account: Self.keychainAccount + ".text")
         hasAPIKey = false
+    }
+
+    func hasAPIKey(for provider: String) -> Bool {
+        (try? Self.readKey(account: Self.keychainAccount + "." + provider)) != nil
+    }
+
+    func deleteAPIKey(for provider: String) {
+        #if DEBUG
+        print("[ProviderDebug] delete provider key: provider=\(provider) account=\(Self.keychainAccount).\(provider)")
+        #endif
+        Self.deleteStoredKey(account: Self.keychainAccount + "." + provider)
+        if provider == "text" {
+            Self.deleteStoredKey()
+            hasAPIKey = false
+        }
+    }
+
+    func saveProviderAPIKey(_ value: String, provider: String = "text") throws {
+        let key = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !key.isEmpty else { throw ProviderError.missingAPIKey }
+        #if DEBUG
+        if key.count > 512 {
+            print("[ProviderDebug] warning: credential length=\(key.count); this is unusually large for an API key. Verify that only the key text was pasted.")
+        }
+        #endif
+        try saveKey(key, account: Self.keychainAccount + "." + provider)
+        // Keep the legacy account synchronized for already-installed builds that
+        // still read the pre-provider Keychain account.
+        if provider == "text" {
+            try saveKey(key, account: Self.keychainAccount)
+        }
+    }
+
+    func providerAPIKey(_ provider: String = "text") throws -> String { try Self.readKey(account: Self.keychainAccount + "." + provider) ?? apiKey() }
+
+    func apiKey(for provider: String) throws -> String { try Self.readKey(account: Self.keychainAccount + "." + provider) ?? apiKey() }
+
+    private func saveKey(_ key: String, account: String) throws {
+        var status = SecItemUpdate([kSecClass: kSecClassGenericPassword, kSecAttrService: Self.keychainService, kSecAttrAccount: account] as CFDictionary, [kSecValueData: Data(key.utf8)] as CFDictionary)
+        if status == errSecItemNotFound {
+            status = SecItemAdd([kSecClass: kSecClassGenericPassword, kSecAttrService: Self.keychainService, kSecAttrAccount: account, kSecValueData: Data(key.utf8), kSecAttrAccessible: kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly] as CFDictionary, nil)
+        }
+        guard status == errSecSuccess else { throw ProviderError.keychain(status) }
+        ProviderCredentialDiagnostics.logSave(account: account, key: key)
+        hasAPIKey = true
+    }
+
+    private static func readKey(account: String) throws -> String? {
+        var result: CFTypeRef?
+        let status = SecItemCopyMatching([kSecClass: kSecClassGenericPassword, kSecAttrService: keychainService, kSecAttrAccount: account, kSecReturnData: true, kSecMatchLimit: kSecMatchLimitOne] as CFDictionary, &result)
+        if status == errSecItemNotFound {
+            #if DEBUG
+            print("[ProviderDebug] key not found: service=\(keychainService) account=\(account)")
+            #endif
+            return nil
+        }
+        guard status == errSecSuccess, let data = result as? Data, let key = String(data: data, encoding: .utf8) else { throw ProviderError.keychain(status) }
+        return key.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private static func readTextOrLegacyKey() throws -> String? {
+        if let key = try readKey(account: keychainAccount + ".text") {
+            ProviderCredentialDiagnostics.logRead(account: keychainAccount + ".text", key: key)
+            return key
+        }
+        if let key = try readKey() {
+            ProviderCredentialDiagnostics.logRead(account: keychainAccount, key: key)
+            return key
+        }
+        return nil
     }
 
     private static func readKey() throws -> String? {
@@ -434,129 +562,358 @@ final class PrototypeAISettings {
         if status == errSecItemNotFound { return nil }
         guard status == errSecSuccess, let data = result as? Data,
               let key = String(data: data, encoding: .utf8) else {
-            throw OpenRouterError.keychain(status)
+            throw ProviderError.keychain(status)
         }
         return key
     }
 
     private static func deleteStoredKey() {
+        deleteStoredKey(account: keychainAccount)
+    }
+
+    private static func deleteStoredKey(account: String) {
         SecItemDelete([
             kSecClass: kSecClassGenericPassword,
             kSecAttrService: keychainService,
-            kSecAttrAccount: keychainAccount
+            kSecAttrAccount: account
         ] as CFDictionary)
     }
 }
 
-enum OpenRouterError: LocalizedError {
+enum ProviderCredentialDiagnostics {
+    static func logSave(account: String, key: String) {
+        #if DEBUG
+        print("[ProviderDebug] saved key: service=ai.linguabrain.provider account=\(account) length=\(key.count) fingerprint=\(fingerprint(key)) storage=Keychain")
+        #endif
+    }
+
+    static func logRead(account: String, key: String) {
+        #if DEBUG
+        print("[ProviderDebug] read key: service=ai.linguabrain.provider account=\(account) length=\(key.count) fingerprint=\(fingerprint(key)) storage=Keychain")
+        #endif
+    }
+
+    static func logRequest(endpoint: String, model: String, account: String, key: String) {
+        #if DEBUG
+        print("[ProviderDebug] request: endpoint=\(endpoint) model=\(model) account=\(account) keyLength=\(key.count) keyFingerprint=\(fingerprint(key))")
+        #endif
+    }
+
+    private static func fingerprint(_ key: String) -> String {
+        SHA256.hash(data: Data(key.utf8)).map { String(format: "%02x", $0) }.joined().prefix(12).description
+    }
+}
+
+enum PrototypeProviderMode: String, CaseIterable, Identifiable {
+    case builtIn = "built-in"
+    case local
+    case cloud
+    case off
+
+    var id: Self { self }
+    var label: String {
+        switch self {
+        case .builtIn: "provider.builtIn"
+        case .local: "provider.local"
+        case .cloud: "provider.cloud"
+        case .off: "provider.off"
+        }
+    }
+}
+
+private struct ProviderMenusForm: View {
+    @Environment(PrototypeAISettings.self) private var settings
+    @Environment(PrototypeLocalization.self) private var localization
+
+    var body: some View {
+        @Bindable var settings = settings
+        Section(localization.localized("provider.text")) {
+            Picker(localization.localized("provider.mode"), selection: $settings.textMode) {
+                ForEach(PrototypeProviderMode.allCases) { mode in Text(localization.localized(mode.label)).tag(mode) }
+            }
+            TextField(localization.localized("provider.modelID"), text: $settings.modelID)
+                .environment(\.layoutDirection, .leftToRight)
+        }
+        Section(localization.localized("provider.audio")) {
+            Picker(localization.localized("provider.mode"), selection: $settings.audioMode) {
+                ForEach(PrototypeProviderMode.allCases) { mode in Text(localization.localized(mode.label)).tag(mode) }
+            }
+        }
+        Section(localization.localized("provider.image")) {
+            Picker(localization.localized("provider.mode"), selection: $settings.imageMode) {
+                ForEach(PrototypeProviderMode.allCases) { mode in Text(localization.localized(mode.label)).tag(mode) }
+            }
+        }
+        Section(localization.localized("provider.connection")) {
+            TextField(localization.localized("provider.endpoint"), text: $settings.endpoint)
+                .environment(\.layoutDirection, .leftToRight)
+            Picker(localization.localized("provider.protocol"), selection: $settings.protocolName) {
+                Text(localization.localized("provider.openAICompatible")).tag("openai-compatible")
+                Text(localization.localized("provider.googleNative")).tag("google-native")
+            }
+        }
+        Text(localization.localized("provider.entitlementNote"))
+            .font(.caption)
+            .foregroundStyle(.secondary)
+    }
+}
+
+private enum PrototypeProviderKind: String, CaseIterable, Identifiable {
+    case text, audio, image
+    var id: Self { self }
+    var titleKey: String { "provider.\(rawValue)" }
+    var symbol: String {
+        switch self { case .text: "text.alignleft"; case .audio: "waveform"; case .image: "photo" }
+    }
+}
+
+private struct ProviderMenuIndex: View {
+    @Environment(PrototypeLocalization.self) private var localization
+
+    var body: some View {
+        Section(localization.localized("provider.title")) {
+            ForEach(PrototypeProviderKind.allCases) { kind in
+                NavigationLink {
+                    ProviderConfigurationView(kind: kind)
+                } label: {
+                    Label(localization.localized(kind.titleKey), systemImage: kind.symbol)
+                }
+            }
+        }
+    }
+}
+
+private struct ProviderConfigurationView: View {
+    let kind: PrototypeProviderKind
+    @Environment(PrototypeAISettings.self) private var settings
+    @Environment(PrototypeLocalization.self) private var localization
+    @State private var apiKey = ""
+    @State private var keyMessage: String?
+    @State private var isTestingConnection = false
+
+    var body: some View {
+        @Bindable var settings = settings
+        Form {
+            Section(localization.localized(kind.titleKey)) {
+                Picker(localization.localized("provider.mode"), selection: modeBinding(settings: settings)) {
+                    ForEach(PrototypeProviderMode.allCases) { mode in
+                        Text(localization.localized(mode.label)).tag(mode)
+                    }
+                }
+                if kind == .text {
+                    TextField(localization.localized("provider.modelID"), text: $settings.modelID)
+                        .environment(\.layoutDirection, .leftToRight)
+                    if settings.textMode == .cloud {
+                        Toggle(localization.localized("provider.cloudConsent"), isOn: $settings.cloudConsent)
+                        Text(localization.localized("provider.cloudConsentNotice"))
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                } else if kind == .audio {
+                    TextField(localization.localized("provider.voice"), text: $settings.audioVoice)
+                        .environment(\.layoutDirection, .leftToRight)
+                    TextField(localization.localized("provider.modelID"), text: $settings.audioModelID)
+                        .environment(\.layoutDirection, .leftToRight)
+                } else {
+                    TextField(localization.localized("provider.modelID"), text: $settings.imageModelID)
+                        .environment(\.layoutDirection, .leftToRight)
+                }
+            }
+            Section(localization.localized("provider.connection")) {
+                TextField(localization.localized("provider.endpoint"), text: endpointBinding(settings: settings))
+                    .environment(\.layoutDirection, .leftToRight)
+                Picker(localization.localized("provider.protocol"), selection: $settings.protocolName) {
+                    Text(localization.localized("provider.openAICompatible")).tag("openai-compatible")
+                    Text(localization.localized("provider.googleNative")).tag("google-native")
+                }
+                if kind != .image || settings.imageMode == .cloud {
+                    SecureField(localization.localized("provider.apiKey"), text: $apiKey)
+                        .environment(\.layoutDirection, .leftToRight)
+                    HStack {
+                        Button(localization.localized("provider.saveKey")) {
+                            do {
+                                try settings.saveProviderAPIKey(apiKey, provider: kind.rawValue)
+                                apiKey = ""
+                                keyMessage = localization.localized("provider.keySaved")
+                            } catch { keyMessage = error.localizedDescription }
+                        }
+                        if settings.hasAPIKey(for: kind.rawValue) {
+                            Button(localization.localized("provider.deleteKey"), role: .destructive) {
+                                settings.deleteAPIKey(for: kind.rawValue)
+                                keyMessage = localization.localized("provider.keyDeleted")
+                            }
+                        }
+                    }
+                    if let keyMessage { Text(keyMessage).font(.caption).foregroundStyle(.secondary) }
+                    if kind == .text {
+                        Button(localization.localized("provider.testConnection")) {
+                            testTextConnection(settings: settings)
+                        }
+                        .disabled(isTestingConnection || !settings.hasAPIKey(for: kind.rawValue))
+                        if isTestingConnection { ProgressView() }
+                    }
+                }
+            }
+        }
+        .navigationTitle(localization.localized(kind.titleKey))
+    }
+
+    private func modeBinding(settings: PrototypeAISettings) -> Binding<PrototypeProviderMode> {
+        switch kind {
+        case .text: Binding(get: { settings.textMode }, set: { settings.textMode = $0 })
+        case .audio: Binding(get: { settings.audioMode }, set: { settings.audioMode = $0 })
+        case .image: Binding(get: { settings.imageMode }, set: { settings.imageMode = $0 })
+        }
+    }
+
+    private func endpointBinding(settings: PrototypeAISettings) -> Binding<String> {
+        switch kind {
+        case .text: Binding(get: { settings.endpoint }, set: { settings.endpoint = $0 })
+        case .audio: Binding(get: { settings.audioEndpoint }, set: { settings.audioEndpoint = $0 })
+        case .image: Binding(get: { settings.imageEndpoint }, set: { settings.imageEndpoint = $0 })
+        }
+    }
+
+    private func testTextConnection(settings: PrototypeAISettings) {
+        isTestingConnection = true
+        Task {
+            do {
+                let key = try settings.apiKey()
+                try await ConfiguredProviderClient(baseURL: settings.endpoint, protocolName: settings.protocolName)
+                    .testConnection(apiKey: key)
+                keyMessage = localization.localized("provider.connectionSuccess")
+            } catch {
+                keyMessage = error.localizedDescription
+            }
+            isTestingConnection = false
+        }
+    }
+}
+
+enum ProviderError: LocalizedError {
     case missingAPIKey
     case consentRequired
+    case providerDisabled
+    case unsupportedProtocol
     case invalidResponse
     case service(Int, String)
     case keychain(OSStatus)
 
     var errorDescription: String? {
         switch self {
-        case .missingAPIKey: "ابتدا API Key مربوط به OpenRouter را در تنظیمات ذخیره کن."
-        case .consentRequired: "در تنظیمات، اجازهٔ ارسال داده به OpenRouter را فعال کن."
-        case .invalidResponse: "پاسخ OpenRouter با ساختار کارت سازگار نبود."
-        case .service(let status, let message): "OpenRouter (\(status)): \(message)"
+        case .missingAPIKey: "ابتدا API Key مربوط به provider انتخاب‌شده را در تنظیمات ذخیره کن."
+        case .consentRequired: "برای provider ابری، اجازهٔ ارسال داده را در تنظیمات فعال کن."
+        case .providerDisabled: "تولید متن در تنظیمات خاموش است."
+        case .unsupportedProtocol: "پروتکل انتخاب‌شده هنوز برای تولید کارت پشتیبانی نمی‌شود."
+        case .invalidResponse: "پاسخ provider با ساختار کارت سازگار نبود."
+        case .service(let status, let message): "Provider (\(status)): \(message)"
         case .keychain(let status): "ذخیره یا خواندن Keychain انجام نشد (\(status))."
         }
     }
 }
 
-struct OpenRouterGeneratedCard: Codable, Sendable {
+struct ConfiguredProviderCard: Codable, Sendable {
     struct Example: Codable, Sendable {
-        let german: String
-        let persian: String
+        let target: String
+        let source: String
     }
 
-    let german: String
-    let persianMeaning: String
+    let targetText: String
+    let sourceMeaning: String
     let level: String
     let partOfSpeech: String
     let article: String
     let example: Example
 
-    func prototypeWord(domain: String) -> PrototypeWord {
+    func prototypeWord(domain: String, sourceLanguageTag: String, targetLanguageTag: String) -> PrototypeWord {
         PrototypeWord(
-            german: german,
-            persian: persianMeaning,
+            german: targetText,
+            persian: sourceMeaning,
             article: article.isEmpty ? nil : article,
             level: level,
             partOfSpeech: partOfSpeech,
-            example: example.german,
-            exampleTranslation: example.persian,
-            domain: domain
+            example: example.target,
+            exampleTranslation: example.source,
+            domain: domain,
+            sourceLanguageTag: sourceLanguageTag,
+            targetLanguageTag: targetLanguageTag
         )
     }
 }
 
-struct OpenRouterClient: Sendable {
-    func testConnection(apiKey: String) async throws {
-        var request = URLRequest(url: URL(string: "https://openrouter.ai/api/v1/key")!)
-        request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
-        let (_, response) = try await URLSession.shared.data(for: request)
-        guard let http = response as? HTTPURLResponse else { throw OpenRouterError.invalidResponse }
-        guard (200..<300).contains(http.statusCode) else { throw OpenRouterError.service(http.statusCode, "کلید یا اتصال معتبر نیست.") }
+struct ConfiguredProviderClient: Sendable {
+    let baseURL: String
+    let protocolName: String
+
+    init(baseURL: String = "https://api.openai.com/v1", protocolName: String = "openai-compatible") {
+        self.baseURL = baseURL.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+        self.protocolName = protocolName
     }
 
-    func generateCard(word: String, domain: String, model: String, apiKey: String) async throws -> OpenRouterGeneratedCard {
+    func testConnection(apiKey: String) async throws {
+        var request = URLRequest(url: URL(string: "\(baseURL)/models")!)
+        request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        let (_, response) = try await URLSession.shared.data(for: request)
+        guard let http = response as? HTTPURLResponse else { throw ProviderError.invalidResponse }
+        guard (200..<300).contains(http.statusCode) else {
+            throw ProviderError.service(http.statusCode, http.statusCode == 401 ? "کلید API معتبر نیست یا برای این endpoint قابل استفاده نیست." : "کلید یا اتصال معتبر نیست.")
+        }
+    }
+
+    func generateCard(word: String, domain: String, model: String, apiKey: String, sourceLanguageTag: String = "fa", targetLanguageTag: String = "de") async throws -> ConfiguredProviderCard {
         let schema: [String: Any] = [
             "type": "object",
             "properties": [
-                "german": ["type": "string"],
-                "persianMeaning": ["type": "string"],
+                "targetText": ["type": "string"],
+                "sourceMeaning": ["type": "string"],
                 "level": ["type": "string"],
                 "partOfSpeech": ["type": "string"],
                 "article": ["type": "string"],
                 "example": [
                     "type": "object",
-                    "properties": ["german": ["type": "string"], "persian": ["type": "string"]],
-                    "required": ["german", "persian"],
+                    "properties": ["target": ["type": "string"], "source": ["type": "string"]],
+                    "required": ["target", "source"],
                     "additionalProperties": false
                 ]
             ],
-            "required": ["german", "persianMeaning", "level", "partOfSpeech", "article", "example"],
+            "required": ["targetText", "sourceMeaning", "level", "partOfSpeech", "article", "example"],
             "additionalProperties": false
         ]
         let body: [String: Any] = [
             "model": model,
             "messages": [
-                ["role": "system", "content": "You create accurate German-to-Persian language-learning cards. Treat each domain-specific meaning as a separate lexical sense. Return only the requested structured result. Use an empty article for non-nouns."],
-                ["role": "user", "content": "Create one card for the German word or phrase '\(word)' using specifically the sense that belongs to the domain '\(domain)'. Do not fall back to its most common meaning when another sense is natural in this domain. Use a concise Persian meaning and one domain-specific German example with an accurate Persian translation."]
+                ["role": "system", "content": "You create accurate language-learning cards. The learning language is \(targetLanguageTag); the learner's support language is \(sourceLanguageTag). Return JSON using targetText, sourceMeaning, and example.target/example.source. Use an empty article for non-nouns."],
+                ["role": "user", "content": "Create one card for the \(targetLanguageTag) word or phrase '\(word)' using the domain '\(domain)'. Return targetText and example.target in \(targetLanguageTag), and sourceMeaning and example.source in \(sourceLanguageTag). Return only the requested JSON fields."]
             ],
             "response_format": [
                 "type": "json_schema",
                 "json_schema": ["name": "linguabrain_card", "strict": true, "schema": schema]
             ],
-            "provider": ["require_parameters": true, "data_collection": "deny"],
             "temperature": 0.2,
             "max_tokens": 700
         ]
-        var request = URLRequest(url: URL(string: "https://openrouter.ai/api/v1/chat/completions")!)
+        var request = URLRequest(url: URL(string: "\(baseURL)/chat/completions")!)
         request.httpMethod = "POST"
         request.timeoutInterval = 45
-        request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        if !apiKey.isEmpty { request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization") }
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.setValue("LinguaBrain", forHTTPHeaderField: "X-Title")
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
         let (data, response) = try await URLSession.shared.data(for: request)
-        guard let http = response as? HTTPURLResponse else { throw OpenRouterError.invalidResponse }
+        guard let http = response as? HTTPURLResponse else { throw ProviderError.invalidResponse }
         guard (200..<300).contains(http.statusCode) else {
             let message = (try? JSONSerialization.jsonObject(with: data) as? [String: Any])
                 .flatMap { $0["error"] as? [String: Any] }?["message"] as? String ?? "درخواست ناموفق بود."
-            throw OpenRouterError.service(http.statusCode, message)
+            let normalizedMessage = http.statusCode == 401 ? "کلید API معتبر نیست یا برای این endpoint قابل استفاده نیست." : message
+            throw ProviderError.service(http.statusCode, normalizedMessage)
         }
-        let envelope = try JSONDecoder().decode(OpenRouterEnvelope.self, from: data)
+        let envelope = try JSONDecoder().decode(ProviderChatEnvelope.self, from: data)
         guard let content = envelope.choices.first?.message.content,
-              let contentData = content.data(using: .utf8) else { throw OpenRouterError.invalidResponse }
-        return try JSONDecoder().decode(OpenRouterGeneratedCard.self, from: contentData)
+              let contentData = content.data(using: .utf8) else { throw ProviderError.invalidResponse }
+        return try JSONDecoder().decode(ConfiguredProviderCard.self, from: contentData)
     }
 }
 
-private struct OpenRouterEnvelope: Decodable {
+private struct ProviderChatEnvelope: Decodable {
     struct Choice: Decodable {
         struct Message: Decodable { let content: String? }
         let message: Message

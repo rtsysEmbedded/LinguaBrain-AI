@@ -1,4 +1,5 @@
 import SwiftUI
+import AVFoundation
 import UniformTypeIdentifiers
 import SQLite3
 import zlib
@@ -6,9 +7,10 @@ import zlib
 struct AddWordPrototypeView: View {
     @Environment(PrototypeStore.self) private var store
     @Environment(PrototypeAISettings.self) private var aiSettings
+    @Environment(PrototypeLocalization.self) private var localization
     @Environment(PrototypeLanguageSettings.self) private var languageSettings
     @State private var word = "arbeiten"
-    @State private var domain = "عمومی"
+    @State private var domain = "general"
     @State private var showPreview = true
     @State private var isImporterPresented = false
     @State private var isInspectingPackage = false
@@ -16,17 +18,22 @@ struct AddWordPrototypeView: View {
     @State private var packageError: String?
     @State private var isImportingPackage = false
     @State private var importResult: PrototypeImportResult?
-    @State private var generatedCard: OpenRouterGeneratedCard?
+    @State private var generatedCard: ConfiguredProviderCard?
     @State private var isGeneratingCard = false
     @State private var generatedCardSaved = false
+    @State private var generatedAudio: Data?
+    @State private var audioPlayer: AVAudioPlayer?
+    @State private var isGeneratingAudio = false
 
     var body: some View {
         ScrollView {
             VStack(spacing: 20) {
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("یک واژه اضافه کن")
+                    Text(localization.localized("card.addTitle"))
                         .font(.largeTitle.bold())
-                    Text(aiSettings.hasAPIKey ? "کارت با مدل انتخاب‌شده در OpenRouter ساخته می‌شود و قبل از ذخیره قابل بررسی است." : "برای ساخت کارت هوشمند، ابتدا OpenRouter را در تنظیمات فعال کن.")
+                    Text(aiSettings.textMode == .local || (aiSettings.hasAPIKey && aiSettings.cloudConsent)
+                         ? localization.localized("provider.cardReady")
+                         : localization.localized("provider.configureText"))
                         .foregroundStyle(.secondary)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -35,16 +42,16 @@ struct AddWordPrototypeView: View {
 
                 PrototypeCard {
                     VStack(alignment: .leading, spacing: 16) {
-                        TextField("واژه یا عبارت آلمانی", text: $word)
+                        TextField(localization.localized("card.wordPlaceholder"), text: $word)
                             .textFieldStyle(.roundedBorder)
                             .font(.title3)
                             .environment(\.layoutDirection, .leftToRight)
 
-                        Picker("حوزه", selection: $domain) {
-                            Text("عمومی").tag("عمومی")
-                            Text("محیط کار").tag("محیط کار")
-                            Text("نرم‌افزار").tag("نرم‌افزار")
-                            Text("پزشکی").tag("پزشکی")
+                        Picker(localization.localized("card.domain"), selection: $domain) {
+                            Text(localization.localized("domain.general")).tag("general")
+                            Text(localization.localized("domain.work")).tag("work")
+                            Text(localization.localized("domain.software")).tag("software")
+                            Text(localization.localized("domain.medical")).tag("medical")
                         }
                         .pickerStyle(.segmented)
 
@@ -54,7 +61,7 @@ struct AddWordPrototypeView: View {
                             if isGeneratingCard {
                                 ProgressView().frame(maxWidth: .infinity).padding(.vertical, 10)
                             } else {
-                                Label("ساخت کارت با OpenRouter", systemImage: "wand.and.stars")
+                                Label(localization.localized("provider.generateCard"), systemImage: "wand.and.stars")
                                     .frame(maxWidth: .infinity)
                                     .padding(.vertical, 10)
                             }
@@ -74,7 +81,7 @@ struct AddWordPrototypeView: View {
             .frame(maxWidth: .infinity)
         }
         .background(PrototypeBackground())
-        .navigationTitle("افزودن")
+        .navigationTitle(localization.localized("card.addTitle"))
         .onChange(of: word) { _, _ in resetGeneratedPreview() }
         .onChange(of: domain) { _, _ in resetGeneratedPreview() }
         .fileImporter(
@@ -84,10 +91,10 @@ struct AddWordPrototypeView: View {
         ) { result in
             inspectSelectedPackage(result)
         }
-        .alert("عملیات انجام نشد", isPresented: packageErrorBinding) {
-            Button("باشه", role: .cancel) { packageError = nil }
+        .alert(localization.localized("card.operationFailed"), isPresented: packageErrorBinding) {
+            Button(localization.localized("common.ok"), role: .cancel) { packageError = nil }
         } message: {
-            Text(packageError ?? "خطای ناشناخته")
+            Text(packageError ?? localization.localized("common.unknownError"))
         }
     }
 
@@ -97,18 +104,32 @@ struct AddWordPrototypeView: View {
         generatedCardSaved = false
         Task {
             do {
-                guard aiSettings.cloudConsent else { throw OpenRouterError.consentRequired }
-                let draft = try await OpenRouterClient().generateCard(
+                guard aiSettings.textMode != .off else { throw ProviderError.providerDisabled }
+                guard aiSettings.protocolName == "openai-compatible" else { throw ProviderError.unsupportedProtocol }
+                if aiSettings.textMode == .cloud {
+                    guard aiSettings.cloudConsent else { throw ProviderError.consentRequired }
+                    guard aiSettings.hasAPIKey else { throw ProviderError.missingAPIKey }
+                }
+                let gateway = AIProviderGateway(
+                    endpoint: aiSettings.endpoint,
+                    protocolName: aiSettings.protocolName,
+                    apiKey: try aiSettings.apiKey()
+                )
+                #if DEBUG
+                ProviderCredentialDiagnostics.logRequest(endpoint: aiSettings.endpoint, model: aiSettings.modelID, account: "api-key.text", key: gateway.apiKey)
+                #endif
+                let draft = try await gateway.generateCard(
                     word: word.trimmingCharacters(in: .whitespacesAndNewlines),
                     domain: domain,
                     model: aiSettings.modelID,
-                    apiKey: try aiSettings.apiKey()
+                    sourceLanguageTag: languageSettings.sourceLanguageTag,
+                    targetLanguageTag: languageSettings.targetLanguageTag
                 )
-                guard !draft.german.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
-                      !draft.persianMeaning.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
-                      !draft.example.german.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
-                      !draft.example.persian.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-                    throw OpenRouterError.invalidResponse
+                guard !draft.targetText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+                      !draft.sourceMeaning.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+                      !draft.example.target.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+                      !draft.example.source.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+                    throw ProviderError.invalidResponse
                 }
                 generatedCard = draft
                 withAnimation { showPreview = true }
@@ -122,6 +143,21 @@ struct AddWordPrototypeView: View {
     private func resetGeneratedPreview() {
         generatedCard = nil
         generatedCardSaved = false
+        generatedAudio = nil
+        audioPlayer = nil
+    }
+
+    private func generateAudio() {
+        guard let preview = generatedCard else { return }
+        isGeneratingAudio = true
+        Task {
+            do {
+                guard aiSettings.audioMode != .off else { throw ProviderError.providerDisabled }
+                let gateway = AIProviderGateway(endpoint: aiSettings.audioEndpoint, protocolName: aiSettings.protocolName, apiKey: try aiSettings.apiKey(for: "audio"))
+                generatedAudio = try await gateway.synthesizeSpeech(text: preview.targetText, model: aiSettings.audioModelID, voice: aiSettings.audioVoice)
+            } catch { packageError = error.localizedDescription }
+            isGeneratingAudio = false
+        }
     }
 
     private var packageImporter: some View {
@@ -250,7 +286,7 @@ struct AddWordPrototypeView: View {
     }
 
     private var cardPreview: some View {
-        let rawPreview = generatedCard?.prototypeWord(domain: domain) ?? PrototypeWord(
+        let rawPreview = generatedCard?.prototypeWord(domain: domain, sourceLanguageTag: languageSettings.sourceLanguageTag, targetLanguageTag: languageSettings.targetLanguageTag) ?? PrototypeWord(
             german: word.isEmpty ? "arbeiten" : word,
             persian: "—",
             level: "—",
@@ -266,19 +302,19 @@ struct AddWordPrototypeView: View {
         return PrototypeCard {
             VStack(alignment: .leading, spacing: 18) {
                 HStack {
-                    Label("پیشنهاد آماده بررسی", systemImage: "checkmark.seal.fill")
+            Label(localization.localized("card.previewReady"), systemImage: "checkmark.seal.fill")
                         .font(.subheadline.weight(.semibold))
                         .foregroundStyle(PrototypeTheme.mint)
                     Spacer()
                     Text("\(preview.level) · \(preview.partOfSpeech)").font(.caption).foregroundStyle(.secondary)
                 }
-                GermanText(text: preview.german, font: .largeTitle.bold())
-                Text(preview.persian).font(.title2)
+                LanguageText(text: preview.german, languageTag: preview.targetLanguageTag, font: .largeTitle.bold())
+                LanguageText(text: preview.persian, languageTag: preview.sourceLanguageTag, font: .title2)
                 Divider()
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("مثال").font(.caption.weight(.semibold)).foregroundStyle(.secondary)
-                    GermanText(text: preview.example.isEmpty ? "پس از تولید کارت نمایش داده می‌شود." : preview.example, font: .title3)
-                    Text(preview.exampleTranslation).foregroundStyle(.secondary)
+                    Text(localization.localized("card.example")).font(.caption.weight(.semibold)).foregroundStyle(.secondary)
+                    LanguageText(text: preview.example.isEmpty ? localization.localized("card.examplePending") : preview.example, languageTag: preview.targetLanguageTag, font: .title3)
+                    LanguageText(text: preview.exampleTranslation, languageTag: preview.sourceLanguageTag, font: .body, color: .secondary)
                 }
                 HStack {
                     Label(preview.partOfSpeech, systemImage: "square.stack.3d.up.fill")
@@ -287,6 +323,20 @@ struct AddWordPrototypeView: View {
                 }
                 .font(.caption)
                 .foregroundStyle(PrototypeTheme.accent)
+                HStack {
+                    Button {
+                        generateAudio()
+                    } label: {
+                        Label(isGeneratingAudio ? localization.localized("media.generatingAudio") : localization.localized("media.generateAudio"), systemImage: "waveform")
+                    }
+                    .disabled(isGeneratingAudio || aiSettings.audioMode == .off)
+                    if let generatedAudio {
+                        Button(localization.localized("media.playAudio"), systemImage: "play.fill") {
+                            audioPlayer = try? AVAudioPlayer(data: generatedAudio)
+                            audioPlayer?.play()
+                        }
+                    }
+                }
                 Button {
                     guard generatedCard != nil else { return }
                     if store.addGeneratedCard(preview) {
@@ -295,7 +345,7 @@ struct AddWordPrototypeView: View {
                         packageError = store.lastPersistenceError
                     }
                 } label: {
-                    Label(generatedCardSaved ? "به کتابخانه اضافه شد" : "تأیید و افزودن", systemImage: generatedCardSaved ? "checkmark.circle.fill" : "plus.circle.fill")
+                    Label(generatedCardSaved ? localization.localized("card.addedToLibrary") : localization.localized("card.approveAndAdd"), systemImage: generatedCardSaved ? "checkmark.circle.fill" : "plus.circle.fill")
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.borderedProminent)

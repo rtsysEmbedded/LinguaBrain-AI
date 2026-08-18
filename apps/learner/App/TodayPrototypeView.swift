@@ -115,7 +115,7 @@ struct TodayPrototypeView: View {
                     Divider().padding(.vertical, 12)
                     planRow(symbol: "text.book.closed.fill", color: PrototypeTheme.blue, title: "متن کوتاه", detail: "محیط کار · سطح B1", time: localization.minutes(7))
                     Divider().padding(.vertical, 12)
-                    planRow(symbol: "character.bubble.fill", color: PrototypeTheme.pink, title: "ترجمه معکوس", detail: "فارسی به آلمانی", time: localization.minutes(5))
+                planRow(symbol: "character.bubble.fill", color: PrototypeTheme.pink, title: localization.localized("reverseTranslation"), detail: localization.localized("reversePracticeDetail"), time: localization.minutes(5))
                 }
             }
 
@@ -133,7 +133,7 @@ struct TodayPrototypeView: View {
             NavigationLink {
                 ReviewPrototypeView(newCardLimit: newCardLimit, mode: .reverseTranslation)
             } label: {
-                Label("تمرین ترجمهٔ معکوس", systemImage: "character.bubble.fill")
+                Label(localization.localized("reversePractice"), systemImage: "character.bubble.fill")
                     .font(.headline)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 11)
@@ -167,8 +167,8 @@ struct TodayPrototypeView: View {
                     .frame(width: 52, height: 52)
                     .background(PrototypeTheme.pink.opacity(0.12), in: Circle())
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("پیشنهاد مربی").font(.headline)
-                    Text(reviewedCount == 0 ? "وضعیت کاربر ریست است. مرور را شروع کن تا همهٔ بخش‌ها هم‌زمان تغییر کنند." : "تا اینجا \(reviewedCount) واژه مرور شده و \(weakCount) واژه نیاز به تمرین بیشتر دارد.")
+                    Text(localization.localized("coachSuggestion")).font(.headline)
+                    Text(localization.coachMessage(reviewed: reviewedCount, weak: weakCount))
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                 }

@@ -412,6 +412,36 @@ struct PrototypeWord: Identifiable, Hashable, Sendable {
     }
 }
 
+enum PrototypeMediaKind: String, Codable, Sendable {
+    case pronunciationAudio
+    case illustration
+}
+
+struct PrototypeA1MediaPlan: Hashable, Sendable {
+    let isEligible: Bool
+    let audioCacheKey: String?
+    let imageCacheKey: String?
+    let imagePrompt: String?
+}
+
+/// Deterministic media boundary for A1 cards. Providers can generate assets later;
+/// card creation remains safe and text-only when either provider is unavailable.
+enum PrototypeA1MediaPlanner {
+    static func plan(for word: PrototypeWord, includeAudio: Bool, includeImage: Bool) -> PrototypeA1MediaPlan {
+        guard word.level.uppercased() == "A1" else {
+            return PrototypeA1MediaPlan(isEligible: false, audioCacheKey: nil, imageCacheKey: nil, imagePrompt: nil)
+        }
+        let identity = "(word.targetLanguageTag)|(word.german.lowercased())|A1"
+        let safeIdentity = identity.replacingOccurrences(of: " ", with: "_")
+        return PrototypeA1MediaPlan(
+            isEligible: true,
+            audioCacheKey: includeAudio ? "audio.v1.(safeIdentity)" : nil,
+            imageCacheKey: includeImage ? "image.v1.(safeIdentity)" : nil,
+            imagePrompt: includeImage ? "A clear, literal educational illustration of (word.german), suitable for an A1 language-learning card, no text" : nil
+        )
+    }
+}
+
 struct PrototypeImportedCard: Sendable {
     let sourceIdentifier: String
     let word: PrototypeWord
@@ -431,6 +461,12 @@ struct PrototypeImportedCard: Sendable {
     }
 }
 
+enum PrototypeCardProvenance: String, CaseIterable, Identifiable, Sendable {
+    case generated
+    case imported
+    var id: Self { self }
+}
+
 struct PrototypeImportResult: Sendable {
     let deckName: String
     let addedCount: Int
@@ -448,6 +484,15 @@ enum PrototypeReviewGrade: String, CaseIterable, Identifiable, Hashable {
     case again, hard, good, easy
 
     var id: Self { self }
+
+    var localizationKey: String {
+        switch self {
+        case .again: "ratingAgain"
+        case .hard: "ratingHard"
+        case .good: "ratingGood"
+        case .easy: "ratingEasy"
+        }
+    }
 
     var title: String {
         switch self {
@@ -564,6 +609,16 @@ final class PrototypeStore {
         words.filter {
             $0.sourceLanguageTag == sourceLanguageTag && $0.targetLanguageTag == targetLanguageTag
         }
+    }
+
+    func provenance(of word: PrototypeWord) -> PrototypeCardProvenance {
+        (try? modelContext.fetch(FetchDescriptor<PrototypeCardRecord>()))?
+            .first(where: { $0.id == word.id })?.sourcePackage == nil ? .generated : .imported
+    }
+
+    func words(sourceLanguageTag: String, targetLanguageTag: String, provenance: PrototypeCardProvenance) -> [PrototypeWord] {
+        words(sourceLanguageTag: sourceLanguageTag, targetLanguageTag: targetLanguageTag)
+            .filter { self.provenance(of: $0) == provenance }
     }
 
     func reviewedCount(in words: [PrototypeWord]) -> Int {

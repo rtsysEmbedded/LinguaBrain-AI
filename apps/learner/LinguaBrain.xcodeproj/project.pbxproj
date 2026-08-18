@@ -21,6 +21,10 @@
 		10000000000000000000000C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 20000000000000000000000C /* Assets.xcassets */; };
 		10000000000000000000000D /* AppLocalization.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20000000000000000000000F /* AppLocalization.swift */; };
 		10000000000000000000000E /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000010 /* Localizable.xcstrings */; };
+		100000000000000000000011 /* en.json in Resources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000011 /* en.json */; };
+		100000000000000000000012 /* de.json in Resources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000012 /* de.json */; };
+		100000000000000000000013 /* fa.json in Resources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000013 /* fa.json */; };
+		100000000000000000000014 /* GoogleCloudTextToSpeech.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000014 /* GoogleCloudTextToSpeech.swift */; };
 		110000000000000000000001 /* LinguaBrainPrototypeApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000001 /* LinguaBrainPrototypeApp.swift */; };
 		110000000000000000000002 /* PrototypeModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000002 /* PrototypeModels.swift */; };
 		110000000000000000000003 /* PrototypeComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000003 /* PrototypeComponents.swift */; };
@@ -35,10 +39,15 @@
 		11000000000000000000000C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 20000000000000000000000C /* Assets.xcassets */; };
 		11000000000000000000000D /* AppLocalization.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20000000000000000000000F /* AppLocalization.swift */; };
 		11000000000000000000000E /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000010 /* Localizable.xcstrings */; };
+		110000000000000000000011 /* en.json in Resources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000011 /* en.json */; };
+		110000000000000000000012 /* de.json in Resources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000012 /* de.json */; };
+		110000000000000000000013 /* fa.json in Resources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000013 /* fa.json */; };
+		110000000000000000000014 /* GoogleCloudTextToSpeech.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000014 /* GoogleCloudTextToSpeech.swift */; };
 		120000000000000000000001 /* AnkiCoreRegressionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 220000000000000000000001 /* AnkiCoreRegressionTests.swift */; };
 		120000000000000000000002 /* APKGFixtureFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 220000000000000000000002 /* APKGFixtureFactory.swift */; };
 		120000000000000000000003 /* legacy-linguabrain.json in Resources */ = {isa = PBXBuildFile; fileRef = 220000000000000000000003 /* legacy-linguabrain.json */; };
 		120000000000000000000004 /* multilingual-language-pairs.json in Resources */ = {isa = PBXBuildFile; fileRef = 220000000000000000000005 /* multilingual-language-pairs.json */; };
+		120000000000000000000005 /* modern-apkg-fixtures.json in Resources */ = {isa = PBXBuildFile; fileRef = 220000000000000000000006 /* modern-apkg-fixtures.json */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -68,11 +77,16 @@
 		20000000000000000000000E /* LinguaBrain Mac.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "LinguaBrain Mac.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		20000000000000000000000F /* AppLocalization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLocalization.swift; sourceTree = "<group>"; };
 		200000000000000000000010 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
+		200000000000000000000011 /* en.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = en.json; sourceTree = "<group>"; };
+		200000000000000000000012 /* de.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = de.json; sourceTree = "<group>"; };
+		200000000000000000000013 /* fa.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = fa.json; sourceTree = "<group>"; };
+		200000000000000000000014 /* GoogleCloudTextToSpeech.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoogleCloudTextToSpeech.swift; sourceTree = "<group>"; };
 		220000000000000000000001 /* AnkiCoreRegressionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnkiCoreRegressionTests.swift; sourceTree = "<group>"; };
 		220000000000000000000002 /* APKGFixtureFactory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APKGFixtureFactory.swift; sourceTree = "<group>"; };
 		220000000000000000000003 /* legacy-linguabrain.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "legacy-linguabrain.json"; sourceTree = "<group>"; };
 		220000000000000000000004 /* LinguaBrainTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = LinguaBrainTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		220000000000000000000005 /* multilingual-language-pairs.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "multilingual-language-pairs.json"; sourceTree = "<group>"; };
+		220000000000000000000006 /* modern-apkg-fixtures.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "Fixtures/modern-apkg-fixtures.json"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -115,6 +129,7 @@
 			children = (
 				200000000000000000000001 /* LinguaBrainPrototypeApp.swift */,
 				20000000000000000000000F /* AppLocalization.swift */,
+				200000000000000000000014 /* GoogleCloudTextToSpeech.swift */,
 				200000000000000000000002 /* PrototypeModels.swift */,
 				200000000000000000000003 /* PrototypeComponents.swift */,
 				200000000000000000000004 /* PrototypeRootView.swift */,
@@ -134,10 +149,12 @@
 			children = (
 				20000000000000000000000C /* Assets.xcassets */,
 				200000000000000000000010 /* Localizable.xcstrings */,
+				400000000000000000000005 /* Localization */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
 		};
+		400000000000000000000005 /* Localization */ = { isa = PBXGroup; children = ( 200000000000000000000011 /* en.json */, 200000000000000000000012 /* de.json */, 200000000000000000000013 /* fa.json */ ); path = Localization; sourceTree = "<group>"; };
 		400000000000000000000004 /* Products */ = {
 			isa = PBXGroup;
 			children = (
@@ -153,6 +170,7 @@
 			children = (
 				220000000000000000000001 /* AnkiCoreRegressionTests.swift */,
 				220000000000000000000002 /* APKGFixtureFactory.swift */,
+				220000000000000000000006 /* modern-apkg-fixtures.json */,
 				420000000000000000000002 /* Fixtures */,
 			);
 			path = Tests;
@@ -273,6 +291,9 @@
 			files = (
 				10000000000000000000000C /* Assets.xcassets in Resources */,
 				10000000000000000000000E /* Localizable.xcstrings in Resources */,
+				100000000000000000000011 /* en.json in Resources */,
+				100000000000000000000012 /* de.json in Resources */,
+				100000000000000000000013 /* fa.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -282,6 +303,9 @@
 			files = (
 				11000000000000000000000C /* Assets.xcassets in Resources */,
 				11000000000000000000000E /* Localizable.xcstrings in Resources */,
+				110000000000000000000011 /* en.json in Resources */,
+				110000000000000000000012 /* de.json in Resources */,
+				110000000000000000000013 /* fa.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -291,6 +315,7 @@
 			files = (
 				120000000000000000000003 /* legacy-linguabrain.json in Resources */,
 				120000000000000000000004 /* multilingual-language-pairs.json in Resources */,
+				120000000000000000000005 /* modern-apkg-fixtures.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -313,6 +338,7 @@
 				100000000000000000000009 /* ProgressPrototypeView.swift in Sources */,
 				10000000000000000000000A /* SettingsPrototypeView.swift in Sources */,
 				10000000000000000000000B /* OnboardingPrototypeView.swift in Sources */,
+				100000000000000000000014 /* GoogleCloudTextToSpeech.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -332,6 +358,7 @@
 				110000000000000000000009 /* ProgressPrototypeView.swift in Sources */,
 				11000000000000000000000A /* SettingsPrototypeView.swift in Sources */,
 				11000000000000000000000B /* OnboardingPrototypeView.swift in Sources */,
+				110000000000000000000014 /* GoogleCloudTextToSpeech.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -390,6 +417,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 44JPFD4X2P;
@@ -411,6 +439,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 44JPFD4X2P;
@@ -432,6 +461,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = "";
@@ -450,6 +480,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;

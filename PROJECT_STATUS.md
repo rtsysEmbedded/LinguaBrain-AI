@@ -1,9 +1,9 @@
 ---
 title: Project Status and Delivery Checklist
 document_id: LB-STATUS
-version: 0.4.9
+version: 0.4.10
 status: Active
-last_updated: 2026-08-17
+last_updated: 2026-08-18
 ---
 
 # Project Status and Delivery Checklist
@@ -31,7 +31,7 @@ This file is the single progress checklist for LinguaBrain AI. It must be update
 | Active Git branch | `main` |
 | Native platform migration commit | `3c75a70` |
 | Visual prototype | Buildable SwiftUI prototype for iPhone, iPad, and Mac; review state persists, APKG cards can be imported, and an approved OpenRouter proposal can be stored locally |
-| Next primary deliverable | Execute Spec Kit task T005: create owned modern valid/corrupt/hostile golden fixtures from the approved format and reconciliation contracts |
+| Next primary deliverable | Execute Spec Kit task T004E: complete localization QA across all interface languages and Settings/review surfaces |
 | Current delivery strategy | Anki Core first: secure APKG import and reliable offline review gate before AI and final visual approval |
 | Latest verification | 2026-08-17: six tests passed on iPhone 17 / iOS 27; all six directed English/German/Persian pairs contain at least five isolated learning cards; an existing simulator store migrated and rendered the selected `fa→en` pair with exactly five new cards |
 
@@ -54,6 +54,18 @@ This file is the single progress checklist for LinguaBrain AI. It must be update
 - [x] Complete Spec Kit task T004 with approved normalized-reader, resource-policy, provenance, polysemy, reconciliation, conflict, and ownership contracts.
 - [x] Complete pre-T005 task T004A with independent English/German/Persian interface selection, dynamic RTL/LTR behavior, an Apple String Catalog for prototype screens, persisted source/target roles, and three generated language-pair APKG fixtures.
 - [x] Complete pre-T005 task T004B with 30 stable multilingual sample cards, persisted language-pair metadata, pair-scoped Today/Library/Review/Progress behavior, generic target/source card rendering, and all six directed pairs.
+- [x] Complete localization tasks T004C/T004D with editable `fa.json`, `en.json`, and `de.json` resources, centralized fallback loading, and a 306-key inventory migrated from the prototype String Catalog; remaining content-only card examples are explicitly outside interface-copy scope.
+- [x] Complete Spec Kit task T005 with an owned 10-case modern/legacy/hostile fixture catalog, pinned upstream provenance, and XCTest coverage for fixture-matrix integrity; binary schema-18 generation remains gated to T006–T008.
+- [x] Complete Spec Kit tasks T014/T015 with stable imported-card review identities, independent recognition/reverse states, all four FSRS ratings, due timing, session accounting, atomic persistence, and regression coverage on iPhone 17 Simulator.
+- [~] Defer T006–T013 modern Anki import, schema 18, Zstandard/SwiftProtobuf, modern media, and modern reconciliation to a separate Spec Kit feature; legacy import and offline review remain the current feature boundary.
+- [ ] Complete Spec Kit task T004E localization QA across all interface languages, Settings submenus, review labels, duration units, coach suggestions, and source/target titles on iOS and macOS.
+- [ ] Define internal Anki generation for all levels with Google Cloud Text-to-Speech audio, A1-targeted images, local caching, preview/approval, provenance, quota visibility, and text-only fallback (T020).
+- [~] T020 provider foundation: Google Cloud TTS client, MP3 response validation, local audio cache, and deterministic A1 media-plan boundary are implemented; UI/provider wiring, quota accounting, and image generation remain open.
+- [ ] Design and implement the generic AI provider connection boundary (endpoint, protocol, model, optional Keychain credential, local/remote scope) with OpenAI-compatible local support for LM Studio/Ollama (T021).
+- [ ] Split provider settings into independent Text, Audio, and Image menus with local/cloud/off choices and a premium-gated built-in provider path (T022).
+- [~] T021/T022 settings foundation: independent provider modes, endpoint URL, protocol, model ID, and local/no-key boundary are implemented; adapters, Keychain migration, entitlements, quota, and QA remain open.
+- [~] Configured text-provider wiring: default endpoint is `api.openai.com/v1`, default model is `gpt-4o-mini`, and Anki card generation uses the configured OpenAI-compatible endpoint with provider-neutral errors and localization; endpoint-scoped credentials, protocol adapters, and iOS QA remain open.
+- [~] OpenAI media defaults: audio uses `gpt-4o-mini-tts` and image uses `gpt-image-1-mini` through the configured endpoint; final card-preview wiring and end-to-end media approval remain open.
 - [x] Harden `.gitignore` for local projects, secrets, Python, local stores, SwiftPM, Xcode, archives, and generated files.
 - [x] Add a buildable static SwiftUI visual prototype for iPhone, iPad, and Mac, with mock data and no production dependencies.
 - [x] Define and prototype the ten minimum MVP card surfaces required before final visual-design approval.

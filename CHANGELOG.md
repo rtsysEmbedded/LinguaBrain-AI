@@ -8,6 +8,28 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- Added Spec Kit task T020 for level-aware A1 Anki generation with optional audio/image assets, local caching, provenance, preview/approval, and offline text-only fallback.
+- T020 provider decision: use Google Cloud Text-to-Speech Standard voices for audio across all levels, with explicit free-quota and billing-risk disclosure; image generation remains A1-targeted by default.
+- T020 foundation implementation: added a credential-free Google Cloud TTS client boundary, MP3 response validation, deterministic local audio caching, safe filenames, and text-only fallback planning.
+- Added Spec Kit task T021 to replace the OpenRouter-specific AI integration with a configurable endpoint/protocol/model boundary supporting local OpenAI-compatible providers such as LM Studio and Ollama.
+- Added Spec Kit task T022 for independent Text, Audio, and Image provider menus, including local/cloud/off choices and a premium-gated first-party provider path with entitlement-aware asset provenance.
+- T021/T022 foundation implementation: Settings now expose independent Text, Audio, and Image provider modes, configurable endpoint/protocol/model, and a local-provider boundary that does not require an API key.
+- Connected Anki card generation to the generic configured OpenAI-compatible endpoint; defaults now use OpenAI `gpt-4o-mini`, while OpenRouter remains selectable through its endpoint URL.
+- Added OpenAI-compatible audio (`/audio/speech`, `gpt-4o-mini-tts`) and image (`/images/generations`, `gpt-image-1-mini`) clients using the configured endpoint and Keychain credential; defaults are now Cloud/OpenAI.
+- Fixed Anki generation messaging and activation checks so OpenAI, OpenRouter, and local providers use the selected generic Text provider configuration instead of OpenRouter-specific errors.
+- Localized the provider menus and connection settings in Persian, English, and German, including modes, protocols, endpoint/model labels, and Premium entitlement guidance.
+- Split provider settings into separate Text, Audio, and Image submenus with independently persisted mode/model/voice settings and localized navigation labels.
+
+- Documented a separate feature boundary for modern `collection.anki21b`/schema 18 import and deferred T006–T013 until a dedicated dependency, fixture, and reconciliation plan is created.
+
+- T014/T015 review completion: imported cards now have independent recognition/reverse review identities, all four FSRS ratings are regression-tested, and due/session/persistence behavior is documented against the offline review gate.
+
+- Spec Kit change-control rule requiring newly discovered work—including localization regressions—to be added as a tracked task before implementation and checked only after documented verification.
+
+- T005 fixture contract: an owned 10-case APKG compatibility matrix covering legacy baselines, modern schema-18 variants, malformed metadata, unknown versions, mismatched entries, and hostile decompression/SQLite/media cases, with pinned upstream provenance and XCTest validation.
+
+- T004C/T004D localization resources: 306 catalog strings are available in editable Persian, English, and German JSON files; prototype menu/submenu labels use the centralized JSON resolver with English fallback.
+
 - Thirty stable multilingual learning cards covering all six directed pairs among Persian, German, and English, with pair-scoped library, dashboard, progress, and review queues.
 - A pre-T005 multilingual smoke gate with persisted English/German/Persian interface selection, dynamic RTL/LTR shell behavior, source/target settings independent from interface language, explicit imported-card BCP 47 tags, and owned runtime-generated `fa→de`, `en→de`, and `de→en` APKG fixtures.
 - Approved T004 import contracts separating Anki source identity from meaning/domain-specific `LexicalSense` identity, preserving learner overrides and FSRS evidence, and defining deterministic inserted/updated/skipped/linked/conflicted/rejected outcomes with `entlassen` polysemy coverage.
@@ -45,6 +67,22 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Domain contracts for LexicalSense, ReviewUnit, revisions, proposals, learning plans, and pipeline jobs.
 
 ### Changed
+
+- Removed the remaining executable OpenRouter-specific card-generation boundary: text-card creation now routes through the configured provider endpoint/protocol/model, omits OpenRouter-only request fields, supports keyless local mode, and uses localized provider-neutral labels/errors. JSON catalogs and Spec Kit evidence were updated; macOS Debug build passed.
+- Added the missing Cloud data-consent toggle and explanation to Settings → Text provider, localized in Persian, English, and German.
+- Added an exact saved-key/endpoint connection test beside Text provider settings, hardened Keychain upsert/read trimming, and localized the card-generation screen with source/target-language-aware generation prompts.
+- Added provenance-aware Anki TSV export: internally generated and imported cards are separated and exported through distinct localized actions.
+- Added a per-card selection sheet before TSV export, with select/deselect controls and localized actions.
+- Recorded the native APKG exporter as T024 with an explicit boundary: valid SQLite collection, ZIP packaging, templates/tags, media ownership, and round-trip fixtures are required before APKG export is exposed.
+- Added a unified `AIProviderGateway` for text, speech, and image generation and routed Anki card creation through it.
+- Fixed the provider 401 root cause: Text settings and card generation now read the same provider-scoped Keychain account (`api-key.text`), while the old generic account is used only as a migration fallback.
+- Added safe DEBUG provider diagnostics showing Keychain account, endpoint, model, key length, and hashed fingerprint without exposing the API key.
+- Added runtime migration for the persisted legacy OpenRouter endpoint and a warning when an unusually large value is pasted as an API key.
+- Normalized empty persisted provider protocols and aligned the saved-key indicator with the exact lookup used during card generation.
+- Synchronized Text provider credentials across scoped and legacy Keychain accounts for compatibility with previously installed builds.
+- Isolated provider credential state and deletion for Text, Audio, and Image Keychain accounts.
+- Made AI card generation language-direction aware: response fields, examples, preview layout, stored pair metadata, and pronunciation input now follow the selected source and target languages instead of fixed German/Persian semantics.
+- Added pronunciation generation/playback to card preview and independent audio endpoint/model/provider-key settings.
 
 - Persist language-pair metadata on every prototype card, include the pair in semantic duplicate identity, correct generic APKG source/target mapping, swap conflicting language selections safely, and render card sides with their own RTL/LTR direction.
 - Repaired the incomplete interface-language switch by adding an Apple String Catalog for 265 prototype-screen strings, resolving variable component copy through the selected in-app locale, localizing dynamic minute/review summaries, shortening German tab labels, and visually smoke-testing English/German/Persian LTR/RTL renders.

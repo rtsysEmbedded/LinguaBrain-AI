@@ -1,4 +1,5 @@
 import SwiftUI
+import UniformTypeIdentifiers
 
 struct LibraryPrototypeView: View {
     @Environment(PrototypeStore.self) private var store
@@ -8,6 +9,12 @@ struct LibraryPrototypeView: View {
     @State private var filter = "همه"
     @State private var packagePendingDeletion: PrototypeImportedPackage?
     @State private var deletionError: String?
+    @State private var exportGroup: PrototypeCardProvenance?
+    @State private var isExporting = false
+    @State private var exportDocument = AnkiTSVDocument(text: "")
+    @State private var isSelectingExportCards = false
+    @State private var exportCandidates: [PrototypeWord] = []
+    @State private var selectedExportIDs: Set<UUID> = []
 
     private var activeWords: [PrototypeWord] {
         store.words(
@@ -37,6 +44,8 @@ struct LibraryPrototypeView: View {
                 if !store.importedPackages.isEmpty {
                     importedPackagesSection
                 }
+
+                exportSection
 
                 NavigationLink {
                     CardGalleryPrototypeView()
@@ -106,6 +115,42 @@ struct LibraryPrototypeView: View {
             Button("باشه", role: .cancel) { deletionError = nil }
         } message: {
             Text(deletionError ?? "خطای ناشناخته")
+        }
+        .fileExporter(isPresented: $isExporting, document: exportDocument, contentType: .plainText, defaultFilename: "linguabrain-cards.tsv") { _ in }
+        .sheet(isPresented: $isSelectingExportCards) {
+            ExportCardSelectionView(cards: exportCandidates, selectedIDs: $selectedExportIDs, onCancel: {
+                isSelectingExportCards = false
+            }, onExport: {
+                let selected = exportCandidates.filter { selectedExportIDs.contains($0.id) }
+                exportDocument = AnkiTSVDocument(text: AnkiTSVExporter.makeTSV(selected))
+                isSelectingExportCards = false
+                isExporting = true
+            })
+        }
+    }
+
+    private var exportSection: some View {
+        PrototypeCard {
+            VStack(alignment: .leading, spacing: 10) {
+                Text(localization.localized("export.title")).font(.headline)
+                Text(localization.localized("export.subtitle")).font(.caption).foregroundStyle(.secondary)
+                ForEach(PrototypeCardProvenance.allCases) { provenance in
+                    let cards = store.words(sourceLanguageTag: languageSettings.sourceLanguageTag, targetLanguageTag: languageSettings.targetLanguageTag, provenance: provenance)
+                    Button {
+                        exportGroup = provenance
+                        exportCandidates = cards
+                        selectedExportIDs = Set(cards.map(\.id))
+                        isSelectingExportCards = true
+                    } label: {
+                        HStack {
+                            Label(localization.localized(provenance == .generated ? "export.generated" : "export.imported"), systemImage: provenance == .generated ? "wand.and.stars" : "square.and.arrow.down")
+                            Spacer()
+                            Text("\(cards.count)")
+                        }
+                    }
+                    .disabled(cards.isEmpty)
+                }
+            }
         }
     }
 
@@ -184,6 +229,66 @@ struct LibraryPrototypeView: View {
                         .tint(store.strength(for: word) < 0.5 ? .orange : PrototypeTheme.mint)
                 }
                 Image(systemName: "chevron.left").font(.caption).foregroundStyle(.tertiary)
+            }
+        }
+    }
+}
+
+struct AnkiTSVDocument: FileDocument {
+    static var readableContentTypes: [UTType] { [.plainText] }
+    var text: String
+    init(text: String) { self.text = text }
+    init(configuration: ReadConfiguration) throws {
+        text = String(data: configuration.file.regularFileContents ?? Data(), encoding: .utf8) ?? ""
+    }
+    func fileWrapper(configuration: WriteConfiguration) throws -> FileWrapper {
+        FileWrapper(regularFileWithContents: Data(text.utf8))
+    }
+}
+
+enum AnkiTSVExporter {
+    static func makeTSV(_ cards: [PrototypeWord]) -> String {
+        let header = ["Front", "Back", "Example", "Example translation", "Level", "Part of speech", "Tags"].joined(separator: "\t")
+        let rows = cards.map { card in
+            [card.german, card.persian, card.example, card.exampleTranslation, card.level, card.partOfSpeech, card.domain]
+                .map { $0.replacingOccurrences(of: "\t", with: " ").replacingOccurrences(of: "\n", with: " ") }
+                .joined(separator: "\t")
+        }
+        return ([header] + rows).joined(separator: "\n") + "\n"
+    }
+}
+
+private struct ExportCardSelectionView: View {
+    @Environment(PrototypeLocalization.self) private var localization
+    let cards: [PrototypeWord]
+    @Binding var selectedIDs: Set<UUID>
+    let onCancel: () -> Void
+    let onExport: () -> Void
+
+    var body: some View {
+        NavigationStack {
+            List(cards) { card in
+                Button {
+                    if selectedIDs.contains(card.id) { selectedIDs.remove(card.id) }
+                    else { selectedIDs.insert(card.id) }
+                } label: {
+                    HStack {
+                        Image(systemName: selectedIDs.contains(card.id) ? "checkmark.circle.fill" : "circle")
+                        VStack(alignment: .leading) {
+                            Text(card.german)
+                            Text(card.persian).font(.caption).foregroundStyle(.secondary)
+                        }
+                    }
+                }
+                .buttonStyle(.plain)
+            }
+            .navigationTitle(localization.localized("export.selectTitle"))
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) { Button(localization.localized("common.cancel"), action: onCancel) }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button(localization.localized("export.exportSelected"), action: onExport)
+                        .disabled(selectedIDs.isEmpty)
+                }
             }
         }
     }

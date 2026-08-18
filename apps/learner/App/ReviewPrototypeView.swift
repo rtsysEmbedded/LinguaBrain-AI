@@ -4,6 +4,7 @@ struct ReviewPrototypeView: View {
     let newCardLimit: Int?
     let mode: PrototypeReviewMode
     @Environment(PrototypeStore.self) private var store
+    @Environment(PrototypeLocalization.self) private var localization
     @Environment(PrototypeLanguageSettings.self) private var languageSettings
     @State private var revealed = false
     @State private var queue: [UUID] = []
@@ -35,10 +36,26 @@ struct ReviewPrototypeView: View {
         Double(store.reviewedCount(in: activeWords)) / Double(max(activeWords.count, 1))
     }
 
+    private var reviewTitle: String {
+        guard mode == .recognition else { return localization.localized("reverseReviewTitle") }
+        return localization.localized("recognitionReviewFormat")
+            .replacingOccurrences(of: "%1$@", with: languageName(languageSettings.sourceLanguageTag))
+            .replacingOccurrences(of: "%2$@", with: languageName(languageSettings.targetLanguageTag))
+    }
+
+    private func languageName(_ tag: String) -> String {
+        switch tag {
+        case "de": return "Deutsch"
+        case "en": return "English"
+        case "fa": return "فارسی"
+        default: return tag
+        }
+    }
+
     var body: some View {
         Group {
             if !hasStarted {
-                ProgressView("آماده‌کردن صف مرور…")
+                ProgressView(localization.localized("preparingReviewQueue"))
             } else if isComplete {
                 completionView
             } else if let waitingUntil {
@@ -51,7 +68,7 @@ struct ReviewPrototypeView: View {
         .frame(maxWidth: 820)
         .frame(maxWidth: .infinity)
         .background(PrototypeBackground())
-        .navigationTitle(mode.title)
+        .navigationTitle(reviewTitle)
         .task {
             guard !hasStarted else { return }
             startSession()
@@ -69,11 +86,11 @@ struct ReviewPrototypeView: View {
     private func reviewView(word: PrototypeWord) -> some View {
         VStack(spacing: 22) {
             HStack {
-                Text("\(ratings.count) پاسخ ثبت‌شده")
+                Text(localization.localized("recordedResponses").replacingOccurrences(of: "%d", with: "\(ratings.count)"))
                     .font(.subheadline.weight(.medium))
                 ProgressView(value: progress)
                     .tint(PrototypeTheme.accent)
-                Text("\(queue.count) در صف")
+                Text(localization.localized("queueCount").replacingOccurrences(of: "%d", with: "\(queue.count)"))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -81,7 +98,7 @@ struct ReviewPrototypeView: View {
             Spacer(minLength: 10)
 
             VStack(spacing: 22) {
-                Text(mode == .recognition ? "معنی این واژه چیست؟" : "معادل آن در زبان یادگیری چیست؟")
+                Text(localization.localized(mode == .recognition ? "reviewPrompt" : "reversePrompt"))
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                 if mode == .recognition {
@@ -108,7 +125,7 @@ struct ReviewPrototypeView: View {
                     LanguageText(text: word.example, languageTag: word.targetLanguageTag, font: .title3)
                     LanguageText(text: word.exampleTranslation, languageTag: word.sourceLanguageTag, color: .secondary)
                 } else {
-                    Button("نمایش پاسخ") {
+                    Button(localization.localized("revealAnswer")) {
                         withAnimation(.snappy) { revealed = true }
                     }
                     .buttonStyle(.borderedProminent)
@@ -128,7 +145,7 @@ struct ReviewPrototypeView: View {
 
             if revealed {
                 VStack(spacing: 10) {
-                    Text("پاسخت چطور بود؟")
+                    Text(localization.localized("answerRating"))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                     HStack(spacing: 10) {
@@ -154,7 +171,7 @@ struct ReviewPrototypeView: View {
                 .font(.title2.bold())
             TimelineView(.periodic(from: .now, by: 1)) { context in
                 let seconds = max(0, Int(date.timeIntervalSince(context.date).rounded(.up)))
-                Text("کارت بعدی تا \(seconds) ثانیهٔ دیگر")
+                Text(localization.localized("nextCardIn").replacingOccurrences(of: "%@", with: localization.duration(seconds)))
                     .font(.title3.monospacedDigit())
                     .foregroundStyle(.secondary)
             }
@@ -176,15 +193,15 @@ struct ReviewPrototypeView: View {
             Image(systemName: "checkmark.seal.fill")
                 .font(.system(size: 64))
                 .foregroundStyle(PrototypeTheme.mint)
-            Text("مرورهای فعلی تمام شد").font(.largeTitle.bold())
-            Text("\(ratings.count) پاسخ در این جلسه ثبت شد")
+            Text(localization.localized("reviewCompleteTitle")).font(.largeTitle.bold())
+            Text(localization.localized("sessionResponses").replacingOccurrences(of: "%d", with: "\(ratings.count)"))
                 .foregroundStyle(.secondary)
 
             PrototypeCard {
                 VStack(spacing: 14) {
                     ForEach(PrototypeReviewGrade.allCases) { rating in
                         HStack {
-                            Label(rating.title, systemImage: rating.symbol)
+                            Label(localization.localized(rating.localizationKey), systemImage: rating.symbol)
                                 .foregroundStyle(rating.color)
                             Spacer()
                             Text("\(ratings.filter { $0 == rating }.count)")
@@ -195,7 +212,7 @@ struct ReviewPrototypeView: View {
             }
             .frame(maxWidth: 440)
 
-            Button("بررسی دوبارهٔ صف") {
+            Button(localization.localized("retryQueue")) {
                 startSession()
             }
             .buttonStyle(.borderedProminent)
@@ -205,13 +222,14 @@ struct ReviewPrototypeView: View {
     }
 
     private func ratingButton(_ rating: PrototypeReviewGrade, word: PrototypeWord) -> some View {
-        let interval = store.previewSchedule(for: rating, word: word, mode: mode).intervalLabel
+        let schedule = store.previewSchedule(for: rating, word: word, mode: mode)
+        let interval = localization.duration(max(0, Int(schedule.dueAt.timeIntervalSince(schedule.state.lastReview).rounded())))
         return Button {
             submit(rating, for: word)
         } label: {
             VStack(spacing: 5) {
                 Image(systemName: rating.symbol)
-                Text(rating.title).font(.caption.weight(.semibold))
+                Text(localization.localized(rating.localizationKey)).font(.caption.weight(.semibold))
                 Text(interval).font(.caption2).foregroundStyle(.secondary)
             }
             .frame(maxWidth: .infinity)

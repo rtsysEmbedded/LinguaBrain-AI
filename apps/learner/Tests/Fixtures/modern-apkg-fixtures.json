@@ -1,0 +1,16 @@
+{
+  "baseline": "anki-modern-schema-18",
+  "upstreamCommit": "967aa0d578fc75181e292e95326f9b58698da25c",
+  "fixtures": [
+    {"id":"modern-text-only","kind":"accepted","formatVersion":3,"collection":"collection.anki21b","schema":18,"media":0,"expected":"accepted"},
+    {"id":"modern-image-audio","kind":"accepted","formatVersion":3,"collection":"collection.anki21b","schema":18,"media":2,"expected":"accepted"},
+    {"id":"modern-scheduling-deck-config","kind":"accepted","formatVersion":3,"collection":"collection.anki21b","schema":18,"media":0,"expected":"accepted"},
+    {"id":"modern-multiple-notetypes-templates-tags-unicode","kind":"accepted","formatVersion":3,"collection":"collection.anki21b","schema":18,"media":0,"expected":"accepted"},
+    {"id":"legacy-anki2-baseline","kind":"accepted","formatVersion":1,"collection":"collection.anki2","schema":11,"media":0,"expected":"accepted"},
+    {"id":"legacy-anki21-baseline","kind":"accepted","formatVersion":2,"collection":"collection.anki21","schema":11,"media":0,"expected":"accepted"},
+    {"id":"malformed-meta","kind":"corrupt","formatVersion":null,"collection":"collection.anki21b","schema":null,"media":0,"expected":"rejected"},
+    {"id":"unknown-version","kind":"unsupported","formatVersion":99,"collection":"collection.anki21b","schema":18,"media":0,"expected":"rejected"},
+    {"id":"metadata-entry-mismatch","kind":"corrupt","formatVersion":3,"collection":"collection.anki2","schema":11,"media":0,"expected":"rejected"},
+    {"id":"truncated-zstd-invalid-sqlite-oversized-media","kind":"hostile","formatVersion":3,"collection":"collection.anki21b","schema":18,"media":1,"expected":"rejected"}
+  ]
+}

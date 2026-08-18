@@ -51,6 +51,22 @@ struct SanitizedLanguagePairFixture: Decodable {
     let targetExample: String
 }
 
+struct ModernFixtureCatalog: Decodable {
+    struct Fixture: Decodable {
+        let id: String
+        let kind: String
+        let formatVersion: Int?
+        let collection: String
+        let schema: Int?
+        let media: Int
+        let expected: String
+    }
+
+    let baseline: String
+    let upstreamCommit: String
+    let fixtures: [Fixture]
+}
+
 enum APKGFixtureFactory {
     static func loadFixture() throws -> SanitizedLegacyFixture {
         let url = try XCTUnwrapResource(named: "legacy-linguabrain", extension: "json")
@@ -235,7 +251,7 @@ enum APKGFixtureFactory {
     }
 }
 
-private final class FixtureBundleMarker {}
+final class FixtureBundleMarker {}
 
 private extension Data {
     mutating func appendLE<T: FixedWidthInteger>(_ value: T) {
