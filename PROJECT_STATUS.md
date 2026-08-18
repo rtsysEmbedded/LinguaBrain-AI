@@ -31,7 +31,7 @@ This file is the single progress checklist for LinguaBrain AI. It must be update
 | Active Git branch | `main` |
 | Native platform migration commit | `3c75a70` |
 | Visual prototype | Buildable SwiftUI prototype for iPhone, iPad, and Mac; review state persists, APKG cards can be imported, and an approved OpenRouter proposal can be stored locally |
-| Next primary deliverable | Execute Spec Kit task T004E: complete localization QA across all interface languages and Settings/review surfaces |
+| Next primary deliverable | Execute Spec Kit tasks T004E/T025–T027: complete localization QA, mixed-practice review, and future-proof audio/collocation/conversation card bundles |
 | Current delivery strategy | Anki Core first: secure APKG import and reliable offline review gate before AI and final visual approval |
 | Latest verification | 2026-08-17: six tests passed on iPhone 17 / iOS 27; all six directed English/German/Persian pairs contain at least five isolated learning cards; an existing simulator store migrated and rendered the selected `fa→en` pair with exactly five new cards |
 
@@ -60,7 +60,7 @@ This file is the single progress checklist for LinguaBrain AI. It must be update
 - [~] Defer T006–T013 modern Anki import, schema 18, Zstandard/SwiftProtobuf, modern media, and modern reconciliation to a separate Spec Kit feature; legacy import and offline review remain the current feature boundary.
 - [ ] Complete Spec Kit task T004E localization QA across all interface languages, Settings submenus, review labels, duration units, coach suggestions, and source/target titles on iOS and macOS.
 - [ ] Define internal Anki generation for all levels with Google Cloud Text-to-Speech audio, A1-targeted images, local caching, preview/approval, provenance, quota visibility, and text-only fallback (T020).
-- [~] T020 provider foundation: Google Cloud TTS client, MP3 response validation, local audio cache, and deterministic A1 media-plan boundary are implemented; UI/provider wiring, quota accounting, and image generation remain open.
+- [~] T020/T026 audio slice: generated word cards automatically request audio from the independent Audio provider, now routing Google Native through the configured Google TTS endpoint and `api-key.audio`, persist MP3 bytes on approval, and play them during review; quota accounting, full MediaAsset provenance/cache lifecycle, collocations, conversation sentences, and packaged APKG media export remain open.
 - [ ] Design and implement the generic AI provider connection boundary (endpoint, protocol, model, optional Keychain credential, local/remote scope) with OpenAI-compatible local support for LM Studio/Ollama (T021).
 - [ ] Split provider settings into independent Text, Audio, and Image menus with local/cloud/off choices and a premium-gated built-in provider path (T022).
 - [~] T021/T022 settings foundation: independent provider modes, endpoint URL, protocol, model ID, and local/no-key boundary are implemented; adapters, Keychain migration, entitlements, quota, and QA remain open.

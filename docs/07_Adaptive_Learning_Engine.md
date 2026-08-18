@@ -126,6 +126,10 @@ No single score is treated as objective truth. The plan retains component values
 
 ## Exercise-selection policy
 
+### Mixed retrieval policy
+
+The default learner session alternates retrieval directions and modalities around the active objective set. It may ask for direct translation, reverse translation, article/grammar application, listening recognition or dictation, typed production, collocation completion/selection, and daily-conversation response. Selection is weighted-random: randomness provides variety, while due state, objective weakness, recent errors, mission relevance, learner energy, and available time determine the weights. A session must not show the same operation repeatedly when other due or weak objectives are available.
+
 The engine selects a modality based on the objective, not simply the KnowledgeItem type.
 
 | Evidence pattern | Preferred practice |
@@ -136,6 +140,8 @@ The engine selects a modality based on the objective, not simply the KnowledgeIt
 | Grammar rule recognized; usage weak | Cloze, word order, sentence builder |
 | Production weak; basic knowledge ready | `GUIDED_PRODUCTION`, only when an installed evaluator and release capability permit it |
 | New material | Short contextual introduction, recognition, then low-risk retrieval |
+| Fixed combination weak | Collocation completion, partner selection, then contextual production |
+| Daily conversation weak | Situation-to-utterance recognition, reverse recall, then short typed response |
 
 The engine must not select open-ended production as the first evidence for an unintroduced beginner item unless the learner explicitly asks for a challenge.
 

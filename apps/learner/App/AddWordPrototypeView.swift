@@ -132,6 +132,23 @@ struct AddWordPrototypeView: View {
                     throw ProviderError.invalidResponse
                 }
                 generatedCard = draft
+                // Generate pronunciation as part of card creation. The explicit
+                // preview button remains available for retry/regeneration.
+                if aiSettings.audioMode != .off {
+                    let audioGateway = AIProviderGateway(
+                        endpoint: aiSettings.audioEndpoint,
+                        protocolName: aiSettings.audioProtocolName,
+                        apiKey: try aiSettings.apiKey(for: "audio")
+                    )
+                    // Audio is generated during creation, but a temporary audio
+                    // provider/quota failure must not discard an otherwise valid
+                    // text card; the preview button can retry it.
+                    generatedAudio = try? await audioGateway.synthesizeSpeech(
+                        text: draft.targetText,
+                        model: aiSettings.audioModelID,
+                        voice: aiSettings.audioVoice
+                    )
+                }
                 withAnimation { showPreview = true }
             } catch {
                 packageError = error.localizedDescription
@@ -153,7 +170,7 @@ struct AddWordPrototypeView: View {
         Task {
             do {
                 guard aiSettings.audioMode != .off else { throw ProviderError.providerDisabled }
-                let gateway = AIProviderGateway(endpoint: aiSettings.audioEndpoint, protocolName: aiSettings.protocolName, apiKey: try aiSettings.apiKey(for: "audio"))
+                let gateway = AIProviderGateway(endpoint: aiSettings.audioEndpoint, protocolName: aiSettings.audioProtocolName, apiKey: try aiSettings.apiKey(for: "audio"))
                 generatedAudio = try await gateway.synthesizeSpeech(text: preview.targetText, model: aiSettings.audioModelID, voice: aiSettings.audioVoice)
             } catch { packageError = error.localizedDescription }
             isGeneratingAudio = false
@@ -339,7 +356,7 @@ struct AddWordPrototypeView: View {
                 }
                 Button {
                     guard generatedCard != nil else { return }
-                    if store.addGeneratedCard(preview) {
+                    if store.addGeneratedCard(preview, pronunciationAudio: generatedAudio) {
                         generatedCardSaved = true
                     } else {
                         packageError = store.lastPersistenceError

@@ -65,6 +65,7 @@ flowchart TD
 4. **Smart card enrichment**
    - Persian meaning, part of speech, CEFR estimate, pronunciation where available, and level-appropriate example.
    - German noun article/plural and essential verb forms.
+   - A content bundle containing pronunciation audio when the configured capability is available, at least one validated fixed combination/collocation when applicable, and at least one natural everyday-conversation sentence.
    - Provider-independent AI with validation and caching.
    - A bundled seed lexicon and manual minimal-card path work without an AI provider or network.
 
@@ -91,6 +92,8 @@ flowchart TD
    - Provides a concise rationale and offline fallback.
 
 10. **MVP exercises**
+   - Mixed practice is the default: direct/reverse translation, article and grammar checks, listening/dictation, and typed production are selected across independent objectives rather than treating a word's meaning card as the complete learning unit.
+    - Collocation tests (partner selection, cloze completion, and contextual production) and daily-conversation tests (situation recognition and reusable-sentence recall) are selected as independent objectives.
     - German → Persian recognition.
     - Persian → German recall.
     - Multiple-choice cloze.

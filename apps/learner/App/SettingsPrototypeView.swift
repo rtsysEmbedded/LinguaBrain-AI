@@ -398,6 +398,7 @@ final class PrototypeAISettings {
     private static let audioEndpointKey = "prototype.provider.audio.endpoint"
     private static let imageEndpointKey = "prototype.provider.image.endpoint"
     private static let protocolKey = "prototype.provider.protocol"
+    private static let audioProtocolKey = "prototype.provider.audio.protocol"
     private static let audioVoiceKey = "prototype.provider.audio.voice"
     private static let imageModelKey = "prototype.provider.image.model"
     private static let audioModelKey = "prototype.provider.audio.model"
@@ -409,6 +410,7 @@ final class PrototypeAISettings {
     var audioEndpoint: String { didSet { UserDefaults.standard.set(audioEndpoint, forKey: Self.audioEndpointKey) } }
     var imageEndpoint: String { didSet { UserDefaults.standard.set(imageEndpoint, forKey: Self.imageEndpointKey) } }
     var protocolName: String { didSet { UserDefaults.standard.set(protocolName, forKey: Self.protocolKey) } }
+    var audioProtocolName: String { didSet { UserDefaults.standard.set(audioProtocolName, forKey: Self.audioProtocolKey) } }
     var audioVoice: String { didSet { UserDefaults.standard.set(audioVoice, forKey: Self.audioVoiceKey) } }
     var imageModelID: String { didSet { UserDefaults.standard.set(imageModelID, forKey: Self.imageModelKey) } }
     var audioModelID: String { didSet { UserDefaults.standard.set(audioModelID, forKey: Self.audioModelKey) } }
@@ -432,13 +434,35 @@ final class PrototypeAISettings {
         } else {
             endpoint = storedTextEndpoint.isEmpty ? "https://api.openai.com/v1" : storedTextEndpoint
         }
-        audioEndpoint = UserDefaults.standard.string(forKey: Self.audioEndpointKey) ?? "https://api.openai.com/v1"
-        imageEndpoint = UserDefaults.standard.string(forKey: Self.imageEndpointKey) ?? "https://api.openai.com/v1"
         let storedProtocol = UserDefaults.standard.string(forKey: Self.protocolKey) ?? ""
-        protocolName = storedProtocol == "google-native" ? "google-native" : "openai-compatible"
-        audioVoice = UserDefaults.standard.string(forKey: Self.audioVoiceKey) ?? "de-DE-Standard-A"
+        let resolvedProtocol = storedProtocol == "google-native" ? "google-native" : "openai-compatible"
+        let storedAudioEndpoint = UserDefaults.standard.string(forKey: Self.audioEndpointKey) ?? ""
+        // Audio follows the provider configuration already saved on this device.
+        // Do not silently switch an existing installation to Google.
+        let resolvedEndpoint = storedTextEndpoint.isEmpty ? "https://api.openai.com/v1" : storedTextEndpoint
+        let candidateAudioEndpoint = storedAudioEndpoint.isEmpty ? resolvedEndpoint : storedAudioEndpoint
+        audioEndpoint = (resolvedProtocol == "openai-compatible" && candidateAudioEndpoint.contains("texttospeech.googleapis.com"))
+            ? resolvedEndpoint
+            : candidateAudioEndpoint
+        imageEndpoint = UserDefaults.standard.string(forKey: Self.imageEndpointKey) ?? "https://api.openai.com/v1"
+        protocolName = resolvedProtocol
+        let storedAudioProtocol = UserDefaults.standard.string(forKey: Self.audioProtocolKey)
+        let resolvedAudioProtocol = (resolvedProtocol == "openai-compatible" && storedAudioProtocol == "google-native")
+            ? "openai-compatible"
+            : (storedAudioProtocol ?? resolvedProtocol)
+        // Repair the stale Google values written by the previous implementation
+        // when this device is configured for OpenAI-compatible speech.
+        let storedVoice = UserDefaults.standard.string(forKey: Self.audioVoiceKey) ?? ""
+        let storedAudioModel = UserDefaults.standard.string(forKey: Self.audioModelKey) ?? ""
+        audioProtocolName = resolvedAudioProtocol
+        if resolvedAudioProtocol == "openai-compatible" {
+            audioVoice = storedVoice.isEmpty || storedVoice.contains("Standard-") ? "alloy" : storedVoice
+            audioModelID = storedAudioModel.isEmpty || storedAudioModel == "standard" ? "gpt-4o-mini-tts" : storedAudioModel
+        } else {
+            audioVoice = storedVoice.isEmpty ? "de-DE-Standard-A" : storedVoice
+            audioModelID = storedAudioModel.isEmpty ? "standard" : storedAudioModel
+        }
         imageModelID = UserDefaults.standard.string(forKey: Self.imageModelKey) ?? "gpt-image-1-mini"
-        audioModelID = UserDefaults.standard.string(forKey: Self.audioModelKey) ?? "gpt-4o-mini-tts"
         modelID = UserDefaults.standard.string(forKey: Self.modelKey) ?? "gpt-4o-mini"
         cloudConsent = UserDefaults.standard.bool(forKey: Self.consentKey)
         hasAPIKey = (try? Self.readTextOrLegacyKey()) != nil
@@ -722,9 +746,16 @@ private struct ProviderConfigurationView: View {
             Section(localization.localized("provider.connection")) {
                 TextField(localization.localized("provider.endpoint"), text: endpointBinding(settings: settings))
                     .environment(\.layoutDirection, .leftToRight)
-                Picker(localization.localized("provider.protocol"), selection: $settings.protocolName) {
-                    Text(localization.localized("provider.openAICompatible")).tag("openai-compatible")
-                    Text(localization.localized("provider.googleNative")).tag("google-native")
+                if kind == .audio {
+                    Picker(localization.localized("provider.protocol"), selection: $settings.audioProtocolName) {
+                        Text(localization.localized("provider.openAICompatible")).tag("openai-compatible")
+                        Text(localization.localized("provider.googleNative")).tag("google-native")
+                    }
+                } else {
+                    Picker(localization.localized("provider.protocol"), selection: $settings.protocolName) {
+                        Text(localization.localized("provider.openAICompatible")).tag("openai-compatible")
+                        Text(localization.localized("provider.googleNative")).tag("google-native")
+                    }
                 }
                 if kind != .image || settings.imageMode == .cloud {
                     SecureField(localization.localized("provider.apiKey"), text: $apiKey)

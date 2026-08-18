@@ -41,18 +41,19 @@ enum GoogleCloudTTSError: LocalizedError, Equatable {
 
 struct GoogleCloudTextToSpeechClient: Sendable {
     let apiKey: String
+    let baseURL: String
     let session: URLSession
-    let endpoint = URL(string: "https://texttospeech.googleapis.com/v1/text:synthesize")!
 
-    init(apiKey: String, session: URLSession = .shared) {
+    init(apiKey: String, baseURL: String, session: URLSession = .shared) {
         self.apiKey = apiKey
+        self.baseURL = baseURL.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
         self.session = session
     }
 
     func synthesize(text: String, languageCode: String, voiceName: String? = nil, speakingRate: Double = 1.0) async throws -> Data {
         guard !apiKey.isEmpty else { throw GoogleCloudTTSError.missingAPIKey }
         guard !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { throw GoogleCloudTTSError.emptyText }
-        var components = URLComponents(url: endpoint, resolvingAgainstBaseURL: false)!
+        var components = URLComponents(string: "\(baseURL)/text:synthesize")!
         components.queryItems = [URLQueryItem(name: "key", value: apiKey)]
         var request = URLRequest(url: components.url!)
         request.httpMethod = "POST"
@@ -172,8 +173,20 @@ struct AIProviderGateway: Sendable {
     }
 
     func synthesizeSpeech(text: String, model: String, voice: String) async throws -> Data {
-        try await OpenAIMediaClient(baseURL: endpoint, apiKey: apiKey, session: session)
-            .speech(text: text, model: model, voice: voice)
+        switch protocolName {
+        case "google-native":
+            let languageCode = voice.split(separator: "-").prefix(2).joined(separator: "-")
+            return try await GoogleCloudTextToSpeechClient(
+                apiKey: apiKey,
+                baseURL: endpoint,
+                session: session
+            ).synthesize(text: text, languageCode: languageCode, voiceName: voice)
+        case "openai-compatible":
+            return try await OpenAIMediaClient(baseURL: endpoint, apiKey: apiKey, session: session)
+                .speech(text: text, model: model, voice: voice)
+        default:
+            throw ProviderError.unsupportedProtocol
+        }
     }
 
     func generateImage(prompt: String, model: String) async throws -> Data {

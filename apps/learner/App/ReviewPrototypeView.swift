@@ -1,4 +1,5 @@
 import SwiftUI
+import AVFoundation
 
 struct ReviewPrototypeView: View {
     let newCardLimit: Int?
@@ -14,6 +15,7 @@ struct ReviewPrototypeView: View {
     @State private var isComplete = false
     @State private var hasStarted = false
     @State private var persistenceError: String?
+    @State private var audioPlayer: AVAudioPlayer?
 
     init(newCardLimit: Int? = nil, mode: PrototypeReviewMode = .recognition) {
         self.newCardLimit = newCardLimit
@@ -113,6 +115,14 @@ struct ReviewPrototypeView: View {
                         languageTag: word.sourceLanguageTag,
                         font: .system(size: 34, weight: .bold, design: .rounded)
                     )
+                }
+
+                if let audio = store.pronunciationAudio(for: word) {
+                    Button(localization.localized("media.playAudio"), systemImage: "play.circle.fill") {
+                        audioPlayer = try? AVAudioPlayer(data: audio)
+                        audioPlayer?.play()
+                    }
+                    .buttonStyle(.bordered)
                 }
 
                 if revealed {

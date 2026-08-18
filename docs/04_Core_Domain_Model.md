@@ -164,6 +164,22 @@ Examples:
 - `eine Entscheidung treffen`
 - `Ich hätte gern …`
 
+### Collocations and fixed combinations
+
+A `Phrase` may be classified as a `COLLOCATION` when the combination is conventional,
+lexically restricted, or meaningfully different from composing its words independently.
+Examples include German `eine Entscheidung treffen` and `Entscheidungen treffen`.
+Collocations are first-class learning targets, not only tags on their component words.
+
+Required metadata for a collocation:
+
+- canonical target-language form and natural source-language meaning;
+- component KnowledgeItem/Phrase references;
+- pattern slots and allowed inflectional variants;
+- register, domain, CEFR estimate, and usage notes;
+- at least one validated sentence;
+- provenance, validation status, and stable identity for review scheduling.
+
 ## Entity: Sentence
 
 `Sentence` is a complete, language-specific example. It can support a word, phrase, grammar rule, dialogue, or exercise.
@@ -176,6 +192,15 @@ Required properties:
 - difficulty/CEFR estimate;
 - source and validation status;
 - references to the knowledge items illustrated.
+
+### Everyday conversation sentences
+
+A `Sentence` may be classified as `DAILY_CONVERSATION` and must retain its situation,
+speaker/role when relevant, register, and whether it is a reusable utterance or a
+literal example. Card generation should provide at least one natural daily-life
+sentence for approved beginner/intermediate content, with source and target text
+stored separately. Dialogue turns may reference the same sentence model so later
+conversation exercises do not need a new content format.
 
 ## Entity: GrammarRule
 
@@ -211,6 +236,16 @@ Examples:
 - generation/provider provenance when generated.
 
 The platform must not assume that remote URLs remain available. Cached and user-owned media require a local storage strategy.
+
+### Card-generation media contract
+
+An approved generated card is a content bundle, not text alone. For a spoken target
+language, pronunciation audio is required whenever the selected provider/capability
+is available and must be persisted with checksum, locale, voice, provider/model,
+generation timestamp, and local cache reference. If generation is unavailable, the
+card may be approved only through an explicit text-only fallback that records the
+missing-media reason. Images remain optional and capability-gated, but use the same
+provenance and cache rules.
 
 ## Entity: Exercise
 

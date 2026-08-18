@@ -62,6 +62,10 @@ A **LearningObjective** is a measurable ability associated with a KnowledgeItem.
 
 The taxonomy must not mix a cognitive operation with a modality or content component. Each objective combines dimensions explicitly.
 
+### Mixed practice session
+
+The learner-facing session is not a fixed vocabulary/meaning review. A session samples several objectives for the same KnowledgeItem or small related set, with weighted random selection rather than uniform randomness. Candidate activities include direct translation, reverse translation, article selection, grammar application, listening recognition/dictation, and typed word production. Weak, due, mission-relevant, or recently failed objectives receive higher weight; repeated success lowers immediate selection weight while preserving scheduled review. Each activity produces its own LearningEvent and updates its own ReviewUnit/SkillMastery state.
+
 | Dimension | Values/examples |
 | --- | --- |
 | Operation | `RECOGNIZE`, `RECALL`, `COMPREHEND`, `APPLY`, `PRODUCE` |
@@ -70,6 +74,14 @@ The taxonomy must not mix a cognitive operation with a modality or content compo
 | Context | language pair, direction, register, domain, and task constraints |
 
 Examples: reverse translation is `RECALL + TEXT + LEXICAL_FORM`; dictation is `PRODUCE + AUDIO→TEXT + LEXICAL_FORM`; article cloze is `APPLY + TEXT + GRAMMAR`.
+
+Collocation practice adds objectives for recognizing a fixed combination, selecting
+the natural partner word, completing a pattern, and producing the combination in a
+sentence. Daily-conversation practice adds objectives for understanding a situation,
+choosing an appropriate utterance, and recalling/producing a reusable sentence.
+These objectives reference the `Phrase`/`Sentence` and their component items, so
+errors in `entscheiden` versus `eine Entscheidung treffen` can be scheduled
+independently from the single-word meaning objective.
 
 Objective-to-objective prerequisites use a separate `ObjectiveDependency` association with source objective, target objective, dependency type, confidence, and provenance. These associations are not Knowledge Graph edges because LearningObjectives are not KnowledgeItems.
 

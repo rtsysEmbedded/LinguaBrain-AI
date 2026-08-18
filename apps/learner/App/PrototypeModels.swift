@@ -34,6 +34,8 @@ final class PrototypeCardRecord {
     var sourcePackage: String?
     var sourceLanguageTag: String = "fa"
     var targetLanguageTag: String = "de"
+    var pronunciationAudio: Data?
+    var pronunciationAudioFilename: String?
 
     init(
         word: PrototypeWord,
@@ -41,7 +43,9 @@ final class PrototypeCardRecord {
         position: Int,
         createdAt: Date = .now,
         sourceIdentifier: String? = nil,
-        sourcePackage: String? = nil
+        sourcePackage: String? = nil,
+        pronunciationAudio: Data? = nil,
+        pronunciationAudioFilename: String? = nil
     ) {
         id = word.id
         self.deckID = deckID
@@ -59,6 +63,8 @@ final class PrototypeCardRecord {
         self.sourcePackage = sourcePackage
         sourceLanguageTag = word.sourceLanguageTag
         targetLanguageTag = word.targetLanguageTag
+        self.pronunciationAudio = pronunciationAudio
+        self.pronunciationAudioFilename = pronunciationAudioFilename
     }
 
     var word: PrototypeWord {
@@ -621,6 +627,11 @@ final class PrototypeStore {
             .filter { self.provenance(of: $0) == provenance }
     }
 
+    func pronunciationAudio(for word: PrototypeWord) -> Data? {
+        (try? modelContext.fetch(FetchDescriptor<PrototypeCardRecord>()))?
+            .first(where: { $0.id == word.id })?.pronunciationAudio
+    }
+
     func reviewedCount(in words: [PrototypeWord]) -> Int {
         words.filter { reviewCount(for: $0) > 0 }.count
     }
@@ -827,7 +838,7 @@ final class PrototypeStore {
     }
 
     @discardableResult
-    func addGeneratedCard(_ word: PrototypeWord) -> Bool {
+    func addGeneratedCard(_ word: PrototypeWord, pronunciationAudio: Data? = nil) -> Bool {
         do {
             let cards = try modelContext.fetch(FetchDescriptor<PrototypeCardRecord>())
             guard !cards.contains(where: { $0.word.semanticKey == word.semanticKey }) else {
@@ -840,7 +851,14 @@ final class PrototypeStore {
                 modelContext.insert(deck)
                 return deck
             }()
-            modelContext.insert(PrototypeCardRecord(word: word, deckID: deck.id, position: cards.count))
+            let audioFilename = pronunciationAudio.map { _ in "audio-\(word.id.uuidString).mp3" }
+            modelContext.insert(PrototypeCardRecord(
+                word: word,
+                deckID: deck.id,
+                position: cards.count,
+                pronunciationAudio: pronunciationAudio,
+                pronunciationAudioFilename: audioFilename
+            ))
             try modelContext.save()
             try restoreCards()
             lastPersistenceError = nil

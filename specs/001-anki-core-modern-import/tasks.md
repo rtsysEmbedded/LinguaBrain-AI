@@ -47,6 +47,9 @@
 - [ ] T022 [US7] Split AI/media configuration into independent Text, Audio, and Image provider menus, with free/local/cloud choices and a premium-gated first-party provider path for assets or models shipped by LinguaBrain.
 - [ ] T023 [US8] Export cards with provenance-aware selection, separating cards created in LinguaBrain from cards imported from Anki and asking which group/cards to export (TSV MVP; APKG/media export follow-up).
 - [ ] T024 [US8] Build a native APKG exporter for selected cards, including valid `collection.anki2`, notes/cards/templates/tags, ZIP packaging, and owned round-trip fixtures; add media manifest/blob export after persisted media ownership is available.
+- [ ] T025 [US9] Implement weighted mixed-practice sessions across independent learning objectives (direct/reverse translation, article, grammar, listening/dictation, and typed production), with per-objective events, mastery, due state, and anti-repetition selection rules.
+- [ ] T026 [US9] Extend generated-card content bundles for future-proof learning: persist pronunciation audio/media provenance, validated collocations/fixed combinations with component references and variants, and natural everyday-conversation sentences with situation/register metadata; provide explicit text-only fallback reasons.
+- [ ] T027 [US9] Add collocation and daily-conversation exercise contracts to mixed review: partner selection, cloze completion, contextual production, situation-to-utterance recognition, and reusable-sentence recall, each with independent objective/review evidence and weighted scheduling.
 
 ## Dependencies and Parallel Work
 
@@ -140,6 +143,8 @@ Modern `collection.anki21b`, schema 18, Zstandard, SwiftProtobuf, modern templat
 - **T023 export MVP — 2026-08-18**: Added provenance classification from `sourcePackage`, separate export actions for internally generated versus imported cards, active language-pair filtering, localized Anki-compatible TSV export, and a per-card selection sheet before file creation. macOS Debug build passed. Remaining: native APKG packaging, media inclusion, richer tags/templates, and export/import reconciliation.
 - **T024 boundary — 2026-08-18**: No ZIP writer or APKG exporter dependency exists in the project; import currently has a security-focused reader only. Native APKG work is therefore explicitly separated from the completed TSV selection UI and must include round-trip validation through the existing APKG inspector/reader before being checked off.
 - **Media defaults**: Audio defaults to OpenAI `gpt-4o-mini-tts` via `/audio/speech`; images default to `gpt-image-1-mini` via `/images/generations`; both use the configured endpoint and Keychain API key.
+- **Audio generation slice — 2026-08-18**: Generated word-card creation now automatically attempts pronunciation synthesis through the independently configured Audio provider, persists returned audio bytes plus a deterministic filename on approval, and exposes playback in review. iOS and macOS Debug builds passed. T026 remains open for collocations, conversation sentences, full media provenance/cache metadata, and packaged APKG media export.
+- **Google Audio routing — 2026-08-18**: Added an independent persisted Audio protocol setting. `google-native` calls Google Cloud Text-to-Speech `text:synthesize` with the Audio provider's endpoint, voice, and `api-key.audio`; `openai-compatible` remains supported only when selected. iOS Debug build passed.
 
 For each completed task record the agent/tool, date, changed files, commands/tests, result, known risks, and commit SHA. Never include credentials, private APKG data, or raw learner content.
 

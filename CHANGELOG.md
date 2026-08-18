@@ -8,6 +8,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- Audio card-generation slice: generated word cards now automatically request pronunciation from the configured Audio provider, persist MP3 bytes and a deterministic filename on approval, and expose playback during review; provider failure keeps an explicit text-only fallback and preview retry.
+- Audio provider routing now honors the Audio submenu independently: Google Native uses the configured Google Cloud Text-to-Speech endpoint and provider-scoped API key, while OpenAI-compatible remains an explicit alternative. Text provider protocol/credentials are no longer reused for speech.
+- Added Spec Kit tasks T026/T027 for future-proof generated-card bundles: required pronunciation media when available, collocations/fixed combinations such as `eine Entscheidung treffen`, natural everyday-conversation sentences, and independent mixed-review exercises for those content types.
+- Documented collocations and daily-conversation sentences as first-class domain content with provenance, variants, context/register metadata, and independent mastery/review evidence.
 - Added Spec Kit task T020 for level-aware A1 Anki generation with optional audio/image assets, local caching, provenance, preview/approval, and offline text-only fallback.
 - T020 provider decision: use Google Cloud Text-to-Speech Standard voices for audio across all levels, with explicit free-quota and billing-risk disclosure; image generation remains A1-targeted by default.
 - T020 foundation implementation: added a credential-free Google Cloud TTS client boundary, MP3 response validation, deterministic local audio caching, safe filenames, and text-only fallback planning.
