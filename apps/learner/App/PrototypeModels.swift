@@ -3,6 +3,26 @@ import Observation
 import SwiftData
 import SwiftUI
 
+struct PrototypeExample: Codable, Hashable, Sendable {
+    let target: String
+    let source: String
+}
+
+enum PrototypeExamplePairing {
+    static func pair(target: String, source: String) -> [PrototypeExample] {
+        let targets = split(target)
+        let sources = split(source)
+        return zip(targets, sources).map { PrototypeExample(target: $0.0, source: $0.1) }
+    }
+
+    private static func split(_ value: String) -> [String] {
+        value.replacingOccurrences(of: "<br>", with: "\n", options: .caseInsensitive)
+            .components(separatedBy: "\n")
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+    }
+}
+
 @Model
 final class PrototypeDeckRecord {
     @Attribute(.unique) var id: UUID
@@ -28,6 +48,7 @@ final class PrototypeCardRecord {
     var partOfSpeech: String
     var example: String
     var exampleTranslation: String
+    var examplesJSON: String = "[]"
     var domain: String = "عمومی"
     var createdAt: Date
     var sourceIdentifier: String?
@@ -57,6 +78,7 @@ final class PrototypeCardRecord {
         partOfSpeech = word.partOfSpeech
         example = word.example
         exampleTranslation = word.exampleTranslation
+        examplesJSON = (try? String(data: JSONEncoder().encode(word.examples), encoding: .utf8)) ?? "[]"
         domain = word.domain
         self.createdAt = createdAt
         self.sourceIdentifier = sourceIdentifier
@@ -77,6 +99,7 @@ final class PrototypeCardRecord {
             partOfSpeech: partOfSpeech,
             example: example,
             exampleTranslation: exampleTranslation,
+            examples: (try? JSONDecoder().decode([PrototypeExample].self, from: Data(examplesJSON.utf8))) ?? [],
             domain: domain,
             sourceLanguageTag: sourceLanguageTag,
             targetLanguageTag: targetLanguageTag
@@ -387,6 +410,7 @@ struct PrototypeWord: Identifiable, Hashable, Sendable {
     let partOfSpeech: String
     let example: String
     let exampleTranslation: String
+    let examples: [PrototypeExample]
     let domain: String
     let sourceLanguageTag: String
     let targetLanguageTag: String
@@ -400,6 +424,7 @@ struct PrototypeWord: Identifiable, Hashable, Sendable {
         partOfSpeech: String,
         example: String,
         exampleTranslation: String,
+        examples: [PrototypeExample] = [],
         domain: String = "عمومی",
         sourceLanguageTag: String = "fa",
         targetLanguageTag: String = "de"
@@ -412,6 +437,7 @@ struct PrototypeWord: Identifiable, Hashable, Sendable {
         self.partOfSpeech = partOfSpeech
         self.example = example
         self.exampleTranslation = exampleTranslation
+        self.examples = examples.isEmpty ? [PrototypeExample(target: example, source: exampleTranslation)] : examples
         self.domain = domain
         self.sourceLanguageTag = sourceLanguageTag
         self.targetLanguageTag = targetLanguageTag
@@ -549,11 +575,13 @@ enum PrototypeReviewGrade: String, CaseIterable, Identifiable, Hashable {
 enum PrototypeReviewMode: String, Sendable {
     case recognition
     case reverseTranslation
+    case mixedGame
 
     var title: String {
         switch self {
         case .recognition: "مرور آلمانی به فارسی"
         case .reverseTranslation: "ترجمهٔ معکوس"
+        case .mixedGame: "بازی ترکیبی"
         }
     }
 }
@@ -795,6 +823,7 @@ final class PrototypeStore {
                     record.partOfSpeech = candidate.word.partOfSpeech
                     record.example = candidate.word.example
                     record.exampleTranslation = candidate.word.exampleTranslation
+                    record.examplesJSON = (try? String(data: JSONEncoder().encode(candidate.word.examples), encoding: .utf8)) ?? "[]"
                     record.domain = candidate.word.domain
                     record.sourceLanguageTag = candidate.sourceLanguageTag
                     record.targetLanguageTag = candidate.targetLanguageTag
@@ -1015,6 +1044,7 @@ final class PrototypeStore {
         switch mode {
         case .recognition: word.reviewIdentityKey
         case .reverseTranslation: "\(word.reviewIdentityKey)::reverse"
+        case .mixedGame: "\(word.reviewIdentityKey)::mixed"
         }
     }
 }

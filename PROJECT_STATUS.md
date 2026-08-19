@@ -31,7 +31,7 @@ This file is the single progress checklist for LinguaBrain AI. It must be update
 | Active Git branch | `main` |
 | Native platform migration commit | `3c75a70` |
 | Visual prototype | Buildable SwiftUI prototype for iPhone, iPad, and Mac; review state persists, APKG cards can be imported, and an approved OpenRouter proposal can be stored locally |
-| Next primary deliverable | Execute Spec Kit tasks T004E/T025–T027: complete localization QA, mixed-practice review, and future-proof audio/collocation/conversation card bundles |
+| Next primary deliverable | Execute Spec Kit tasks T004E/T025–T029: complete localization QA, mixed-practice review, and future-proof audio/collocation/conversation and multi-sense card bundles |
 | Current delivery strategy | Anki Core first: secure APKG import and reliable offline review gate before AI and final visual approval |
 | Latest verification | 2026-08-17: six tests passed on iPhone 17 / iOS 27; all six directed English/German/Persian pairs contain at least five isolated learning cards; an existing simulator store migrated and rendered the selected `fa→en` pair with exactly five new cards |
 

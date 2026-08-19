@@ -21,6 +21,8 @@ This document maps the product and domain specifications to an implementable nat
 - Local writes complete before optional synchronization.
 - Modules communicate through typed commands, queries, and domain events.
 - Every external dependency is behind an adapter interface.
+- Swift is the primary implementation language for the Hermes application, domain, orchestration, validation, persistence, media, and Apple-platform integration layers.
+- Agent implementation language is not an architectural dependency; agents integrate through versioned contracts and provider adapters.
 - Swift 6 strict concurrency is enabled; shared mutable infrastructure is actor-isolated and public cross-actor values conform to `Sendable` where appropriate.
 
 ## System context
@@ -89,6 +91,20 @@ Exercise definitions, templates, attempts, evaluators, hints, and objective evid
 
 Task registry, prompt/context management, model routing, provider adapters, output validation, cache, and usage metering.
 
+The production baseline is Swift-first: `LinguaBrainAI` owns orchestration ports,
+request lifecycle, structured-output validation, duplicate detection, approval
+transactions, provenance, and persistence boundaries. A generation agent may be
+implemented in any language, but it must use a versioned JSON contract and must
+not write directly to Hermes storage, review state, mastery, or the Knowledge Graph.
+
+```text
+Hermes Swift Application → Generation Orchestrator (Swift)
+                         → Versioned contract
+                         → Agent / Provider Adapter (any language)
+                         → Structured proposal
+                         → Swift validation, approval, and persistence
+```
+
 ### Media
 
 Images, audio metadata, local cache, playback/download lifecycle, accessibility metadata, and quotas.
@@ -155,6 +171,11 @@ LinguaBrain AI/
 ```
 
 `LinguaBrainKit` is one repository-local Swift package with separately compiled targets. `LinguaBrainDomain` and `LinguaBrainApplication` are native Swift targets that do not import SwiftUI, SwiftData/Core Data/SQLite implementations, Foundation Models, Speech, AVFoundation, Security, or CloudKit. Domain owns aggregate repository contracts required by semantics; Application owns use-case gateways for AI, media, secure storage, transactions, events, clocks, and external services. A generic catch-all shared or utils target is prohibited.
+
+External generation services are optional interoperability components, not part
+of the Hermes domain core. Swift remains the default runtime for local-first and
+on-device generation; remote agents are selected through adapters and can be
+replaced without changing domain semantics.
 
 `LinguaBrainPresentation` owns reusable SwiftUI feature/view-state code and depends inward on Application/Domain. The app project owns `@main` entry points, scenes/windows, platform navigation composition, entitlements, signing, lifecycle, and adapter wiring. Infrastructure and Language Package targets depend inward on application ports and domain types. Production targets cannot import `experiments/`; future services cannot become a requirement for offline learning.
 

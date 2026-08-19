@@ -14,6 +14,27 @@ This document defines the processing pipeline that converts manual input, text, 
 
 Agents never write directly to canonical learning data. The application orchestrates stages, validates outputs, records provenance, and requests learner approval where required.
 
+## Runtime and language boundary
+
+Hermes is Swift-first. The Swift application owns the orchestrator, typed ports,
+validation, duplicate detection, approval, persistence, media ownership, and
+export. An agent is a contract-bound processing component, not a required
+runtime language or deployment shape. It may run in Swift in-process, or in
+Python, TypeScript, or another language behind a local or remote adapter.
+
+```text
+Swift Hermes App → Swift Generation Orchestrator
+                 → Versioned JSON contract
+                 → Agent/provider in any implementation language
+                 → Structured proposal
+                 → Swift validation and approval transaction
+```
+
+The agent must not access Hermes databases directly or mutate scheduling,
+mastery, canonical graph facts, or accepted content. This preserves offline
+operation and allows the implementation language or provider to change without
+changing domain semantics.
+
 ## Design principles
 
 - One bounded responsibility per stage.

@@ -227,4 +227,27 @@ final class AnkiCoreRegressionTests: XCTestCase {
         XCTAssertEqual(store.grades.values.flatMap { $0 }.count, 4)
         XCTAssertEqual(store.reviewCount(for: words[0], mode: .reverseTranslation), 0)
     }
+
+    func testMultipleExamplesPairAndRoundTripThroughTSVExport() throws {
+        let examples = PrototypeExamplePairing.pair(
+            target: "Ich arbeite heute.<br>Ich arbeite im Büro.",
+            source: "من امروز کار می‌کنم.<br>من در دفتر کار می‌کنم."
+        )
+        XCTAssertEqual(examples.count, 2)
+        XCTAssertEqual(examples[1].target, "Ich arbeite im Büro.")
+        XCTAssertEqual(examples[1].source, "من در دفتر کار می‌کنم.")
+
+        let word = PrototypeWord(
+            german: "arbeiten",
+            persian: "کار کردن",
+            level: "A1",
+            partOfSpeech: "Verb",
+            example: examples[0].target,
+            exampleTranslation: examples[0].source,
+            examples: examples
+        )
+        let tsv = AnkiTSVExporter.makeTSV([word])
+        XCTAssertTrue(tsv.contains("Ich arbeite heute.<br>Ich arbeite im Büro."))
+        XCTAssertTrue(tsv.contains("من امروز کار می‌کنم.<br>من در دفتر کار می‌کنم."))
+    }
 }

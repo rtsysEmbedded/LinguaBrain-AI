@@ -8,6 +8,24 @@ last_updated: 2026-08-17
 
 # Database Schema and Persistence
 
+## Decision note: when to promote examples to a first-class Sentence entity
+
+The current prototype stores the complete ordered example collection as a versioned
+JSON persistence field on the card record while retaining the legacy `example` and
+`exampleTranslation` projections. This is the low-risk compatibility step used by
+T031: it prevents imported examples from being lost without changing existing
+review identities or requiring an immediate destructive migration.
+
+Before production persistence, examples should be promoted to a first-class
+`Sentence` table/entity related to `LexicalSense` when at least one of these becomes
+true: examples need independent review history, multiple cards reuse the same
+sentence, sentence-level validation/editing is required, or native APKG export must
+preserve note/card/template relationships without JSON projection. That migration
+must define stable sentence identity, sense ownership, ordering, provenance,
+deduplication, learner edits, and backward-compatible reconstruction of the legacy
+single-example fields. Until those contracts are approved, the JSON collection is
+the safer implementation boundary.
+
 ## Purpose
 
 This document defines the MVP local persistence model, integrity rules, indexing, migrations, backup/export behavior, and future synchronization readiness for the native Apple clients.

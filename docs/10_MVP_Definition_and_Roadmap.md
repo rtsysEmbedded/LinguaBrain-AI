@@ -66,6 +66,8 @@ flowchart TD
    - Persian meaning, part of speech, CEFR estimate, pronunciation where available, and level-appropriate example.
    - German noun article/plural and essential verb forms.
    - A content bundle containing pronunciation audio when the configured capability is available, at least one validated fixed combination/collocation when applicable, and at least one natural everyday-conversation sentence.
+   - Polysemous words are generated as one lexical parent with multiple independent senses; each sense has its own usage, example, translation, and review identity.
+   - Anki import preserves all examples per sense as ordered sentences; review may select one example at a time, while export preserves the complete collection.
    - Provider-independent AI with validation and caching.
    - A bundled seed lexicon and manual minimal-card path work without an AI provider or network.
 

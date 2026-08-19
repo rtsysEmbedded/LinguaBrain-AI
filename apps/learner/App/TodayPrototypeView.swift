@@ -140,6 +140,18 @@ struct TodayPrototypeView: View {
             }
             .buttonStyle(.bordered)
             .controlSize(.large)
+
+            NavigationLink {
+                ReviewPrototypeView(newCardLimit: newCardLimit, mode: .mixedGame)
+            } label: {
+                Label(localization.localized("mixedPractice.title"), systemImage: "gamecontroller.fill")
+                    .font(.headline)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 11)
+            }
+            .buttonStyle(.bordered)
+            .tint(PrototypeTheme.pink)
+            .controlSize(.large)
         }
     }
 

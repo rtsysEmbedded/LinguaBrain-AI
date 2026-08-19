@@ -333,6 +333,25 @@ struct AddWordPrototypeView: View {
                     LanguageText(text: preview.example.isEmpty ? localization.localized("card.examplePending") : preview.example, languageTag: preview.targetLanguageTag, font: .title3)
                     LanguageText(text: preview.exampleTranslation, languageTag: preview.sourceLanguageTag, font: .body, color: .secondary)
                 }
+                if let generatedCard, !generatedCard.senses.isEmpty {
+                    Divider()
+                    Text("معنی‌ها و کاربردهای مستقل")
+                        .font(.headline)
+                    ForEach(Array(generatedCard.senses.enumerated()), id: \.offset) { index, sense in
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("\(index + 1). \(sense.meaning)").font(.body.bold())
+                            Text(sense.usage).font(.caption).foregroundStyle(.secondary)
+                            LanguageText(text: sense.example.target, languageTag: preview.targetLanguageTag, font: .subheadline)
+                            LanguageText(text: sense.example.source, languageTag: preview.sourceLanguageTag, font: .caption, color: .secondary)
+                            if !sense.collocations.isEmpty {
+                                Text(sense.collocations.joined(separator: " · "))
+                                    .font(.caption2)
+                                    .foregroundStyle(PrototypeTheme.accent)
+                            }
+                        }
+                        .padding(.vertical, 4)
+                    }
+                }
                 HStack {
                     Label(preview.partOfSpeech, systemImage: "square.stack.3d.up.fill")
                     Label(preview.level, systemImage: "graduationcap.fill")
@@ -356,7 +375,15 @@ struct AddWordPrototypeView: View {
                 }
                 Button {
                     guard generatedCard != nil else { return }
-                    if store.addGeneratedCard(preview, pronunciationAudio: generatedAudio) {
+                    let senses = generatedCard?.prototypeWords(
+                        domain: domain,
+                        sourceLanguageTag: languageSettings.sourceLanguageTag,
+                        targetLanguageTag: languageSettings.targetLanguageTag
+                    ) ?? [preview]
+                    let saved = senses.enumerated().allSatisfy { index, sense in
+                        store.addGeneratedCard(sense, pronunciationAudio: index == 0 ? generatedAudio : nil)
+                    }
+                    if saved {
                         generatedCardSaved = true
                     } else {
                         packageError = store.lastPersistenceError
@@ -729,6 +756,7 @@ struct APKGCardReader: Sendable {
             guard !normalizedSource.isEmpty, !normalizedTarget.isEmpty else { return nil }
             let sourceTag = sanitize(values["SourceLanguageTag"] ?? "fa")
             let targetTag = sanitize(values["TargetLanguageTag"] ?? "de")
+            let examples = PrototypeExamplePairing.pair(target: values["TargetExample"] ?? "", source: values["SourceExample"] ?? "")
             return PrototypeWord(
                 german: normalizedTarget,
                 persian: normalizedSource,
@@ -736,6 +764,7 @@ struct APKGCardReader: Sendable {
                 partOfSpeech: sanitize(values["PartOfSpeech"] ?? "Imported"),
                 example: sanitize(values["TargetExample"] ?? ""),
                 exampleTranslation: sanitize(values["SourceExample"] ?? ""),
+                examples: examples,
                 domain: sanitize(values["Domain"] ?? "General"),
                 sourceLanguageTag: sourceTag,
                 targetLanguageTag: targetTag
@@ -750,6 +779,7 @@ struct APKGCardReader: Sendable {
             let german = compactWord.isEmpty ? sanitize(payload.headword) : compactWord
             guard !german.isEmpty else { return nil }
             let firstExample = payload.examples.first
+            let examples = payload.examples.map { PrototypeExample(target: sanitize($0.de), source: sanitize($0.fa)) }
             return PrototypeWord(
                 german: german,
                 persian: payload.meaningFA.map(sanitize).filter { !$0.isEmpty }.joined(separator: "، "),
@@ -757,7 +787,8 @@ struct APKGCardReader: Sendable {
                 level: sanitize(payload.level),
                 partOfSpeech: sanitize(payload.partOfSpeechFA),
                 example: firstExample.map { sanitize($0.de) } ?? "",
-                exampleTranslation: firstExample.map { sanitize($0.fa) } ?? ""
+                exampleTranslation: firstExample.map { sanitize($0.fa) } ?? "",
+                examples: examples
             )
         }
 
@@ -796,6 +827,7 @@ struct APKGCardReader: Sendable {
         let normalized = sanitize(value).lowercased()
         return ["der", "die", "das"].first { normalized.contains("\($0) ") }
     }
+
 
     private func extractPartOfSpeech(from value: String) -> String? {
         guard let opening = value.lastIndex(of: "("), let closing = value.lastIndex(of: ")"), opening < closing else {

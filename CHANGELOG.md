@@ -8,6 +8,12 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- Added a localized Mixed Practice Game entry to Today/review, randomly combining direct translation, reverse translation, article checks, and collocation/context prompts with an independent mixed-review FSRS identity.
+- Added Spec Kit task T029 for multi-sense card generation, sense-specific examples/collocations, and independent review identities.
+- Multi-sense generation foundation: provider responses can contain up to three senses with separate examples and collocations; the preview shows them and approval creates independent prototype cards with backward-compatible single-sense decoding.
+- Mixed Practice Game now offers a verb sense-distractor question when enough related senses exist: three related meanings plus one unrelated meaning, with incorrect selections forced back into the current session.
+- Added Spec Kit task T031 for preserving multiple sense-specific examples during Anki import, adaptive review selection, and lossless export/re-import.
+- T031 implementation slice: review selects from the persisted example collection, multi-line Anki examples are paired and retained, TSV export includes the complete ordered collection, and regression coverage verifies pairing/export. Independent Sentence persistence remains documented as a later migration decision.
 - Audio card-generation slice: generated word cards now automatically request pronunciation from the configured Audio provider, persist MP3 bytes and a deterministic filename on approval, and expose playback during review; provider failure keeps an explicit text-only fallback and preview retry.
 - Audio provider routing now honors the Audio submenu independently: Google Native uses the configured Google Cloud Text-to-Speech endpoint and provider-scoped API key, while OpenAI-compatible remains an explicit alternative. Text provider protocol/credentials are no longer reused for speech.
 - Added Spec Kit tasks T026/T027 for future-proof generated-card bundles: required pronunciation media when available, collocations/fixed combinations such as `eine Entscheidung treffen`, natural everyday-conversation sentences, and independent mixed-review exercises for those content types.

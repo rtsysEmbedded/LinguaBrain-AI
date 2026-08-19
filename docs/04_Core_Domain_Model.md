@@ -141,6 +141,11 @@ Every approved or proposed change to canonical content is represented by a `Know
 
 `LexicalSense` is a stable, language-specific meaning of a Word or Phrase. It prevents polysemous forms such as German `Bank` from sharing one undifferentiated translation.
 
+A generated word card may contain multiple LexicalSense records. Each sense owns its
+own examples, usage/register notes, collocations, provenance, and review identity.
+The word remains the shared lexical parent; senses are not flattened into one long
+translation field.
+
 Each sense has a stable ID, definition or gloss, optional domain/register qualifiers, provenance, validation state, and version. Translation relations reference source and target sense IDs when both endpoints are lexical. The MVP may begin with one validated default sense, but it must not invent a global one-word-to-one-word mapping.
 
 ### German extension examples
@@ -192,6 +197,11 @@ Required properties:
 - difficulty/CEFR estimate;
 - source and validation status;
 - references to the knowledge items illustrated.
+
+A sentence collection is ordered and sense-scoped. Importers must not collapse multiple
+examples into one string: every example receives its own stable identity, source
+provenance, source/target text, and validation state. A LexicalSense may reference
+many Sentence records, while the same sentence may be reused by a Phrase or Exercise.
 
 ### Everyday conversation sentences
 

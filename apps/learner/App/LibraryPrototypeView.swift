@@ -250,7 +250,9 @@ enum AnkiTSVExporter {
     static func makeTSV(_ cards: [PrototypeWord]) -> String {
         let header = ["Front", "Back", "Example", "Example translation", "Level", "Part of speech", "Tags"].joined(separator: "\t")
         let rows = cards.map { card in
-            [card.german, card.persian, card.example, card.exampleTranslation, card.level, card.partOfSpeech, card.domain]
+            let targetExamples = card.examples.map(\.target).joined(separator: "<br>")
+            let sourceExamples = card.examples.map(\.source).joined(separator: "<br>")
+            return [card.german, card.persian, targetExamples, sourceExamples, card.level, card.partOfSpeech, card.domain]
                 .map { $0.replacingOccurrences(of: "\t", with: " ").replacingOccurrences(of: "\n", with: " ") }
                 .joined(separator: "\t")
         }

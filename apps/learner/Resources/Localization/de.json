@@ -392,4 +392,10 @@
   ,"export.selectTitle": "Karten zum Export auswählen"
   ,"export.exportSelected": "Ausgewählte exportieren"
   ,"common.cancel": "Abbrechen"
+  ,"mixedPractice.title": "Gemischtes Lernspiel"
+  ,"mixedPractice.directPrompt": "Direkt übersetzen"
+  ,"mixedPractice.reversePrompt": "Rückwärts übersetzen"
+  ,"mixedPractice.articlePrompt": "Den richtigen Artikel wählen"
+  ,"mixedPractice.collocationPrompt": "Die natürliche Kombination erkennen"
+  ,"mixedPractice.oddMeaningPrompt": "Die unpassende Bedeutung wählen"
 }

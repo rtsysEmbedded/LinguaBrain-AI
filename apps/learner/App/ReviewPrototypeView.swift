@@ -1,6 +1,10 @@
 import SwiftUI
 import AVFoundation
 
+private enum MixedPracticeKind: CaseIterable {
+    case direct, reverse, article, collocation, oddMeaning
+}
+
 struct ReviewPrototypeView: View {
     let newCardLimit: Int?
     let mode: PrototypeReviewMode
@@ -16,6 +20,16 @@ struct ReviewPrototypeView: View {
     @State private var hasStarted = false
     @State private var persistenceError: String?
     @State private var audioPlayer: AVAudioPlayer?
+    @State private var mixedKind: MixedPracticeKind = .direct
+    @State private var selectedArticle: String?
+    @State private var articleAnswered = false
+    @State private var articleWasWrong = false
+    @State private var forcedRepeatID: UUID?
+    @State private var meaningOptions: [String] = []
+    @State private var selectedMeaning: String?
+    @State private var meaningAnswered = false
+    @State private var meaningWasWrong = false
+    @State private var selectedExample = PrototypeExample(target: "", source: "")
 
     init(newCardLimit: Int? = nil, mode: PrototypeReviewMode = .recognition) {
         self.newCardLimit = newCardLimit
@@ -39,6 +53,7 @@ struct ReviewPrototypeView: View {
     }
 
     private var reviewTitle: String {
+        if mode == .mixedGame { return localization.localized("mixedPractice.title") }
         guard mode == .recognition else { return localization.localized("reverseReviewTitle") }
         return localization.localized("recognitionReviewFormat")
             .replacingOccurrences(of: "%1$@", with: languageName(languageSettings.sourceLanguageTag))
@@ -100,16 +115,24 @@ struct ReviewPrototypeView: View {
             Spacer(minLength: 10)
 
             VStack(spacing: 22) {
-                Text(localization.localized(mode == .recognition ? "reviewPrompt" : "reversePrompt"))
+                Text(promptText)
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
-                if mode == .recognition {
+                if mode == .mixedGame && mixedKind == .article {
+                    LanguageText(
+                        text: word.german.replacingOccurrences(of: "^\\S+\\s", with: "", options: .regularExpression),
+                        languageTag: word.targetLanguageTag,
+                        font: .system(size: 38, weight: .bold, design: .rounded)
+                    )
+                } else if mode == .mixedGame && mixedKind == .collocation {
+                    LanguageText(text: selectedExample.target, languageTag: word.targetLanguageTag, font: .title2.bold())
+                } else if mode == .recognition || (mode == .mixedGame && mixedKind == .direct) {
                     LanguageText(
                         text: word.german,
                         languageTag: word.targetLanguageTag,
                         font: .system(size: 38, weight: .bold, design: .rounded)
                     )
-                } else {
+                } else if !(mode == .mixedGame && mixedKind == .article) {
                     LanguageText(
                         text: word.persian,
                         languageTag: word.sourceLanguageTag,
@@ -125,15 +148,60 @@ struct ReviewPrototypeView: View {
                     .buttonStyle(.bordered)
                 }
 
+                if mode == .mixedGame && mixedKind == .article && !articleAnswered {
+                    HStack(spacing: 12) {
+                        ForEach(["der", "die", "das"], id: \.self) { article in
+                            Button(article) {
+                                selectedArticle = article
+                                articleAnswered = true
+                                articleWasWrong = article != correctArticle(for: word)
+                                withAnimation(.snappy) { revealed = true }
+                            }
+                            .font(.title3.bold())
+                            .frame(maxWidth: .infinity)
+                            .buttonStyle(.borderedProminent)
+                        }
+                    }
+                }
+
+                if mode == .mixedGame && mixedKind == .oddMeaning && !meaningAnswered {
+                    VStack(spacing: 10) {
+                        ForEach(meaningOptions, id: \.self) { meaning in
+                            Button(meaning) {
+                                selectedMeaning = meaning
+                                meaningAnswered = true
+                                meaningWasWrong = meaning != meaningOptions.first(where: { !relatedMeanings(for: word).contains($0) })
+                                withAnimation(.snappy) { revealed = true }
+                            }
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .buttonStyle(.bordered)
+                        }
+                    }
+                }
+
                 if revealed {
                     Divider()
-                    if mode == .recognition {
+                    if mode == .mixedGame && mixedKind == .article {
+                        LanguageText(text: correctArticle(for: word) ?? "—", languageTag: word.targetLanguageTag, font: .title.bold())
+                        LanguageText(text: word.persian, languageTag: word.sourceLanguageTag, font: .title3)
+                        Text(selectedArticle == correctArticle(for: word) ? "درست" : "نادرست · پاسخ درست: \(correctArticle(for: word) ?? "—")")
+                            .font(.headline)
+                            .foregroundStyle(selectedArticle == correctArticle(for: word) ? PrototypeTheme.mint : .red)
+                    } else if mode == .mixedGame && mixedKind == .oddMeaning {
+                        let related = relatedMeanings(for: word)
+                        let unrelated = meaningOptions.first(where: { !related.contains($0) }) ?? "—"
+                        Text(selectedMeaning == unrelated ? "درست" : "نادرست · معنی نامرتبط: \(unrelated)")
+                            .font(.headline)
+                            .foregroundStyle(selectedMeaning == unrelated ? PrototypeTheme.mint : .red)
+                    } else if mode == .mixedGame && mixedKind == .collocation {
+                        LanguageText(text: selectedExample.source, languageTag: word.sourceLanguageTag, font: .title3)
+                } else if mode == .recognition || (mode == .mixedGame && (mixedKind == .direct || mixedKind == .oddMeaning)) {
                         LanguageText(text: word.persian, languageTag: word.sourceLanguageTag, font: .title.bold())
                     } else {
                         LanguageText(text: word.german, languageTag: word.targetLanguageTag, font: .title.bold())
                     }
-                    LanguageText(text: word.example, languageTag: word.targetLanguageTag, font: .title3)
-                    LanguageText(text: word.exampleTranslation, languageTag: word.sourceLanguageTag, color: .secondary)
+                    LanguageText(text: selectedExample.target, languageTag: word.targetLanguageTag, font: .title3)
+                    LanguageText(text: selectedExample.source, languageTag: word.sourceLanguageTag, color: .secondary)
                 } else {
                     Button(localization.localized("revealAnswer")) {
                         withAnimation(.snappy) { revealed = true }
@@ -169,6 +237,34 @@ struct ReviewPrototypeView: View {
 
             Spacer()
         }
+    }
+
+    private var promptText: String {
+        guard mode == .mixedGame else {
+            return localization.localized(mode == .recognition ? "reviewPrompt" : "reversePrompt")
+        }
+        switch mixedKind {
+        case .direct: return localization.localized("mixedPractice.directPrompt")
+        case .reverse: return localization.localized("mixedPractice.reversePrompt")
+        case .article: return localization.localized("mixedPractice.articlePrompt")
+        case .collocation: return localization.localized("mixedPractice.collocationPrompt")
+        case .oddMeaning: return localization.localized("mixedPractice.oddMeaningPrompt")
+        }
+    }
+
+    private func relatedMeanings(for word: PrototypeWord) -> [String] {
+        Array(Set(store.words.filter {
+            $0.german.caseInsensitiveCompare(word.german) == .orderedSame && $0.partOfSpeech == word.partOfSpeech
+        }.map(\.persian)))
+    }
+
+    private func correctArticle(for word: PrototypeWord) -> String? {
+        if let article = word.article?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased(),
+           ["der", "die", "das"].contains(article) {
+            return article
+        }
+        let first = word.german.split(separator: " ").first?.lowercased()
+        return first.flatMap { ["der", "die", "das"].contains($0) ? String($0) : nil }
     }
 
     private func waitingView(until date: Date) -> some View {
@@ -281,6 +377,9 @@ struct ReviewPrototypeView: View {
         if schedule.isShortTerm {
             queue.append(word.id)
         }
+        if articleWasWrong || meaningWasWrong {
+            forcedRepeatID = word.id
+        }
 
         withAnimation(.snappy) {
             revealed = false
@@ -290,6 +389,28 @@ struct ReviewPrototypeView: View {
     }
 
     private func selectNextCard() {
+        if let forcedRepeatID {
+            self.forcedRepeatID = nil
+            currentWordID = forcedRepeatID
+            revealed = false
+            if mode == .mixedGame {
+                let repeatMeaning = meaningWasWrong
+                mixedKind = repeatMeaning ? .oddMeaning : .article
+                selectedArticle = nil
+                articleAnswered = false
+                articleWasWrong = false
+                selectedMeaning = nil
+                meaningAnswered = false
+                if repeatMeaning, let word = currentWord {
+                    let related = Array(relatedMeanings(for: word).prefix(3))
+                    let unrelated = store.words.map(\.persian).first(where: { !related.contains($0) && $0 != word.persian }) ?? "—"
+                    meaningOptions = (related + [unrelated]).shuffled()
+                }
+                meaningWasWrong = false
+            }
+            waitingUntil = nil
+            return
+        }
         let now = Date.now
         // Repeated cards that are now due take priority over unseen cards.
         let dueRepeatIndex = queue.firstIndex(where: { id in
@@ -302,7 +423,35 @@ struct ReviewPrototypeView: View {
         })
 
         if let index = nextIndex {
-            currentWordID = queue.remove(at: index)
+            let nextID = queue.remove(at: index)
+            currentWordID = nextID
+            if let word = store.words.first(where: { $0.id == nextID }) {
+                selectedExample = word.examples.randomElement() ?? PrototypeExample(target: word.example, source: word.exampleTranslation)
+            }
+            if mode == .mixedGame {
+                let eligibleKinds: [MixedPracticeKind] = store.words.first(where: { $0.id == nextID }).flatMap { word in
+                    let canTestArticle = correctArticle(for: word) != nil &&
+                        (word.partOfSpeech.localizedCaseInsensitiveContains("noun") ||
+                         word.partOfSpeech.localizedCaseInsensitiveContains("اسم") ||
+                         word.article != nil)
+                    let canTestOddMeaning = relatedMeanings(for: word).count >= 3 && word.partOfSpeech.localizedCaseInsensitiveContains("verb")
+                    return (canTestOddMeaning ? [.direct, .reverse, .collocation, .oddMeaning] : [.direct, .reverse, .collocation]) +
+                        (canTestArticle ? [.article] : [])
+                } ?? [.direct, .reverse, .collocation]
+                mixedKind = eligibleKinds.randomElement() ?? .direct
+                selectedArticle = nil
+                articleAnswered = false
+                articleWasWrong = false
+                meaningOptions = []
+                selectedMeaning = nil
+                meaningAnswered = false
+                meaningWasWrong = false
+                if mixedKind == .oddMeaning, let word = currentWord {
+                    let related = Array(relatedMeanings(for: word).prefix(3))
+                    let unrelated = store.words.map(\.persian).first(where: { !related.contains($0) && $0 != word.persian }) ?? "—"
+                    meaningOptions = (related + [unrelated]).shuffled()
+                }
+            }
             waitingUntil = nil
             return
         }

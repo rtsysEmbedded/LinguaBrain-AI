@@ -849,12 +849,31 @@ struct ConfiguredProviderCard: Codable, Sendable {
         let source: String
     }
 
+    struct Sense: Codable, Sendable {
+        let meaning: String
+        let usage: String
+        let example: Example
+        let collocations: [String]
+    }
+
     let targetText: String
     let sourceMeaning: String
     let level: String
     let partOfSpeech: String
     let article: String
     let example: Example
+    let senses: [Sense]
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        targetText = try container.decode(String.self, forKey: .targetText)
+        sourceMeaning = try container.decode(String.self, forKey: .sourceMeaning)
+        level = try container.decode(String.self, forKey: .level)
+        partOfSpeech = try container.decode(String.self, forKey: .partOfSpeech)
+        article = try container.decode(String.self, forKey: .article)
+        example = try container.decode(Example.self, forKey: .example)
+        senses = try container.decodeIfPresent([Sense].self, forKey: .senses) ?? []
+    }
 
     func prototypeWord(domain: String, sourceLanguageTag: String, targetLanguageTag: String) -> PrototypeWord {
         PrototypeWord(
@@ -869,6 +888,24 @@ struct ConfiguredProviderCard: Codable, Sendable {
             sourceLanguageTag: sourceLanguageTag,
             targetLanguageTag: targetLanguageTag
         )
+    }
+
+    func prototypeWords(domain: String, sourceLanguageTag: String, targetLanguageTag: String) -> [PrototypeWord] {
+        guard !senses.isEmpty else { return [prototypeWord(domain: domain, sourceLanguageTag: sourceLanguageTag, targetLanguageTag: targetLanguageTag)] }
+        return senses.map { sense in
+            PrototypeWord(
+                german: targetText,
+                persian: sense.meaning,
+                article: article.isEmpty ? nil : article,
+                level: level,
+                partOfSpeech: partOfSpeech,
+                example: sense.example.target,
+                exampleTranslation: sense.example.source,
+                domain: domain,
+                sourceLanguageTag: sourceLanguageTag,
+                targetLanguageTag: targetLanguageTag
+            )
+        }
     }
 }
 
@@ -905,16 +942,31 @@ struct ConfiguredProviderClient: Sendable {
                     "properties": ["target": ["type": "string"], "source": ["type": "string"]],
                     "required": ["target", "source"],
                     "additionalProperties": false
+                ],
+                "senses": [
+                    "type": "array",
+                    "maxItems": 3,
+                    "items": [
+                        "type": "object",
+                        "properties": [
+                            "meaning": ["type": "string"],
+                            "usage": ["type": "string"],
+                            "example": ["type": "object", "properties": ["target": ["type": "string"], "source": ["type": "string"]], "required": ["target", "source"], "additionalProperties": false],
+                            "collocations": ["type": "array", "items": ["type": "string"]]
+                        ],
+                        "required": ["meaning", "usage", "example", "collocations"],
+                        "additionalProperties": false
+                    ]
                 ]
             ],
-            "required": ["targetText", "sourceMeaning", "level", "partOfSpeech", "article", "example"],
+            "required": ["targetText", "sourceMeaning", "level", "partOfSpeech", "article", "example", "senses"],
             "additionalProperties": false
         ]
         let body: [String: Any] = [
             "model": model,
             "messages": [
-                ["role": "system", "content": "You create accurate language-learning cards. The learning language is \(targetLanguageTag); the learner's support language is \(sourceLanguageTag). Return JSON using targetText, sourceMeaning, and example.target/example.source. Use an empty article for non-nouns."],
-                ["role": "user", "content": "Create one card for the \(targetLanguageTag) word or phrase '\(word)' using the domain '\(domain)'. Return targetText and example.target in \(targetLanguageTag), and sourceMeaning and example.source in \(sourceLanguageTag). Return only the requested JSON fields."]
+                ["role": "system", "content": "You create accurate language-learning cards. The learning language is \(targetLanguageTag); the learner's support language is \(sourceLanguageTag). Return a shared lexical parent plus up to three important independent senses. Each sense must have its own natural example, usage/register, and collocations. Use an empty article for non-nouns."],
+                ["role": "user", "content": "Create a complete card for the \(targetLanguageTag) word or phrase '\(word)' using the domain '\(domain)'. Include all common meanings that are useful at the learner level, but do not invent obscure meanings. Return targetText and examples in \(targetLanguageTag), and meanings/translations in \(sourceLanguageTag). Return only the requested JSON fields."]
             ],
             "response_format": [
                 "type": "json_schema",
