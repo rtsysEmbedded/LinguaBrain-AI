@@ -5,38 +5,38 @@
 
 ## Phase 1: Setup
 
-- [ ] T001 Create feature module/test seams in `packages/LinguaBrainKit/Package.swift` for generation contracts and application ports.
-- [ ] T002 [P] Add versioned contract fixtures under `packages/LinguaBrainKit/Tests/LinguaBrainAITests/Fixtures/`.
-- [ ] T003 [P] Add feature-level test constants and deterministic fake provider configuration in `packages/LinguaBrainKit/Tests/LinguaBrainTestSupport/`.
+- [X] T001 Create feature module/test seams in `packages/LinguaBrainKit/Package.swift` for generation contracts and application ports.
+- [X] T002 [P] Add versioned contract fixtures under `packages/LinguaBrainKit/Tests/LinguaBrainAITests/Fixtures/`.
+- [X] T003 [P] Add feature-level test constants and deterministic fake provider configuration in `packages/LinguaBrainKit/Tests/LinguaBrainTestSupport/`.
 
 ## Phase 2: Foundational
 
-- [ ] T004 Define `GenerationRequest`, `GenerationJob`, proposal states, and idempotency values in `packages/LinguaBrainKit/Sources/LinguaBrainDomain/`.
-- [ ] T005 [P] Define `CardProposal`, `GeneratedCardBundle`, and provenance value types in `packages/LinguaBrainKit/Sources/LinguaBrainDomain/`.
-- [ ] T006 [P] Define text/audio/image provider ports and normalized error types in `packages/LinguaBrainKit/Sources/LinguaBrainApplication/`.
-- [ ] T007 Implement versioned proposal decoding and schema validation in `packages/LinguaBrainKit/Sources/LinguaBrainAI/`.
-- [ ] T008 Implement sense- and direction-aware identity normalization and duplicate detection in `packages/LinguaBrainKit/Sources/LinguaBrainDomain/`.
-- [ ] T009 Implement provenance, usage, consent, and secure credential ports without logging secrets in `packages/LinguaBrainKit/Sources/LinguaBrainApplication/`.
-- [ ] T010 [P] Add unit tests for schema, identity, duplicate, provenance, and error normalization in `packages/LinguaBrainKit/Tests/LinguaBrainAITests/`.
-- [ ] T011 Implement deterministic fake text/audio/image providers for application tests in `packages/LinguaBrainKit/Sources/LinguaBrainTestSupport/`.
+- [X] T004 Define `GenerationRequest`, `GenerationJob`, proposal states, and idempotency values in `packages/LinguaBrainKit/Sources/LinguaBrainDomain/`.
+- [X] T005 [P] Define `CardProposal`, `GeneratedCardBundle`, and provenance value types in `packages/LinguaBrainKit/Sources/LinguaBrainDomain/`.
+- [X] T006 [P] Define text/audio/image provider ports and normalized error types in `packages/LinguaBrainKit/Sources/LinguaBrainApplication/`.
+- [X] T007 Implement versioned proposal decoding and schema validation in `packages/LinguaBrainKit/Sources/LinguaBrainAI/`.
+- [X] T008 Implement sense- and direction-aware identity normalization and duplicate detection in `packages/LinguaBrainKit/Sources/LinguaBrainDomain/`.
+- [X] T009 Implement provenance, usage, consent, and secure credential ports without logging secrets in `packages/LinguaBrainKit/Sources/LinguaBrainApplication/`.
+- [X] T010 [P] Add unit tests for schema, identity, duplicate, provenance, and error normalization in `packages/LinguaBrainKit/Tests/LinguaBrainAITests/`.
+- [X] T011 Implement deterministic fake text/audio/image providers for application tests in `packages/LinguaBrainKit/Sources/LinguaBrainTestSupport/`.
 
 ## Phase 3: User Story 1 — Generate and approve a card collection (P1) 🎯 MVP
 
 **Independent test**: Generate a deterministic batch, reject/edit/approve selected cards, restart offline, and verify only approved cards are study candidates.
 
-- [ ] T012 [P] [US1] Add generation use-case commands and queries in `packages/LinguaBrainKit/Sources/LinguaBrainApplication/`.
-- [ ] T013 [US1] Implement `AnkiGenerationOrchestrator` with cancellation, bounded retry, idempotency, and stage status in `packages/LinguaBrainKit/Sources/LinguaBrainApplication/`.
-- [ ] T014 [US1] Implement proposal-to-domain validation and approval transaction in `packages/LinguaBrainKit/Sources/LinguaBrainApplication/`.
-- [ ] T015 [US1] Persist approved card bundles, job state, and provenance through the existing persistence boundary in `packages/LinguaBrainKit/Sources/LinguaBrainPersistence/`.
-- [ ] T016 [US1] Add card generation preview/edit/reject/approve state and actions in `apps/learner/App/`.
-- [ ] T017 [US1] Add localized generation and approval copy for `apps/learner/Resources/Localization/en.json`, `fa.json`, and `de.json`.
-- [ ] T018 [US1] Add application, persistence, and restart tests for the complete approval journey in `packages/LinguaBrainKit/Tests/` and `apps/learner/Tests/`.
+- [X] T012 [P] [US1] Add generation use-case commands and queries in `packages/LinguaBrainKit/Sources/LinguaBrainApplication/`.
+- [X] T013 [US1] Implement `AnkiGenerationOrchestrator` with cancellation, bounded retry, idempotency, and stage status in `packages/LinguaBrainKit/Sources/LinguaBrainApplication/`.
+- [X] T014 [US1] Implement proposal-to-domain validation and approval transaction in `packages/LinguaBrainKit/Sources/LinguaBrainApplication/`.
+- [X] T015 [US1] Persist approved card bundles, job state, and provenance through the existing persistence boundary in `packages/LinguaBrainKit/Sources/LinguaBrainPersistence/`.
+- [X] T016 [US1] Add card generation preview/edit/reject/approve state and actions in `apps/learner/App/`.
+- [X] T017 [US1] Add localized generation and approval copy for `apps/learner/Resources/Localization/en.json`, `fa.json`, and `de.json`.
+- [X] T018 [US1] Add application, persistence, and restart tests for the complete approval journey in `packages/LinguaBrainKit/Tests/` and `apps/learner/Tests/`.
 
 ## Phase 4: User Story 2 — Preserve senses and media (P1)
 
 **Independent test**: Generate two senses of `Bank`, approve independent cards with and without audio, and verify separate identities and offline playback/fallback.
 
-- [ ] T019 [P] [US2] Map multi-sense proposals to `LexicalSense` and ordered `Sentence` records in `packages/LinguaBrainKit/Sources/LinguaBrainDomain/`.
+- [X] T019 [P] [US2] Map multi-sense proposals to `LexicalSense` and ordered `Sentence` records in `packages/LinguaBrainKit/Sources/LinguaBrainDomain/`.
 - [ ] T020 [P] [US2] Implement media asset metadata, checksum, cache reference, availability, and fallback reason in `packages/LinguaBrainKit/Sources/LinguaBrainMedia/`.
 - [ ] T021 [US2] Implement independent audio/image provider adapters and quota/capability reporting in `packages/LinguaBrainKit/Sources/LinguaBrainAI/` and `LinguaBrainMedia/`.
 - [ ] T022 [US2] Integrate media generation and approval into `AnkiGenerationOrchestrator` in `packages/LinguaBrainKit/Sources/LinguaBrainApplication/`.
@@ -89,3 +89,16 @@
 ## MVP scope
 
 Deliver Phase 1, Phase 2, and Phase 3 through T018. This provides deterministic generation, validation, preview, approval, persistence, and offline study. Phase 4 is the next increment; APKG export remains gated by T029.
+
+## Phase 8: Convergence
+
+- [ ] T038 Implement the full media asset cache lifecycle (checksum, cache reference, availability, fallback reason) and media fallback path per FR-008, US2 (missing)
+- [ ] T039 Integrate independent audio/image provider adapters with quota/capability reporting into `LinguaBrainMedia`/`LinguaBrainAI` per US2 (missing)
+- [ ] T040 Add sense-aware card rendering, audio playback, and text-only fallback UI in `apps/learner/App/` per US-02 (missing)
+- [ ] T041 Integrate media generation and approval into `AnkiGenerationOrchestrator` per FR-008 (missing)
+- [ ] T042 Implement export selection/manifest models and provenance-aware TSV export with Unicode/RTL-LTR preservation per FR-012, SC-006 (missing)
+- [ ] T043 Implement APKG export only after collection/templates/media round-trip fixtures pass per export-contract, SC-006 (missing)
+- [ ] T044 Implement OpenAI-compatible/local/remote provider adapter configuration, health checks, and endpoint-scoped credentials per FR-010, US-04 (missing)
+- [ ] T045 Add automated tests proving no provider can mutate canonical learning or scheduling state per SC-007, Constitution III (missing)
+- [ ] T046 Wire `LinguaBrainKit` into the app Xcode target and add app-level approval-journey tests per US-01/T018 (partial)
+- [ ] T047 Execute polish and cross-cutting verification: accessibility/RTL UI tests, feature quickstart (lib + macOS), security review, and `PROJECT_STATUS.md`/`CHANGELOG.md` updates per plan (missing)

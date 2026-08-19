@@ -1,0 +1,21 @@
+{
+    "version": "generation-v1",
+    "lemma": "Bank",
+    "senses": [
+        {
+            "senseKey": "bank-n-finance",
+            "partOfSpeech": "noun",
+            "meaning": "financial institution",
+            "translation": "بانک",
+            "level": "A1",
+            "examples": [
+                {"text": "I deposit cash at the bank.", "translation": "من پول را در بانک می‌گذارم."}
+            ]
+        }
+    ],
+    "provenance": {
+        "provider": "openai",
+        "model": "gpt-4o-mini",
+        "schemaVersion": "generation-v1"
+    }
+}

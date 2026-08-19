@@ -1,0 +1,5 @@
+{
+    "version": "generation-v1",
+    "schema": "json",
+    "fields": ["lemma", "sense_key", "part_of_speech", "examples", "translation", "direction", "level", "provenance"]
+}

@@ -48,6 +48,14 @@
 		120000000000000000000003 /* legacy-linguabrain.json in Resources */ = {isa = PBXBuildFile; fileRef = 220000000000000000000003 /* legacy-linguabrain.json */; };
 		120000000000000000000004 /* multilingual-language-pairs.json in Resources */ = {isa = PBXBuildFile; fileRef = 220000000000000000000005 /* multilingual-language-pairs.json */; };
 		120000000000000000000005 /* modern-apkg-fixtures.json in Resources */ = {isa = PBXBuildFile; fileRef = 220000000000000000000006 /* modern-apkg-fixtures.json */; };
+		DEADBEEF0000000000000010 /* LinguaBrainDomain in Frameworks */ = {isa = PBXBuildFile; productRef = DEADBEEF0000000000000002 /* LinguaBrainDomain */; };
+		DEADBEEF0000000000000011 /* LinguaBrainApplication in Frameworks */ = {isa = PBXBuildFile; productRef = DEADBEEF0000000000000003 /* LinguaBrainApplication */; };
+		DEADBEEF0000000000000012 /* LinguaBrainAI in Frameworks */ = {isa = PBXBuildFile; productRef = DEADBEEF0000000000000004 /* LinguaBrainAI */; };
+		DEADBEEF0000000000000013 /* LinguaBrainPersistence in Frameworks */ = {isa = PBXBuildFile; productRef = DEADBEEF0000000000000005 /* LinguaBrainPersistence */; };
+		DEADBEEF0000000000000014 /* LinguaBrainTestSupport in Frameworks */ = {isa = PBXBuildFile; productRef = DEADBEEF0000000000000006 /* LinguaBrainTestSupport */; };
+		DEADBEEF0000000000000022 /* CardGenerationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEADBEEF0000000000000021 /* CardGenerationView.swift */; };
+		DEADBEEF0000000000000023 /* CardGenerationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEADBEEF0000000000000021 /* CardGenerationView.swift */; };
+		DEADBEEF0000000000000032 /* GenerationPrototypeIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEADBEEF0000000000000031 /* GenerationPrototypeIntegrationTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -87,6 +95,8 @@
 		220000000000000000000004 /* LinguaBrainTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = LinguaBrainTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		220000000000000000000005 /* multilingual-language-pairs.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "multilingual-language-pairs.json"; sourceTree = "<group>"; };
 		220000000000000000000006 /* modern-apkg-fixtures.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "Fixtures/modern-apkg-fixtures.json"; sourceTree = "<group>"; };
+		DEADBEEF0000000000000021 /* CardGenerationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardGenerationView.swift; sourceTree = "<group>"; };
+		DEADBEEF0000000000000031 /* GenerationPrototypeIntegrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GenerationPrototypeIntegrationTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -94,6 +104,11 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DEADBEEF0000000000000010 /* LinguaBrainDomain in Frameworks */,
+				DEADBEEF0000000000000011 /* LinguaBrainApplication in Frameworks */,
+				DEADBEEF0000000000000012 /* LinguaBrainAI in Frameworks */,
+				DEADBEEF0000000000000013 /* LinguaBrainPersistence in Frameworks */,
+				DEADBEEF0000000000000014 /* LinguaBrainTestSupport in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -101,6 +116,11 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DEADBEEF0000000000000010 /* LinguaBrainDomain in Frameworks */,
+				DEADBEEF0000000000000011 /* LinguaBrainApplication in Frameworks */,
+				DEADBEEF0000000000000012 /* LinguaBrainAI in Frameworks */,
+				DEADBEEF0000000000000013 /* LinguaBrainPersistence in Frameworks */,
+				DEADBEEF0000000000000014 /* LinguaBrainTestSupport in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -140,6 +160,7 @@
 				200000000000000000000009 /* ProgressPrototypeView.swift */,
 				20000000000000000000000A /* SettingsPrototypeView.swift */,
 				20000000000000000000000B /* OnboardingPrototypeView.swift */,
+				DEADBEEF0000000000000021 /* CardGenerationView.swift */,
 			);
 			path = App;
 			sourceTree = "<group>";
@@ -172,6 +193,7 @@
 				220000000000000000000002 /* APKGFixtureFactory.swift */,
 				220000000000000000000006 /* modern-apkg-fixtures.json */,
 				420000000000000000000002 /* Fixtures */,
+				DEADBEEF0000000000000031 /* GenerationPrototypeIntegrationTests.swift */,
 			);
 			path = Tests;
 			sourceTree = "<group>";
@@ -187,6 +209,41 @@
 		};
 /* End PBXGroup section */
 
+/* Begin XCLocalSwiftPackageReference section */
+		DEADBEEF00000000000000A1 /* XCLocalSwiftPackageReference "LinguaBrainKit" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ../../packages/LinguaBrainKit;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		DEADBEEF0000000000000002 /* LinguaBrainDomain */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = LinguaBrainDomain;
+			package = DEADBEEF00000000000000A1 /* XCLocalSwiftPackageReference "LinguaBrainKit" */;
+		};
+		DEADBEEF0000000000000003 /* LinguaBrainApplication */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = LinguaBrainApplication;
+			package = DEADBEEF00000000000000A1 /* XCLocalSwiftPackageReference "LinguaBrainKit" */;
+		};
+		DEADBEEF0000000000000004 /* LinguaBrainAI */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = LinguaBrainAI;
+			package = DEADBEEF00000000000000A1 /* XCLocalSwiftPackageReference "LinguaBrainKit" */;
+		};
+		DEADBEEF0000000000000005 /* LinguaBrainPersistence */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = LinguaBrainPersistence;
+			package = DEADBEEF00000000000000A1 /* XCLocalSwiftPackageReference "LinguaBrainKit" */;
+		};
+		DEADBEEF0000000000000006 /* LinguaBrainTestSupport */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = LinguaBrainTestSupport;
+			package = DEADBEEF00000000000000A1 /* XCLocalSwiftPackageReference "LinguaBrainKit" */;
+		};
+/* End XCSwiftPackageProductDependency section */
+
 /* Begin PBXNativeTarget section */
 		500000000000000000000001 /* LinguaBrain */ = {
 			isa = PBXNativeTarget;
@@ -201,6 +258,13 @@
 			dependencies = (
 			);
 			name = LinguaBrain;
+			packageProductDependencies = (
+				DEADBEEF0000000000000002 /* LinguaBrainDomain */,
+				DEADBEEF0000000000000003 /* LinguaBrainApplication */,
+				DEADBEEF0000000000000004 /* LinguaBrainAI */,
+				DEADBEEF0000000000000005 /* LinguaBrainPersistence */,
+				DEADBEEF0000000000000006 /* LinguaBrainTestSupport */,
+			);
 			productName = LinguaBrain;
 			productReference = 20000000000000000000000D /* LinguaBrain.app */;
 			productType = "com.apple.product-type.application";
@@ -218,6 +282,13 @@
 			dependencies = (
 			);
 			name = "LinguaBrain Mac";
+			packageProductDependencies = (
+				DEADBEEF0000000000000002 /* LinguaBrainDomain */,
+				DEADBEEF0000000000000003 /* LinguaBrainApplication */,
+				DEADBEEF0000000000000004 /* LinguaBrainAI */,
+				DEADBEEF0000000000000005 /* LinguaBrainPersistence */,
+				DEADBEEF0000000000000006 /* LinguaBrainTestSupport */,
+			);
 			productName = "LinguaBrain Mac";
 			productReference = 20000000000000000000000E /* LinguaBrain Mac.app */;
 			productType = "com.apple.product-type.application";
@@ -274,6 +345,9 @@
 			);
 			mainGroup = 400000000000000000000001;
 			productRefGroup = 400000000000000000000004 /* Products */;
+			packageReferences = (
+				DEADBEEF00000000000000A1 /* XCLocalSwiftPackageReference "LinguaBrainKit" */,
+			);
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -339,6 +413,7 @@
 				10000000000000000000000A /* SettingsPrototypeView.swift in Sources */,
 				10000000000000000000000B /* OnboardingPrototypeView.swift in Sources */,
 				100000000000000000000014 /* GoogleCloudTextToSpeech.swift in Sources */,
+				DEADBEEF0000000000000022 /* CardGenerationView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -359,6 +434,7 @@
 				11000000000000000000000A /* SettingsPrototypeView.swift in Sources */,
 				11000000000000000000000B /* OnboardingPrototypeView.swift in Sources */,
 				110000000000000000000014 /* GoogleCloudTextToSpeech.swift in Sources */,
+				DEADBEEF0000000000000023 /* CardGenerationView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -368,6 +444,7 @@
 			files = (
 				120000000000000000000001 /* AnkiCoreRegressionTests.swift in Sources */,
 				120000000000000000000002 /* APKGFixtureFactory.swift in Sources */,
+				DEADBEEF0000000000000032 /* GenerationPrototypeIntegrationTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
