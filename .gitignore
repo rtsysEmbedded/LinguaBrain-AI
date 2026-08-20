@@ -75,3 +75,7 @@ xcuserdata/
 # Generated documentation output
 site/
 build/
+DerivedData/
+Packages/
+*.xcodeproj/
+-Xcc/

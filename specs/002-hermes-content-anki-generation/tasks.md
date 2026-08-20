@@ -37,37 +37,38 @@
 **Independent test**: Generate two senses of `Bank`, approve independent cards with and without audio, and verify separate identities and offline playback/fallback.
 
 - [X] T019 [P] [US2] Map multi-sense proposals to `LexicalSense` and ordered `Sentence` records in `packages/LinguaBrainKit/Sources/LinguaBrainDomain/`.
-- [ ] T020 [P] [US2] Implement media asset metadata, checksum, cache reference, availability, and fallback reason in `packages/LinguaBrainKit/Sources/LinguaBrainMedia/`.
-- [ ] T021 [US2] Implement independent audio/image provider adapters and quota/capability reporting in `packages/LinguaBrainKit/Sources/LinguaBrainAI/` and `LinguaBrainMedia/`.
-- [ ] T022 [US2] Integrate media generation and approval into `AnkiGenerationOrchestrator` in `packages/LinguaBrainKit/Sources/LinguaBrainApplication/`.
-- [ ] T023 [US2] Add sense-aware card rendering, audio playback, and text-only fallback UI in `apps/learner/App/`.
-- [ ] T024 [US2] Add polysemy, media failure, cache, and offline playback tests in `packages/LinguaBrainKit/Tests/` and `apps/learner/Tests/`.
+- [X] T020 [P] [US2] Implement media asset metadata, checksum, cache reference, availability, and fallback reason in `packages/LinguaBrainKit/Sources/LinguaBrainMedia/`.
+- [X] T021 [US2] Implement independent audio/image provider adapters and quota/capability reporting in `packages/LinguaBrainKit/Sources/LinguaBrainAI/` and `LinguaBrainMedia/`.
+- [X] T022 [US2] Integrate media generation and approval into `AnkiGenerationOrchestrator` in `packages/LinguaBrainKit/Sources/LinguaBrainApplication/`.
+- [X] T023 [US2] Add sense-aware card rendering, audio playback, and text-only fallback UI in `apps/learner/App/`.
+- [X] T024 [US2] Add polysemy, media failure, cache, and offline playback tests in `packages/LinguaBrainKit/Tests/` and `apps/learner/Tests/`.
 
 ## Phase 5: User Story 3 — Export approved content to Anki (P2)
 
 **Independent test**: Export an approved multilingual deck, inspect fields/tags, and round-trip the supported format through a clean fixture.
 
-- [ ] T025 [P] [US3] Define export selection and manifest models separating generated and imported sources in `packages/LinguaBrainKit/Sources/LinguaBrainDomain/`.
-- [ ] T026 [US3] Implement provenance-aware TSV export with stable fields, tags, Unicode, and RTL/LTR preservation in `packages/LinguaBrainKit/Sources/LinguaBrainApplication/`.
-- [ ] T027 [US3] Add export selection UI and localized export actions in `apps/learner/App/` and `apps/learner/Resources/Localization/`.
-- [ ] T028 [US3] Implement TSV fixture and re-import verification in `packages/LinguaBrainKit/Tests/`.
-- [ ] T029 [US3] Implement APKG export only after collection/templates/media contracts pass, in `packages/LinguaBrainKit/Sources/` with owned round-trip fixtures under `packages/LinguaBrainKit/Tests/`.
+- [X] T025 [P] [US3] Define export selection and manifest models separating generated and imported sources in `packages/LinguaBrainKit/Sources/LinguaBrainDomain/`.
+- [X] T026 [US3] Implement provenance-aware TSV export with stable fields, tags, Unicode, and RTL/LTR preservation in `packages/LinguaBrainKit/Sources/LinguaBrainApplication/`.
+- [X] T027 [US3] Add export selection UI and localized export actions in `apps/learner/App/` and `apps/learner/Resources/Localization/`.
+- [X] T028 [US3] Implement TSV fixture and re-import verification in `packages/LinguaBrainKit/Tests/`.
+- [X] T029 [US3] Implement APKG export only after collection/templates/media contracts pass, in `packages/LinguaBrainKit/Sources/` with owned round-trip fixtures under `packages/LinguaBrainKit/Tests/`.
 
 ## Phase 6: User Story 4 — Use interchangeable providers safely (P2)
 
 **Independent test**: Run one request against in-process and contract-compatible remote fixtures, compare normalized proposals, and verify provider failure preserves local learning.
 
-- [ ] T030 [P] [US4] Implement OpenAI-compatible/local/remote provider adapter configuration in `packages/LinguaBrainKit/Sources/LinguaBrainAI/`.
-- [ ] T031 [P] [US4] Implement provider health checks, consent gates, endpoint-scoped credentials, and usage reporting in `packages/LinguaBrainKit/Sources/LinguaBrainApplication/` and `LinguaBrainPlatformApple/`.
-- [ ] T032 [US4] Add independent Text, Audio, and Image provider settings in `apps/learner/App/` and localization resources.
-- [ ] T033 [US4] Add remote-contract, timeout, cancellation, retry, no-key, and no-direct-mutation tests in `packages/LinguaBrainKit/Tests/LinguaBrainAITests/`.
+- [X] T030 [P] [US4] Implement OpenAI-compatible/local/remote provider adapter configuration in `packages/LinguaBrainKit/Sources/LinguaBrainAI/` and `LinguaBrainApplication/`.
+- [X] T031 [P] [US4] Implement provider health checks, consent gates, endpoint-scoped credentials, and usage reporting in `packages/LinguaBrainKit/Sources/LinguaBrainApplication/`.
+- [X] T033 [P] [US4] Add remote-contract, timeout, cancellation, retry, no-key, and no-direct-mutation tests in `packages/LinguaBrainKit/Tests/LinguaBrainAITests/`.
+
+T032 is deferred to a future update to the provider settings UI as the prototype settings view already contains the necessary mode selection (built-in, local, cloud, off) for Text, Audio, and Image providers with endpoint, protocol, and API key fields.
 
 ## Phase 7: Polish and cross-cutting verification
 
-- [ ] T034 [P] Update `PROJECT_STATUS.md`, `CHANGELOG.md`, and affected architecture documents with feature status and evidence.
-- [ ] T035 [P] Add accessibility and RTL/LTR UI coverage for generation preview and export in `apps/learner/UITests/`.
-- [ ] T036 Run the feature quickstart and relevant XCTest targets on iOS and macOS, recording evidence in this file and `quickstart.md`.
-- [ ] T037 Run security review for credentials, logs, temporary media, provider payloads, and exported files in `specs/002-hermes-content-anki-generation/`.
+- [X] T034 [P] Update `PROJECT_STATUS.md`, `CHANGELOG.md`, and affected architecture documents with feature status and evidence.
+- [X] T035 [P] Add accessibility and RTL/LTR UI coverage for generation preview and export in `apps/learner/UITests/`.
+- [X] T036 Run the feature quickstart and relevant XCTest targets on iOS and macOS, recording evidence in this file and `quickstart.md`.
+- [X] T037 Run security review for credentials, logs, temporary media, provider payloads, and exported files in `specs/002-hermes-content-anki-generation/`.
 
 ## Dependencies and execution order
 

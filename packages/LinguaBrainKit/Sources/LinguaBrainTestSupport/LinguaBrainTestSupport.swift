@@ -1,6 +1,7 @@
 import Foundation
 import LinguaBrainDomain
 import LinguaBrainApplication
+import LinguaBrainAI
 
 // MARK: - Deterministic Fake Providers (T003, T011, plan Phase 2)
 
@@ -114,6 +115,87 @@ public final class AlwaysConsent: ConsentGate {
     public init() {}
     public func hasConsent(to scope: String) -> Bool { true }
     public func requestConsent(to scope: String) async throws {}
+}
+
+// MARK: - Test Credential Loaders (T031)
+
+public final class TestCredentialLoader: CredentialLoader {
+    private let storage: LockedStorage<[String: String]>
+
+    public init(credentials: [String: String] = [:]) {
+        self.storage = LockedStorage(credentials)
+    }
+
+    public func loadCredential(for scope: String) throws -> String? {
+        storage.withValue { $0[scope] }
+    }
+
+    public func setCredential(_ value: String, for scope: String) {
+        storage.withValue { $0[scope] = value }
+    }
+}
+
+public final class LockedStorage<Element>: @unchecked Sendable {
+    private var value: Element
+    private let lock = NSLock()
+
+    public init(_ value: Element) {
+        self.value = value
+    }
+
+    public func withValue<T>(_ block: (inout Element) throws -> T) rethrows -> T {
+        lock.lock(); defer { lock.unlock() }
+        return try block(&value)
+    }
+}
+
+public final class NoOpCredentialLoader: CredentialLoader {
+    public init() {}
+    public func loadCredential(for scope: String) throws -> String? { nil }
+}
+
+public final class FailingCredentialLoader: CredentialLoader {
+    public init() {}
+    public func loadCredential(for scope: String) throws -> String? {
+        throw ProviderError.missingAPIKey
+    }
+}
+
+// MARK: - Failing Fake Providers (T033)
+
+public final class FailingTextProvider: TextProviderPort, @unchecked Sendable {
+    public let error: ProviderError
+
+    public init(error: ProviderError = .unavailable(reason: "Simulated failure")) {
+        self.error = error
+    }
+
+    public func generateProposal(for request: GenerationRequest) async throws -> CardProposal {
+        throw error
+    }
+}
+
+public final class SlowTextProvider: TextProviderPort, @unchecked Sendable {
+    public let delay: TimeInterval
+
+    public init(delay: TimeInterval = 5.0) {
+        self.delay = delay
+    }
+
+    public func generateProposal(for request: GenerationRequest) async throws -> CardProposal {
+        try await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
+        return CardProposal(
+            lemma: "timeout-test",
+            senses: [],
+            provenance: Provenance(provider: "slow", model: "test")
+        )
+    }
+}
+
+public final class NetworkErrorTextProvider: TextProviderPort, @unchecked Sendable {
+    public func generateProposal(for request: GenerationRequest) async throws -> CardProposal {
+        throw ProviderError.network(reason: "Simulated network failure")
+    }
 }
 
 // MARK: - Helpers

@@ -40,7 +40,7 @@ let package = Package(
         ),
         .target(
             name: "LinguaBrainTestSupport",
-            dependencies: ["LinguaBrainDomain", "LinguaBrainApplication"]
+            dependencies: ["LinguaBrainDomain", "LinguaBrainApplication", "LinguaBrainAI"]
         ),
         .testTarget(
             name: "LinguaBrainAITests",

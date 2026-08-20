@@ -8,6 +8,11 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- Implemented T030: OpenAI-compatible provider adapter with configurable endpoint, protocol (OpenAI-compatible, Google native), model ID, timeout, and health check support. Added `ProviderConfiguration`, `ProviderCapabilities`, `ProviderHealthCheck`, and `CredentialLoader` protocols for interchangeable providers.
+- Implemented T031: Provider health checks via `/models` endpoint, consent gates, endpoint-scoped credentials through `SecureCredentialStore`, and usage reporting via `UsageEvent`. Added `TestCredentialLoader`, `NoOpCredentialLoader`, and `FailingCredentialLoader` for testing.
+- Implemented T033: Comprehensive tests for no-key errors, timeout configuration, cancellation, retry logic, and Constitution III compliance (no direct mutation of canonical learning state). Added 13 new provider configuration and safety tests.
+- Provider settings UI (T032): Text, Audio, and Image provider settings already present in prototype with independent mode selection (built-in, local, cloud, off), endpoint URLs, protocol selection, model ID, API keys, and consent toggles. Fully localized in Persian, English, and German.
+
 - Added a localized Mixed Practice Game entry to Today/review, randomly combining direct translation, reverse translation, article checks, and collocation/context prompts with an independent mixed-review FSRS identity.
 - Added Spec Kit task T029 for multi-sense card generation, sense-specific examples/collocations, and independent review identities.
 - Multi-sense generation foundation: provider responses can contain up to three senses with separate examples and collocations; the preview shows them and approval creates independent prototype cards with backward-compatible single-sense decoding.

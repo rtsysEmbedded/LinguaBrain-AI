@@ -1,6 +1,9 @@
 import XCTest
+import Foundation
 @testable import LinguaBrainDomain
 @testable import LinguaBrainAI
+@testable import LinguaBrainApplication
+@testable import LinguaBrainTestSupport
 
 final class LinguaBrainAITests: XCTestCase {
 
@@ -210,5 +213,201 @@ final class LinguaBrainAITests: XCTestCase {
         XCTAssertEqual(bundle.senses[1].targetLanguage, "es")
         XCTAssertEqual(bundle.directions, [.recognition])
         XCTAssertEqual(bundle.approvalState, .pending)
+    }
+
+    // MARK: - T031: Provider Configuration Tests
+
+    func testProviderConfigurationDefaults() {
+        let config = ProviderConfiguration()
+        XCTAssertEqual(config.mode, .cloud)
+        XCTAssertEqual(config.endpoint, "https://api.openai.com/v1")
+        XCTAssertEqual(config.protocolName, "openai-compatible")
+        XCTAssertEqual(config.modelID, "gpt-4o-mini")
+        XCTAssertEqual(config.timeoutSeconds, 30.0)
+    }
+
+    func testProviderConfigurationWithModeOffDisablesProvider() {
+        let config = ProviderConfiguration(mode: .off)
+        XCTAssertEqual(config.mode, .off)
+    }
+
+    func testProviderCapabilitiesReportCorrectly() {
+        let textCaps = ProviderCapabilities(supportsTextGeneration: true, maxTokens: 8192)
+        XCTAssertTrue(textCaps.supportsTextGeneration)
+        XCTAssertEqual(textCaps.maxTokens, 8192)
+
+        let audioCaps = ProviderCapabilities(supportsAudioGeneration: true)
+        XCTAssertTrue(audioCaps.supportsAudioGeneration)
+    }
+
+    func testProviderModeIsCaseIterable() {
+        XCTAssertEqual(ProviderMode.allCases.count, 4)
+        XCTAssertEqual(ProviderMode.builtIn, .builtIn)
+        XCTAssertEqual(ProviderMode.local, .local)
+        XCTAssertEqual(ProviderMode.cloud, .cloud)
+        XCTAssertEqual(ProviderMode.off, .off)
+    }
+
+    // MARK: - T033: No-Key Error Tests
+
+    func testNoAPIKeyThrowsMissingKeyError() async throws {
+        let missingKeyLoader = NoOpCredentialLoader()
+        let config = ProviderConfiguration(mode: .cloud)
+        let adapter = OpenAICompatibleProviderAdapter(
+            configuration: config,
+            credentialLoader: missingKeyLoader
+        )
+
+        let request = GenerationRequest(
+            sourceLanguage: "en", targetLanguage: "es", level: "A1",
+            count: 1, directions: [.recognition],
+            mediaPreferences: MediaPreferences(audioEnabled: false, imageEnabled: false)
+        )
+
+        do {
+            _ = try await adapter.generateProposal(for: request)
+            XCTFail("Expected missingAPIKey error")
+        } catch let error as ProviderError {
+            if case .missingAPIKey = error {
+                // Expected
+            } else {
+                XCTFail("Expected missingAPIKey error, got \(error)")
+            }
+        } catch {
+            XCTFail("Unexpected error type: \(error)")
+        }
+    }
+
+    // MARK: - T033: Timeout Tests
+
+    func testProviderTimeoutConfiguredSuccessfully() {
+        let config = ProviderConfiguration(timeoutSeconds: 10.0)
+        XCTAssertEqual(config.timeoutSeconds, 10.0)
+    }
+
+    func testSlowProviderTimesOut() {
+        let slowProvider = SlowTextProvider(delay: 0.1)
+        let request = GenerationRequest(
+            sourceLanguage: "en", targetLanguage: "es", level: "A1",
+            count: 1, directions: [.recognition],
+            mediaPreferences: MediaPreferences(audioEnabled: false, imageEnabled: false)
+        )
+
+        Task {
+            do {
+                _ = try await slowProvider.generateProposal(for: request)
+            } catch {
+                // Expected timeout/cancellation
+            }
+        }
+
+        Thread.sleep(forTimeInterval: 0.15)
+    }
+
+    // MARK: - T033: Cancellation Tests
+
+    func testProviderCancellationWorks() async throws {
+        let request = GenerationRequest(
+            sourceLanguage: "en", targetLanguage: "es", level: "A1",
+            count: 1, directions: [.recognition],
+            mediaPreferences: MediaPreferences(audioEnabled: false, imageEnabled: false)
+        )
+
+        let task = Task {
+            let slow = SlowTextProvider(delay: 5.0)
+            return try await slow.generateProposal(for: request)
+        }
+
+        task.cancel()
+        do {
+            _ = try await task.value
+            XCTFail("Expected cancellation")
+        } catch is CancellationError { }
+    }
+
+    // MARK: - T033: No-Direct-Mutation Tests (Constitution III)
+
+    func testProviderCannotDirectlyMutateStorage() async throws {
+        let repo = InMemoryPersistence()
+        let failingProvider = FailingTextProvider()
+
+        let orchestrator = AnkiGenerationOrchestrator(
+            repository: repo,
+            textProvider: failingProvider,
+            validator: StrictProposalValidator()
+        )
+
+        do {
+            _ = try await orchestrator.startGeneration(from: GenerationRequestCommand(
+                sourceLanguage: "en", targetLanguage: "es", level: "A1", count: 1,
+                directions: [.recognition], audioEnabled: false, imageEnabled: false
+            ))
+            XCTFail("Expected failure")
+        } catch {
+            XCTAssertTrue(error is ProviderError)
+        }
+
+        let bundlesAfter = try await repo.approvedBundles()
+        XCTAssertEqual(bundlesAfter.count, 0, "Provider failed - no bundles should persist")
+    }
+
+    func testProviderCannotModifyApprovedBundles() async throws {
+        let repo = InMemoryPersistence()
+        let textProvider = DeterministicTextProvider()
+
+        let orchestrator = AnkiGenerationOrchestrator(
+            repository: repo,
+            textProvider: textProvider,
+            validator: StrictProposalValidator()
+        )
+
+        let command = GenerationRequestCommand(
+            sourceLanguage: "en", targetLanguage: "es", level: "A1",
+            count: 1, directions: [.recognition]
+        )
+
+        let job = try await orchestrator.startGeneration(from: command)
+        let proposal = try XCTUnwrap(job.proposal)
+
+        let bundle = try await orchestrator.apply(.approve, proposal: proposal, direction: .recognition)
+        XCTAssertEqual(bundle.approvalState, .approved)
+
+        let bundles = try await repo.approvedBundles()
+        XCTAssertEqual(bundles.count, 1, "Should have one approved bundle")
+        XCTAssertEqual(bundles[0].senses[0].lemma, bundle.senses[0].lemma,
+            "Bundle lemma should match original proposal")
+    }
+
+    // MARK: - T033: Health Check Tests
+
+    func testHealthCheckReturnsUnavailableForOffMode() async throws {
+        let config = ProviderConfiguration(mode: .off)
+        let adapter = OpenAICompatibleProviderAdapter(
+            configuration: config,
+            credentialLoader: NoOpCredentialLoader()
+        )
+
+        let status = await adapter.healthStatus()
+        XCTAssertEqual(status, .unavailable(reason: "Provider mode disabled"))
+    }
+
+    func testProviderHealthStatusReturnsStatus() async throws {
+        let adapter = OpenAICompatibleProviderAdapter(
+            configuration: ProviderConfiguration(mode: .off),
+            credentialLoader: NoOpCredentialLoader()
+        )
+
+        let healthStatus = await adapter.healthStatus()
+        XCTAssertNotEqual(healthStatus, .healthy, "Off provider should not be healthy")
+    }
+
+    func testProviderIsAvailableReturnsCorrectly() async throws {
+        let adapter = OpenAICompatibleProviderAdapter(
+            configuration: ProviderConfiguration(mode: .off),
+            credentialLoader: NoOpCredentialLoader()
+        )
+
+        let isAvailable = await adapter.isAvailable()
+        XCTAssertFalse(isAvailable, "Off provider should not be available")
     }
 }

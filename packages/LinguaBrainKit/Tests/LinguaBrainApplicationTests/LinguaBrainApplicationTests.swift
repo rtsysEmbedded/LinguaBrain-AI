@@ -180,4 +180,171 @@ final class LinguaBrainApplicationTests: XCTestCase {
         XCTAssertEqual(approved.first?.identity.targetLanguage, "fa")
         XCTAssertEqual(approved.first?.identity.direction, .recall)
     }
+
+    // MARK: - T024: Polysemy, Media Failure, Cache, and Offline Playback Tests
+
+    // T024a: Verify independent identities for different senses
+    func testPolysemyCreatesDistinctSenseIdentities() {
+        // Create two different senses of "Bank"
+        let financeSense = LexicalSense(
+            sourceLanguage: "de",
+            targetLanguage: "fa",
+            lemma: "Bank",
+            senseKey: "bank-n-finance",
+            partOfSpeech: "noun",
+            meaning: "financial institution",
+            translation: "بانک"
+        )
+
+        let riverSense = LexicalSense(
+            sourceLanguage: "de",
+            targetLanguage: "fa",
+            lemma: "Bank",
+            senseKey: "bank-n-river",
+            partOfSpeech: "noun",
+            meaning: "river edge",
+            translation: "کناره"
+        )
+
+        // Verify senseKeys are different (independent identities)
+        XCTAssertNotEqual(financeSense.senseKey, riverSense.senseKey)
+        XCTAssertNotEqual(financeSense, riverSense)
+
+        // Verify they can be distinguished by senseKey
+        XCTAssertTrue(financeSense.senseKey.hasPrefix("bank-n-finance"))
+        XCTAssertTrue(riverSense.senseKey.hasPrefix("bank-n-river"))
+    }
+
+    // T024b: Media failure fallback - text-only when audio unavailable
+    func testMediaFailureFallsBackToTextOnly() async throws {
+        let repo = InMemoryPersistence()
+
+        // Text provider generates proposal
+        let textProvider = DeterministicTextProvider()
+
+        // Audio provider is nil (simulating unavailable/quota exceeded)
+        let orchestrator = AnkiGenerationOrchestrator(
+            repository: repo,
+            textProvider: textProvider,
+            audioProvider: nil, // No audio provider
+            validator: StrictProposalValidator()
+        )
+
+        let proposal = makeProposal()
+        let bundle = try await orchestrator.apply(.approve, proposal: proposal, direction: .recognition)
+
+        // Bundle should still be approved even without audio
+        XCTAssertEqual(bundle.approvalState, .approved)
+        XCTAssertEqual(bundle.senses.count, 1)
+
+        // Verify the bundle was persisted
+        let persisted = try await repo.approvedBundles()
+        XCTAssertEqual(persisted.count, 1)
+        XCTAssertEqual(persisted[0].provenance.provider, "deterministic")
+    }
+
+    // T024c: Cache lifecycle simulation
+    func testMediaAssetCacheLifecycle() async throws {
+        // Create a media asset with all required lifecycle fields
+        let media = MediaAsset(
+            kind: .audio,
+            locale: "fa",
+            checksum: "abc123sha256",
+            fileSize: 1024,
+            provider: "test-audio-provider",
+            model: "tts-model",
+            generatedAt: Date(),
+            consentContext: "learning",
+            cacheReference: "/tmp/cache/audio_bank_001.mp3",
+            availability: .available,
+            fallbackReason: nil
+        )
+
+        // Verify all required fields are present
+        XCTAssertEqual(media.kind, .audio)
+        XCTAssertEqual(media.locale, "fa")
+        XCTAssertEqual(media.checksum, "abc123sha256")
+        XCTAssertEqual(media.fileSize, 1024)
+        XCTAssertEqual(media.provider, "test-audio-provider")
+        XCTAssertEqual(media.model, "tts-model")
+        XCTAssertEqual(media.cacheReference, "/tmp/cache/audio_bank_001.mp3")
+        XCTAssertEqual(media.availability, .available)
+        XCTAssertNil(media.fallbackReason)
+
+        // Test missing availability with fallback reason
+        let missingMedia = MediaAsset(
+            kind: .audio,
+            locale: "fa",
+            checksum: "missing123",
+            provider: "quota-exceeded",
+            model: "model",
+            availability: .missing,
+            fallbackReason: "Provider quota exceeded - text-only fallback"
+        )
+
+        XCTAssertEqual(missingMedia.availability, .missing)
+        XCTAssertEqual(missingMedia.fallbackReason, "Provider quota exceeded - text-only fallback")
+    }
+
+    // T024d: Offline playback bundle persistence
+    func testApprovedBundlePersistsForOfflineStudy() async throws {
+        let repo = InMemoryPersistence()
+        let orchestrator = AnkiGenerationOrchestrator(
+            repository: repo,
+            textProvider: DeterministicTextProvider(),
+            validator: StrictProposalValidator()
+        )
+
+        // Generate and approve a bundle
+        let proposal = makeProposal()
+        let bundle = try await orchestrator.apply(.approve, proposal: proposal, direction: .recognition)
+
+        // Verify bundle was approved
+        XCTAssertEqual(bundle.approvalState, .approved)
+
+        // Save is done automatically by the orchestrator
+
+        // Create a new orchestrator to simulate app restart (offline mode)
+        let _ = AnkiGenerationOrchestrator(
+            repository: repo,
+            textProvider: DeterministicTextProvider(),
+            validator: StrictProposalValidator()
+        )
+
+        // Reload persisted bundles
+        let persistedBundles = try await repo.approvedBundles()
+
+        // Verify the bundle is still available offline
+        XCTAssertEqual(persistedBundles.count, 1)
+        XCTAssertEqual(persistedBundles[0].senses.count, 1)
+        XCTAssertEqual(persistedBundles[0].identity.sourceLanguage, "de")
+        XCTAssertEqual(persistedBundles[0].identity.targetLanguage, "fa")
+    }
+
+    // T024e: Verify generation request includes media preferences
+    func testMediaPreferencesInGenerationRequest() async throws {
+        let repo = InMemoryPersistence()
+        let orchestrator = AnkiGenerationOrchestrator(
+            repository: repo,
+            textProvider: DeterministicTextProvider(),
+            validator: StrictProposalValidator()
+        )
+
+        // Request with audio enabled
+        let command = GenerationRequestCommand(
+            sourceLanguage: "en",
+            targetLanguage: "es",
+            level: "A1",
+            count: 1,
+            directions: [.recognition],
+            audioEnabled: true,
+            imageEnabled: true
+        )
+
+        let job = try await orchestrator.startGeneration(from: command)
+
+        // Verify the request has media preferences
+        XCTAssertEqual(job.request.mediaPreferences.audioEnabled, true)
+        XCTAssertEqual(job.request.mediaPreferences.imageEnabled, true)
+    }
 }

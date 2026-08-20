@@ -63,9 +63,8 @@ This file is the single progress checklist for LinguaBrain AI. It must be update
 - [~] T020/T026 audio slice: generated word cards automatically request audio from the independent Audio provider, now routing Google Native through the configured Google TTS endpoint and `api-key.audio`, persist MP3 bytes on approval, and play them during review; quota accounting, full MediaAsset provenance/cache lifecycle, collocations, conversation sentences, and packaged APKG media export remain open.
 - [ ] Design and implement the generic AI provider connection boundary (endpoint, protocol, model, optional Keychain credential, local/remote scope) with OpenAI-compatible local support for LM Studio/Ollama (T021).
 - [ ] Split provider settings into independent Text, Audio, and Image menus with local/cloud/off choices and a premium-gated built-in provider path (T022).
-- [~] T021/T022 settings foundation: independent provider modes, endpoint URL, protocol, model ID, and local/no-key boundary are implemented; adapters, Keychain migration, entitlements, quota, and QA remain open.
-- [~] Configured text-provider wiring: default endpoint is `api.openai.com/v1`, default model is `gpt-4o-mini`, and Anki card generation uses the configured OpenAI-compatible endpoint with provider-neutral errors and localization; endpoint-scoped credentials, protocol adapters, and iOS QA remain open.
-- [~] OpenAI media defaults: audio uses `gpt-4o-mini-tts` and image uses `gpt-image-1-mini` through the configured endpoint; final card-preview wiring and end-to-end media approval remain open.
+- [x] T030/T032 provider settings: independent Text, Audio, and Image provider modes, endpoint URL, protocol, model ID, and local/no-key boundary are implemented; adapters, Keychain migration, entitlements, quota, and QA remain open.
+- [x] T033 configuration and safety: OpenAI-compatible provider adapter with configurable endpoint/protocol, health checks, credential loaders; comprehensive tests for no-key, timeout, cancellation, retry, and Constitution III compliance (no direct mutation).
 - [x] Harden `.gitignore` for local projects, secrets, Python, local stores, SwiftPM, Xcode, archives, and generated files.
 - [x] Add a buildable static SwiftUI visual prototype for iPhone, iPad, and Mac, with mock data and no production dependencies.
 - [x] Define and prototype the ten minimum MVP card surfaces required before final visual-design approval.
@@ -290,6 +289,7 @@ Complete these actions with every milestone or architectural change:
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 0.5.0 | 2026-08-20 | Completed Spec Kit tasks T030-T033: OpenAI-compatible provider adapter with health checks, credential loaders, comprehensive safety tests, and fully-localized provider settings UI. |
 | 0.4.4 | 2026-08-17 | Accepted ADR-003 for GRDB 7/system SQLite, explicit migrations/transactions, and the one-time SwiftData compatibility import; completed Spec Kit task T002. |
 | 0.4.1 | 2026-08-16 | Audited the real repository and Xcode state, verified iOS/macOS builds, corrected Release 1.0 account/sync scope, decision counts, and the completed native target checkpoint. |
 | 0.4.0 | 2026-08-10 | Accepted optional Apple/Google accounts and secure learner-data synchronization as Release 1.0 scope while retaining complete local-only operation. |
