@@ -59,6 +59,7 @@ final class LiveTranscriptionController {
     private(set) var transcript = ""
     private(set) var partialTranscript = ""
     private(set) var isRecording = false
+    private var isStarting = false
     private(set) var errorMessage: String?
 
     private var audioEngine: AVAudioEngine?
@@ -80,7 +81,7 @@ final class LiveTranscriptionController {
     }
 
     func toggle(languageTag: String = "de") {
-        if isRecording { stop() } else { start() }
+        if isRecording { stop() } else if !isStarting { start(languageTag: languageTag) }
     }
 
     func clear() {
@@ -90,9 +91,11 @@ final class LiveTranscriptionController {
     }
 
     func start(languageTag: String = "de") {
-        guard !isRecording else { return }
+        guard !isRecording, !isStarting else { return }
+        isStarting = true
         guard provider == .appleOnDevice else {
-            errorMessage = "اتصال OpenAI Realtime در مرحلهٔ بعدی همین ابزار فعال می‌شود."
+            errorMessage = "OpenAI Realtime streaming is not connected yet."
+            isStarting = false
             return
         }
         Task { await startOnDevice(languageTag: languageTag) }
@@ -110,6 +113,7 @@ final class LiveTranscriptionController {
         recognitionRequest = nil
         recognitionTask = nil
         isRecording = false
+        isStarting = false
         partialTranscript = ""
     }
 
@@ -118,22 +122,26 @@ final class LiveTranscriptionController {
         let speechStatus = await requestSpeechAuthorization()
         guard speechStatus == .authorized else {
             errorMessage = "اجازهٔ تشخیص گفتار داده نشد. از Settings دسترسی Speech و Microphone را فعال کنید."
+            isStarting = false
             return
         }
         let microphoneGranted = await requestMicrophoneAuthorization()
         guard microphoneGranted else {
             errorMessage = "اجازهٔ میکروفون داده نشد."
+            isStarting = false
             return
         }
         let locale = Locale(identifier: languageTag)
         guard let recognizer = SFSpeechRecognizer(locale: locale) else {
             errorMessage = "تشخیص گفتار برای زبان دستگاه در دسترس نیست."
+            isStarting = false
             return
         }
         recognizer.defaultTaskHint = .dictation
         recognizer.supportsOnDeviceRecognition = true
         guard recognizer.isAvailable else {
             errorMessage = "تشخیص گفتار فعلاً در دسترس نیست."
+            isStarting = false
             return
         }
 
@@ -142,6 +150,11 @@ final class LiveTranscriptionController {
         request.requiresOnDeviceRecognition = true
         let engine = AVAudioEngine()
         let inputNode = engine.inputNode
+        guard inputNode.inputFormat(forBus: 0).channelCount > 0 else {
+            errorMessage = "No audio input device is available. Select a microphone in macOS Sound settings."
+            isStarting = false
+            return
+        }
         #if os(iOS)
         do {
             let session = AVAudioSession.sharedInstance()
@@ -149,6 +162,7 @@ final class LiveTranscriptionController {
             try session.setActive(true, options: .notifyOthersOnDeactivation)
         } catch {
             errorMessage = "Audio session: \(error.localizedDescription)"
+            isStarting = false
             return
         }
         #endif
@@ -180,8 +194,10 @@ final class LiveTranscriptionController {
         }
 
         do {
+            engine.prepare()
             try engine.start()
             isRecording = true
+            isStarting = false
         } catch {
             errorMessage = error.localizedDescription
             stop()
