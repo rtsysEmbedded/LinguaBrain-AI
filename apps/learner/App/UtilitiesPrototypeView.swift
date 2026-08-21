@@ -377,10 +377,10 @@ struct UtilitiesPrototypeView: View {
     private var utilityRoadmap: some View {
         PrototypeCard {
             VStack(alignment: .leading, spacing: 10) {
-                Text("ادامهٔ مسیر ابزار").font(.headline)
-                Label("ذخیرهٔ متن جلسه و یادداشت‌ها", systemImage: "note.text")
-                Label("استخراج واژه‌های جدید و ساخت کارت", systemImage: "rectangle.stack.badge.plus")
-                Label("ترجمه و خلاصه‌سازی جلسه با AI", systemImage: "sparkles")
+                Text(localization.localized("utilities.roadmapTitle")).font(.headline)
+                Label(localization.localized("utilities.roadmap.saveNotes"), systemImage: "note.text")
+                Label(localization.localized("utilities.roadmap.extractWords"), systemImage: "rectangle.stack.badge.plus")
+                Label(localization.localized("utilities.roadmap.summarize"), systemImage: "sparkles")
             }
             .font(.subheadline)
             .foregroundStyle(.secondary)
