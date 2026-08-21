@@ -10,6 +10,7 @@
   "utilities.provider.openai": "OpenAI Cloud",
   "utilities.provider.appleDescription": "Die Verarbeitung bleibt auf diesem Gerät und wird nicht an einen Cloud-Dienst gesendet.",
   "utilities.provider.openaiDescription": "OpenAI-Realtime-Streaming wird später mit den konfigurierten Anbietern verbunden.",
+  "utilities.inputSource": "Eingangsquelle (Systemstandard)",
   "utilities.emptyTranscript": "Tippe auf das Mikrofon, um zu beginnen…",
   "utilities.start": "Aufnahme starten",
   "utilities.stop": "Stopp",

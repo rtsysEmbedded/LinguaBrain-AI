@@ -65,9 +65,18 @@ final class LiveTranscriptionController {
     private var recognitionTask: SFSpeechRecognitionTask?
     private var recognitionRequest: SFSpeechAudioBufferRecognitionRequest?
     private var recognizer: SFSpeechRecognizer?
+    private var tapInstalled = false
 
     var visibleText: String {
         [transcript, partialTranscript].filter { !$0.isEmpty }.joined(separator: transcript.isEmpty ? "" : " ")
+    }
+
+    var inputDeviceName: String {
+        #if os(macOS)
+        return AVCaptureDevice.default(for: .audio)?.localizedName ?? "System Default"
+        #else
+        return "Device Microphone"
+        #endif
     }
 
     func toggle(languageTag: String = "de") {
@@ -91,7 +100,10 @@ final class LiveTranscriptionController {
 
     func stop() {
         audioEngine?.stop()
-        audioEngine?.inputNode.removeTap(onBus: 0)
+        if tapInstalled {
+            audioEngine?.inputNode.removeTap(onBus: 0)
+            tapInstalled = false
+        }
         recognitionRequest?.endAudio()
         recognitionTask?.cancel()
         audioEngine = nil
@@ -130,7 +142,6 @@ final class LiveTranscriptionController {
         request.requiresOnDeviceRecognition = true
         let engine = AVAudioEngine()
         let inputNode = engine.inputNode
-        inputNode.removeTap(onBus: 0)
         #if os(iOS)
         do {
             let session = AVAudioSession.sharedInstance()
@@ -144,6 +155,7 @@ final class LiveTranscriptionController {
         inputNode.installTap(onBus: 0, bufferSize: 1_024, format: nil) { [weak self] buffer, _ in
             self?.recognitionRequest?.append(buffer)
         }
+        tapInstalled = true
 
         self.recognizer = recognizer
         recognitionRequest = request
@@ -249,6 +261,13 @@ struct UtilitiesPrototypeView: View {
                      : "utilities.provider.openaiDescription"))
                     .font(.caption)
                     .foregroundStyle(.secondary)
+                HStack {
+                    Label(localization.localized("utilities.inputSource"), systemImage: "mic")
+                    Spacer()
+                    Text(transcription.inputDeviceName)
+                        .foregroundStyle(.secondary)
+                }
+                .font(.caption)
             }
         }
     }

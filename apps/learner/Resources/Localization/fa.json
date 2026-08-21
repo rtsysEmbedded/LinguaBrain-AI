@@ -10,6 +10,7 @@
   "utilities.provider.openai": "OpenAI Cloud",
   "utilities.provider.appleDescription": "پردازش روی دستگاه انجام می‌شود و متن به سرویس ابری ارسال نمی‌شود.",
   "utilities.provider.openaiDescription": "استریم OpenAI Realtime در مرحلهٔ بعد به Providerهای تنظیم‌شده متصل می‌شود.",
+  "utilities.inputSource": "منبع ورودی (پیش‌فرض سیستم)",
   "utilities.emptyTranscript": "برای شروع، دکمهٔ میکروفون را بزنید…",
   "utilities.start": "شروع ضبط",
   "utilities.stop": "توقف",
