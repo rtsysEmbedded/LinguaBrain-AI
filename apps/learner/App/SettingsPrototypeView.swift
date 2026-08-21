@@ -1035,6 +1035,36 @@ struct ConfiguredProviderClient: Sendable {
               let contentData = content.data(using: .utf8) else { throw ProviderError.invalidResponse }
         return try JSONDecoder().decode(ConfiguredProviderCard.self, from: contentData)
     }
+
+    func translate(text: String, targetLanguageTag: String, model: String, apiKey: String) async throws -> String {
+        let body: [String: Any] = [
+            "model": model,
+            "messages": [
+                ["role": "system", "content": "Translate the user's text into language code \(targetLanguageTag). Preserve meaning, names, numbers, and paragraph breaks. Return only the translation."],
+                ["role": "user", "content": text]
+            ],
+            "temperature": 0.1,
+            "max_tokens": 2_000
+        ]
+        var request = URLRequest(url: URL(string: "\(baseURL)/chat/completions")!)
+        request.httpMethod = "POST"
+        request.timeoutInterval = 45
+        request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = try JSONSerialization.data(withJSONObject: body)
+        let (data, response) = try await URLSession.shared.data(for: request)
+        guard let http = response as? HTTPURLResponse else { throw ProviderError.invalidResponse }
+        guard (200..<300).contains(http.statusCode) else {
+            let message = (try? JSONSerialization.jsonObject(with: data) as? [String: Any])
+                .flatMap { $0["error"] as? [String: Any] }?["message"] as? String ?? "ترجمه ناموفق بود."
+            throw ProviderError.service(http.statusCode, message)
+        }
+        let envelope = try JSONDecoder().decode(ProviderChatEnvelope.self, from: data)
+        guard let content = envelope.choices.first?.message.content?.trimmingCharacters(in: .whitespacesAndNewlines), !content.isEmpty else {
+            throw ProviderError.invalidResponse
+        }
+        return content
+    }
 }
 
 private struct ProviderChatEnvelope: Decodable {

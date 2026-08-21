@@ -2,6 +2,26 @@ import AVFoundation
 import Observation
 import Speech
 import SwiftUI
+#if os(macOS)
+import AppKit
+#else
+import UIKit
+#endif
+
+enum PrototypeTranslationLanguage: String, CaseIterable, Identifiable {
+    case persian = "fa"
+    case german = "de"
+    case english = "en"
+
+    var id: Self { self }
+    var title: String {
+        switch self {
+        case .persian: "فارسی"
+        case .german: "Deutsch"
+        case .english: "English"
+        }
+    }
+}
 
 enum PrototypeTranscriptionProvider: String, CaseIterable, Identifiable {
     case appleOnDevice
@@ -151,7 +171,12 @@ final class LiveTranscriptionController {
 }
 
 struct UtilitiesPrototypeView: View {
+    @Environment(PrototypeAISettings.self) private var aiSettings
     @State private var transcription = LiveTranscriptionController()
+    @State private var translationLanguage: PrototypeTranslationLanguage = .persian
+    @State private var translatedText = ""
+    @State private var translationError: String?
+    @State private var isTranslating = false
 
     var body: some View {
         ScrollView {
@@ -159,6 +184,7 @@ struct UtilitiesPrototypeView: View {
                 header
                 providerPicker
                 transcriptCard
+                translationCard
                 utilityRoadmap
             }
             .padding()
@@ -238,9 +264,93 @@ struct UtilitiesPrototypeView: View {
                     .tint(transcription.isRecording ? .red : PrototypeTheme.accent)
                     Button("پاک کردن") { transcription.clear() }
                         .buttonStyle(.bordered)
+                    Spacer()
+                    Button {
+                        copyToClipboard(transcription.visibleText)
+                    } label: {
+                        Label("کپی متن", systemImage: "doc.on.doc")
+                    }
+                    .disabled(transcription.visibleText.isEmpty)
                 }
             }
         }
+    }
+
+    private var translationCard: some View {
+        PrototypeCard {
+            VStack(alignment: .leading, spacing: 14) {
+                HStack {
+                    Text("ترجمهٔ متن").font(.headline)
+                    Spacer()
+                    Picker("زبان ترجمه", selection: $translationLanguage) {
+                        ForEach(PrototypeTranslationLanguage.allCases) { language in
+                            Text(language.title).tag(language)
+                        }
+                    }
+                    .labelsHidden()
+                }
+                Text(translatedText.isEmpty ? "زبان مقصد را انتخاب کنید و ترجمه را بزنید." : translatedText)
+                    .frame(maxWidth: .infinity, minHeight: 100, alignment: .topLeading)
+                    .padding()
+                    .background(Color.primary.opacity(0.04), in: RoundedRectangle(cornerRadius: 14))
+                    .textSelection(.enabled)
+                if let translationError {
+                    Label(translationError, systemImage: "exclamationmark.triangle.fill")
+                        .font(.caption)
+                        .foregroundStyle(.orange)
+                }
+                HStack {
+                    Button {
+                        translateTranscript()
+                    } label: {
+                        Label(isTranslating ? "در حال ترجمه…" : "ترجمه با AI", systemImage: "character.bubble")
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .disabled(isTranslating || transcription.visibleText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                    Button {
+                        copyToClipboard(translatedText)
+                    } label: {
+                        Label("کپی ترجمه", systemImage: "doc.on.doc")
+                    }
+                    .disabled(translatedText.isEmpty)
+                }
+                Text("ترجمه از Provider متنی تنظیم‌شده در بخش هوش مصنوعی استفاده می‌کند.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        }
+    }
+
+    private func translateTranscript() {
+        let text = transcription.visibleText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !text.isEmpty else { return }
+        isTranslating = true
+        translationError = nil
+        Task {
+            do {
+                let key = try aiSettings.apiKey()
+                let client = ConfiguredProviderClient(baseURL: aiSettings.endpoint, protocolName: aiSettings.protocolName)
+                translatedText = try await client.translate(
+                    text: text,
+                    targetLanguageTag: translationLanguage.rawValue,
+                    model: aiSettings.modelID,
+                    apiKey: key
+                )
+            } catch {
+                translationError = error.localizedDescription
+            }
+            isTranslating = false
+        }
+    }
+
+    private func copyToClipboard(_ text: String) {
+        guard !text.isEmpty else { return }
+        #if os(macOS)
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(text, forType: .string)
+        #else
+        UIPasteboard.general.string = text
+        #endif
     }
 
     private var utilityRoadmap: some View {

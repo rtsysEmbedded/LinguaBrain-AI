@@ -57,6 +57,7 @@
 - [x] T032 [US11] Add opt-in private iCloud card backup and reinstall recovery for learner-created/imported cards, excluding built-in sample content.
 - [x] T034 [US12] Add the Utilities surface and working on-device streaming speech-to-text prototype with explicit microphone/Speech permission handling.
 - [ ] T035 [US12] Implement the OpenAI Realtime cloud transcription provider behind the Utilities provider boundary, including short-lived sessions, 24 kHz PCM streaming, turn detection, cancellation, consent, and redacted diagnostics.
+- [x] T036 [US12] Add copyable transcript/translation output and AI translation controls for Persian, German, and English.
 
 ## Dependencies and Parallel Work
 

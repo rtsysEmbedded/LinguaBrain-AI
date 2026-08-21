@@ -78,6 +78,7 @@ This file is the single progress checklist for LinguaBrain AI. It must be update
 - [x] Accept optional Sign in with Apple/Google and secure learner-data synchronization as Release 1.0 scope while preserving full local-only use.
 - [x] Add opt-in private iCloud backup/recovery for learner-generated and Anki-imported cards while excluding built-in samples (ADR-015/T032).
 - [x] Add Utilities navigation and on-device streaming speech-to-text with permission-gated microphone/Speech access (ADR-016/T034).
+- [x] Add copyable transcript/translation output for Persian, German, and English through the configured text Provider (T036).
 - [ ] Add OpenAI Realtime cloud transcription behind the Utilities provider boundary (T035).
 - [x] Classify and place the vocabulary prototype at `experiments/vocabulary-mvp/` according to [ADR-001](decisions/ADR-001-Repository-Package-and-Module-Layout.md).
 - [ ] Configure a Git remote and push `main`.

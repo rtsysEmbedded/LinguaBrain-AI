@@ -133,3 +133,4 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Closed LB-DEC-058 and advanced the active architecture queue to ADR-003 for the native Swift persistence stack.
 - Added opt-in private CloudKit card backup and reinstall recovery for learner-generated and Anki-imported cards, with sample exclusion, merge/deduplication, Privacy & Data status UI, shared Apple-platform entitlements, and local regression coverage.
 - Added a top-level Utilities area with live on-device speech-to-text, partial transcript rendering, provider selection, microphone/Speech permission handling, and an explicit OpenAI Cloud follow-up boundary.
+- Added copy buttons for transcript and translation output plus AI translation to Persian, German, and English using the configured text provider.
