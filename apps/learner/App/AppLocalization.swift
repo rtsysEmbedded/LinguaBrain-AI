@@ -42,7 +42,7 @@ final class PrototypeLocalization {
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
         language = defaults.string(forKey: Key.language)
-            .flatMap(PrototypeAppLanguage.init(rawValue:)) ?? .persian
+            .flatMap(PrototypeAppLanguage.init(rawValue:)) ?? .english
     }
 
     func text(_ key: PrototypeTextKey) -> String {

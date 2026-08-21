@@ -16,10 +16,14 @@ enum PrototypeTranslationLanguage: String, CaseIterable, Identifiable {
     var id: Self { self }
     var title: String {
         switch self {
-        case .persian: "فارسی"
-        case .german: "Deutsch"
-        case .english: "English"
+        case .persian: "language.persian"
+        case .german: "language.german"
+        case .english: "language.english"
         }
+    }
+
+    func localizedTitle(_ localization: PrototypeLocalization) -> String {
+        localization.localized(title)
     }
 }
 
@@ -31,9 +35,13 @@ enum PrototypeTranscriptionProvider: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .appleOnDevice: "روی دستگاه اپل"
-        case .openAICloud: "OpenAI Cloud"
+        case .appleOnDevice: "utilities.provider.apple"
+        case .openAICloud: "utilities.provider.openai"
         }
+    }
+
+    func localizedTitle(_ localization: PrototypeLocalization) -> String {
+        localization.localized(title)
     }
 
     var symbol: String {
@@ -62,7 +70,7 @@ final class LiveTranscriptionController {
         [transcript, partialTranscript].filter { !$0.isEmpty }.joined(separator: transcript.isEmpty ? "" : " ")
     }
 
-    func toggle() {
+    func toggle(languageTag: String = "de") {
         if isRecording { stop() } else { start() }
     }
 
@@ -72,13 +80,13 @@ final class LiveTranscriptionController {
         errorMessage = nil
     }
 
-    func start() {
+    func start(languageTag: String = "de") {
         guard !isRecording else { return }
         guard provider == .appleOnDevice else {
             errorMessage = "اتصال OpenAI Realtime در مرحلهٔ بعدی همین ابزار فعال می‌شود."
             return
         }
-        Task { await startOnDevice() }
+        Task { await startOnDevice(languageTag: languageTag) }
     }
 
     func stop() {
@@ -93,7 +101,7 @@ final class LiveTranscriptionController {
         partialTranscript = ""
     }
 
-    private func startOnDevice() async {
+    private func startOnDevice(languageTag: String) async {
         errorMessage = nil
         let speechStatus = await requestSpeechAuthorization()
         guard speechStatus == .authorized else {
@@ -105,7 +113,8 @@ final class LiveTranscriptionController {
             errorMessage = "اجازهٔ میکروفون داده نشد."
             return
         }
-        guard let recognizer = SFSpeechRecognizer() else {
+        let locale = Locale(identifier: languageTag)
+        guard let recognizer = SFSpeechRecognizer(locale: locale) else {
             errorMessage = "تشخیص گفتار برای زبان دستگاه در دسترس نیست."
             return
         }
@@ -121,8 +130,18 @@ final class LiveTranscriptionController {
         request.requiresOnDeviceRecognition = true
         let engine = AVAudioEngine()
         let inputNode = engine.inputNode
-        let format = inputNode.outputFormat(forBus: 0)
-        inputNode.installTap(onBus: 0, bufferSize: 1_024, format: format) { [weak self] buffer, _ in
+        inputNode.removeTap(onBus: 0)
+        #if os(iOS)
+        do {
+            let session = AVAudioSession.sharedInstance()
+            try session.setCategory(.record, mode: .measurement, options: [.duckOthers])
+            try session.setActive(true, options: .notifyOthersOnDeactivation)
+        } catch {
+            errorMessage = "Audio session: \(error.localizedDescription)"
+            return
+        }
+        #endif
+        inputNode.installTap(onBus: 0, bufferSize: 1_024, format: nil) { [weak self] buffer, _ in
             self?.recognitionRequest?.append(buffer)
         }
 
@@ -171,6 +190,8 @@ final class LiveTranscriptionController {
 }
 
 struct UtilitiesPrototypeView: View {
+    @Environment(PrototypeLocalization.self) private var localization
+    @Environment(PrototypeLanguageSettings.self) private var languageSettings
     @Environment(PrototypeAISettings.self) private var aiSettings
     @State private var transcription = LiveTranscriptionController()
     @State private var translationLanguage: PrototypeTranslationLanguage = .persian
@@ -192,7 +213,7 @@ struct UtilitiesPrototypeView: View {
             .frame(maxWidth: .infinity)
         }
         .background(PrototypeBackground())
-        .navigationTitle("ابزارها")
+        .navigationTitle(localization.localized("utilities.title"))
     }
 
     private var header: some View {
@@ -204,8 +225,8 @@ struct UtilitiesPrototypeView: View {
                     .frame(width: 54, height: 54)
                     .background(PrototypeTheme.accent.opacity(0.12), in: Circle())
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("تبدیل صوت به متن زنده").font(.title3.weight(.bold))
-                    Text("برای جلسه، یادداشت‌برداری و استخراج واژه‌های جدید")
+                    Text(localization.localized("utilities.liveTitle")).font(.title3.weight(.bold))
+                    Text(localization.localized("utilities.liveSubtitle"))
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                 }
@@ -216,16 +237,16 @@ struct UtilitiesPrototypeView: View {
     private var providerPicker: some View {
         PrototypeCard {
             VStack(alignment: .leading, spacing: 12) {
-                Text("منبع تشخیص گفتار").font(.headline)
-                Picker("منبع تشخیص گفتار", selection: $transcription.provider) {
+                Text(localization.localized("utilities.providerLabel")).font(.headline)
+                Picker(localization.localized("utilities.providerLabel"), selection: $transcription.provider) {
                     ForEach(PrototypeTranscriptionProvider.allCases) { provider in
-                        Label(provider.title, systemImage: provider.symbol).tag(provider)
+                        Label(provider.localizedTitle(localization), systemImage: provider.symbol).tag(provider)
                     }
                 }
                 .pickerStyle(.segmented)
-                Text(transcription.provider == .appleOnDevice
-                     ? "پردازش روی دستگاه انجام می‌شود و متن جلسه به سرویس ابری ارسال نمی‌شود."
-                     : "OpenAI Realtime برای استریم ابری در گام بعدی به Providerهای پروژه متصل می‌شود.")
+                Text(localization.localized(transcription.provider == .appleOnDevice
+                     ? "utilities.provider.appleDescription"
+                     : "utilities.provider.openaiDescription"))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -236,15 +257,15 @@ struct UtilitiesPrototypeView: View {
         PrototypeCard {
             VStack(alignment: .leading, spacing: 14) {
                 HStack {
-                    Text("متن زنده").font(.headline)
+                    Text(localization.localized("utilities.transcriptTitle")).font(.headline)
                     Spacer()
                     if transcription.isRecording {
-                        Label("در حال شنیدن", systemImage: "record.circle.fill")
+                        Label(localization.localized("utilities.listening"), systemImage: "record.circle.fill")
                             .foregroundStyle(.red)
                             .font(.caption)
                     }
                 }
-                Text(transcription.visibleText.isEmpty ? "برای شروع، دکمهٔ میکروفون را بزنید…" : transcription.visibleText)
+                Text(transcription.visibleText.isEmpty ? localization.localized("utilities.emptyTranscript") : transcription.visibleText)
                     .frame(maxWidth: .infinity, minHeight: 180, alignment: .topLeading)
                     .padding()
                     .background(Color.primary.opacity(0.04), in: RoundedRectangle(cornerRadius: 14))
@@ -256,19 +277,19 @@ struct UtilitiesPrototypeView: View {
                 }
                 HStack {
                     Button {
-                        transcription.toggle()
+                        transcription.toggle(languageTag: languageSettings.targetLanguageTag)
                     } label: {
-                        Label(transcription.isRecording ? "توقف" : "شروع ضبط", systemImage: transcription.isRecording ? "stop.fill" : "mic.fill")
+                        Label(localization.localized(transcription.isRecording ? "utilities.stop" : "utilities.start"), systemImage: transcription.isRecording ? "stop.fill" : "mic.fill")
                     }
                     .buttonStyle(.borderedProminent)
                     .tint(transcription.isRecording ? .red : PrototypeTheme.accent)
-                    Button("پاک کردن") { transcription.clear() }
+                    Button(localization.localized("utilities.clear")) { transcription.clear() }
                         .buttonStyle(.bordered)
                     Spacer()
                     Button {
                         copyToClipboard(transcription.visibleText)
                     } label: {
-                        Label("کپی متن", systemImage: "doc.on.doc")
+                        Label(localization.localized("utilities.copyTranscript"), systemImage: "doc.on.doc")
                     }
                     .disabled(transcription.visibleText.isEmpty)
                 }
@@ -280,16 +301,16 @@ struct UtilitiesPrototypeView: View {
         PrototypeCard {
             VStack(alignment: .leading, spacing: 14) {
                 HStack {
-                    Text("ترجمهٔ متن").font(.headline)
+                    Text(localization.localized("utilities.translationTitle")).font(.headline)
                     Spacer()
-                    Picker("زبان ترجمه", selection: $translationLanguage) {
+                    Picker(localization.localized("utilities.translationLanguage"), selection: $translationLanguage) {
                         ForEach(PrototypeTranslationLanguage.allCases) { language in
-                            Text(language.title).tag(language)
+                            Text(language.localizedTitle(localization)).tag(language)
                         }
                     }
                     .labelsHidden()
                 }
-                Text(translatedText.isEmpty ? "زبان مقصد را انتخاب کنید و ترجمه را بزنید." : translatedText)
+                Text(translatedText.isEmpty ? localization.localized("utilities.translationEmpty") : translatedText)
                     .frame(maxWidth: .infinity, minHeight: 100, alignment: .topLeading)
                     .padding()
                     .background(Color.primary.opacity(0.04), in: RoundedRectangle(cornerRadius: 14))
@@ -303,18 +324,18 @@ struct UtilitiesPrototypeView: View {
                     Button {
                         translateTranscript()
                     } label: {
-                        Label(isTranslating ? "در حال ترجمه…" : "ترجمه با AI", systemImage: "character.bubble")
+                        Label(localization.localized(isTranslating ? "utilities.translating" : "utilities.translate"), systemImage: "character.bubble")
                     }
                     .buttonStyle(.borderedProminent)
                     .disabled(isTranslating || transcription.visibleText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                     Button {
                         copyToClipboard(translatedText)
                     } label: {
-                        Label("کپی ترجمه", systemImage: "doc.on.doc")
+                        Label(localization.localized("utilities.copyTranslation"), systemImage: "doc.on.doc")
                     }
                     .disabled(translatedText.isEmpty)
                 }
-                Text("ترجمه از Provider متنی تنظیم‌شده در بخش هوش مصنوعی استفاده می‌کند.")
+                Text(localization.localized("utilities.translationProviderNote"))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
