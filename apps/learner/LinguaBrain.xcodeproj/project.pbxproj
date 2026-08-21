@@ -43,6 +43,10 @@
 		110000000000000000000012 /* de.json in Resources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000012 /* de.json */; };
 		110000000000000000000013 /* fa.json in Resources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000013 /* fa.json */; };
 		110000000000000000000014 /* GoogleCloudTextToSpeech.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000014 /* GoogleCloudTextToSpeech.swift */; };
+		100000000000000000000015 /* CloudCardBackup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000015 /* CloudCardBackup.swift */; };
+		100000000000000000000016 /* UtilitiesPrototypeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000016 /* UtilitiesPrototypeView.swift */; };
+		110000000000000000000015 /* CloudCardBackup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000015 /* CloudCardBackup.swift */; };
+		110000000000000000000016 /* UtilitiesPrototypeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000016 /* UtilitiesPrototypeView.swift */; };
 		120000000000000000000001 /* AnkiCoreRegressionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 220000000000000000000001 /* AnkiCoreRegressionTests.swift */; };
 		120000000000000000000002 /* APKGFixtureFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 220000000000000000000002 /* APKGFixtureFactory.swift */; };
 		120000000000000000000003 /* legacy-linguabrain.json in Resources */ = {isa = PBXBuildFile; fileRef = 220000000000000000000003 /* legacy-linguabrain.json */; };
@@ -89,6 +93,8 @@
 		200000000000000000000012 /* de.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = de.json; sourceTree = "<group>"; };
 		200000000000000000000013 /* fa.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = fa.json; sourceTree = "<group>"; };
 		200000000000000000000014 /* GoogleCloudTextToSpeech.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoogleCloudTextToSpeech.swift; sourceTree = "<group>"; };
+		200000000000000000000015 /* CloudCardBackup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudCardBackup.swift; sourceTree = "<group>"; };
+		200000000000000000000016 /* UtilitiesPrototypeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UtilitiesPrototypeView.swift; sourceTree = "<group>"; };
 		220000000000000000000001 /* AnkiCoreRegressionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnkiCoreRegressionTests.swift; sourceTree = "<group>"; };
 		220000000000000000000002 /* APKGFixtureFactory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APKGFixtureFactory.swift; sourceTree = "<group>"; };
 		220000000000000000000003 /* legacy-linguabrain.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "legacy-linguabrain.json"; sourceTree = "<group>"; };
@@ -150,6 +156,8 @@
 				200000000000000000000001 /* LinguaBrainPrototypeApp.swift */,
 				20000000000000000000000F /* AppLocalization.swift */,
 				200000000000000000000014 /* GoogleCloudTextToSpeech.swift */,
+				200000000000000000000015 /* CloudCardBackup.swift */,
+				200000000000000000000016 /* UtilitiesPrototypeView.swift */,
 				200000000000000000000002 /* PrototypeModels.swift */,
 				200000000000000000000003 /* PrototypeComponents.swift */,
 				200000000000000000000004 /* PrototypeRootView.swift */,
@@ -413,6 +421,8 @@
 				10000000000000000000000A /* SettingsPrototypeView.swift in Sources */,
 				10000000000000000000000B /* OnboardingPrototypeView.swift in Sources */,
 				100000000000000000000014 /* GoogleCloudTextToSpeech.swift in Sources */,
+				100000000000000000000015 /* CloudCardBackup.swift in Sources */,
+				100000000000000000000016 /* UtilitiesPrototypeView.swift in Sources */,
 				DEADBEEF0000000000000022 /* CardGenerationView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -434,6 +444,8 @@
 				11000000000000000000000A /* SettingsPrototypeView.swift in Sources */,
 				11000000000000000000000B /* OnboardingPrototypeView.swift in Sources */,
 				110000000000000000000014 /* GoogleCloudTextToSpeech.swift in Sources */,
+				110000000000000000000015 /* CloudCardBackup.swift in Sources */,
+				110000000000000000000016 /* UtilitiesPrototypeView.swift in Sources */,
 				DEADBEEF0000000000000023 /* CardGenerationView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -496,10 +508,13 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
+				CODE_SIGN_ENTITLEMENTS = Resources/LinguaBrain.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 44JPFD4X2P;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = LinguaBrain;
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "LinguaBrain uses the microphone for live speech transcription.";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "LinguaBrain uses speech recognition for live transcription.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 27.0;
@@ -518,10 +533,13 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
+				CODE_SIGN_ENTITLEMENTS = Resources/LinguaBrain.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 44JPFD4X2P;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = LinguaBrain;
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "LinguaBrain uses the microphone for live speech transcription.";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "LinguaBrain uses speech recognition for live transcription.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 27.0;
@@ -540,10 +558,13 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
+				CODE_SIGN_ENTITLEMENTS = Resources/LinguaBrain.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = "";
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = LinguaBrain;
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "LinguaBrain uses the microphone for live speech transcription.";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "LinguaBrain uses speech recognition for live transcription.";
 				MACOSX_DEPLOYMENT_TARGET = 27.0;
 				MARKETING_VERSION = 0.1;
 				PRODUCT_BUNDLE_IDENTIFIER = ai.linguabrain.prototype.mac;
@@ -559,9 +580,12 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
+				CODE_SIGN_ENTITLEMENTS = Resources/LinguaBrain.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = LinguaBrain;
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "LinguaBrain uses the microphone for live speech transcription.";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "LinguaBrain uses speech recognition for live transcription.";
 				MACOSX_DEPLOYMENT_TARGET = 27.0;
 				MARKETING_VERSION = 0.1;
 				PRODUCT_BUNDLE_IDENTIFIER = ai.linguabrain.prototype.mac;

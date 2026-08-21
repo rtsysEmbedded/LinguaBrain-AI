@@ -55,6 +55,8 @@
 - [ ] T030 [US9] Add verb sense-distractor practice to Mixed Practice Game: when at least three related senses exist, show three related meanings and one unrelated meaning, require selecting the unrelated option, and force incorrect answers back into the current session.
 - [~] T031 [US8] Preserve multiple examples during Anki import: model examples as ordered sense-specific Sentence records, retain source/target text and provenance, select examples adaptively during review, and round-trip all examples through export without collapsing them into one field.
 - [x] T032 [US11] Add opt-in private iCloud card backup and reinstall recovery for learner-created/imported cards, excluding built-in sample content.
+- [x] T034 [US12] Add the Utilities surface and working on-device streaming speech-to-text prototype with explicit microphone/Speech permission handling.
+- [ ] T035 [US12] Implement the OpenAI Realtime cloud transcription provider behind the Utilities provider boundary, including short-lived sessions, 24 kHz PCM streaming, turn detection, cancellation, consent, and redacted diagnostics.
 
 ## Dependencies and Parallel Work
 

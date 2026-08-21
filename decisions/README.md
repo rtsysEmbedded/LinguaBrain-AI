@@ -20,6 +20,8 @@ Use [ADR_TEMPLATE.md](ADR_TEMPLATE.md) as the starting point for new records. Na
 - [ADR-012 — Anki Core First and APKG Import Boundary](ADR-012-Anki-Core-First-and-APKG-Import-Boundary.md)
 - [ADR-013 — Initial AI Provider Strategy](ADR-013-Initial-AI-Provider-Strategy.md)
 - [ADR-014 — Optional Accounts and Release Sync](ADR-014-Optional-Accounts-and-Release-Sync.md)
+- [ADR-015 — Private iCloud Card Backup](ADR-015-Private-iCloud-Card-Backup.md)
+- [ADR-016 — Utilities and Live Transcription](ADR-016-Utilities-Live-Transcription.md)
 - [ADR-004 — FSRS Implementation and Version](ADR-004-FSRS-Implementation-and-Version.md)
 
 ## Superseded ADRs

@@ -41,7 +41,7 @@ struct SettingsPrototypeView: View {
                         title: localization.localized("برنامه و حساب"),
                         subtitle: nil,
                         items: [
-                            .init(title: localization.localized("حریم خصوصی و داده‌ها"), detail: localization.localized("ذخیرهٔ محلی"), symbol: "lock.shield.fill", color: .green, destination: .privacy),
+                            .init(title: localization.localized("حریم خصوصی و داده‌ها"), detail: localization.localized("محلی · پشتیبان اختیاری iCloud"), symbol: "lock.shield.fill", color: .green, destination: .privacy),
                             .init(title: localization.localized("دسترس‌پذیری و ظاهر"), detail: localization.localized("هماهنگ با سیستم"), symbol: "accessibility", color: .teal, destination: .accessibility),
                             .init(title: localization.localized("دربارهٔ LinguaBrain"), detail: localization.localized("Visual Prototype 0.2"), symbol: "info.circle.fill", color: .gray, destination: .about)
                         ]
@@ -205,6 +205,8 @@ private struct SettingsDetailPrototypeView: View {
     let section: SettingsSection
     @Environment(PrototypeLocalization.self) private var localization
     @Environment(PrototypeLanguageSettings.self) private var languageSettings
+    @Environment(PrototypeStore.self) private var store
+    @Environment(PrototypeCloudBackupController.self) private var cloudBackup
     @State private var dailyGoal = 20
     @State private var notifications = true
     @State private var offlineOnly = false
@@ -281,9 +283,19 @@ private struct SettingsDetailPrototypeView: View {
                     Button("مدیریت دانلودها") { }
                 }
             case .privacy:
-                Section("وضعیت") {
-                    Label("داده‌ها در این نمونه فقط روی دستگاه هستند", systemImage: "lock.shield.fill")
-                        .foregroundStyle(.green)
+                @Bindable var cloudBackup = cloudBackup
+                Section("پشتیبان iCloud") {
+                    Toggle("ذخیرهٔ کارت‌های من در iCloud", isOn: $cloudBackup.isEnabled)
+                    Text("کارت‌های ساخته‌شده و بسته‌های Anki واردشده در پایگاه خصوصی iCloud شما نگهداری می‌شوند. کارت‌های نمونهٔ برنامه ارسال نمی‌شوند.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Button("همگام‌سازی اکنون") {
+                        Task { await cloudBackup.sync(store: store) }
+                    }
+                    .disabled(!cloudBackup.isEnabled || isCloudSyncBusy)
+                    cloudStatusView
+                }
+                Section("داده‌های محلی") {
                     Button("خروجی گرفتن از داده‌ها") { }
                     Button("حذف تمام داده‌ها", role: .destructive) { }
                 }
@@ -303,6 +315,10 @@ private struct SettingsDetailPrototypeView: View {
             }
         }
         .navigationTitle(section == .languages ? localization.text(.languageSettings) : section.title(for: localization))
+        .onChange(of: cloudBackup.isEnabled) { _, enabled in
+            guard section == .privacy, enabled else { return }
+            Task { await cloudBackup.sync(store: store) }
+        }
     }
 
     private var interfaceLanguageBinding: Binding<PrototypeAppLanguage> {
@@ -315,6 +331,31 @@ private struct SettingsDetailPrototypeView: View {
 
     private var targetLanguageBinding: Binding<String> {
         Binding(get: { languageSettings.targetLanguageTag }, set: { languageSettings.selectTarget($0) })
+    }
+
+    private var isCloudSyncBusy: Bool {
+        cloudBackup.status == .checking || cloudBackup.status == .syncing
+    }
+
+    @ViewBuilder
+    private var cloudStatusView: some View {
+        switch cloudBackup.status {
+        case .idle:
+            Label("هنوز همگام‌سازی نشده است", systemImage: "icloud")
+        case .checking:
+            Label("در حال بررسی حساب iCloud…", systemImage: "icloud")
+        case .syncing:
+            HStack { ProgressView(); Text("در حال پشتیبان‌گیری و بازیابی…") }
+        case let .synced(date, count):
+            Label("آخرین همگام‌سازی: \(date.formatted(date: .abbreviated, time: .shortened)) · \(count) کارت", systemImage: "checkmark.icloud.fill")
+                .foregroundStyle(.green)
+        case let .unavailable(message):
+            Label(message, systemImage: "icloud.slash")
+                .foregroundStyle(.orange)
+        case let .failed(message):
+            Label("همگام‌سازی ناموفق بود: \(message)", systemImage: "exclamationmark.icloud.fill")
+                .foregroundStyle(.red)
+        }
     }
 }
 

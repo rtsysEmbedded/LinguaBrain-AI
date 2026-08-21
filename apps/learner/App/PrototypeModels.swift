@@ -375,16 +375,24 @@ struct PrototypeFSRS6Scheduler {
 }
 
 enum PrototypeSection: String, CaseIterable, Identifiable, Hashable {
-    case today, library, add, progress, settings
+    case today, library, add, progress, utilities, settings
 
     var id: Self { self }
 
     func title(for language: PrototypeAppLanguage) -> String {
+        if self == .utilities {
+            return switch language {
+            case .persian: "ابزارها"
+            case .german: "Werkzeuge"
+            case .english: "Utilities"
+        }
+        }
         let key: PrototypeTextKey = switch self {
         case .today: .today
         case .library: .library
         case .add: .add
         case .progress: .progress
+        case .utilities: .today
         case .settings: .settings
         }
         return PrototypeLocalization.text(key, language: language)
@@ -396,6 +404,7 @@ enum PrototypeSection: String, CaseIterable, Identifiable, Hashable {
         case .library: "books.vertical.fill"
         case .add: "plus.circle.fill"
         case .progress: "chart.line.uptrend.xyaxis"
+        case .utilities: "wrench.and.screwdriver.fill"
         case .settings: "gearshape.fill"
         }
     }
@@ -787,6 +796,82 @@ final class PrototypeStore {
 
     func clearPersistenceError() {
         lastPersistenceError = nil
+    }
+
+    func cloudBackupCards() throws -> [PrototypeCloudCard] {
+        let records = try modelContext.fetch(FetchDescriptor<PrototypeCardRecord>())
+        let decks = try modelContext.fetch(FetchDescriptor<PrototypeDeckRecord>())
+        let deckNames = Dictionary(uniqueKeysWithValues: decks.map { ($0.id, $0.name) })
+        return records.compactMap { record in
+            guard record.sourcePackage != nil || deckNames[record.deckID] == "کارت‌های هوشمند" else { return nil }
+            return PrototypeCloudCard(
+                id: record.id,
+                deckName: deckNames[record.deckID] ?? "Cloud Cards",
+                position: record.position,
+                german: record.german,
+                persian: record.persian,
+                article: record.article,
+                level: record.level,
+                partOfSpeech: record.partOfSpeech,
+                example: record.example,
+                exampleTranslation: record.exampleTranslation,
+                examplesJSON: record.examplesJSON,
+                domain: record.domain,
+                createdAt: record.createdAt,
+                sourceIdentifier: record.sourceIdentifier,
+                sourcePackage: record.sourcePackage,
+                sourceLanguageTag: record.sourceLanguageTag,
+                targetLanguageTag: record.targetLanguageTag,
+                pronunciationAudio: record.pronunciationAudio,
+                pronunciationAudioFilename: record.pronunciationAudioFilename
+            )
+        }
+    }
+
+    func mergeCloudCards(_ cloudCards: [PrototypeCloudCard]) throws {
+        let records = try modelContext.fetch(FetchDescriptor<PrototypeCardRecord>())
+        var ids = Set(records.map(\.id))
+        var semanticKeys = Set(records.map { $0.word.semanticKey })
+        let decks = try modelContext.fetch(FetchDescriptor<PrototypeDeckRecord>())
+        var deckByName = Dictionary(uniqueKeysWithValues: decks.map { ($0.name, $0) })
+
+        for card in cloudCards where !ids.contains(card.id) {
+            let word = PrototypeWord(
+                id: card.id,
+                german: card.german,
+                persian: card.persian,
+                article: card.article,
+                level: card.level,
+                partOfSpeech: card.partOfSpeech,
+                example: card.example,
+                exampleTranslation: card.exampleTranslation,
+                examples: (try? JSONDecoder().decode([PrototypeExample].self, from: Data(card.examplesJSON.utf8))) ?? [],
+                domain: card.domain,
+                sourceLanguageTag: card.sourceLanguageTag,
+                targetLanguageTag: card.targetLanguageTag
+            )
+            guard !semanticKeys.contains(word.semanticKey) else { continue }
+            let deck = deckByName[card.deckName] ?? {
+                let deck = PrototypeDeckRecord(name: card.deckName)
+                modelContext.insert(deck)
+                deckByName[card.deckName] = deck
+                return deck
+            }()
+            modelContext.insert(PrototypeCardRecord(
+                word: word,
+                deckID: deck.id,
+                position: card.position,
+                createdAt: card.createdAt,
+                sourceIdentifier: card.sourceIdentifier,
+                sourcePackage: card.sourcePackage,
+                pronunciationAudio: card.pronunciationAudio,
+                pronunciationAudioFilename: card.pronunciationAudioFilename
+            ))
+            ids.insert(card.id)
+            semanticKeys.insert(word.semanticKey)
+        }
+        try modelContext.save()
+        try restoreCards()
     }
 
     func importCards(

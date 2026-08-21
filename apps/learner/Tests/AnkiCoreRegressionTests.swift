@@ -250,4 +250,26 @@ final class AnkiCoreRegressionTests: XCTestCase {
         XCTAssertTrue(tsv.contains("Ich arbeite heute.<br>Ich arbeite im Büro."))
         XCTAssertTrue(tsv.contains("من امروز کار می‌کنم.<br>من در دفتر کار می‌کنم."))
     }
+
+    @MainActor
+    func testCloudBackupExcludesSamplesAndRestoresUserCards() throws {
+        let source = PrototypeStore(inMemory: true)
+        let userWord = PrototypeWord(
+            german: "sichern",
+            persian: "پشتیبان گرفتن",
+            level: "A2",
+            partOfSpeech: "Verb",
+            example: "Ich sichere meine Karten.",
+            exampleTranslation: "من از کارت‌هایم پشتیبان می‌گیرم.",
+            domain: "فناوری"
+        )
+        XCTAssertTrue(source.addGeneratedCard(userWord))
+        let snapshot = try source.cloudBackupCards()
+        XCTAssertEqual(snapshot.map(\.id), [userWord.id])
+
+        let restored = PrototypeStore(inMemory: true)
+        try restored.mergeCloudCards(snapshot)
+        XCTAssertTrue(restored.words.contains { $0.id == userWord.id })
+        XCTAssertEqual(try restored.cloudBackupCards().count, 1)
+    }
 }

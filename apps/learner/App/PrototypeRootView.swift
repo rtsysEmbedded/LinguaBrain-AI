@@ -1,9 +1,11 @@
 import SwiftUI
 
 struct PrototypeRootView: View {
+    @Environment(\.scenePhase) private var scenePhase
     @State private var selection: PrototypeSection = .today
     @State private var store: PrototypeStore
     @State private var aiSettings = PrototypeAISettings()
+    @State private var cloudBackup = PrototypeCloudBackupController()
     @State private var localization: PrototypeLocalization
     @State private var languageSettings: PrototypeLanguageSettings
 
@@ -27,10 +29,16 @@ struct PrototypeRootView: View {
         }
         .environment(store)
         .environment(aiSettings)
+        .environment(cloudBackup)
         .environment(localization)
         .environment(languageSettings)
         .environment(\.locale, localization.language.locale)
         .environment(\.layoutDirection, localization.language.layoutDirection)
+        .task { await cloudBackup.syncIfEnabled(store: store) }
+        .onChange(of: scenePhase) { _, phase in
+            guard phase == .active else { return }
+            Task { await cloudBackup.syncIfEnabled(store: store) }
+        }
     }
 
     #if os(macOS)
@@ -92,6 +100,8 @@ struct PrototypeRootView: View {
             AddWordPrototypeView()
         case .progress:
             ProgressPrototypeView()
+        case .utilities:
+            UtilitiesPrototypeView()
         case .settings:
             SettingsPrototypeView()
         }
