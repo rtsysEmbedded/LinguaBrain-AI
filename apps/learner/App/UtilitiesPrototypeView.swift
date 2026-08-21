@@ -303,6 +303,7 @@ struct UtilitiesPrototypeView: View {
     @State private var translatedText = ""
     @State private var translationError: String?
     @State private var isTranslating = false
+    @State private var liveTranslationTask: Task<Void, Never>?
 
     var body: some View {
         ScrollView {
@@ -319,6 +320,10 @@ struct UtilitiesPrototypeView: View {
         }
         .background(PrototypeBackground())
         .navigationTitle(localization.localized("utilities.title"))
+        .onDisappear { liveTranslationTask?.cancel() }
+        .onChange(of: transcription.visibleText) { _, value in
+            scheduleLiveTranslation(value)
+        }
     }
 
     private var header: some View {
@@ -473,6 +478,27 @@ struct UtilitiesPrototypeView: View {
                 translationError = error.localizedDescription
             }
             isTranslating = false
+        }
+    }
+
+    private func scheduleLiveTranslation(_ value: String) {
+        liveTranslationTask?.cancel()
+        let text = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard text.count >= 8, aiSettings.textMode == .cloud else { return }
+        liveTranslationTask = Task {
+            try? await Task.sleep(for: .milliseconds(650))
+            guard !Task.isCancelled else { return }
+            do {
+                let key = try aiSettings.apiKey()
+                let client = ConfiguredProviderClient(baseURL: aiSettings.endpoint, protocolName: aiSettings.protocolName)
+                await MainActor.run { translatedText = ""; translationError = nil }
+                try await client.streamTranslate(text: text, targetLanguageTag: translationLanguage.rawValue, model: aiSettings.modelID, apiKey: key) { delta in
+                    await MainActor.run { translatedText += delta }
+                }
+            } catch {
+                guard !Task.isCancelled else { return }
+                await MainActor.run { translationError = error.localizedDescription }
+            }
         }
     }
 

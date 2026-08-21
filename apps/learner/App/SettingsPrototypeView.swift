@@ -1065,12 +1065,53 @@ struct ConfiguredProviderClient: Sendable {
         }
         return content
     }
+
+    func streamTranslate(text: String, targetLanguageTag: String, model: String, apiKey: String, onDelta: @escaping @Sendable (String) async -> Void) async throws {
+        let body: [String: Any] = [
+            "model": model,
+            "stream": true,
+            "messages": [
+                ["role": "system", "content": "Translate into language code \(targetLanguageTag). Return only the translation."],
+                ["role": "user", "content": text]
+            ],
+            "temperature": 0.1,
+            "max_tokens": 2_000
+        ]
+        var request = URLRequest(url: URL(string: "\(baseURL)/chat/completions")!)
+        request.httpMethod = "POST"
+        request.timeoutInterval = 60
+        request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = try JSONSerialization.data(withJSONObject: body)
+        let (bytes, response) = try await URLSession.shared.bytes(for: request)
+        guard let http = response as? HTTPURLResponse, (200..<300).contains(http.statusCode) else {
+            throw ProviderError.invalidResponse
+        }
+        for try await line in bytes.lines {
+            guard line.hasPrefix("data: ") else { continue }
+            let payload = String(line.dropFirst(6))
+            if payload == "[DONE]" { break }
+            guard let data = payload.data(using: .utf8),
+                  let chunk = try? JSONDecoder().decode(ProviderStreamEnvelope.self, from: data),
+                  let delta = chunk.choices.first?.delta.content,
+                  !delta.isEmpty else { continue }
+            await onDelta(delta)
+        }
+    }
 }
 
 private struct ProviderChatEnvelope: Decodable {
     struct Choice: Decodable {
         struct Message: Decodable { let content: String? }
         let message: Message
+    }
+    let choices: [Choice]
+}
+
+private struct ProviderStreamEnvelope: Decodable {
+    struct Choice: Decodable {
+        struct Delta: Decodable { let content: String? }
+        let delta: Delta
     }
     let choices: [Choice]
 }
