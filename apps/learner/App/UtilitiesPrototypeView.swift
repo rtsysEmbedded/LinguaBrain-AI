@@ -93,6 +93,14 @@ final class LiveTranscriptionController {
     func start(languageTag: String = "de") {
         guard !isRecording, !isStarting else { return }
         isStarting = true
+        #if os(macOS)
+        // The iOS AVAudioEngine tap path is not safe for the current macOS
+        // Catalyst runtime. Keep the desktop app crash-free until the native
+        // Core Audio/AVAudioRecorder implementation is introduced.
+        errorMessage = "Live recording on macOS is being prepared. Please use the iOS build for now."
+        isStarting = false
+        return
+        #endif
         guard provider == .appleOnDevice else {
             errorMessage = "OpenAI Realtime streaming is not connected yet."
             isStarting = false
