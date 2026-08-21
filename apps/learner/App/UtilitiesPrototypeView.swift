@@ -67,6 +67,10 @@ final class LiveTranscriptionController {
     private var recognitionRequest: SFSpeechAudioBufferRecognitionRequest?
     private var recognizer: SFSpeechRecognizer?
     private var tapInstalled = false
+    #if os(macOS)
+    private var macRecorder: AVAudioRecorder?
+    private var macRecordingURL: URL?
+    #endif
 
     var visibleText: String {
         [transcript, partialTranscript].filter { !$0.isEmpty }.joined(separator: transcript.isEmpty ? "" : " ")
@@ -110,6 +114,18 @@ final class LiveTranscriptionController {
     }
 
     func stop() {
+        #if os(macOS)
+        if let recorder = macRecorder, recorder.isRecording {
+            recorder.stop()
+            macRecorder = nil
+            isRecording = false
+            isStarting = false
+            if let url = macRecordingURL {
+                Task { await recognizeMacRecording(at: url) }
+            }
+            return
+        }
+        #endif
         audioEngine?.stop()
         if tapInstalled {
             audioEngine?.inputNode.removeTap(onBus: 0)
@@ -151,6 +167,11 @@ final class LiveTranscriptionController {
             isStarting = false
             return
         }
+
+        #if os(macOS)
+        startMacRecording(with: recognizer)
+        return
+        #endif
 
         let request = SFSpeechAudioBufferRecognitionRequest()
         request.shouldReportPartialResults = true
@@ -213,6 +234,54 @@ final class LiveTranscriptionController {
             stop()
         }
     }
+
+    #if os(macOS)
+    private func startMacRecording(with recognizer: SFSpeechRecognizer) {
+        let url = FileManager.default.temporaryDirectory
+            .appendingPathComponent("linguabrain-\(UUID().uuidString).m4a")
+        let settings: [String: Any] = [
+            AVFormatIDKey: Int(kAudioFormatMPEG4AAC),
+            AVSampleRateKey: 44_100,
+            AVNumberOfChannelsKey: 1,
+            AVEncoderAudioQualityKey: AVAudioQuality.high.rawValue
+        ]
+        do {
+            let recorder = try AVAudioRecorder(url: url, settings: settings)
+            recorder.prepareToRecord()
+            guard recorder.record() else {
+                errorMessage = "macOS could not start recording. Check the selected input device."
+                isStarting = false
+                return
+            }
+            macRecordingURL = url
+            macRecorder = recorder
+            isRecording = true
+            isStarting = false
+        } catch {
+            errorMessage = "macOS recording failed: \(error.localizedDescription)"
+            isStarting = false
+        }
+    }
+
+    private func recognizeMacRecording(at url: URL) async {
+        guard let recognizer else { return }
+        let request = SFSpeechURLRecognitionRequest(url: url)
+        request.shouldReportPartialResults = false
+        request.requiresOnDeviceRecognition = recognizer.supportsOnDeviceRecognition
+        recognitionTask = recognizer.recognitionTask(with: request) { [weak self] result, error in
+            Task { @MainActor in
+                guard let self else { return }
+                if let result, result.isFinal {
+                    self.transcript = [self.transcript, result.bestTranscription.formattedString]
+                        .filter { !$0.isEmpty }.joined(separator: " ")
+                }
+                if let error { self.errorMessage = error.localizedDescription }
+                try? FileManager.default.removeItem(at: url)
+                self.macRecordingURL = nil
+            }
+        }
+    }
+    #endif
 
     private func requestSpeechAuthorization() async -> SFSpeechRecognizerAuthorizationStatus {
         await withCheckedContinuation { continuation in
