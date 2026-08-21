@@ -93,13 +93,13 @@ Deliver Phase 1, Phase 2, and Phase 3 through T018. This provides deterministic 
 
 ## Phase 8: Convergence
 
-- [ ] T038 Implement the full media asset cache lifecycle (checksum, cache reference, availability, fallback reason) and media fallback path per FR-008, US2 (missing)
-- [ ] T039 Integrate independent audio/image provider adapters with quota/capability reporting into `LinguaBrainMedia`/`LinguaBrainAI` per US2 (missing)
-- [ ] T040 Add sense-aware card rendering, audio playback, and text-only fallback UI in `apps/learner/App/` per US-02 (missing)
-- [ ] T041 Integrate media generation and approval into `AnkiGenerationOrchestrator` per FR-008 (missing)
-- [ ] T042 Implement export selection/manifest models and provenance-aware TSV export with Unicode/RTL-LTR preservation per FR-012, SC-006 (missing)
-- [ ] T043 Implement APKG export only after collection/templates/media round-trip fixtures pass per export-contract, SC-006 (missing)
-- [ ] T044 Implement OpenAI-compatible/local/remote provider adapter configuration, health checks, and endpoint-scoped credentials per FR-010, US-04 (missing)
-- [ ] T045 Add automated tests proving no provider can mutate canonical learning or scheduling state per SC-007, Constitution III (missing)
+T044 and T045 are duplicates of T030/T033 and are complete via those tasks.
+
+- [ ] T038 Implement the full media asset cache lifecycle (checksum, cache reference, availability, fallback reason) and media fallback path per FR-008, US2
+- [ ] T039 Integrate independent audio/image provider adapters with quota/capability reporting into `LinguaBrainMedia`/`LinguaBrainAI` per US2
+- [ ] T040 Add sense-aware card rendering, audio playback, and text-only fallback UI in `apps/learner/App/` per US-02
+- [ ] T041 Integrate media generation and approval into `AnkiGenerationOrchestrator` per FR-008
+- [ ] T042 Implement export selection/manifest models and provenance-aware TSV export with Unicode/RTL-LTR preservation per FR-012, SC-006
+- [ ] T043 Implement APKG export only after collection/templates/media round-trip fixtures pass per export-contract, SC-006
 - [ ] T046 Wire `LinguaBrainKit` into the app Xcode target and add app-level approval-journey tests per US-01/T018 (partial)
-- [ ] T047 Execute polish and cross-cutting verification: accessibility/RTL UI tests, feature quickstart (lib + macOS), security review, and `PROJECT_STATUS.md`/`CHANGELOG.md` updates per plan (missing)
+- [ ] T047 Execute polish and cross-cutting verification: accessibility/RTL UI tests, feature quickstart (lib + macOS), security review, and `PROJECT_STATUS.md`/`CHANGELOG.md` updates per plan (partial)

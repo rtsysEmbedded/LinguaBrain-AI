@@ -131,3 +131,4 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Recorded the local Apple-toolchain audit: macOS 27 on Apple silicon and Swift 6.4 are available, but full Xcode 27 is not yet the active developer directory.
 - Activated and verified Xcode 27.0 build `27A5228h` with Swift 6.4 and version 27 iPhoneOS, iPhone Simulator, and macOS SDKs.
 - Closed LB-DEC-058 and advanced the active architecture queue to ADR-003 for the native Swift persistence stack.
+- Added opt-in private CloudKit card backup and reinstall recovery for learner-generated and Anki-imported cards, with sample exclusion, merge/deduplication, Privacy & Data status UI, shared Apple-platform entitlements, and local regression coverage.

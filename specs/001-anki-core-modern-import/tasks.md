@@ -54,6 +54,7 @@
 - [~] T029 [US10] Generate and persist multi-sense word cards: store each validated sense with its own meaning, usage/register, example, translation, and collocations; preview all senses and create independent review identities/cards per sense while preserving backward compatibility for single-sense responses.
 - [ ] T030 [US9] Add verb sense-distractor practice to Mixed Practice Game: when at least three related senses exist, show three related meanings and one unrelated meaning, require selecting the unrelated option, and force incorrect answers back into the current session.
 - [~] T031 [US8] Preserve multiple examples during Anki import: model examples as ordered sense-specific Sentence records, retain source/target text and provenance, select examples adaptively during review, and round-trip all examples through export without collapsing them into one field.
+- [x] T032 [US11] Add opt-in private iCloud card backup and reinstall recovery for learner-created/imported cards, excluding built-in sample content.
 
 ## Dependencies and Parallel Work
 
@@ -155,6 +156,7 @@ Modern `collection.anki21b`, schema 18, Zstandard, SwiftProtobuf, modern templat
 - **T031 definition — 2026-08-18**: Import must preserve every example attached to a note/sense as ordered Sentence records rather than keeping only one `example` field. Examples remain grouped by LexicalSense, retain source/target text and Anki provenance, can be selected by review policy, and must survive export/re-import without loss. Implementation is pending.
 - **T031 implementation slice — 2026-08-18 (partial)**: Added ordered `PrototypeExample` collections with legacy single-example fallback, imported all examples from the internal JSON payload and paired multi-line Anki fields, persisted them as JSON on card records, and exported all examples as `<br>`-separated TSV fields. iOS Debug build passed. Remaining: sense-specific database entities, adaptive example selection in review, and round-trip fixture assertions.
 - **T031 completion slice — 2026-08-18 (partial)**: Review now selects a stored example for each card session, and regression coverage verifies pairing plus lossless TSV export of multiple examples. The independent `Sentence` entity remains intentionally deferred pending the documented persistence decision. iOS Debug build passed; simulator test execution did not return within the local command window.
+- **T032 iCloud card backup — 2026-08-21**: Added an opt-in CloudKit private-database snapshot for learner-generated and Anki-imported cards, restore-and-merge on launch/foreground, manual sync and status UI under Privacy & Data, shared iOS/macOS entitlements, and an in-memory regression test proving sample exclusion and reinstall-style restoration. This is card backup/recovery only; FSRS events, tombstones, account linking, and concurrent multi-device conflict resolution remain separate Release 1.0 work.
 
 For each completed task record the agent/tool, date, changed files, commands/tests, result, known risks, and commit SHA. Never include credentials, private APKG data, or raw learner content.
 

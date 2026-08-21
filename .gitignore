@@ -71,6 +71,7 @@ xcuserdata/
 *.xcodeproj/xcuserdata/
 
 # Keep source projects, workspaces, entitlements, and app-level Package.resolved files tracked.
+# NOTE: packages/ directory is tracked but may contain build artifacts that should be excluded individually
 
 # Generated documentation output
 site/

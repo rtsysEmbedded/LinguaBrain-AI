@@ -1,9 +1,9 @@
 ---
 title: Project Status and Delivery Checklist
 document_id: LB-STATUS
-version: 0.4.10
+version: 0.4.11
 status: Active
-last_updated: 2026-08-18
+last_updated: 2026-08-21
 ---
 
 # Project Status and Delivery Checklist
@@ -27,13 +27,13 @@ This file is the single progress checklist for LinguaBrain AI. It must be update
 | Documentation | Documents 01–15 complete as reviewed drafts |
 | Architecture baseline | Native Swift migration; DOC-10 at 0.5.1, DOC-11 at 0.3.1, DOC-14 at 0.3.2, and DOC-15 at 0.2.2 |
 | Local Apple toolchain | Xcode 27.0 (`27A5228h`) is active with Swift 6.4 and iOS/iPadOS/macOS 27 SDKs; beta-era evidence remains provisional |
-| Latest accepted ADRs | Native baseline ADR-009 through ADR-014, plus [ADR-004](decisions/ADR-004-FSRS-Implementation-and-Version.md) for the pinned scheduler |
+| Latest accepted ADRs | Native baseline ADR-009 through ADR-015, plus [ADR-004](decisions/ADR-004-FSRS-Implementation-and-Version.md) for the pinned scheduler |
 | Active Git branch | `main` |
 | Native platform migration commit | `3c75a70` |
-| Visual prototype | Buildable SwiftUI prototype for iPhone, iPad, and Mac; review state persists, APKG cards can be imported, and an approved OpenRouter proposal can be stored locally |
+| Visual prototype | Buildable SwiftUI prototype for iPhone, iPad, and Mac; review state persists, APKG cards can be imported, and approved learner cards have opt-in private iCloud backup/recovery |
 | Next primary deliverable | Execute Spec Kit tasks T004E/T025–T029: complete localization QA, mixed-practice review, and future-proof audio/collocation/conversation and multi-sense card bundles |
 | Current delivery strategy | Anki Core first: secure APKG import and reliable offline review gate before AI and final visual approval |
-| Latest verification | 2026-08-17: six tests passed on iPhone 17 / iOS 27; all six directed English/German/Persian pairs contain at least five isolated learning cards; an existing simulator store migrated and rendered the selected `fa→en` pair with exactly five new cards |
+| Latest verification | 2026-08-21: iOS 27 Simulator build passes with the CloudKit backup code and entitlements; deterministic local snapshot/restore regression coverage is included. Signed-device CloudKit container verification remains required. |
 
 ## Completed foundation
 
@@ -76,6 +76,7 @@ This file is the single progress checklist for LinguaBrain AI. It must be update
 - [x] Add a functional OpenRouter prototype with Keychain-backed API-key storage, explicit cloud consent, configurable model ID, structured card proposals, preview, and local approval.
 - [x] Model generated cards as domain-specific lexical senses so homographs can coexist and retain independent recognition/reverse-review schedules; migrate legacy review keys to stable card identities.
 - [x] Accept optional Sign in with Apple/Google and secure learner-data synchronization as Release 1.0 scope while preserving full local-only use.
+- [x] Add opt-in private iCloud backup/recovery for learner-generated and Anki-imported cards while excluding built-in samples (ADR-015/T032).
 - [x] Classify and place the vocabulary prototype at `experiments/vocabulary-mvp/` according to [ADR-001](decisions/ADR-001-Repository-Package-and-Module-Layout.md).
 - [ ] Configure a Git remote and push `main`.
 - [ ] Create an annotated MVP specification baseline tag.
