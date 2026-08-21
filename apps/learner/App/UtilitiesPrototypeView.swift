@@ -62,15 +62,10 @@ final class LiveTranscriptionController {
     private var isStarting = false
     private(set) var errorMessage: String?
 
-    private var audioEngine: AVAudioEngine?
-    private var recognitionTask: SFSpeechRecognitionTask?
-    private var recognitionRequest: SFSpeechAudioBufferRecognitionRequest?
-    private var recognizer: SFSpeechRecognizer?
-    private var tapInstalled = false
-    #if os(macOS)
-    private var macRecorder: AVAudioRecorder?
-    private var macRecordingURL: URL?
-    #endif
+    private var modernAnalyzer: SpeechAnalyzer?
+    private var modernTranscriber: SpeechTranscriber?
+    private var modernCaptureProvider: CaptureInputSequenceProvider?
+    private var modernResultsTask: Task<Void, Never>?
 
     var visibleText: String {
         [transcript, partialTranscript].filter { !$0.isEmpty }.joined(separator: transcript.isEmpty ? "" : " ")
@@ -97,201 +92,106 @@ final class LiveTranscriptionController {
     func start(languageTag: String = "de") {
         guard !isRecording, !isStarting else { return }
         isStarting = true
-        #if os(macOS)
-        // The iOS AVAudioEngine tap path is not safe for the current macOS
-        // Catalyst runtime. Keep the desktop app crash-free until the native
-        // Core Audio/AVAudioRecorder implementation is introduced.
-        errorMessage = "Live recording on macOS is being prepared. Please use the iOS build for now."
-        isStarting = false
-        return
-        #endif
         guard provider == .appleOnDevice else {
-            errorMessage = "OpenAI Realtime streaming is not connected yet."
+            errorMessage = "Cloud live transcription requires a configured realtime transcription provider."
             isStarting = false
             return
         }
-        Task { await startOnDevice(languageTag: languageTag) }
+        Task { await startModernOnDevice(languageTag: languageTag) }
     }
 
     func stop() {
-        #if os(macOS)
-        if let recorder = macRecorder, recorder.isRecording {
-            recorder.stop()
-            macRecorder = nil
+        if let captureProvider = modernCaptureProvider {
+            captureProvider.captureSession.stopRunning()
+            modernCaptureProvider = nil
+            modernResultsTask?.cancel()
+            modernResultsTask = nil
+            let analyzer = modernAnalyzer
+            modernAnalyzer = nil
+            modernTranscriber = nil
             isRecording = false
             isStarting = false
-            if let url = macRecordingURL {
-                Task { await recognizeMacRecording(at: url) }
-            }
+            Task { try? await analyzer?.finalizeAndFinishThroughEndOfInput() }
             return
         }
-        #endif
-        audioEngine?.stop()
-        if tapInstalled {
-            audioEngine?.inputNode.removeTap(onBus: 0)
-            tapInstalled = false
-        }
-        recognitionRequest?.endAudio()
-        recognitionTask?.cancel()
-        audioEngine = nil
-        recognitionRequest = nil
-        recognitionTask = nil
         isRecording = false
         isStarting = false
         partialTranscript = ""
     }
 
-    private func startOnDevice(languageTag: String) async {
+    private func startModernOnDevice(languageTag: String) async {
         errorMessage = nil
-        let speechStatus = await requestSpeechAuthorization()
-        guard speechStatus == .authorized else {
-            errorMessage = "اجازهٔ تشخیص گفتار داده نشد. از Settings دسترسی Speech و Microphone را فعال کنید."
+        guard await AVCaptureDevice.requestAccess(for: .audio) else {
+            errorMessage = "Microphone permission was denied."
             isStarting = false
             return
         }
-        let microphoneGranted = await requestMicrophoneAuthorization()
-        guard microphoneGranted else {
-            errorMessage = "اجازهٔ میکروفون داده نشد."
+        let requestedLocale = Locale(identifier: languageTag)
+        guard SpeechTranscriber.isAvailable,
+              let locale = await SpeechTranscriber.supportedLocale(equivalentTo: requestedLocale) else {
+            errorMessage = "The selected language is not supported by Apple's on-device transcription model."
             isStarting = false
             return
         }
-        let locale = Locale(identifier: languageTag)
-        guard let recognizer = SFSpeechRecognizer(locale: locale) else {
-            errorMessage = "تشخیص گفتار برای زبان دستگاه در دسترس نیست."
-            isStarting = false
-            return
-        }
-        recognizer.defaultTaskHint = .dictation
-        guard recognizer.isAvailable else {
-            errorMessage = "تشخیص گفتار فعلاً در دسترس نیست."
+        guard let device = AVCaptureDevice.default(for: .audio) else {
+            errorMessage = "No microphone is available."
             isStarting = false
             return
         }
 
-        #if os(macOS)
-        startMacRecording(with: recognizer)
-        return
-        #endif
-
-        let request = SFSpeechAudioBufferRecognitionRequest()
-        request.shouldReportPartialResults = true
-        // Some locales on iOS 27 do not ship an on-device model. Requiring it
-        // unconditionally produces a misleading connection failure; fall
-        // back to Apple's authorized speech service when necessary.
-        request.requiresOnDeviceRecognition = recognizer.supportsOnDeviceRecognition
-        let engine = AVAudioEngine()
-        let inputNode = engine.inputNode
-        guard inputNode.inputFormat(forBus: 0).channelCount > 0 else {
-            errorMessage = "No audio input device is available. Select a microphone in macOS Sound settings."
-            isStarting = false
-            return
-        }
-        #if os(iOS)
+        let transcriber = SpeechTranscriber(locale: locale, preset: .progressiveTranscription)
         do {
-            let session = AVAudioSession.sharedInstance()
-            try session.setCategory(.record, mode: .measurement, options: [.duckOthers])
-            try session.setActive(true, options: .notifyOthersOnDeactivation)
-        } catch {
-            errorMessage = "Audio session: \(error.localizedDescription)"
-            isStarting = false
-            return
-        }
-        #endif
-        inputNode.installTap(onBus: 0, bufferSize: 1_024, format: nil) { [weak self] buffer, _ in
-            self?.recognitionRequest?.append(buffer)
-        }
-        tapInstalled = true
+            let modules: [any SpeechModule] = [transcriber]
+            let status = await AssetInventory.status(forModules: modules)
+            if status != .installed {
+                guard let request = try await AssetInventory.assetInstallationRequest(supporting: modules) else {
+                    errorMessage = "The speech model for this language is not installed."
+                    isStarting = false
+                    return
+                }
+                try await request.downloadAndInstall()
+            }
 
-        self.recognizer = recognizer
-        recognitionRequest = request
-        audioEngine = engine
-        recognitionTask = recognizer.recognitionTask(with: request) { [weak self] result, error in
-            Task { @MainActor in
-                guard let self else { return }
-                if let result {
-                    if result.isFinal {
-                        self.transcript = [self.transcript, result.bestTranscription.formattedString]
-                            .filter { !$0.isEmpty }.joined(separator: " ")
-                        self.partialTranscript = ""
-                    } else {
-                        self.partialTranscript = result.bestTranscription.formattedString
+            let captureProvider = try await CaptureInputSequenceProvider.providerWithSession(
+                from: device,
+                compatibleWith: modules
+            )
+            let analyzer = SpeechAnalyzer(modules: modules)
+            modernTranscriber = transcriber
+            modernAnalyzer = analyzer
+            modernCaptureProvider = captureProvider
+            modernResultsTask = Task { [weak self] in
+                do {
+                    for try await result in transcriber.results {
+                        guard let self else { return }
+                        let text = String(result.text.characters)
+                        if result.isFinal {
+                            self.transcript = [self.transcript, text].filter { !$0.isEmpty }.joined(separator: " ")
+                            self.partialTranscript = ""
+                        } else {
+                            self.partialTranscript = text
+                        }
                     }
-                }
-                if let error, self.isRecording {
-                    self.errorMessage = error.localizedDescription
-                    self.stop()
+                } catch {
+                    guard !Task.isCancelled else { return }
+                    self?.errorMessage = error.localizedDescription
                 }
             }
-        }
-
-        do {
-            engine.prepare()
-            try engine.start()
+            try await analyzer.start(inputSequence: captureProvider.analyzerInputs)
+            captureProvider.captureSession.startRunning()
             isRecording = true
             isStarting = false
         } catch {
+            modernResultsTask?.cancel()
+            modernResultsTask = nil
+            modernCaptureProvider = nil
+            modernAnalyzer = nil
+            modernTranscriber = nil
             errorMessage = error.localizedDescription
-            stop()
-        }
-    }
-
-    #if os(macOS)
-    private func startMacRecording(with recognizer: SFSpeechRecognizer) {
-        let url = FileManager.default.temporaryDirectory
-            .appendingPathComponent("linguabrain-\(UUID().uuidString).m4a")
-        let settings: [String: Any] = [
-            AVFormatIDKey: Int(kAudioFormatMPEG4AAC),
-            AVSampleRateKey: 44_100,
-            AVNumberOfChannelsKey: 1,
-            AVEncoderAudioQualityKey: AVAudioQuality.high.rawValue
-        ]
-        do {
-            let recorder = try AVAudioRecorder(url: url, settings: settings)
-            recorder.prepareToRecord()
-            guard recorder.record() else {
-                errorMessage = "macOS could not start recording. Check the selected input device."
-                isStarting = false
-                return
-            }
-            macRecordingURL = url
-            macRecorder = recorder
-            isRecording = true
-            isStarting = false
-        } catch {
-            errorMessage = "macOS recording failed: \(error.localizedDescription)"
             isStarting = false
         }
     }
 
-    private func recognizeMacRecording(at url: URL) async {
-        guard let recognizer else { return }
-        let request = SFSpeechURLRecognitionRequest(url: url)
-        request.shouldReportPartialResults = false
-        request.requiresOnDeviceRecognition = recognizer.supportsOnDeviceRecognition
-        recognitionTask = recognizer.recognitionTask(with: request) { [weak self] result, error in
-            Task { @MainActor in
-                guard let self else { return }
-                if let result, result.isFinal {
-                    self.transcript = [self.transcript, result.bestTranscription.formattedString]
-                        .filter { !$0.isEmpty }.joined(separator: " ")
-                }
-                if let error { self.errorMessage = error.localizedDescription }
-                try? FileManager.default.removeItem(at: url)
-                self.macRecordingURL = nil
-            }
-        }
-    }
-    #endif
-
-    private func requestSpeechAuthorization() async -> SFSpeechRecognizerAuthorizationStatus {
-        await withCheckedContinuation { continuation in
-            SFSpeechRecognizer.requestAuthorization { continuation.resume(returning: $0) }
-        }
-    }
-
-    private func requestMicrophoneAuthorization() async -> Bool {
-        await AVAudioApplication.requestRecordPermission()
-    }
 }
 
 struct UtilitiesPrototypeView: View {
