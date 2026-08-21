@@ -146,7 +146,6 @@ final class LiveTranscriptionController {
             return
         }
         recognizer.defaultTaskHint = .dictation
-        recognizer.supportsOnDeviceRecognition = true
         guard recognizer.isAvailable else {
             errorMessage = "تشخیص گفتار فعلاً در دسترس نیست."
             isStarting = false
@@ -155,7 +154,10 @@ final class LiveTranscriptionController {
 
         let request = SFSpeechAudioBufferRecognitionRequest()
         request.shouldReportPartialResults = true
-        request.requiresOnDeviceRecognition = true
+        // Some locales on iOS 27 do not ship an on-device model. Requiring it
+        // unconditionally produces a misleading connection failure; fall
+        // back to Apple's authorized speech service when necessary.
+        request.requiresOnDeviceRecognition = recognizer.supportsOnDeviceRecognition
         let engine = AVAudioEngine()
         let inputNode = engine.inputNode
         guard inputNode.inputFormat(forBus: 0).channelCount > 0 else {
@@ -219,9 +221,7 @@ final class LiveTranscriptionController {
     }
 
     private func requestMicrophoneAuthorization() async -> Bool {
-        await withCheckedContinuation { continuation in
-            AVAudioApplication.requestRecordPermission { continuation.resume(returning: $0) }
-        }
+        await AVAudioApplication.requestRecordPermission()
     }
 }
 
