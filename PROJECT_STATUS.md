@@ -77,6 +77,7 @@ This file is the single progress checklist for LinguaBrain AI. It must be update
 - [x] Model generated cards as domain-specific lexical senses so homographs can coexist and retain independent recognition/reverse-review schedules; migrate legacy review keys to stable card identities.
 - [x] Accept optional Sign in with Apple/Google and secure learner-data synchronization as Release 1.0 scope while preserving full local-only use.
 - [x] Add opt-in private iCloud backup/recovery for learner-generated and Anki-imported cards while excluding built-in samples (ADR-015/T032).
+- [ ] Register `iCloud.ai.linguabrain.prototype` on a paid Apple Developer Team and reattach `Resources/LinguaBrain.entitlements` before enabling signed CloudKit builds.
 - [x] Add Utilities navigation and on-device streaming speech-to-text with permission-gated microphone/Speech access (ADR-016/T034).
 - [x] Add copyable transcript/translation output for Persian, German, and English through the configured text Provider (T036).
 - [ ] Add OpenAI Realtime cloud transcription behind the Utilities provider boundary (T035).

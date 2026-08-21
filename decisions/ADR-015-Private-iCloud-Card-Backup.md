@@ -30,3 +30,4 @@ This is recovery-oriented card backup, not the complete Release 1.0 synchronizat
 
 Deleting and reinstalling the app can recover approved learner cards when the same iCloud account is available and backup had completed. Runtime verification requires a signed build whose Apple Developer profile contains the `iCloud.ai.linguabrain.prototype` CloudKit container.
 
+The current local Xcode team is a Personal Development Team, which cannot provision iCloud. The entitlement file remains in the repository but is intentionally detached from the current targets until a paid Apple Developer Team registers the App ID and CloudKit container.
