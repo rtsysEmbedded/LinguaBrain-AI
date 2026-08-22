@@ -362,7 +362,11 @@ final class LiveTranscriptionController {
                 throw TranscriptionError.audioFormatUnavailable
             }
             cloudPCMProcessor = pcmProcessor
-            try inputNode.installAudioTap(onBus: 0, bufferSize: 1_024, format: nil) { [weak self, weak socket, pcmProcessor] readOnlyBuffer, _ in
+            // macOS/iOS 27 requires installAudioTap buffers in the 100–400 ms
+            // range. A fixed 1,024-frame buffer is only ~21 ms at 48 kHz and
+            // causes Audio Unit initialization to fail with paramErr (-50).
+            let tapBufferSize = AVAudioFrameCount(ceil(inputFormat.sampleRate * 0.1))
+            try inputNode.installAudioTap(onBus: 0, bufferSize: tapBufferSize, format: nil) { [weak self, weak socket, pcmProcessor] readOnlyBuffer, _ in
                 let processed = pcmProcessor.process(AVAudioPCMBuffer(copying: readOnlyBuffer))
                 Task { [weak self, weak socket] in
                     guard let socket else { return }
