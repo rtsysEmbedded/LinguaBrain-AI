@@ -74,6 +74,7 @@ final class LiveTranscriptionController {
     private var cloudURLSession: URLSession?
     private var cloudSocketDelegate: CloudWebSocketDelegate?
     private var cloudReceiveTask: Task<Void, Never>?
+    private var cloudCommitTask: Task<Void, Never>?
 
     var visibleText: String {
         [transcript, partialTranscript].filter { !$0.isEmpty }.joined(separator: transcript.isEmpty ? "" : " ")
@@ -137,15 +138,19 @@ final class LiveTranscriptionController {
             cloudCaptureQueue = nil
             cloudReceiveTask?.cancel()
             cloudReceiveTask = nil
+            cloudCommitTask?.cancel()
+            cloudCommitTask = nil
             let socket = cloudSocket
             cloudSocket = nil
-            cloudURLSession?.invalidateAndCancel()
-            cloudURLSession = nil
-            cloudSocketDelegate = nil
             Task {
                 if let socket {
-                    try? await socket.send(.string("{\"type\":\"input_audio_buffer.commit\"}"))
+                    try? await Self.sendCloudMessage("{\"type\":\"input_audio_buffer.commit\"}", via: socket, attempts: 2)
                     socket.cancel(with: .normalClosure, reason: nil)
+                }
+                await MainActor.run {
+                    self.cloudURLSession?.invalidateAndCancel()
+                    self.cloudURLSession = nil
+                    self.cloudSocketDelegate = nil
                 }
             }
             audioMeter = nil
@@ -346,14 +351,14 @@ final class LiveTranscriptionController {
             guard captureSession.canAddInput(captureInput) else { throw TranscriptionError.captureInputUnavailable }
             captureSession.addInput(captureInput)
             let meter = AudioInputMeter(onLevelAndPCM: { [weak self, weak socket] level, pcmData in
-                Task { @MainActor in
-                    self?.inputLevel = level
+                Task { [weak self, weak socket] in
                     guard let socket else { return }
                     let event: [String: Any] = [
                         "type": "input_audio_buffer.append",
                         "audio": pcmData.base64EncodedString()
                     ]
                     try? await Self.sendCloudMessage(Self.jsonString(event), via: socket, attempts: 2)
+                    await MainActor.run { self?.inputLevel = level }
                 }
             })
             let output = AVCaptureAudioDataOutput()
@@ -377,6 +382,14 @@ final class LiveTranscriptionController {
             cloudCaptureQueue = captureQueue
             audioMeter = meter
             captureQueue.async { captureSession.startRunning() }
+            cloudCommitTask = Task { [weak socket] in
+                guard let socket else { return }
+                while !Task.isCancelled {
+                    try? await Task.sleep(for: .seconds(3))
+                    guard !Task.isCancelled else { return }
+                    try? await Self.sendCloudMessage("{\"type\":\"input_audio_buffer.commit\"}", via: socket, attempts: 2)
+                }
+            }
             isRecording = true
             isStarting = false
         } catch {
