@@ -472,13 +472,13 @@ enum PrototypeA1MediaPlanner {
         guard word.level.uppercased() == "A1" else {
             return PrototypeA1MediaPlan(isEligible: false, audioCacheKey: nil, imageCacheKey: nil, imagePrompt: nil)
         }
-        let identity = "(word.targetLanguageTag)|(word.german.lowercased())|A1"
+        let identity = "\(word.targetLanguageTag)|\(word.german.lowercased())|A1"
         let safeIdentity = identity.replacingOccurrences(of: " ", with: "_")
         return PrototypeA1MediaPlan(
             isEligible: true,
-            audioCacheKey: includeAudio ? "audio.v1.(safeIdentity)" : nil,
-            imageCacheKey: includeImage ? "image.v1.(safeIdentity)" : nil,
-            imagePrompt: includeImage ? "A clear, literal educational illustration of (word.german), suitable for an A1 language-learning card, no text" : nil
+            audioCacheKey: includeAudio ? "audio.v1.\(safeIdentity)" : nil,
+            imageCacheKey: includeImage ? "image.v1.\(safeIdentity)" : nil,
+            imagePrompt: includeImage ? "A clear, literal educational illustration of \(word.german), suitable for an A1 language-learning card, no text" : nil
         )
     }
 }
