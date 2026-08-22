@@ -1026,12 +1026,18 @@ struct ConfiguredProviderClient: Sendable {
         }
         let models = envelope.data.map(\.id)
         if baseURL.localizedCaseInsensitiveContains("api.openai.com") {
-            let supported = Set(["whisper-1", "gpt-4o-mini-transcribe", "gpt-4o-transcribe", "gpt-4o-transcribe-diarize"])
-            return models.filter { supported.contains($0) }.sorted()
+            let supported = Set([
+                "whisper-1", "gpt-4o-mini-transcribe", "gpt-4o-transcribe", "gpt-4o-transcribe-diarize",
+                "gpt-realtime", "gpt-realtime-mini", "gpt-4o-realtime-preview", "gpt-4o-mini-realtime-preview"
+            ])
+            return models.filter { id in
+                let normalized = id.lowercased()
+                return supported.contains(id) || normalized.contains("transcri") || normalized.contains("realtime")
+            }.sorted()
         }
         let audioModels = models.filter { id in
             let normalized = id.lowercased()
-            return normalized.contains("transcri") || normalized.contains("whisper") || normalized.contains("speech-to-text") || normalized.contains("audio")
+            return normalized.contains("transcri") || normalized.contains("whisper") || normalized.contains("speech-to-text") || normalized.contains("audio") || normalized.contains("realtime")
         }
         return audioModels.sorted()
     }

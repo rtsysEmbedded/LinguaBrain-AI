@@ -75,6 +75,7 @@ final class LiveTranscriptionController {
     private var cloudSocketDelegate: CloudWebSocketDelegate?
     private var cloudReceiveTask: Task<Void, Never>?
     private var cloudCommitTask: Task<Void, Never>?
+    private var cloudPCMAccumulator: AudioPCMAccumulator?
 
     var visibleText: String {
         [transcript, partialTranscript].filter { !$0.isEmpty }.joined(separator: transcript.isEmpty ? "" : " ")
@@ -140,6 +141,7 @@ final class LiveTranscriptionController {
             cloudReceiveTask = nil
             cloudCommitTask?.cancel()
             cloudCommitTask = nil
+            cloudPCMAccumulator = nil
             let socket = cloudSocket
             cloudSocket = nil
             Task {
@@ -321,7 +323,10 @@ final class LiveTranscriptionController {
             cloudSocketDelegate = delegate
             startCloudReceiveLoop(socket)
 
-            let supportedModels = ["whisper-1", "gpt-4o-mini-transcribe", "gpt-4o-transcribe", "gpt-4o-transcribe-diarize"]
+            let supportedModels = [
+                "whisper-1", "gpt-4o-mini-transcribe", "gpt-4o-transcribe", "gpt-4o-transcribe-diarize",
+                "gpt-realtime", "gpt-realtime-mini", "gpt-4o-realtime-preview", "gpt-4o-mini-realtime-preview"
+            ]
             let requestedModel = settings.audioModelID == "gpt-4o-mini-tts" ? "gpt-4o-transcribe" : settings.audioModelID
             let transcriptionModel = supportedModels.contains(requestedModel) ? requestedModel : "gpt-4o-transcribe"
             let sessionUpdate: [String: Any] = [
@@ -350,14 +355,24 @@ final class LiveTranscriptionController {
             let captureInput = try AVCaptureDeviceInput(device: device)
             guard captureSession.canAddInput(captureInput) else { throw TranscriptionError.captureInputUnavailable }
             captureSession.addInput(captureInput)
-            let meter = AudioInputMeter(onLevelAndPCM: { [weak self, weak socket] level, pcmData in
+            #if os(macOS)
+            let minimumPCMBytes = 9_600 // 24 kHz × 100 ms × 2 bytes
+            #else
+            let minimumPCMBytes = 17_640 // iOS capture default: 44.1 kHz × 100 ms × 2 bytes
+            #endif
+            let pcmAccumulator = AudioPCMAccumulator(minimumBytes: minimumPCMBytes)
+            cloudPCMAccumulator = pcmAccumulator
+            let meter = AudioInputMeter(onLevelAndPCM: { [weak self, weak socket, pcmAccumulator] level, pcmData in
+                let chunks = pcmAccumulator.append(pcmData)
                 Task { [weak self, weak socket] in
                     guard let socket else { return }
-                    let event: [String: Any] = [
-                        "type": "input_audio_buffer.append",
-                        "audio": pcmData.base64EncodedString()
-                    ]
-                    try? await Self.sendCloudMessage(Self.jsonString(event), via: socket, attempts: 2)
+                    for chunk in chunks {
+                        let event: [String: Any] = [
+                            "type": "input_audio_buffer.append",
+                            "audio": chunk.base64EncodedString()
+                        ]
+                        try? await Self.sendCloudMessage(Self.jsonString(event), via: socket, attempts: 2)
+                    }
                     await MainActor.run { self?.inputLevel = level }
                 }
             })
@@ -398,6 +413,7 @@ final class LiveTranscriptionController {
             }
             cloudSession = nil
             cloudCaptureQueue = nil
+            cloudPCMAccumulator = nil
             cloudSocket?.cancel(with: .abnormalClosure, reason: nil)
             cloudSocket = nil
             cloudURLSession?.invalidateAndCancel()
@@ -539,6 +555,32 @@ private final class AudioInputMeter: NSObject, AVCaptureAudioDataOutputSampleBuf
         onLevel(level)
         onLevelAndPCM?(level, Data(bytes: pointer, count: length))
         onPCM?(Data(bytes: pointer, count: length))
+    }
+}
+
+/// Buffers microphone PCM until each Realtime append contains at least 100 ms
+/// of 24 kHz, mono, 16-bit audio (9,600 bytes), as required by the API.
+private final class AudioPCMAccumulator: @unchecked Sendable {
+    private let lock = NSLock()
+    private let minimumBytes: Int
+    private var pending = Data()
+
+    init(minimumBytes: Int) {
+        self.minimumBytes = minimumBytes
+    }
+
+    func append(_ data: Data) -> [Data] {
+        lock.lock()
+        defer { lock.unlock() }
+        pending.append(data)
+        guard pending.count >= minimumBytes else { return [] }
+        let chunkCount = pending.count / minimumBytes
+        let bytesToEmit = chunkCount * minimumBytes
+        let emitted = pending.prefix(bytesToEmit)
+        pending.removeFirst(bytesToEmit)
+        return stride(from: 0, to: emitted.count, by: minimumBytes).map {
+            Data(emitted[$0 ..< min($0 + minimumBytes, emitted.count)])
+        }
     }
 }
 
