@@ -74,7 +74,6 @@ final class LiveTranscriptionController {
     private var cloudURLSession: URLSession?
     private var cloudSocketDelegate: CloudWebSocketDelegate?
     private var cloudReceiveTask: Task<Void, Never>?
-    private var cloudCommitTask: Task<Void, Never>?
 
     var visibleText: String {
         [transcript, partialTranscript].filter { !$0.isEmpty }.joined(separator: transcript.isEmpty ? "" : " ")
@@ -139,13 +138,10 @@ final class LiveTranscriptionController {
             cloudPCMProcessor = nil
             cloudReceiveTask?.cancel()
             cloudReceiveTask = nil
-            cloudCommitTask?.cancel()
-            cloudCommitTask = nil
             let socket = cloudSocket
             cloudSocket = nil
             Task {
                 if let socket {
-                    try? await Self.sendCloudMessage("{\"type\":\"input_audio_buffer.commit\"}", via: socket, attempts: 2)
                     socket.cancel(with: .normalClosure, reason: nil)
                 }
                 await MainActor.run {
@@ -321,12 +317,20 @@ final class LiveTranscriptionController {
             cloudSocketDelegate = delegate
             startCloudReceiveLoop(socket)
 
+            let connectionDeadline = ContinuousClock.now.advanced(by: .seconds(10))
+            while !delegate.isOpen {
+                guard ContinuousClock.now < connectionDeadline else {
+                    throw TranscriptionError.connectionTimedOut
+                }
+                try await Task.sleep(for: .milliseconds(50))
+            }
+
             let supportedModels = [
-                "whisper-1", "gpt-4o-mini-transcribe", "gpt-4o-transcribe", "gpt-4o-transcribe-diarize",
-                "gpt-realtime", "gpt-realtime-mini", "gpt-4o-realtime-preview", "gpt-4o-mini-realtime-preview"
+                "gpt-live-transcribe", "gpt-transcribe", "gpt-realtime-whisper",
+                "whisper-1", "gpt-4o-mini-transcribe", "gpt-4o-transcribe", "gpt-4o-transcribe-diarize"
             ]
             let requestedModel = settings.audioModelID == "gpt-4o-mini-tts" ? "gpt-4o-transcribe" : settings.audioModelID
-            let transcriptionModel = supportedModels.contains(requestedModel) ? requestedModel : "gpt-4o-transcribe"
+            let transcriptionModel = supportedModels.contains(requestedModel) ? requestedModel : "gpt-live-transcribe"
             let sessionUpdate: [String: Any] = [
                 "type": "session.update",
                 "session": [
@@ -350,7 +354,7 @@ final class LiveTranscriptionController {
 
             let audioEngine = AVAudioEngine()
             let inputNode = audioEngine.inputNode
-            let inputFormat = inputNode.outputFormat(forBus: 0)
+            let inputFormat = inputNode.inputFormat(forBus: 0)
             guard inputFormat.sampleRate > 0, inputFormat.channelCount > 0 else {
                 throw TranscriptionError.audioFormatUnavailable
             }
@@ -358,7 +362,7 @@ final class LiveTranscriptionController {
                 throw TranscriptionError.audioFormatUnavailable
             }
             cloudPCMProcessor = pcmProcessor
-            try inputNode.installAudioTap(onBus: 0, bufferSize: 1_024, format: inputFormat) { [weak self, weak socket, pcmProcessor] readOnlyBuffer, _ in
+            try inputNode.installAudioTap(onBus: 0, bufferSize: 1_024, format: nil) { [weak self, weak socket, pcmProcessor] readOnlyBuffer, _ in
                 let processed = pcmProcessor.process(AVAudioPCMBuffer(copying: readOnlyBuffer))
                 Task { [weak self, weak socket] in
                     guard let socket else { return }
@@ -375,14 +379,6 @@ final class LiveTranscriptionController {
             audioEngine.prepare()
             try audioEngine.start()
             cloudAudioEngine = audioEngine
-            cloudCommitTask = Task { [weak socket] in
-                guard let socket else { return }
-                while !Task.isCancelled {
-                    try? await Task.sleep(for: .seconds(3))
-                    guard !Task.isCancelled else { return }
-                    try? await Self.sendCloudMessage("{\"type\":\"input_audio_buffer.commit\"}", via: socket, attempts: 2)
-                }
-            }
             isRecording = true
             isStarting = false
         } catch {
@@ -466,12 +462,14 @@ private enum TranscriptionError: LocalizedError {
     case captureInputUnavailable
     case captureOutputUnavailable
     case audioFormatUnavailable
+    case connectionTimedOut
 
     var errorDescription: String? {
         switch self {
         case .captureInputUnavailable: "The selected microphone cannot be attached to the capture session."
         case .captureOutputUnavailable: "The microphone capture output could not be created."
         case .audioFormatUnavailable: "No compatible audio format is available for live transcription."
+        case .connectionTimedOut: "The OpenAI Realtime connection did not open within 10 seconds. Check the endpoint, API key, network, and account access."
         }
     }
 }
@@ -479,13 +477,25 @@ private enum TranscriptionError: LocalizedError {
 private final class CloudWebSocketDelegate: NSObject, URLSessionWebSocketDelegate, @unchecked Sendable {
     private let onClose: @Sendable (URLSessionWebSocketTask.CloseCode) -> Void
     private let onFailure: @Sendable (Error) -> Void
+    private let stateLock = NSLock()
+    private var opened = false
+
+    var isOpen: Bool {
+        stateLock.lock()
+        defer { stateLock.unlock() }
+        return opened
+    }
 
     init(onClose: @escaping @Sendable (URLSessionWebSocketTask.CloseCode) -> Void, onFailure: @escaping @Sendable (Error) -> Void) {
         self.onClose = onClose
         self.onFailure = onFailure
     }
 
-    func urlSession(_ session: URLSession, webSocketTask: URLSessionWebSocketTask, didOpenWithProtocol protocol: String?) {}
+    func urlSession(_ session: URLSession, webSocketTask: URLSessionWebSocketTask, didOpenWithProtocol protocol: String?) {
+        stateLock.lock()
+        opened = true
+        stateLock.unlock()
+    }
 
     func urlSession(_ session: URLSession, webSocketTask: URLSessionWebSocketTask, didCloseWith closeCode: URLSessionWebSocketTask.CloseCode, reason: Data?) {
         onClose(closeCode)

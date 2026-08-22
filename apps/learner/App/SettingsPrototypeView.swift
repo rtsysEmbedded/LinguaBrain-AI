@@ -502,7 +502,7 @@ final class PrototypeAISettings {
         audioProtocolName = resolvedAudioProtocol
         if resolvedAudioProtocol == "openai-compatible" {
             audioVoice = storedVoice.isEmpty || storedVoice.contains("Standard-") ? "alloy" : storedVoice
-            audioModelID = storedAudioModel.isEmpty || storedAudioModel == "standard" || storedAudioModel == "gpt-4o-mini-tts" ? "gpt-4o-transcribe" : storedAudioModel
+            audioModelID = storedAudioModel.isEmpty || storedAudioModel == "standard" || storedAudioModel == "gpt-4o-mini-tts" ? "gpt-live-transcribe" : storedAudioModel
         } else {
             audioVoice = storedVoice.isEmpty ? "de-DE-Standard-A" : storedVoice
             audioModelID = storedAudioModel.isEmpty ? "standard" : storedAudioModel
@@ -895,7 +895,7 @@ private struct ProviderConfigurationView: View {
                     .fetchAudioModels(apiKey: key)
                 settings.audioModelOptions = models
                 if !models.contains(settings.audioModelID) {
-                    settings.audioModelID = models.first ?? "gpt-4o-transcribe"
+                    settings.audioModelID = models.first ?? "gpt-live-transcribe"
                 }
                 keyMessage = localization.localized("provider.audioConnectionSuccess")
             } catch {
@@ -1027,17 +1027,23 @@ struct ConfiguredProviderClient: Sendable {
         let models = envelope.data.map(\.id)
         if baseURL.localizedCaseInsensitiveContains("api.openai.com") {
             let supported = Set([
-                "whisper-1", "gpt-4o-mini-transcribe", "gpt-4o-transcribe", "gpt-4o-transcribe-diarize",
-                "gpt-realtime", "gpt-realtime-mini", "gpt-4o-realtime-preview", "gpt-4o-mini-realtime-preview"
+                "gpt-live-transcribe", "gpt-transcribe", "gpt-realtime-whisper",
+                "whisper-1", "gpt-4o-mini-transcribe", "gpt-4o-transcribe", "gpt-4o-transcribe-diarize"
             ])
-            return models.filter { id in
+            let transcriptionModels = models.filter { id in
                 let normalized = id.lowercased()
-                return supported.contains(id) || normalized.contains("transcri") || normalized.contains("realtime")
-            }.sorted()
+                return supported.contains(id) || normalized.contains("transcri") || normalized.contains("realtime-whisper")
+            }
+            let preferredOrder = ["gpt-live-transcribe", "gpt-transcribe", "gpt-realtime-whisper", "gpt-4o-transcribe", "gpt-4o-mini-transcribe", "whisper-1"]
+            return transcriptionModels.sorted { left, right in
+                let leftPriority = preferredOrder.firstIndex(of: left) ?? Int.max
+                let rightPriority = preferredOrder.firstIndex(of: right) ?? Int.max
+                return leftPriority == rightPriority ? left < right : leftPriority < rightPriority
+            }
         }
         let audioModels = models.filter { id in
             let normalized = id.lowercased()
-            return normalized.contains("transcri") || normalized.contains("whisper") || normalized.contains("speech-to-text") || normalized.contains("audio") || normalized.contains("realtime")
+            return normalized.contains("transcri") || normalized.contains("whisper") || normalized.contains("speech-to-text")
         }
         return audioModels.sorted()
     }
