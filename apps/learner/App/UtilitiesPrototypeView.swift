@@ -69,7 +69,10 @@ final class LiveTranscriptionController {
     private var modernResultsTask: Task<Void, Never>?
     private var audioMeter: AudioInputMeter?
     private var cloudSession: AVCaptureSession?
+    private var cloudCaptureQueue: DispatchQueue?
     private var cloudSocket: URLSessionWebSocketTask?
+    private var cloudURLSession: URLSession?
+    private var cloudSocketDelegate: CloudWebSocketDelegate?
     private var cloudReceiveTask: Task<Void, Never>?
 
     var visibleText: String {
@@ -129,12 +132,16 @@ final class LiveTranscriptionController {
             return
         }
         if let cloudSession {
-            cloudSession.stopRunning()
+            cloudCaptureQueue?.async { cloudSession.stopRunning() }
             self.cloudSession = nil
+            cloudCaptureQueue = nil
             cloudReceiveTask?.cancel()
             cloudReceiveTask = nil
             let socket = cloudSocket
             cloudSocket = nil
+            cloudURLSession?.invalidateAndCancel()
+            cloudURLSession = nil
+            cloudSocketDelegate = nil
             Task {
                 if let socket {
                     try? await socket.send(.string("{\"type\":\"input_audio_buffer.commit\"}"))
@@ -287,9 +294,20 @@ final class LiveTranscriptionController {
             var request = URLRequest(url: URL(string: "wss://api.openai.com/v1/realtime?intent=transcription")!)
             request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
             request.setValue("realtime=v1", forHTTPHeaderField: "OpenAI-Beta")
-            let socket = URLSession.shared.webSocketTask(with: request)
+            let delegate = CloudWebSocketDelegate { [weak self] code in
+                Task { @MainActor in
+                    guard self?.cloudSocket != nil else { return }
+                    self?.errorMessage = "Realtime socket closed (\(code.rawValue)). Check the OpenAI API key, network, and selected transcription model."
+                    self?.isRecording = false
+                    self?.isStarting = false
+                }
+            }
+            let urlSession = URLSession(configuration: .default, delegate: delegate, delegateQueue: nil)
+            let socket = urlSession.webSocketTask(with: request)
             socket.resume()
             cloudSocket = socket
+            cloudURLSession = urlSession
+            cloudSocketDelegate = delegate
             startCloudReceiveLoop(socket)
 
             let supportedModels = ["whisper-1", "gpt-4o-mini-transcribe", "gpt-4o-transcribe", "gpt-4o-transcribe-diarize"]
@@ -342,15 +360,23 @@ final class LiveTranscriptionController {
             captureSession.addOutput(output)
             captureSession.commitConfiguration()
             cloudSession = captureSession
+            let captureQueue = DispatchQueue(label: "ai.linguabrain.cloud-capture")
+            cloudCaptureQueue = captureQueue
             audioMeter = meter
-            captureSession.startRunning()
+            captureQueue.async { captureSession.startRunning() }
             isRecording = true
             isStarting = false
         } catch {
-            cloudSession?.stopRunning()
+            if let cloudSession {
+                cloudCaptureQueue?.async { cloudSession.stopRunning() }
+            }
             cloudSession = nil
+            cloudCaptureQueue = nil
             cloudSocket?.cancel(with: .abnormalClosure, reason: nil)
             cloudSocket = nil
+            cloudURLSession?.invalidateAndCancel()
+            cloudURLSession = nil
+            cloudSocketDelegate = nil
             errorMessage = error.localizedDescription
             isStarting = false
         }
@@ -427,6 +453,20 @@ private enum TranscriptionError: LocalizedError {
         case .captureOutputUnavailable: "The microphone capture output could not be created."
         case .audioFormatUnavailable: "No compatible audio format is available for live transcription."
         }
+    }
+}
+
+private final class CloudWebSocketDelegate: NSObject, URLSessionWebSocketDelegate, @unchecked Sendable {
+    private let onClose: @Sendable (URLSessionWebSocketTask.CloseCode) -> Void
+
+    init(onClose: @escaping @Sendable (URLSessionWebSocketTask.CloseCode) -> Void) {
+        self.onClose = onClose
+    }
+
+    func urlSession(_ session: URLSession, webSocketTask: URLSessionWebSocketTask, didOpenWithProtocol protocol: String?) {}
+
+    func urlSession(_ session: URLSession, webSocketTask: URLSessionWebSocketTask, didCloseWith closeCode: URLSessionWebSocketTask.CloseCode, reason: Data?) {
+        onClose(closeCode)
     }
 }
 
