@@ -579,14 +579,15 @@ private final class AudioPCMAccumulator: @unchecked Sendable {
         lock.lock()
         defer { lock.unlock() }
         pending.append(data)
-        guard pending.count >= minimumBytes else { return [] }
-        let chunkCount = pending.count / minimumBytes
-        let bytesToEmit = chunkCount * minimumBytes
-        let emitted = pending.prefix(bytesToEmit)
-        pending.removeFirst(bytesToEmit)
-        return stride(from: 0, to: emitted.count, by: minimumBytes).map {
-            Data(emitted[$0 ..< min($0 + minimumBytes, emitted.count)])
+        var chunks: [Data] = []
+        while pending.count >= minimumBytes {
+            // Copy the slice before mutating `pending`. Keeping a live
+            // Data.SubSequence while removing bytes from its source can
+            // trigger an exclusivity trap in Swift's runtime.
+            chunks.append(Data(pending.prefix(minimumBytes)))
+            pending.removeFirst(minimumBytes)
         }
+        return chunks
     }
 }
 
