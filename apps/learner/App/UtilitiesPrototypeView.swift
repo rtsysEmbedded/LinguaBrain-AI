@@ -134,7 +134,10 @@ final class LiveTranscriptionController {
             return
         }
         if let cloudSession {
-            cloudCaptureQueue?.async { cloudSession.stopRunning() }
+            cloudCaptureQueue?.async {
+                guard cloudSession.isRunning else { return }
+                cloudSession.stopRunning()
+            }
             self.cloudSession = nil
             cloudCaptureQueue = nil
             cloudReceiveTask?.cancel()
@@ -409,7 +412,10 @@ final class LiveTranscriptionController {
             isStarting = false
         } catch {
             if let cloudSession {
-                cloudCaptureQueue?.async { cloudSession.stopRunning() }
+                cloudCaptureQueue?.async {
+                    guard cloudSession.isRunning else { return }
+                    cloudSession.stopRunning()
+                }
             }
             cloudSession = nil
             cloudCaptureQueue = nil
