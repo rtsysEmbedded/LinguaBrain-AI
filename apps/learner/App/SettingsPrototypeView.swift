@@ -1026,16 +1026,22 @@ struct ConfiguredProviderClient: Sendable {
         }
         let models = envelope.data.map(\.id)
         if baseURL.localizedCaseInsensitiveContains("api.openai.com") {
-            let supported = Set([
+            let officialTestOrder = [
                 "gpt-live-transcribe", "gpt-transcribe", "gpt-realtime-whisper",
                 "whisper-1", "gpt-4o-mini-transcribe", "gpt-4o-transcribe", "gpt-4o-transcribe-diarize"
-            ])
+            ]
+            let supported = Set(officialTestOrder)
             let transcriptionModels = models.filter { id in
                 let normalized = id.lowercased()
                 return supported.contains(id) || normalized.contains("transcri") || normalized.contains("realtime-whisper")
             }
+            // Some account/model-list responses omit specialized Realtime
+            // transcription aliases even though the endpoint accepts them.
+            // Keep the official test candidates visible; runtime errors remain
+            // explicit evidence of account access or model incompatibility.
+            let candidates = Array(Set(transcriptionModels).union(officialTestOrder))
             let preferredOrder = ["gpt-live-transcribe", "gpt-transcribe", "gpt-realtime-whisper", "gpt-4o-transcribe", "gpt-4o-mini-transcribe", "whisper-1"]
-            return transcriptionModels.sorted { left, right in
+            return candidates.sorted { left, right in
                 let leftPriority = preferredOrder.firstIndex(of: left) ?? Int.max
                 let rightPriority = preferredOrder.firstIndex(of: right) ?? Int.max
                 return leftPriority == rightPriority ? left < right : leftPriority < rightPriority

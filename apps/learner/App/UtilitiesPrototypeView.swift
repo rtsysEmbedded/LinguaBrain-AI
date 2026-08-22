@@ -331,6 +331,10 @@ final class LiveTranscriptionController {
             ]
             let requestedModel = settings.audioModelID == "gpt-4o-mini-tts" ? "gpt-4o-transcribe" : settings.audioModelID
             let transcriptionModel = supportedModels.contains(requestedModel) ? requestedModel : "gpt-live-transcribe"
+            let transcriptionConfiguration = Self.transcriptionConfiguration(
+                model: transcriptionModel,
+                languageTag: languageTag
+            )
             let sessionUpdate: [String: Any] = [
                 "type": "session.update",
                 "session": [
@@ -338,12 +342,12 @@ final class LiveTranscriptionController {
                     "audio": [
                         "input": [
                             "format": ["type": "audio/pcm", "rate": 24_000],
-                            "transcription": ["model": transcriptionModel, "language": languageTag],
+                            "transcription": transcriptionConfiguration,
                             "turn_detection": [
                                 "type": "server_vad",
                                 "threshold": 0.5,
                                 "prefix_padding_ms": 300,
-                                "silence_duration_ms": 600
+                                "silence_duration_ms": 400
                             ],
                             "noise_reduction": ["type": "near_field"]
                         ]
@@ -461,6 +465,31 @@ final class LiveTranscriptionController {
         guard let data = try? JSONSerialization.data(withJSONObject: object),
               let string = String(data: data, encoding: .utf8) else { return "{}" }
         return string
+    }
+
+    private static func transcriptionConfiguration(model: String, languageTag: String) -> [String: Any] {
+        switch model {
+        case "gpt-live-transcribe":
+            // The live model rejects the legacy singular `language` field.
+            // Low delay is OpenAI's recommended starting point for captions.
+            return [
+                "model": model,
+                "languages": [languageTag],
+                "delay": "low"
+            ]
+        case "gpt-realtime-whisper":
+            // Keep this comparison profile minimal until physical-device
+            // evidence confirms which optional hints the account accepts.
+            return ["model": model]
+        case "gpt-transcribe":
+            // This model begins transcription after a turn is committed. With
+            // server VAD selected above, visible text is expected after silence.
+            return ["model": model]
+        default:
+            // Legacy GPT-4o/Whisper transcription models accept the singular
+            // ISO-639-1 language hint used by the older Realtime contract.
+            return ["model": model, "language": languageTag]
+        }
     }
 
     private static func sendCloudMessage(_ json: String, via socket: URLSessionWebSocketTask, attempts: Int = 10) async throws {
@@ -637,7 +666,7 @@ private final class RealtimeAudioProcessor: @unchecked Sendable {
     private let lock = NSLock()
     private let converter: AVAudioConverter
     private let outputFormat: AVAudioFormat
-    private let accumulator = AudioPCMAccumulator(minimumBytes: 9_600)
+    private let accumulator = AudioPCMAccumulator(minimumBytes: 4_800)
 
     init?(inputFormat: AVAudioFormat) {
         guard inputFormat.sampleRate > 0,
@@ -714,7 +743,7 @@ private final class RealtimeAudioProcessor: @unchecked Sendable {
 }
 
 /// Buffers microphone PCM until each Realtime append contains at least 100 ms
-/// of 24 kHz, mono, 16-bit audio (9,600 bytes), as required by the API.
+/// of 24 kHz, mono, 16-bit audio (4,800 bytes), as required by the API.
 private final class AudioPCMAccumulator: @unchecked Sendable {
     private let lock = NSLock()
     private let minimumBytes: Int

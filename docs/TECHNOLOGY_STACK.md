@@ -36,7 +36,7 @@ This is an operational constraint, not just documentation. Before editing platfo
 | Speech, local | SpeechAnalyzer / SpeechTranscriber | Apple SDK | On-device transcription | High |
 | Audio capture | AVFoundation / AVCaptureSession | Apple SDK | Microphone capture and input meter | High |
 | Audio transcription, cloud | OpenAI Realtime transcription | GA WebSocket protocol | Streaming cloud transcription | High |
-| Cloud transcription models | OpenAI transcription models | Selected after `/v1/models` test | `gpt-4o-transcribe`, `gpt-4o-mini-transcribe`, `whisper-1`, diarization where available | High |
+| Cloud transcription models | OpenAI transcription models | Official candidates plus account/runtime validation | Preferred `gpt-live-transcribe`; compare `gpt-realtime-whisper`; committed-turn `gpt-transcribe`; GPT-4o/Whisper fallbacks | High |
 | AI text provider | OpenAI-compatible HTTP API | Provider-configured | Card generation, examples, translation | High |
 | Networking | URLSession / URLSessionWebSocketTask | Apple SDK | HTTP, SSE, and Realtime WebSocket calls | Medium |
 | Security | Keychain Services | Apple SDK | Local API-key storage | High |

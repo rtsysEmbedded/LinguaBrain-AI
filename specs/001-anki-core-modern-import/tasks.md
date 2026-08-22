@@ -58,6 +58,8 @@
 - [x] T034 [US12] Add the Utilities surface and working on-device streaming speech-to-text prototype with explicit microphone/Speech permission handling.
 - [ ] T035 [US12] Implement the OpenAI Realtime cloud transcription provider behind the Utilities provider boundary, including short-lived sessions, 24 kHz PCM streaming, turn detection, cancellation, consent, and redacted diagnostics.
 - [x] T036 [US12] Add copyable transcript/translation output and AI translation controls for Persian, German, and English.
+- [~] T037 [US12] Validate the OpenAI realtime-transcription model matrix and latency behavior on physical Mac/iPhone: keep `gpt-4o-transcribe` as the partially working turn-based baseline, configure `gpt-live-transcribe` for incremental deltas with low delay and language hints, compare `gpt-realtime-whisper`, and record empty/delayed/error outcomes per model without marking T035 complete prematurely.
+- [ ] T038 [US12] Prototype `gpt-realtime` as a separate bidirectional Voice Agent mode. Do not expose it as a pure speech-to-text model: general Realtime audio input/output and transcription-only sessions have different product behavior, event contracts, and costs.
 
 ## Dependencies and Parallel Work
 
