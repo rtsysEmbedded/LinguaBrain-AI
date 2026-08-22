@@ -152,10 +152,29 @@ final class LiveTranscriptionController {
                 try await request.downloadAndInstall()
             }
 
-            let captureProvider = try await CaptureInputSequenceProvider.providerWithSession(
-                from: device,
-                compatibleWith: modules
+            // Build the capture session explicitly. On the current iOS/macOS
+            // 27 SDK, the convenience providerWithSession(from:) can crash
+            // inside Speech.framework before returning an error for some
+            // microphone routes. The explicit initializer keeps ownership of
+            // the AVCaptureSession in this controller and avoids that path.
+            let captureSession = AVCaptureSession()
+            captureSession.beginConfiguration()
+            let captureInput = try AVCaptureDeviceInput(device: device)
+            guard captureSession.canAddInput(captureInput) else {
+                captureSession.commitConfiguration()
+                throw TranscriptionError.captureInputUnavailable
+            }
+            captureSession.addInput(captureInput)
+            guard let analyzerFormat = await SpeechAnalyzer.bestAvailableAudioFormat(compatibleWith: modules) else {
+                captureSession.commitConfiguration()
+                throw TranscriptionError.audioFormatUnavailable
+            }
+            let captureProvider = try CaptureInputSequenceProvider(
+                session: captureSession,
+                analyzerFormat: analyzerFormat,
+                priority: nil
             )
+            captureSession.commitConfiguration()
             let analyzer = SpeechAnalyzer(modules: modules)
             modernTranscriber = transcriber
             modernAnalyzer = analyzer
@@ -192,6 +211,18 @@ final class LiveTranscriptionController {
         }
     }
 
+}
+
+private enum TranscriptionError: LocalizedError {
+    case captureInputUnavailable
+    case audioFormatUnavailable
+
+    var errorDescription: String? {
+        switch self {
+        case .captureInputUnavailable: "The selected microphone cannot be attached to the capture session."
+        case .audioFormatUnavailable: "No compatible audio format is available for live transcription."
+        }
+    }
 }
 
 struct UtilitiesPrototypeView: View {
