@@ -149,6 +149,8 @@ SpeechAnalyzer, AVFoundation audio routing, SwiftUI Observation, CloudKit entitl
 
 The app uses a transcription-only Realtime WebSocket session. Keep the WebSocket session schema, audio format, event names, authentication method, and supported transcription model list aligned with the current official API reference. Never assume that a model returned by a general `/models` endpoint is valid for the selected Realtime session.
 
+Audio provider models are role-specific: Speech/TTS is output audio for card pronunciation, Transcript is speech-to-text for completed or committed audio, and Live Stream is low-latency incremental speech-to-text. Application features select a role and must not reuse a generic audio model across incompatible endpoints.
+
 ### FSRS
 
 The current scheduler is intentionally pinned to `FSRS-6.0/default-21`. An algorithm upgrade requires reference-vector tests and a documented migration strategy for existing memory states.

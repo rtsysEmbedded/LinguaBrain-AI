@@ -81,6 +81,7 @@ This file is the single progress checklist for LinguaBrain AI. It must be update
 - [~] Add Utilities navigation and on-device streaming speech-to-text with permission-gated microphone/Speech access (ADR-016/T034); physical macOS testing shows the meter reacts but local transcript text is still missing.
 - [x] Add copyable transcript/translation output for Persian, German, and English through the configured text Provider (T036).
 - [~] Complete physical Mac/iPhone verification of the implemented OpenAI Realtime cloud transcription path (T035/T037); the corrected cloud path is acceptable in the current macOS test, while iPhone verification and the remaining model/latency matrix are still open.
+- [x] Separate Audio provider model roles: card pronunciation uses Speech/TTS, completed audio uses Transcript, and low-latency microphone text uses Live Stream; Utilities reads the selected Transcript/Live model directly from Settings.
 - [ ] Complete the Utilities transcription visual-design pass after provider behavior is explicit and testable (T039).
 - [x] Classify and place the vocabulary prototype at `experiments/vocabulary-mvp/` according to [ADR-001](decisions/ADR-001-Repository-Package-and-Module-Layout.md).
 - [ ] Configure a Git remote and push `main`.

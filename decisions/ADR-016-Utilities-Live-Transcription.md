@@ -36,6 +36,8 @@ A later `gpt-live-transcribe` test reached OpenAI but the server rejected the se
 
 Physical macOS retesting after that correction found the OpenAI cloud path acceptable for the current prototype. The Apple on-device/local mode still captures input activity but does not produce transcript text, so its implementation remains incomplete. The Utilities transcription UI also requires a dedicated visual-design pass; that work is tracked separately from transcription correctness so a cosmetic change cannot hide an unresolved provider failure.
 
+Audio-provider configuration uses separate model roles. The speech/TTS model generates pronunciation audio for cards; the transcript model handles completed or explicitly committed audio; and the live-stream model handles low-latency microphone text. Utilities exposes Transcript and Live Stream modes and resolves their model IDs directly from these persisted settings. A feature must request a role rather than reading one generic audio model ID.
+
 OpenAI's current transcription contract distinguishes the models:
 
 - `gpt-live-transcribe` is the preferred low-latency caption model and must receive `languages` (not legacy `language`) plus an explicit delay profile;

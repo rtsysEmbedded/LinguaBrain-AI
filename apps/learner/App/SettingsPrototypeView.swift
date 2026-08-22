@@ -444,6 +444,10 @@ final class PrototypeAISettings {
     private static let imageModelKey = "prototype.provider.image.model"
     private static let audioModelKey = "prototype.provider.audio.model"
     private static let audioModelOptionsKey = "prototype.provider.audio.model-options"
+    private static let audioTranscriptModelKey = "prototype.provider.audio.transcript-model"
+    private static let audioTranscriptModelOptionsKey = "prototype.provider.audio.transcript-model-options"
+    private static let audioStreamModelKey = "prototype.provider.audio.stream-model"
+    private static let audioStreamModelOptionsKey = "prototype.provider.audio.stream-model-options"
 
     var textMode: PrototypeProviderMode { didSet { UserDefaults.standard.set(textMode.rawValue, forKey: Self.textModeKey) } }
     var audioMode: PrototypeProviderMode { didSet { UserDefaults.standard.set(audioMode.rawValue, forKey: Self.audioModeKey) } }
@@ -458,6 +462,14 @@ final class PrototypeAISettings {
     var audioModelID: String { didSet { UserDefaults.standard.set(audioModelID, forKey: Self.audioModelKey) } }
     var audioModelOptions: [String] {
         didSet { UserDefaults.standard.set(audioModelOptions, forKey: Self.audioModelOptionsKey) }
+    }
+    var audioTranscriptModelID: String { didSet { UserDefaults.standard.set(audioTranscriptModelID, forKey: Self.audioTranscriptModelKey) } }
+    var audioTranscriptModelOptions: [String] {
+        didSet { UserDefaults.standard.set(audioTranscriptModelOptions, forKey: Self.audioTranscriptModelOptionsKey) }
+    }
+    var audioStreamModelID: String { didSet { UserDefaults.standard.set(audioStreamModelID, forKey: Self.audioStreamModelKey) } }
+    var audioStreamModelOptions: [String] {
+        didSet { UserDefaults.standard.set(audioStreamModelOptions, forKey: Self.audioStreamModelOptionsKey) }
     }
 
     var modelID: String {
@@ -502,14 +514,49 @@ final class PrototypeAISettings {
         audioProtocolName = resolvedAudioProtocol
         if resolvedAudioProtocol == "openai-compatible" {
             audioVoice = storedVoice.isEmpty || storedVoice.contains("Standard-") ? "alloy" : storedVoice
-            audioModelID = storedAudioModel.isEmpty || storedAudioModel == "standard" || storedAudioModel == "gpt-4o-mini-tts" ? "gpt-live-transcribe" : storedAudioModel
+            // `audioModelID` remains the speech-synthesis role used by card
+            // pronunciation. Older builds stored transcription models here;
+            // migrate those installations back to a valid TTS default.
+            let storedLooksLikeTranscription = storedAudioModel.localizedCaseInsensitiveContains("transcri")
+                || storedAudioModel.localizedCaseInsensitiveContains("whisper")
+            audioModelID = storedAudioModel.isEmpty || storedAudioModel == "standard" || storedLooksLikeTranscription
+                ? "gpt-4o-mini-tts"
+                : storedAudioModel
         } else {
             audioVoice = storedVoice.isEmpty ? "de-DE-Standard-A" : storedVoice
             audioModelID = storedAudioModel.isEmpty ? "standard" : storedAudioModel
         }
         imageModelID = UserDefaults.standard.string(forKey: Self.imageModelKey) ?? "gpt-image-1-mini"
         modelID = UserDefaults.standard.string(forKey: Self.modelKey) ?? "gpt-4o-mini"
-        audioModelOptions = UserDefaults.standard.stringArray(forKey: Self.audioModelOptionsKey) ?? []
+        let storedAudioOptions = UserDefaults.standard.stringArray(forKey: Self.audioModelOptionsKey) ?? []
+        let storedTranscriptOptions = UserDefaults.standard.stringArray(forKey: Self.audioTranscriptModelOptionsKey) ?? []
+        let storedStreamOptions = UserDefaults.standard.stringArray(forKey: Self.audioStreamModelOptionsKey) ?? []
+        if resolvedAudioProtocol == "openai-compatible" {
+            let migratedSpeech = storedAudioOptions.filter {
+                $0.localizedCaseInsensitiveContains("tts") || $0.localizedCaseInsensitiveContains("speech-generation")
+            }
+            let migratedTranscript = storedAudioOptions.filter {
+                ($0.localizedCaseInsensitiveContains("transcri") || $0.localizedCaseInsensitiveContains("whisper"))
+                    && !$0.localizedCaseInsensitiveContains("live")
+                    && !$0.localizedCaseInsensitiveContains("realtime")
+            }
+            let migratedStream = storedAudioOptions.filter {
+                $0.localizedCaseInsensitiveContains("live-transcri") || $0.localizedCaseInsensitiveContains("realtime-whisper")
+            }
+            audioModelOptions = migratedSpeech.isEmpty ? ["gpt-4o-mini-tts", "tts-1", "tts-1-hd"] : migratedSpeech
+            audioTranscriptModelOptions = storedTranscriptOptions.isEmpty
+                ? (migratedTranscript.isEmpty ? ["gpt-transcribe", "gpt-4o-transcribe", "gpt-4o-mini-transcribe", "whisper-1"] : migratedTranscript)
+                : storedTranscriptOptions
+            audioStreamModelOptions = storedStreamOptions.isEmpty
+                ? (migratedStream.isEmpty ? ["gpt-live-transcribe", "gpt-realtime-whisper"] : migratedStream)
+                : storedStreamOptions
+        } else {
+            audioModelOptions = storedAudioOptions
+            audioTranscriptModelOptions = storedTranscriptOptions
+            audioStreamModelOptions = storedStreamOptions
+        }
+        audioTranscriptModelID = UserDefaults.standard.string(forKey: Self.audioTranscriptModelKey) ?? "gpt-transcribe"
+        audioStreamModelID = UserDefaults.standard.string(forKey: Self.audioStreamModelKey) ?? "gpt-live-transcribe"
         cloudConsent = UserDefaults.standard.bool(forKey: Self.consentKey)
         hasAPIKey = (try? Self.readTextOrLegacyKey()) != nil
     }
@@ -782,16 +829,31 @@ private struct ProviderConfigurationView: View {
                     }
                 } else if kind == .audio {
                     if settings.audioMode == .cloud {
-                        if settings.audioModelOptions.isEmpty {
+                        if settings.audioModelOptions.isEmpty,
+                           settings.audioTranscriptModelOptions.isEmpty,
+                           settings.audioStreamModelOptions.isEmpty {
                             Text(localization.localized("provider.audioModelsNotLoaded"))
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                         } else {
-                            Picker(localization.localized("provider.audioModel"), selection: $settings.audioModelID) {
+                            Picker(localization.localized("provider.audioSpeechModel"), selection: $settings.audioModelID) {
                                 ForEach(settings.audioModelOptions, id: \.self) { model in
                                     Text(model).tag(model)
                                 }
                             }
+                            Picker(localization.localized("provider.audioTranscriptModel"), selection: $settings.audioTranscriptModelID) {
+                                ForEach(settings.audioTranscriptModelOptions, id: \.self) { model in
+                                    Text(model).tag(model)
+                                }
+                            }
+                            Picker(localization.localized("provider.audioStreamModel"), selection: $settings.audioStreamModelID) {
+                                ForEach(settings.audioStreamModelOptions, id: \.self) { model in
+                                    Text(model).tag(model)
+                                }
+                            }
+                            Text(localization.localized("provider.audioModelRolesDescription"))
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
                         }
                     } else if settings.audioMode == .local {
                         Text(localization.localized("provider.audioLocalDescription"))
@@ -891,11 +953,19 @@ private struct ProviderConfigurationView: View {
         Task {
             do {
                 let key = try settings.apiKey(for: "audio")
-                let models = try await ConfiguredProviderClient(baseURL: settings.audioEndpoint, protocolName: settings.audioProtocolName)
-                    .fetchAudioModels(apiKey: key)
-                settings.audioModelOptions = models
-                if !models.contains(settings.audioModelID) {
-                    settings.audioModelID = models.first ?? "gpt-live-transcribe"
+                let catalog = try await ConfiguredProviderClient(baseURL: settings.audioEndpoint, protocolName: settings.audioProtocolName)
+                    .fetchAudioModelCatalog(apiKey: key)
+                settings.audioModelOptions = catalog.speech
+                settings.audioTranscriptModelOptions = catalog.transcript
+                settings.audioStreamModelOptions = catalog.stream
+                if !catalog.speech.contains(settings.audioModelID) {
+                    settings.audioModelID = catalog.speech.first ?? "gpt-4o-mini-tts"
+                }
+                if !catalog.transcript.contains(settings.audioTranscriptModelID) {
+                    settings.audioTranscriptModelID = catalog.transcript.first ?? "gpt-transcribe"
+                }
+                if !catalog.stream.contains(settings.audioStreamModelID) {
+                    settings.audioStreamModelID = catalog.stream.first ?? "gpt-live-transcribe"
                 }
                 keyMessage = localization.localized("provider.audioConnectionSuccess")
             } catch {
@@ -1013,7 +1083,13 @@ struct ConfiguredProviderClient: Sendable {
         }
     }
 
-    func fetchAudioModels(apiKey: String) async throws -> [String] {
+    struct AudioModelCatalog {
+        let speech: [String]
+        let transcript: [String]
+        let stream: [String]
+    }
+
+    func fetchAudioModelCatalog(apiKey: String) async throws -> AudioModelCatalog {
         var request = URLRequest(url: URL(string: "\(baseURL)/models")!)
         request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
         let (data, response) = try await URLSession.shared.data(for: request)
@@ -1026,32 +1102,50 @@ struct ConfiguredProviderClient: Sendable {
         }
         let models = envelope.data.map(\.id)
         if baseURL.localizedCaseInsensitiveContains("api.openai.com") {
-            let officialTestOrder = [
-                "gpt-live-transcribe", "gpt-transcribe", "gpt-realtime-whisper",
-                "whisper-1", "gpt-4o-mini-transcribe", "gpt-4o-transcribe", "gpt-4o-transcribe-diarize"
-            ]
-            let supported = Set(officialTestOrder)
-            let transcriptionModels = models.filter { id in
+            let speechOrder = ["gpt-4o-mini-tts", "tts-1", "tts-1-hd"]
+            let transcriptOrder = ["gpt-transcribe", "gpt-4o-transcribe", "gpt-4o-mini-transcribe", "gpt-4o-transcribe-diarize", "whisper-1"]
+            let streamOrder = ["gpt-live-transcribe", "gpt-realtime-whisper"]
+            let speechModels = models.filter { id in
                 let normalized = id.lowercased()
-                return supported.contains(id) || normalized.contains("transcri") || normalized.contains("realtime-whisper")
+                return normalized.contains("tts") || (normalized.contains("speech") && !normalized.contains("speech-to-text"))
             }
-            // Some account/model-list responses omit specialized Realtime
-            // transcription aliases even though the endpoint accepts them.
-            // Keep the official test candidates visible; runtime errors remain
-            // explicit evidence of account access or model incompatibility.
-            let candidates = Array(Set(transcriptionModels).union(officialTestOrder))
-            let preferredOrder = ["gpt-live-transcribe", "gpt-transcribe", "gpt-realtime-whisper", "gpt-4o-transcribe", "gpt-4o-mini-transcribe", "whisper-1"]
-            return candidates.sorted { left, right in
-                let leftPriority = preferredOrder.firstIndex(of: left) ?? Int.max
-                let rightPriority = preferredOrder.firstIndex(of: right) ?? Int.max
-                return leftPriority == rightPriority ? left < right : leftPriority < rightPriority
+            let transcriptModels = models.filter { id in
+                let normalized = id.lowercased()
+                return (normalized.contains("transcri") || normalized.contains("whisper"))
+                    && !normalized.contains("live") && !normalized.contains("realtime")
             }
+            let streamModels = models.filter { id in
+                let normalized = id.lowercased()
+                return normalized.contains("live-transcri") || normalized.contains("realtime-whisper")
+            }
+            return AudioModelCatalog(
+                speech: Self.preferredModels(speechModels, including: speechOrder, order: speechOrder),
+                transcript: Self.preferredModels(transcriptModels, including: transcriptOrder, order: transcriptOrder),
+                stream: Self.preferredModels(streamModels, including: streamOrder, order: streamOrder)
+            )
         }
-        let audioModels = models.filter { id in
+        let speech = models.filter { id in
+            let normalized = id.lowercased()
+            return normalized.contains("tts") || normalized.contains("speech-generation")
+        }.sorted()
+        let stream = models.filter { id in
+            let normalized = id.lowercased()
+            return normalized.contains("live") || normalized.contains("realtime") || normalized.contains("stream")
+        }.filter { $0.localizedCaseInsensitiveContains("transcri") || $0.localizedCaseInsensitiveContains("whisper") }.sorted()
+        let transcript = models.filter { id in
             let normalized = id.lowercased()
             return normalized.contains("transcri") || normalized.contains("whisper") || normalized.contains("speech-to-text")
+        }.filter { !stream.contains($0) }.sorted()
+        return AudioModelCatalog(speech: speech, transcript: transcript, stream: stream)
+    }
+
+    private static func preferredModels(_ discovered: [String], including official: [String], order: [String]) -> [String] {
+        let candidates = Array(Set(discovered).union(official))
+        return candidates.sorted { left, right in
+            let leftPriority = order.firstIndex(of: left) ?? Int.max
+            let rightPriority = order.firstIndex(of: right) ?? Int.max
+            return leftPriority == rightPriority ? left < right : leftPriority < rightPriority
         }
-        return audioModels.sorted()
     }
 
     func generateCard(word: String, domain: String, model: String, apiKey: String, sourceLanguageTag: String = "fa", targetLanguageTag: String = "de") async throws -> ConfiguredProviderCard {

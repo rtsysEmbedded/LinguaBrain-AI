@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-08-22 — Role-specific audio provider models
+
+- Split Audio settings into Speech/TTS, Transcript, and Live Stream model selections with independent persistence and model lists.
+- Added Transcript and Live Stream modes to Utilities and connected each mode directly to its corresponding Settings model.
+- Repaired legacy installations where a transcription model had been stored in the card-pronunciation TTS field.
+- Added localized labels and descriptions in English, German, and Persian.
+
 ## 2026-08-22 — Realtime transcription manual-turn compatibility
 
 - Removed automatic turn detection from the dedicated OpenAI transcription session after physical testing reported that detection is unsupported for the selected live transcription mode.

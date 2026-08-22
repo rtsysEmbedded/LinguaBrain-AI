@@ -53,6 +53,19 @@ enum PrototypeTranscriptionProvider: String, CaseIterable, Identifiable {
     }
 }
 
+enum PrototypeCloudTranscriptionMode: String, CaseIterable, Identifiable {
+    case transcript
+    case liveStream
+
+    var id: Self { self }
+    var titleKey: String {
+        switch self {
+        case .transcript: "utilities.mode.transcript"
+        case .liveStream: "utilities.mode.stream"
+        }
+    }
+}
+
 @MainActor
 @Observable
 final class LiveTranscriptionController {
@@ -99,14 +112,18 @@ final class LiveTranscriptionController {
         errorMessage = nil
     }
 
-    func start(languageTag: String = "de", aiSettings: PrototypeAISettings? = nil) {
+    func start(
+        languageTag: String = "de",
+        aiSettings: PrototypeAISettings? = nil,
+        cloudMode: PrototypeCloudTranscriptionMode = .liveStream
+    ) {
         guard !isRecording, !isStarting else { return }
         isStarting = true
         Task {
             if provider == .appleOnDevice {
                 await startModernOnDevice(languageTag: languageTag)
             } else if let aiSettings {
-                await startCloudRealtime(languageTag: languageTag, settings: aiSettings)
+                await startCloudRealtime(languageTag: languageTag, settings: aiSettings, mode: cloudMode)
             } else {
                 errorMessage = "Cloud provider settings are unavailable."
                 isStarting = false
@@ -282,7 +299,11 @@ final class LiveTranscriptionController {
         }
     }
 
-    private func startCloudRealtime(languageTag: String, settings: PrototypeAISettings) async {
+    private func startCloudRealtime(
+        languageTag: String,
+        settings: PrototypeAISettings,
+        mode: PrototypeCloudTranscriptionMode
+    ) async {
         errorMessage = nil
         guard settings.audioMode == .cloud else {
             errorMessage = "Enable the cloud audio provider in Settings first."
@@ -343,8 +364,11 @@ final class LiveTranscriptionController {
                 "gpt-live-transcribe", "gpt-transcribe", "gpt-realtime-whisper",
                 "whisper-1", "gpt-4o-mini-transcribe", "gpt-4o-transcribe", "gpt-4o-transcribe-diarize"
             ]
-            let requestedModel = settings.audioModelID == "gpt-4o-mini-tts" ? "gpt-4o-transcribe" : settings.audioModelID
-            let transcriptionModel = supportedModels.contains(requestedModel) ? requestedModel : "gpt-live-transcribe"
+            let requestedModel = mode == .liveStream
+                ? settings.audioStreamModelID
+                : settings.audioTranscriptModelID
+            let fallbackModel = mode == .liveStream ? "gpt-live-transcribe" : "gpt-transcribe"
+            let transcriptionModel = supportedModels.contains(requestedModel) ? requestedModel : fallbackModel
             let transcriptionConfiguration = Self.transcriptionConfiguration(
                 model: transcriptionModel,
                 languageTag: languageTag
@@ -796,6 +820,7 @@ struct UtilitiesPrototypeView: View {
     @State private var translationError: String?
     @State private var isTranslating = false
     @State private var liveTranslationTask: Task<Void, Never>?
+    @State private var cloudMode: PrototypeCloudTranscriptionMode = .liveStream
 
     var body: some View {
         ScrollView {
@@ -851,6 +876,21 @@ struct UtilitiesPrototypeView: View {
                      : "utilities.provider.openaiDescription"))
                     .font(.caption)
                     .foregroundStyle(.secondary)
+                if transcription.provider == .openAICloud {
+                    Picker(localization.localized("utilities.modeLabel"), selection: $cloudMode) {
+                        ForEach(PrototypeCloudTranscriptionMode.allCases) { mode in
+                            Text(localization.localized(mode.titleKey)).tag(mode)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                    LabeledContent(
+                        localization.localized("utilities.selectedModel"),
+                        value: cloudMode == .liveStream
+                            ? aiSettings.audioStreamModelID
+                            : aiSettings.audioTranscriptModelID
+                    )
+                    .font(.caption)
+                }
                 HStack {
                     Label(localization.localized("utilities.inputSource"), systemImage: "mic")
                     Spacer()
@@ -908,7 +948,11 @@ struct UtilitiesPrototypeView: View {
                         if transcription.isRecording {
                             transcription.stop()
                         } else {
-                            transcription.start(languageTag: languageSettings.targetLanguageTag, aiSettings: aiSettings)
+                            transcription.start(
+                                languageTag: languageSettings.targetLanguageTag,
+                                aiSettings: aiSettings,
+                                cloudMode: cloudMode
+                            )
                         }
                     } label: {
                         Label(localization.localized(transcription.isRecording ? "utilities.stop" : "utilities.start"), systemImage: transcription.isRecording ? "stop.fill" : "mic.fill")
