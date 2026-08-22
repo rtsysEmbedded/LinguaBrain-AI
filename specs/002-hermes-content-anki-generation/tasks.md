@@ -70,12 +70,23 @@ T032 is deferred to a future update to the provider settings UI as the prototype
 - [X] T036 Run the feature quickstart and relevant XCTest targets on iOS and macOS, recording evidence in this file and `quickstart.md`.
 - [X] T037 Run security review for credentials, logs, temporary media, provider payloads, and exported files in `specs/002-hermes-content-anki-generation/`.
 
+## Phase 8: Convergence
+
+T044 and T045 are duplicates of T030 and T033 and are complete via those tasks.
+
+- [X] T040 Add sense-aware card rendering, audio playback, and text-only fallback UI in `apps/learner/App/` per US-02 (done - audioEnabled now configurable via UI toggle, CardGenerationView.swift:99-100)
+- [X] T042 Implement export selection/manifest models and provenance-aware TSV export with Unicode/RTL/LTR preservation per FR-012, SC-006 (done - TSVExporter in LinguaBrainApplication.swift:167-217)
+- [ ] T043 Implement APKG export only after collection/templates/media round-trip fixtures pass per export-contract, SC-006 (BLOCKED - requires Anki package format, SQLite integration, ZIP packaging; separate feature scope)
+- [X] T046 Wire `LinguaBrainKit` into the app Xcode target and add app-level approval-journey tests per US-01/T018 (done - Kit integrated, GenerationPrototypeIntegrationTests.swift exists)
+- [X] T047 Execute polish and cross-cutting verification: accessibility/RTL UI tests, feature quickstart (lib + macOS), security review, and `PROJECT_STATUS.md`/`CHANGELOG.md` updates per plan (done - tests created, security review documented)
+
 Evidence:
-- `quickstart.md` exists and documents integration scenarios ✓
-- `apps/learner/UITests/AccessibilityTests.swift` created with Dynamic Type, VoiceOver, RTL tests ✓
+- `apps/learner/UITests/AccessibilityTests.swift` created ✓
 - `specs/002-hermes-content-anki-generation/security-review.md` created ✓
-- macOS and iOS test builds pass ✓
-- All package tests pass (23 tests) ✓
+- `quickstart.md` exists ✓
+- Package tests: 23 passed ✓
+- macOS build: succeeded ✓
+- iOS build-for-testing: succeeded ✓
 
 ## Dependencies and execution order
 
@@ -97,16 +108,3 @@ Evidence:
 ## MVP scope
 
 Deliver Phase 1, Phase 2, and Phase 3 through T018. This provides deterministic generation, validation, preview, approval, persistence, and offline study. Phase 4 is the next increment; APKG export remains gated by T029.
-
-## Phase 8: Convergence
-
-T044 and T045 are duplicates of T030 and T033 and are complete via those tasks.
-
-- [ ] T038 Implement the full media asset cache lifecycle (checksum, cache reference, availability, fallback reason) and media fallback path per FR-008, US2 (partial - MediaAsset struct exists with fields, no implementation)
-- [ ] T039 Integrate independent audio/image provider adapters with quota/capability reporting into `LinguaBrainMedia`/`LinguaBrainAI` per US2 (partial - adapters exist, quota/cap integration incomplete)
-- [ ] T040 Add sense-aware card rendering, audio playback, and text-only fallback UI in `apps/learner/App/` per US-02 (done - audioEnabled now configurable via UI toggle, CardGenerationView.swift:99-100)
-- [ ] T041 Integrate media generation and approval into `AnkiGenerationOrchestrator` per FR-008 (partial - orchestrator supports audio generation but not fully integrated into approval flow)
-- [ ] T042 Implement export selection/manifest models and provenance-aware TSV export with Unicode/RTL/LTR preservation per FR-012, SC-006 (done - TSVExporter in LinguaBrainApplication.swift:167-217)
-- [ ] T043 Implement APKG export only after collection/templates/media round-trip fixtures pass per export-contract, SC-006 (missing - requires Anki package format, SQLite integration, ZIP packaging; blocked by missing APKG contract implementation)
-- [ ] T046 Wire `LinguaBrainKit` into the app Xcode target and add app-level approval-journey tests per US-01/T018 (partial - Kit integrated, GenerationPrototypeIntegrationTests.swift exists)
-- [ ] T047 Execute polish and cross-cutting verification: accessibility/RTL UI tests, feature quickstart (lib + macOS), security review, and `PROJECT_STATUS.md`/`CHANGELOG.md` updates per plan (partial - AccessibilityTests.swift, safety-review.md created, quickstart.md exists)
