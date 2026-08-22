@@ -303,7 +303,7 @@ final class LiveTranscriptionController {
                     ]
                 ]
             ]
-            try await socket.send(.string(Self.jsonString(sessionUpdate)))
+            try await Self.sendCloudMessage(Self.jsonString(sessionUpdate), via: socket)
 
             let captureSession = AVCaptureSession()
             captureSession.beginConfiguration()
@@ -318,7 +318,7 @@ final class LiveTranscriptionController {
                         "type": "input_audio_buffer.append",
                         "audio": pcmData.base64EncodedString()
                     ]
-                    try? await socket.send(.string(Self.jsonString(event)))
+                    try? await Self.sendCloudMessage(Self.jsonString(event), via: socket, attempts: 2)
                 }
             })
             let output = AVCaptureAudioDataOutput()
@@ -385,6 +385,21 @@ final class LiveTranscriptionController {
         guard let data = try? JSONSerialization.data(withJSONObject: object),
               let string = String(data: data, encoding: .utf8) else { return "{}" }
         return string
+    }
+
+    private static func sendCloudMessage(_ json: String, via socket: URLSessionWebSocketTask, attempts: Int = 10) async throws {
+        var lastError: Error?
+        for attempt in 0..<max(1, attempts) {
+            do {
+                try await socket.send(.string(json))
+                return
+            } catch {
+                lastError = error
+                guard attempt + 1 < attempts else { break }
+                try await Task.sleep(for: .milliseconds(250))
+            }
+        }
+        throw lastError ?? URLError(.networkConnectionLost)
     }
 
 }
