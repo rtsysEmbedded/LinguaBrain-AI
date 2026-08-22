@@ -61,11 +61,13 @@ final class LiveTranscriptionController {
     private(set) var isRecording = false
     private var isStarting = false
     private(set) var errorMessage: String?
+    private(set) var inputLevel: Double = 0
 
     private var modernAnalyzer: SpeechAnalyzer?
     private var modernTranscriber: SpeechTranscriber?
     private var modernCaptureProvider: CaptureInputSequenceProvider?
     private var modernResultsTask: Task<Void, Never>?
+    private var audioMeter: AudioInputMeter?
 
     var visibleText: String {
         [transcript, partialTranscript].filter { !$0.isEmpty }.joined(separator: transcript.isEmpty ? "" : " ")
@@ -111,6 +113,8 @@ final class LiveTranscriptionController {
             modernTranscriber = nil
             isRecording = false
             isStarting = false
+            inputLevel = 0
+            audioMeter = nil
             Task { try? await analyzer?.finalizeAndFinishThroughEndOfInput() }
             return
         }
@@ -165,6 +169,16 @@ final class LiveTranscriptionController {
                 throw TranscriptionError.captureInputUnavailable
             }
             captureSession.addInput(captureInput)
+            let meter = AudioInputMeter { [weak self] level in
+                Task { @MainActor in self?.inputLevel = level }
+            }
+            let meterOutput = AVCaptureAudioDataOutput()
+            meterOutput.setSampleBufferDelegate(meter, queue: DispatchQueue(label: "ai.linguabrain.audio-meter"))
+            guard captureSession.canAddOutput(meterOutput) else {
+                captureSession.commitConfiguration()
+                throw TranscriptionError.captureOutputUnavailable
+            }
+            captureSession.addOutput(meterOutput)
             guard let analyzerFormat = await SpeechAnalyzer.bestAvailableAudioFormat(compatibleWith: modules) else {
                 captureSession.commitConfiguration()
                 throw TranscriptionError.audioFormatUnavailable
@@ -179,6 +193,7 @@ final class LiveTranscriptionController {
             modernTranscriber = transcriber
             modernAnalyzer = analyzer
             modernCaptureProvider = captureProvider
+            audioMeter = meter
             modernResultsTask = Task { [weak self] in
                 do {
                     for try await result in transcriber.results {
@@ -215,13 +230,42 @@ final class LiveTranscriptionController {
 
 private enum TranscriptionError: LocalizedError {
     case captureInputUnavailable
+    case captureOutputUnavailable
     case audioFormatUnavailable
 
     var errorDescription: String? {
         switch self {
         case .captureInputUnavailable: "The selected microphone cannot be attached to the capture session."
+        case .captureOutputUnavailable: "The microphone capture output could not be created."
         case .audioFormatUnavailable: "No compatible audio format is available for live transcription."
         }
+    }
+}
+
+private final class AudioInputMeter: NSObject, AVCaptureAudioDataOutputSampleBufferDelegate, @unchecked Sendable {
+    private let onLevel: @Sendable (Double) -> Void
+
+    init(onLevel: @escaping @Sendable (Double) -> Void) {
+        self.onLevel = onLevel
+    }
+
+    func captureOutput(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
+        guard let dataBuffer = CMSampleBufferGetDataBuffer(sampleBuffer) else { return }
+        var length = 0
+        var pointer: UnsafeMutablePointer<Int8>?
+        guard CMBlockBufferGetDataPointer(dataBuffer, atOffset: 0, lengthAtOffsetOut: nil, totalLengthOut: &length, dataPointerOut: &pointer) == kCMBlockBufferNoErr,
+              let pointer, length >= 2 else { return }
+        let sampleCount = length / 2
+        var energy = 0.0
+        for index in 0..<sampleCount {
+            let low = UInt16(UInt8(bitPattern: pointer[index * 2]))
+            let high = UInt16(UInt8(bitPattern: pointer[index * 2 + 1])) << 8
+            let sample = Int16(bitPattern: high | low)
+            let normalized = Double(sample) / Double(Int16.max)
+            energy += normalized * normalized
+        }
+        let rms = sqrt(energy / Double(sampleCount))
+        onLevel(min(1, max(0, rms * 4)))
     }
 }
 
@@ -297,6 +341,25 @@ struct UtilitiesPrototypeView: View {
                         .foregroundStyle(.secondary)
                 }
                 .font(.caption)
+                HStack(spacing: 4) {
+                    Image(systemName: "waveform")
+                    GeometryReader { proxy in
+                        ZStack(alignment: .leading) {
+                            Capsule().fill(Color.secondary.opacity(0.16))
+                            Capsule()
+                                .fill(transcription.inputLevel > 0.04 ? PrototypeTheme.accent : .secondary)
+                                .frame(width: proxy.size.width * max(0.03, transcription.inputLevel))
+                                .animation(.easeOut(duration: 0.08), value: transcription.inputLevel)
+                        }
+                    }
+                    .frame(height: 8)
+                    Text(transcription.inputLevel > 0.04
+                         ? localization.localized("utilities.inputActive")
+                         : localization.localized("utilities.inputWaiting"))
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
+                .frame(height: 18)
             }
         }
     }
