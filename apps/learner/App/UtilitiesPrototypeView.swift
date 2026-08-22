@@ -106,8 +106,7 @@ final class LiveTranscriptionController {
         if let captureProvider = modernCaptureProvider {
             captureProvider.captureSession.stopRunning()
             modernCaptureProvider = nil
-            modernResultsTask?.cancel()
-            modernResultsTask = nil
+            let resultsTask = modernResultsTask
             let analyzer = modernAnalyzer
             modernAnalyzer = nil
             modernTranscriber = nil
@@ -115,7 +114,11 @@ final class LiveTranscriptionController {
             isStarting = false
             inputLevel = 0
             audioMeter = nil
-            Task { try? await analyzer?.finalizeAndFinishThroughEndOfInput() }
+            Task {
+                try? await analyzer?.finalizeAndFinishThroughEndOfInput()
+                resultsTask?.cancel()
+            }
+            modernResultsTask = nil
             return
         }
         isRecording = false
@@ -211,10 +214,13 @@ final class LiveTranscriptionController {
                     self?.errorMessage = error.localizedDescription
                 }
             }
-            try await analyzer.start(inputSequence: captureProvider.analyzerInputs)
             captureProvider.captureSession.startRunning()
             isRecording = true
             isStarting = false
+            // Start capture before attaching the analyzer input sequence. This
+            // ensures the first microphone buffers are available immediately
+            // on both the native macOS target and iOS 27.
+            try await analyzer.start(inputSequence: captureProvider.analyzerInputs)
         } catch {
             modernResultsTask?.cancel()
             modernResultsTask = nil
