@@ -68,6 +68,9 @@ final class LiveTranscriptionController {
     private var modernCaptureProvider: CaptureInputSequenceProvider?
     private var modernResultsTask: Task<Void, Never>?
     private var audioMeter: AudioInputMeter?
+    private var cloudSession: AVCaptureSession?
+    private var cloudSocket: URLSessionWebSocketTask?
+    private var cloudReceiveTask: Task<Void, Never>?
 
     var visibleText: String {
         [transcript, partialTranscript].filter { !$0.isEmpty }.joined(separator: transcript.isEmpty ? "" : " ")
@@ -91,15 +94,19 @@ final class LiveTranscriptionController {
         errorMessage = nil
     }
 
-    func start(languageTag: String = "de") {
+    func start(languageTag: String = "de", aiSettings: PrototypeAISettings? = nil) {
         guard !isRecording, !isStarting else { return }
         isStarting = true
-        guard provider == .appleOnDevice else {
-            errorMessage = "Cloud live transcription requires a configured realtime transcription provider."
-            isStarting = false
-            return
+        Task {
+            if provider == .appleOnDevice {
+                await startModernOnDevice(languageTag: languageTag)
+            } else if let aiSettings {
+                await startCloudRealtime(languageTag: languageTag, settings: aiSettings)
+            } else {
+                errorMessage = "Cloud provider settings are unavailable."
+                isStarting = false
+            }
         }
-        Task { await startModernOnDevice(languageTag: languageTag) }
     }
 
     func stop() {
@@ -119,6 +126,26 @@ final class LiveTranscriptionController {
                 resultsTask?.cancel()
             }
             modernResultsTask = nil
+            return
+        }
+        if let cloudSession {
+            cloudSession.stopRunning()
+            self.cloudSession = nil
+            cloudReceiveTask?.cancel()
+            cloudReceiveTask = nil
+            let socket = cloudSocket
+            cloudSocket = nil
+            Task {
+                if let socket {
+                    try? await socket.send(.string("{\"type\":\"input_audio_buffer.commit\"}"))
+                    socket.cancel(with: .normalClosure, reason: nil)
+                }
+            }
+            audioMeter = nil
+            isRecording = false
+            isStarting = false
+            inputLevel = 0
+            partialTranscript = ""
             return
         }
         isRecording = false
@@ -232,6 +259,134 @@ final class LiveTranscriptionController {
         }
     }
 
+    private func startCloudRealtime(languageTag: String, settings: PrototypeAISettings) async {
+        errorMessage = nil
+        guard settings.audioMode == .cloud else {
+            errorMessage = "Enable the cloud audio provider in Settings first."
+            isStarting = false
+            return
+        }
+        guard settings.audioEndpoint.localizedCaseInsensitiveContains("api.openai.com") else {
+            errorMessage = "OpenAI Realtime transcription requires the api.openai.com endpoint."
+            isStarting = false
+            return
+        }
+        guard let apiKey = try? settings.apiKey(for: "audio"), !apiKey.isEmpty else {
+            errorMessage = "Save an OpenAI API key for the Audio provider in Settings."
+            isStarting = false
+            return
+        }
+        guard await AVCaptureDevice.requestAccess(for: .audio),
+              let device = AVCaptureDevice.default(for: .audio) else {
+            errorMessage = "Microphone permission was denied or no microphone is available."
+            isStarting = false
+            return
+        }
+
+        do {
+            var request = URLRequest(url: URL(string: "wss://api.openai.com/v1/realtime?intent=transcription")!)
+            request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+            request.setValue("realtime=v1", forHTTPHeaderField: "OpenAI-Beta")
+            let socket = URLSession.shared.webSocketTask(with: request)
+            socket.resume()
+            cloudSocket = socket
+
+            let sessionUpdate: [String: Any] = [
+                "type": "session.update",
+                "session": [
+                    "type": "transcription",
+                    "audio": [
+                        "input": [
+                            "format": ["type": "audio/pcm", "rate": 24_000],
+                            "transcription": ["model": settings.audioModelID == "gpt-4o-mini-tts" ? "gpt-4o-transcribe" : settings.audioModelID, "language": languageTag]
+                        ]
+                    ]
+                ]
+            ]
+            try await socket.send(.string(Self.jsonString(sessionUpdate)))
+
+            let captureSession = AVCaptureSession()
+            captureSession.beginConfiguration()
+            let captureInput = try AVCaptureDeviceInput(device: device)
+            guard captureSession.canAddInput(captureInput) else { throw TranscriptionError.captureInputUnavailable }
+            captureSession.addInput(captureInput)
+            let meter = AudioInputMeter(onLevelAndPCM: { [weak self, weak socket] level, pcmData in
+                Task { @MainActor in
+                    self?.inputLevel = level
+                    guard let socket else { return }
+                    let event: [String: Any] = [
+                        "type": "input_audio_buffer.append",
+                        "audio": pcmData.base64EncodedString()
+                    ]
+                    try? await socket.send(.string(Self.jsonString(event)))
+                }
+            })
+            let output = AVCaptureAudioDataOutput()
+            #if os(macOS)
+            output.audioSettings = [
+                AVFormatIDKey: kAudioFormatLinearPCM,
+                AVSampleRateKey: 24_000,
+                AVNumberOfChannelsKey: 1,
+                AVLinearPCMBitDepthKey: 16,
+                AVLinearPCMIsFloatKey: false,
+                AVLinearPCMIsBigEndianKey: false,
+                AVLinearPCMIsNonInterleaved: false
+            ]
+            #endif
+            output.setSampleBufferDelegate(meter, queue: DispatchQueue(label: "ai.linguabrain.cloud-audio"))
+            guard captureSession.canAddOutput(output) else { throw TranscriptionError.captureOutputUnavailable }
+            captureSession.addOutput(output)
+            captureSession.commitConfiguration()
+            cloudSession = captureSession
+            audioMeter = meter
+            cloudReceiveTask = Task { [weak self, weak socket] in
+                guard let socket else { return }
+                do {
+                    while !Task.isCancelled {
+                        let message = try await socket.receive()
+                        guard case .string(let text) = message,
+                              let data = text.data(using: .utf8),
+                              let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                              let type = object["type"] as? String else { continue }
+                        await MainActor.run {
+                            if type == "conversation.item.input_audio_transcription.delta",
+                               let delta = object["delta"] as? String {
+                                self?.partialTranscript += delta
+                            } else if type == "conversation.item.input_audio_transcription.completed",
+                                      let completed = object["transcript"] as? String {
+                                self?.transcript = [self?.transcript ?? "", completed].filter { !$0.isEmpty }.joined(separator: " ")
+                                self?.partialTranscript = ""
+                            } else if type == "error",
+                                      let details = object["error"] as? [String: Any],
+                                      let message = details["message"] as? String {
+                                self?.errorMessage = message
+                            }
+                        }
+                    }
+                } catch {
+                    guard !Task.isCancelled else { return }
+                    await MainActor.run { self?.errorMessage = error.localizedDescription }
+                }
+            }
+            captureSession.startRunning()
+            isRecording = true
+            isStarting = false
+        } catch {
+            cloudSession?.stopRunning()
+            cloudSession = nil
+            cloudSocket?.cancel(with: .abnormalClosure, reason: nil)
+            cloudSocket = nil
+            errorMessage = error.localizedDescription
+            isStarting = false
+        }
+    }
+
+    private static func jsonString(_ object: [String: Any]) -> String {
+        guard let data = try? JSONSerialization.data(withJSONObject: object),
+              let string = String(data: data, encoding: .utf8) else { return "{}" }
+        return string
+    }
+
 }
 
 private enum TranscriptionError: LocalizedError {
@@ -250,9 +405,19 @@ private enum TranscriptionError: LocalizedError {
 
 private final class AudioInputMeter: NSObject, AVCaptureAudioDataOutputSampleBufferDelegate, @unchecked Sendable {
     private let onLevel: @Sendable (Double) -> Void
+    private let onPCM: (@Sendable (Data) -> Void)?
+    private let onLevelAndPCM: (@Sendable (Double, Data) -> Void)?
 
     init(onLevel: @escaping @Sendable (Double) -> Void) {
         self.onLevel = onLevel
+        self.onPCM = nil
+        self.onLevelAndPCM = nil
+    }
+
+    init(onLevelAndPCM: @escaping @Sendable (Double, Data) -> Void) {
+        self.onLevel = { _ in }
+        self.onPCM = nil
+        self.onLevelAndPCM = onLevelAndPCM
     }
 
     func captureOutput(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
@@ -271,7 +436,10 @@ private final class AudioInputMeter: NSObject, AVCaptureAudioDataOutputSampleBuf
             energy += normalized * normalized
         }
         let rms = sqrt(energy / Double(sampleCount))
-        onLevel(min(1, max(0, rms * 4)))
+        let level = min(1, max(0, rms * 4))
+        onLevel(level)
+        onLevelAndPCM?(level, Data(bytes: pointer, count: length))
+        onPCM?(Data(bytes: pointer, count: length))
     }
 }
 
@@ -394,7 +562,11 @@ struct UtilitiesPrototypeView: View {
                 }
                 HStack {
                     Button {
-                        transcription.toggle(languageTag: languageSettings.targetLanguageTag)
+                        if transcription.isRecording {
+                            transcription.stop()
+                        } else {
+                            transcription.start(languageTag: languageSettings.targetLanguageTag, aiSettings: aiSettings)
+                        }
                     } label: {
                         Label(localization.localized(transcription.isRecording ? "utilities.stop" : "utilities.start"), systemImage: transcription.isRecording ? "stop.fill" : "mic.fill")
                     }
