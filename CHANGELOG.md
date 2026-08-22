@@ -8,6 +8,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- Reworked live microphone capture for the iOS/macOS 27 beta: Apple and OpenAI transcription now share `AVCaptureSession`; Core Media buffers are converted from their declared hardware format instead of being parsed as assumed Int16 bytes; OpenAI audio is still normalized to buffered 24 kHz mono Int16 PCM. This avoids the route-specific `AVAudioEngine`/`AUIOBase -50` startup failure and supports converter rebuilds after device-format changes. macOS signed/unsigned builds, the iOS 27 Simulator build, and 38 Swift package tests pass; physical-device streaming remains the T035 completion gate.
+
 - Added `docs/TECHNOLOGY_STACK.md` as the maintained technology inventory, version register, quarterly review process, and release-gate checklist. Linked it from `README.md`.
 - Implemented T030: OpenAI-compatible provider adapter with configurable endpoint, protocol (OpenAI-compatible, Google native), model ID, timeout, and health check support. Added `ProviderConfiguration`, `ProviderCapabilities`, `ProviderHealthCheck`, and `CredentialLoader` protocols for interchangeable providers.
 - Implemented T031: Provider health checks via `/models` endpoint, consent gates, endpoint-scoped credentials through `SecureCredentialStore`, and usage reporting via `UsageEvent`. Added `TestCredentialLoader`, `NoOpCredentialLoader`, and `FailingCredentialLoader` for testing.

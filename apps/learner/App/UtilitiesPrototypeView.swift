@@ -69,8 +69,8 @@ final class LiveTranscriptionController {
     private var modernCaptureProvider: CaptureInputSequenceProvider?
     private var modernResultsTask: Task<Void, Never>?
     private var audioMeter: AudioInputMeter?
-    private var cloudAudioEngine: AVAudioEngine?
-    private var cloudPCMProcessor: RealtimeAudioProcessor?
+    private var cloudCaptureSession: AVCaptureSession?
+    private var cloudCaptureHandler: CloudAudioCaptureHandler?
     private var cloudSocket: URLSessionWebSocketTask?
     private var cloudURLSession: URLSession?
     private var cloudSocketDelegate: CloudWebSocketDelegate?
@@ -132,11 +132,10 @@ final class LiveTranscriptionController {
             modernResultsTask = nil
             return
         }
-        if let cloudAudioEngine {
-            cloudAudioEngine.inputNode.removeTap(onBus: 0)
-            cloudAudioEngine.stop()
-            self.cloudAudioEngine = nil
-            cloudPCMProcessor = nil
+        if let cloudCaptureSession {
+            cloudCaptureSession.stopRunning()
+            self.cloudCaptureSession = nil
+            cloudCaptureHandler = nil
             cloudReceiveTask?.cancel()
             cloudReceiveTask = nil
             let socket = cloudSocket
@@ -358,18 +357,26 @@ final class LiveTranscriptionController {
                 throw TranscriptionError.noInputDevice
             }
             #endif
-            let audioEngine = AVAudioEngine()
-            let inputNode = audioEngine.inputNode
-            let inputFormat = inputNode.outputFormat(forBus: 0)
-            guard inputFormat.sampleRate > 0, inputFormat.channelCount > 0 else {
-                throw TranscriptionError.audioFormatUnavailable
+            guard let device = AVCaptureDevice.default(for: .audio) else {
+                throw TranscriptionError.noInputDevice
             }
-            guard let pcmProcessor = RealtimeAudioProcessor(inputFormat: inputFormat) else {
-                throw TranscriptionError.audioFormatUnavailable
+
+            // Use one capture stack on iOS and macOS. AVAudioEngine currently
+            // fails to initialize its AUIO unit for some microphone routes on
+            // the macOS/iOS 27 betas (OSStatus -50). AVCaptureSession delivers
+            // the microphone's real CMSampleBuffer format without forcing an
+            // Audio Unit configuration, and the delegate converts that format
+            // explicitly before sending 24 kHz PCM to the Realtime API.
+            let captureSession = AVCaptureSession()
+            captureSession.beginConfiguration()
+            let captureInput = try AVCaptureDeviceInput(device: device)
+            guard captureSession.canAddInput(captureInput) else {
+                captureSession.commitConfiguration()
+                throw TranscriptionError.captureInputUnavailable
             }
-            cloudPCMProcessor = pcmProcessor
-            let handleBuffer: @Sendable (AVAudioPCMBuffer) -> Void = { [weak self, weak socket, pcmProcessor] buffer in
-                let processed = pcmProcessor.process(buffer)
+            captureSession.addInput(captureInput)
+
+            let captureHandler = CloudAudioCaptureHandler { [weak self, weak socket] processed in
                 Task { [weak self, weak socket] in
                     guard let socket else { return }
                     for chunk in processed.chunks {
@@ -382,30 +389,27 @@ final class LiveTranscriptionController {
                     await MainActor.run { self?.inputLevel = processed.level }
                 }
             }
-            #if os(macOS)
-            // Proven macOS capture pattern used by established Swift dictation
-            // apps: native output format and the mature input-node tap.
-            inputNode.installTap(onBus: 0, bufferSize: 2_048, format: inputFormat) { buffer, _ in
-                handleBuffer(buffer)
+            let captureOutput = AVCaptureAudioDataOutput()
+            captureOutput.setSampleBufferDelegate(
+                captureHandler,
+                queue: DispatchQueue(label: "ai.linguabrain.cloud-audio-capture")
+            )
+            guard captureSession.canAddOutput(captureOutput) else {
+                captureSession.commitConfiguration()
+                throw TranscriptionError.captureOutputUnavailable
             }
-            #else
-            let tapBufferSize = AVAudioFrameCount(ceil(inputFormat.sampleRate * 0.1))
-            try inputNode.installAudioTap(onBus: 0, bufferSize: tapBufferSize, format: nil) { readOnlyBuffer, _ in
-                handleBuffer(AVAudioPCMBuffer(copying: readOnlyBuffer))
-            }
-            #endif
-            audioEngine.prepare()
-            try audioEngine.start()
-            cloudAudioEngine = audioEngine
+            captureSession.addOutput(captureOutput)
+            captureSession.commitConfiguration()
+
+            cloudCaptureSession = captureSession
+            cloudCaptureHandler = captureHandler
+            captureSession.startRunning()
             isRecording = true
             isStarting = false
         } catch {
-            if let cloudAudioEngine {
-                cloudAudioEngine.inputNode.removeTap(onBus: 0)
-                cloudAudioEngine.stop()
-            }
-            cloudAudioEngine = nil
-            cloudPCMProcessor = nil
+            cloudCaptureSession?.stopRunning()
+            cloudCaptureSession = nil
+            cloudCaptureHandler = nil
             cloudSocket?.cancel(with: .abnormalClosure, reason: nil)
             cloudSocket = nil
             cloudURLSession?.invalidateAndCancel()
@@ -549,41 +553,76 @@ private final class CloudWebSocketDelegate: NSObject, URLSessionWebSocketDelegat
 
 private final class AudioInputMeter: NSObject, AVCaptureAudioDataOutputSampleBufferDelegate, @unchecked Sendable {
     private let onLevel: @Sendable (Double) -> Void
-    private let onPCM: (@Sendable (Data) -> Void)?
-    private let onLevelAndPCM: (@Sendable (Double, Data) -> Void)?
 
     init(onLevel: @escaping @Sendable (Double) -> Void) {
         self.onLevel = onLevel
-        self.onPCM = nil
-        self.onLevelAndPCM = nil
-    }
-
-    init(onLevelAndPCM: @escaping @Sendable (Double, Data) -> Void) {
-        self.onLevel = { _ in }
-        self.onPCM = nil
-        self.onLevelAndPCM = onLevelAndPCM
     }
 
     func captureOutput(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
-        guard let dataBuffer = CMSampleBufferGetDataBuffer(sampleBuffer) else { return }
-        var length = 0
-        var pointer: UnsafeMutablePointer<Int8>?
-        guard CMBlockBufferGetDataPointer(dataBuffer, atOffset: 0, lengthAtOffsetOut: nil, totalLengthOut: &length, dataPointerOut: &pointer) == kCMBlockBufferNoErr,
-              let pointer, length >= 2 else { return }
-        let sampleCount = length / 2
-        var energy = 0.0
-        for index in 0..<sampleCount {
-            let low = UInt16(UInt8(bitPattern: pointer[index * 2]))
-            let high = UInt16(UInt8(bitPattern: pointer[index * 2 + 1])) << 8
-            let sample = Int16(bitPattern: high | low)
-            let normalized = Double(sample) / Double(Int16.max)
-            energy += normalized * normalized
+        sampleBuffer.withPCMBuffer { [onLevel] buffer in
+            onLevel(RealtimeAudioProcessor.inputLevel(buffer))
         }
-        let rms = sqrt(energy / Double(sampleCount))
-        let level = min(1, max(0, rms * 4))
-        onLevel(level)
-        onLevelAndPCM?(level, Data(bytes: pointer, count: length))
-        onPCM?(Data(bytes: pointer, count: length))
+    }
+}
+
+/// Receives microphone buffers from AVCaptureSession, preserves their actual
+/// hardware format, and lazily rebuilds the converter if a beta OS changes the
+/// active microphone route while recording.
+private final class CloudAudioCaptureHandler: NSObject, AVCaptureAudioDataOutputSampleBufferDelegate, @unchecked Sendable {
+    private let onOutput: @Sendable (RealtimeAudioProcessor.Output) -> Void
+    private var processor: RealtimeAudioProcessor?
+    private var processorFormat: AVAudioFormat?
+
+    init(onOutput: @escaping @Sendable (RealtimeAudioProcessor.Output) -> Void) {
+        self.onOutput = onOutput
+    }
+
+    func captureOutput(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
+        sampleBuffer.withPCMBuffer { [weak self] buffer in
+            guard let self else { return }
+            if processor == nil || processorFormat != buffer.format {
+                processor = RealtimeAudioProcessor(inputFormat: buffer.format)
+                processorFormat = buffer.format
+            }
+            guard let processor else { return }
+            onOutput(processor.process(buffer))
+        }
+    }
+}
+
+private extension CMSampleBuffer {
+    /// Exposes Core Media audio through AVAudioPCMBuffer for the duration of
+    /// `body`. Unlike byte-level parsing, this respects Float32/Int16,
+    /// interleaved/non-interleaved layouts, channel count, and route changes.
+    func withPCMBuffer(_ body: (AVAudioPCMBuffer) -> Void) {
+        guard let formatDescription = CMSampleBufferGetFormatDescription(self),
+              let streamDescription = CMAudioFormatDescriptionGetStreamBasicDescription(formatDescription) else {
+            return
+        }
+        var description = streamDescription.pointee
+        guard description.mFormatID == kAudioFormatLinearPCM,
+              let format = AVAudioFormat(streamDescription: &description) else {
+            return
+        }
+
+        do {
+            try withAudioBufferList(flags: .audioBufferListAssure16ByteAlignment) { audioBuffers, _ in
+                guard let buffer = AVAudioPCMBuffer(
+                    pcmFormat: format,
+                    bufferListNoCopy: UnsafePointer(audioBuffers.unsafeMutablePointer),
+                    deallocator: nil
+                ) else {
+                    return
+                }
+                buffer.frameLength = min(
+                    buffer.frameCapacity,
+                    AVAudioFrameCount(CMSampleBufferGetNumSamples(self))
+                )
+                body(buffer)
+            }
+        } catch {
+            return
+        }
     }
 }
 
@@ -649,7 +688,7 @@ private final class RealtimeAudioProcessor: @unchecked Sendable {
         return Output(level: level, chunks: accumulator.append(pcm))
     }
 
-    private static func inputLevel(_ buffer: AVAudioPCMBuffer) -> Double {
+    fileprivate static func inputLevel(_ buffer: AVAudioPCMBuffer) -> Double {
         guard buffer.frameLength > 0 else { return 0 }
         let frameCount = Int(buffer.frameLength)
         if let channels = buffer.floatChannelData {

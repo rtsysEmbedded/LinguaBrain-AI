@@ -33,7 +33,7 @@ This file is the single progress checklist for LinguaBrain AI. It must be update
 | Visual prototype | Buildable SwiftUI prototype for iPhone, iPad, and Mac; review state persists, APKG cards can be imported, approved learner cards have opt-in private iCloud backup/recovery, and Utilities includes on-device live transcription |
 | Next primary deliverable | Execute Spec Kit tasks T004E/T025–T029: complete localization QA, mixed-practice review, and future-proof audio/collocation/conversation and multi-sense card bundles |
 | Current delivery strategy | Anki Core first: secure APKG import and reliable offline review gate before AI and final visual approval |
-| Latest verification | 2026-08-21: iOS 27 Simulator build passes with the CloudKit backup code and entitlements; deterministic local snapshot/restore regression coverage is included. Signed-device CloudKit container verification remains required. |
+| Latest verification | 2026-08-22: macOS 27 signed and unsigned builds, iOS 27 Simulator build, and 38 Swift package tests pass after replacing beta-sensitive `AVAudioEngine` microphone capture with format-aware `AVCaptureSession`. Physical Mac/iPhone live-stream verification remains required. |
 
 ## Completed foundation
 
@@ -80,7 +80,7 @@ This file is the single progress checklist for LinguaBrain AI. It must be update
 - [ ] Register `iCloud.ai.linguabrain.prototype` on a paid Apple Developer Team and reattach `Resources/LinguaBrain.entitlements` before enabling signed CloudKit builds.
 - [x] Add Utilities navigation and on-device streaming speech-to-text with permission-gated microphone/Speech access (ADR-016/T034).
 - [x] Add copyable transcript/translation output for Persian, German, and English through the configured text Provider (T036).
-- [ ] Add OpenAI Realtime cloud transcription behind the Utilities provider boundary (T035).
+- [ ] Complete physical Mac/iPhone verification of the implemented OpenAI Realtime cloud transcription path (T035); compile-time integration and format-aware 24 kHz PCM transport are present.
 - [x] Classify and place the vocabulary prototype at `experiments/vocabulary-mvp/` according to [ADR-001](decisions/ADR-001-Repository-Package-and-Module-Layout.md).
 - [ ] Configure a Git remote and push `main`.
 - [ ] Create an annotated MVP specification baseline tag.
