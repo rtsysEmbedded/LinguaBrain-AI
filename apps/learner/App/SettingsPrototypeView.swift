@@ -443,6 +443,7 @@ final class PrototypeAISettings {
     private static let audioVoiceKey = "prototype.provider.audio.voice"
     private static let imageModelKey = "prototype.provider.image.model"
     private static let audioModelKey = "prototype.provider.audio.model"
+    private static let audioModelOptionsKey = "prototype.provider.audio.model-options"
 
     var textMode: PrototypeProviderMode { didSet { UserDefaults.standard.set(textMode.rawValue, forKey: Self.textModeKey) } }
     var audioMode: PrototypeProviderMode { didSet { UserDefaults.standard.set(audioMode.rawValue, forKey: Self.audioModeKey) } }
@@ -455,6 +456,9 @@ final class PrototypeAISettings {
     var audioVoice: String { didSet { UserDefaults.standard.set(audioVoice, forKey: Self.audioVoiceKey) } }
     var imageModelID: String { didSet { UserDefaults.standard.set(imageModelID, forKey: Self.imageModelKey) } }
     var audioModelID: String { didSet { UserDefaults.standard.set(audioModelID, forKey: Self.audioModelKey) } }
+    var audioModelOptions: [String] {
+        didSet { UserDefaults.standard.set(audioModelOptions, forKey: Self.audioModelOptionsKey) }
+    }
 
     var modelID: String {
         didSet { UserDefaults.standard.set(modelID, forKey: Self.modelKey) }
@@ -498,13 +502,14 @@ final class PrototypeAISettings {
         audioProtocolName = resolvedAudioProtocol
         if resolvedAudioProtocol == "openai-compatible" {
             audioVoice = storedVoice.isEmpty || storedVoice.contains("Standard-") ? "alloy" : storedVoice
-            audioModelID = storedAudioModel.isEmpty || storedAudioModel == "standard" ? "gpt-4o-mini-tts" : storedAudioModel
+            audioModelID = storedAudioModel.isEmpty || storedAudioModel == "standard" || storedAudioModel == "gpt-4o-mini-tts" ? "gpt-4o-transcribe" : storedAudioModel
         } else {
             audioVoice = storedVoice.isEmpty ? "de-DE-Standard-A" : storedVoice
             audioModelID = storedAudioModel.isEmpty ? "standard" : storedAudioModel
         }
         imageModelID = UserDefaults.standard.string(forKey: Self.imageModelKey) ?? "gpt-image-1-mini"
         modelID = UserDefaults.standard.string(forKey: Self.modelKey) ?? "gpt-4o-mini"
+        audioModelOptions = UserDefaults.standard.stringArray(forKey: Self.audioModelOptionsKey) ?? []
         cloudConsent = UserDefaults.standard.bool(forKey: Self.consentKey)
         hasAPIKey = (try? Self.readTextOrLegacyKey()) != nil
     }
@@ -546,7 +551,7 @@ final class PrototypeAISettings {
     }
 
     func hasAPIKey(for provider: String) -> Bool {
-        (try? Self.readKey(account: Self.keychainAccount + "." + provider)) != nil
+        (try? Self.readKey(account: Self.keychainAccount + "." + provider)) != nil || (try? Self.readTextOrLegacyKey()) != nil
     }
 
     func deleteAPIKey(for provider: String) {
@@ -676,6 +681,7 @@ enum PrototypeProviderMode: String, CaseIterable, Identifiable {
     case off
 
     var id: Self { self }
+    static var audioCases: [Self] { [.local, .cloud, .off] }
     var label: String {
         switch self {
         case .builtIn: "provider.builtIn"
@@ -761,7 +767,7 @@ private struct ProviderConfigurationView: View {
         Form {
             Section(localization.localized(kind.titleKey)) {
                 Picker(localization.localized("provider.mode"), selection: modeBinding(settings: settings)) {
-                    ForEach(PrototypeProviderMode.allCases) { mode in
+                    ForEach(kind == .audio ? PrototypeProviderMode.audioCases : PrototypeProviderMode.allCases) { mode in
                         Text(localization.localized(mode.label)).tag(mode)
                     }
                 }
@@ -775,10 +781,23 @@ private struct ProviderConfigurationView: View {
                             .foregroundStyle(.secondary)
                     }
                 } else if kind == .audio {
-                    TextField(localization.localized("provider.voice"), text: $settings.audioVoice)
-                        .environment(\.layoutDirection, .leftToRight)
-                    TextField(localization.localized("provider.modelID"), text: $settings.audioModelID)
-                        .environment(\.layoutDirection, .leftToRight)
+                    if settings.audioMode == .cloud {
+                        if settings.audioModelOptions.isEmpty {
+                            Text(localization.localized("provider.audioModelsNotLoaded"))
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        } else {
+                            Picker(localization.localized("provider.audioModel"), selection: $settings.audioModelID) {
+                                ForEach(settings.audioModelOptions, id: \.self) { model in
+                                    Text(model).tag(model)
+                                }
+                            }
+                        }
+                    } else if settings.audioMode == .local {
+                        Text(localization.localized("provider.audioLocalDescription"))
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
                 } else {
                     TextField(localization.localized("provider.modelID"), text: $settings.imageModelID)
                         .environment(\.layoutDirection, .leftToRight)
@@ -823,6 +842,12 @@ private struct ProviderConfigurationView: View {
                         }
                         .disabled(isTestingConnection || !settings.hasAPIKey(for: kind.rawValue))
                         if isTestingConnection { ProgressView() }
+                    } else if kind == .audio {
+                        Button(localization.localized("provider.testConnection")) {
+                            testAudioConnection(settings: settings)
+                        }
+                        .disabled(isTestingConnection || !settings.hasAPIKey(for: kind.rawValue))
+                        if isTestingConnection { ProgressView() }
                     }
                 }
             }
@@ -854,6 +879,25 @@ private struct ProviderConfigurationView: View {
                 try await ConfiguredProviderClient(baseURL: settings.endpoint, protocolName: settings.protocolName)
                     .testConnection(apiKey: key)
                 keyMessage = localization.localized("provider.connectionSuccess")
+            } catch {
+                keyMessage = error.localizedDescription
+            }
+            isTestingConnection = false
+        }
+    }
+
+    private func testAudioConnection(settings: PrototypeAISettings) {
+        isTestingConnection = true
+        Task {
+            do {
+                let key = try settings.apiKey(for: "audio")
+                let models = try await ConfiguredProviderClient(baseURL: settings.audioEndpoint, protocolName: settings.audioProtocolName)
+                    .fetchAudioModels(apiKey: key)
+                settings.audioModelOptions = models
+                if !models.contains(settings.audioModelID) {
+                    settings.audioModelID = models.first ?? "gpt-4o-transcribe"
+                }
+                keyMessage = localization.localized("provider.audioConnectionSuccess")
             } catch {
                 keyMessage = error.localizedDescription
             }
@@ -967,6 +1011,25 @@ struct ConfiguredProviderClient: Sendable {
         guard (200..<300).contains(http.statusCode) else {
             throw ProviderError.service(http.statusCode, http.statusCode == 401 ? "کلید API معتبر نیست یا برای این endpoint قابل استفاده نیست." : "کلید یا اتصال معتبر نیست.")
         }
+    }
+
+    func fetchAudioModels(apiKey: String) async throws -> [String] {
+        var request = URLRequest(url: URL(string: "\(baseURL)/models")!)
+        request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        let (data, response) = try await URLSession.shared.data(for: request)
+        guard let http = response as? HTTPURLResponse else { throw ProviderError.invalidResponse }
+        guard (200..<300).contains(http.statusCode) else {
+            throw ProviderError.service(http.statusCode, http.statusCode == 401 ? "کلید API معتبر نیست یا برای این endpoint قابل استفاده نیست." : "دریافت فهرست مدل‌ها ناموفق بود.")
+        }
+        guard let envelope = try? JSONDecoder().decode(ProviderModelsEnvelope.self, from: data) else {
+            throw ProviderError.invalidResponse
+        }
+        let models = envelope.data.map(\.id)
+        let audioModels = models.filter { id in
+            let normalized = id.lowercased()
+            return normalized.contains("transcri") || normalized.contains("whisper") || normalized.contains("speech-to-text") || normalized.contains("audio")
+        }
+        return audioModels.sorted()
     }
 
     func generateCard(word: String, domain: String, model: String, apiKey: String, sourceLanguageTag: String = "fa", targetLanguageTag: String = "de") async throws -> ConfiguredProviderCard {
@@ -1106,6 +1169,11 @@ private struct ProviderChatEnvelope: Decodable {
         let message: Message
     }
     let choices: [Choice]
+}
+
+private struct ProviderModelsEnvelope: Decodable {
+    struct Model: Decodable { let id: String }
+    let data: [Model]
 }
 
 private struct ProviderStreamEnvelope: Decodable {
