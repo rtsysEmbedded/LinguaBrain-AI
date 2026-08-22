@@ -293,11 +293,17 @@ final class LiveTranscriptionController {
         do {
             var request = URLRequest(url: URL(string: "wss://api.openai.com/v1/realtime?intent=transcription")!)
             request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
-            request.setValue("realtime=v1", forHTTPHeaderField: "OpenAI-Beta")
             let delegate = CloudWebSocketDelegate { [weak self] code in
                 Task { @MainActor in
                     guard self?.cloudSocket != nil else { return }
                     self?.errorMessage = "Realtime socket closed (\(code.rawValue)). Check the OpenAI API key, network, and selected transcription model."
+                    self?.isRecording = false
+                    self?.isStarting = false
+                }
+            } onFailure: { [weak self] error in
+                Task { @MainActor in
+                    guard self?.cloudSocket != nil else { return }
+                    self?.errorMessage = "Realtime transport failed: \(error.localizedDescription)"
                     self?.isRecording = false
                     self?.isStarting = false
                 }
@@ -320,7 +326,14 @@ final class LiveTranscriptionController {
                     "audio": [
                         "input": [
                             "format": ["type": "audio/pcm", "rate": 24_000],
-                            "transcription": ["model": transcriptionModel, "language": languageTag]
+                            "transcription": ["model": transcriptionModel, "language": languageTag],
+                            "turn_detection": [
+                                "type": "server_vad",
+                                "threshold": 0.5,
+                                "prefix_padding_ms": 300,
+                                "silence_duration_ms": 600
+                            ],
+                            "noise_reduction": ["type": "near_field"]
                         ]
                     ]
                 ]
@@ -458,15 +471,21 @@ private enum TranscriptionError: LocalizedError {
 
 private final class CloudWebSocketDelegate: NSObject, URLSessionWebSocketDelegate, @unchecked Sendable {
     private let onClose: @Sendable (URLSessionWebSocketTask.CloseCode) -> Void
+    private let onFailure: @Sendable (Error) -> Void
 
-    init(onClose: @escaping @Sendable (URLSessionWebSocketTask.CloseCode) -> Void) {
+    init(onClose: @escaping @Sendable (URLSessionWebSocketTask.CloseCode) -> Void, onFailure: @escaping @Sendable (Error) -> Void) {
         self.onClose = onClose
+        self.onFailure = onFailure
     }
 
     func urlSession(_ session: URLSession, webSocketTask: URLSessionWebSocketTask, didOpenWithProtocol protocol: String?) {}
 
     func urlSession(_ session: URLSession, webSocketTask: URLSessionWebSocketTask, didCloseWith closeCode: URLSessionWebSocketTask.CloseCode, reason: Data?) {
         onClose(closeCode)
+    }
+
+    func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
+        if let error { onFailure(error) }
     }
 }
 
