@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-08-22 — Realtime transcription manual-turn compatibility
+
+- Removed automatic turn detection from the dedicated OpenAI transcription session after physical testing reported that detection is unsupported for the selected live transcription mode.
+- Kept live transcript deltas active and added an explicit `input_audio_buffer.commit` plus a short final-event drain when recording stops.
+- Recorded the OpenAI model-contract evidence and kept the OS 27 `HALC`/`AQMEIO` cleanup logs distinct from the server-side configuration error.
+
 All notable changes to this documentation repository are recorded in this file.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).

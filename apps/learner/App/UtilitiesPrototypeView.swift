@@ -75,6 +75,7 @@ final class LiveTranscriptionController {
     private var cloudURLSession: URLSession?
     private var cloudSocketDelegate: CloudWebSocketDelegate?
     private var cloudReceiveTask: Task<Void, Never>?
+    private var cloudSentAudioBytes = 0
 
     var visibleText: String {
         [transcript, partialTranscript].filter { !$0.isEmpty }.joined(separator: transcript.isEmpty ? "" : " ")
@@ -136,12 +137,26 @@ final class LiveTranscriptionController {
             cloudCaptureSession.stopRunning()
             self.cloudCaptureSession = nil
             cloudCaptureHandler = nil
-            cloudReceiveTask?.cancel()
-            cloudReceiveTask = nil
             let socket = cloudSocket
-            cloudSocket = nil
+            let shouldCommit = cloudSentAudioBytes > 0
+            cloudSentAudioBytes = 0
             Task {
                 if let socket {
+                    if shouldCommit {
+                        try? await Self.sendCloudMessage(
+                            Self.jsonString(["type": "input_audio_buffer.commit"]),
+                            via: socket,
+                            attempts: 2
+                        )
+                        // Keep receiving briefly so the final committed event is
+                        // not discarded when the learner taps Stop.
+                        try? await Task.sleep(for: .seconds(2))
+                    }
+                    await MainActor.run {
+                        self.cloudSocket = nil
+                        self.cloudReceiveTask?.cancel()
+                        self.cloudReceiveTask = nil
+                    }
                     socket.cancel(with: .normalClosure, reason: nil)
                 }
                 await MainActor.run {
@@ -154,7 +169,6 @@ final class LiveTranscriptionController {
             isRecording = false
             isStarting = false
             inputLevel = 0
-            partialTranscript = ""
             return
         }
         isRecording = false
@@ -343,12 +357,12 @@ final class LiveTranscriptionController {
                         "input": [
                             "format": ["type": "audio/pcm", "rate": 24_000],
                             "transcription": transcriptionConfiguration,
-                            "turn_detection": [
-                                "type": "server_vad",
-                                "threshold": 0.5,
-                                "prefix_padding_ms": 300,
-                                "silence_duration_ms": 400
-                            ],
+                            // Dedicated transcription sessions currently use
+                            // explicit client commits. In particular,
+                            // Automatic detection was rejected for the tested
+                            // live transcription mode, which emits deltas
+                            // without it and is finalized by an explicit commit.
+                            "turn_detection": NSNull(),
                             "noise_reduction": ["type": "near_field"]
                         ]
                     ]
@@ -389,6 +403,7 @@ final class LiveTranscriptionController {
                             "audio": chunk.base64EncodedString()
                         ]
                         try? await Self.sendCloudMessage(Self.jsonString(event), via: socket, attempts: 2)
+                        await MainActor.run { self?.cloudSentAudioBytes += chunk.count }
                     }
                     await MainActor.run { self?.inputLevel = processed.level }
                 }
@@ -407,6 +422,7 @@ final class LiveTranscriptionController {
 
             cloudCaptureSession = captureSession
             cloudCaptureHandler = captureHandler
+            cloudSentAudioBytes = 0
             captureSession.startRunning()
             isRecording = true
             isStarting = false
@@ -414,6 +430,7 @@ final class LiveTranscriptionController {
             cloudCaptureSession?.stopRunning()
             cloudCaptureSession = nil
             cloudCaptureHandler = nil
+            cloudSentAudioBytes = 0
             cloudSocket?.cancel(with: .abnormalClosure, reason: nil)
             cloudSocket = nil
             cloudURLSession?.invalidateAndCancel()

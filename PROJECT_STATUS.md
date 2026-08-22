@@ -80,7 +80,7 @@ This file is the single progress checklist for LinguaBrain AI. It must be update
 - [ ] Register `iCloud.ai.linguabrain.prototype` on a paid Apple Developer Team and reattach `Resources/LinguaBrain.entitlements` before enabling signed CloudKit builds.
 - [x] Add Utilities navigation and on-device streaming speech-to-text with permission-gated microphone/Speech access (ADR-016/T034).
 - [x] Add copyable transcript/translation output for Persian, German, and English through the configured text Provider (T036).
-- [ ] Complete physical Mac/iPhone verification of the implemented OpenAI Realtime cloud transcription path (T035/T037); `gpt-4o-transcribe` currently produces delayed text, while corrected low-delay `gpt-live-transcribe` and `gpt-realtime-whisper` comparison tests remain open.
+- [ ] Complete physical Mac/iPhone verification of the implemented OpenAI Realtime cloud transcription path (T035/T037); `gpt-4o-transcribe` currently produces delayed text, while `gpt-live-transcribe` now follows the official manual-turn contract (`turn_detection: null`, live deltas, explicit Stop commit) after automatic detection was rejected, and the live/whisper comparison tests remain open.
 - [x] Classify and place the vocabulary prototype at `experiments/vocabulary-mvp/` according to [ADR-001](decisions/ADR-001-Repository-Package-and-Module-Layout.md).
 - [ ] Configure a Git remote and push `main`.
 - [ ] Create an annotated MVP specification baseline tag.

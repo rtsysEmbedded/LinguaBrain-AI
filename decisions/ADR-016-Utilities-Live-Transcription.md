@@ -18,7 +18,7 @@ The first tool is live speech-to-text:
 - Microphone capture uses `AVCaptureSession` for both Apple on-device and OpenAI cloud paths. `CMSampleBuffer` audio is interpreted from its declared `AudioStreamBasicDescription`; raw bytes must never be assumed to be interleaved Int16 PCM.
 - Microphone and Speech permissions are requested only when the tool starts.
 - Cloud providers use a replaceable provider boundary and explicit consent.
-- OpenAI Realtime is implemented as a transcription-only WebSocket session with explicit 24 kHz mono Int16 conversion, buffered audio appends, server turn detection, cancellation, and provider-specific error handling. Physical-device runtime verification remains required before T035 is complete.
+- OpenAI Realtime is implemented as a transcription-only WebSocket session with explicit 24 kHz mono Int16 conversion, buffered audio appends, explicit client commits, cancellation, and provider-specific error handling. Physical-device runtime verification remains required before T035 is complete.
 - Captured text is copyable on iOS/iPadOS and macOS.
 - Translation targets are the three supported app languages: Persian, German, and English. Translation uses the configured text Provider and never runs silently.
 
@@ -31,6 +31,8 @@ The OS 27 beta audio stack has produced route-specific `AUIOBase` initialization
 ## Current model-validation evidence
 
 Physical testing on 2026-08-22 established `gpt-4o-transcribe` as a partially working baseline: audio reaches OpenAI and text eventually appears, but partial/final text has excessive latency. Other selectable models were not yet working reliably. This is recorded as progress, not completion.
+
+A later `gpt-live-transcribe` test reached OpenAI but the server rejected the session's automatic detection configuration as unsupported for this transcription mode. The implementation now follows the current dedicated-transcription examples: `turn_detection` is `null`, audio is appended continuously, live deltas are rendered as they arrive, and Stop explicitly commits the buffered turn before closing the socket. The accompanying `HALC`/`AQMEIO` messages are treated as secondary OS 27 beta audio-route cleanup diagnostics unless a capture failure occurs independently of the server error.
 
 OpenAI's current transcription contract distinguishes the models:
 
