@@ -24,13 +24,13 @@ final class GenerationPrototypeModel {
         var imageAvailable: Bool = false
         var fallbackReason: String?
     }
-
+    
     enum CardState: String, Equatable {
         case reviewable
         case approved
         case rejected
     }
-
+    
     enum AudioPlaybackState {
         case notAvailable
         case loading
@@ -38,14 +38,14 @@ final class GenerationPrototypeModel {
         case playing
         case error
     }
-
+    
     struct MediaStatus {
         let audioAvailable: Bool
         let audioPlaybackState: AudioPlaybackState
         let imageAvailable: Bool
         let fallbackReason: String?
     }
-
+    
     var topic: String = ""
     var count: Int = 20
     var level: String = "A1"
@@ -57,10 +57,13 @@ final class GenerationPrototypeModel {
     var cards: [RenderableCard] = []
     var errorMessage: String?
     var currentProposal: CardProposal?
-
+    
     private let useCase: ApprovalUseCase & GenerationUseCase
     private let persistence: PersistencePort
-
+    
+    /// Flag to enable audio generation during preview (T040)
+    var includeAudioInPreview: Bool = false
+    
     /// Injects the real application/persistence boundary. Defaults wire the
     /// deterministic providers used by the MVP harness.
     init(
@@ -76,9 +79,9 @@ final class GenerationPrototypeModel {
         )
         self.useCase = orchestrator
     }
-
+    
     var approvedCount: Int { cards.filter { $0.state == .approved }.count }
-
+    
     func generate() {
         errorMessage = nil
         guard !topic.trimmingCharacters(in: .whitespaces).isEmpty else {
@@ -87,7 +90,7 @@ final class GenerationPrototypeModel {
         }
         Task { await runGeneration() }
     }
-
+    
     private func runGeneration() async {
         let command = GenerationRequestCommand(
             sourceLanguage: sourceLanguage,
@@ -96,7 +99,7 @@ final class GenerationPrototypeModel {
             topic: topic,
             count: count,
             directions: ReviewDirection.allCases,
-            audioEnabled: false,
+            audioEnabled: includeAudioInPreview,
             imageEnabled: false
         )
         isGenerating = true
@@ -126,11 +129,15 @@ final class GenerationPrototypeModel {
         for senseKey in senseMap.keys {
             guard let sense = senseMap[senseKey] else { continue }
             for direction in [ReviewDirection.recognition, .recall] {
+                // Determine media availability based on whether audio was requested (T040)
+                let mediaAvailable = includeAudioInPreview
+                let fallbackReason = includeAudioInPreview ? nil : "Audio not requested in generation settings"
+                
                 let mediaStatus = MediaStatus(
-                    audioAvailable: false,
-                    audioPlaybackState: .notAvailable,
+                    audioAvailable: mediaAvailable,
+                    audioPlaybackState: mediaAvailable ? .notAvailable : .notAvailable,
                     imageAvailable: false,
-                    fallbackReason: "Media generation is not enabled for this preview."
+                    fallbackReason: fallbackReason
                 )
                 let renderedCard = RenderableCard(
                     id: "\(senseKey)-\(direction.rawValue)",
@@ -263,6 +270,8 @@ struct CardGenerationView: View {
         VStack(alignment: .leading, spacing: 12) {
             TextField(localization.localized("generation.placeholder"), text: $model.topic)
                 .textFieldStyle(.roundedBorder)
+            Toggle(localization.localized("provider.audio"), isOn: $model.includeAudioInPreview)
+                .toggleStyle(.switch)
             HStack {
                 Picker(localization.localized("generation.count"), selection: $model.count) {
                     ForEach(1...50, id: \.self) { Text("\($0)") }
