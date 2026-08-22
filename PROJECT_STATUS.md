@@ -78,9 +78,10 @@ This file is the single progress checklist for LinguaBrain AI. It must be update
 - [x] Accept optional Sign in with Apple/Google and secure learner-data synchronization as Release 1.0 scope while preserving full local-only use.
 - [x] Add opt-in private iCloud backup/recovery for learner-generated and Anki-imported cards while excluding built-in samples (ADR-015/T032).
 - [ ] Register `iCloud.ai.linguabrain.prototype` on a paid Apple Developer Team and reattach `Resources/LinguaBrain.entitlements` before enabling signed CloudKit builds.
-- [x] Add Utilities navigation and on-device streaming speech-to-text with permission-gated microphone/Speech access (ADR-016/T034).
+- [~] Add Utilities navigation and on-device streaming speech-to-text with permission-gated microphone/Speech access (ADR-016/T034); physical macOS testing shows the meter reacts but local transcript text is still missing.
 - [x] Add copyable transcript/translation output for Persian, German, and English through the configured text Provider (T036).
-- [ ] Complete physical Mac/iPhone verification of the implemented OpenAI Realtime cloud transcription path (T035/T037); `gpt-4o-transcribe` currently produces delayed text, while `gpt-live-transcribe` now follows the official manual-turn contract (`turn_detection: null`, live deltas, explicit Stop commit) after automatic detection was rejected, and the live/whisper comparison tests remain open.
+- [~] Complete physical Mac/iPhone verification of the implemented OpenAI Realtime cloud transcription path (T035/T037); the corrected cloud path is acceptable in the current macOS test, while iPhone verification and the remaining model/latency matrix are still open.
+- [ ] Complete the Utilities transcription visual-design pass after provider behavior is explicit and testable (T039).
 - [x] Classify and place the vocabulary prototype at `experiments/vocabulary-mvp/` according to [ADR-001](decisions/ADR-001-Repository-Package-and-Module-Layout.md).
 - [ ] Configure a Git remote and push `main`.
 - [ ] Create an annotated MVP specification baseline tag.

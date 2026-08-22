@@ -55,11 +55,12 @@
 - [ ] T030 [US9] Add verb sense-distractor practice to Mixed Practice Game: when at least three related senses exist, show three related meanings and one unrelated meaning, require selecting the unrelated option, and force incorrect answers back into the current session.
 - [~] T031 [US8] Preserve multiple examples during Anki import: model examples as ordered sense-specific Sentence records, retain source/target text and provenance, select examples adaptively during review, and round-trip all examples through export without collapsing them into one field.
 - [x] T032 [US11] Add opt-in private iCloud card backup and reinstall recovery for learner-created/imported cards, excluding built-in sample content.
-- [x] T034 [US12] Add the Utilities surface and working on-device streaming speech-to-text prototype with explicit microphone/Speech permission handling.
+- [~] T034 [US12] Add the Utilities surface and on-device streaming speech-to-text prototype with explicit microphone/Speech permission handling. Physical macOS testing confirms input activity but no transcript output, so the local provider remains incomplete.
 - [ ] T035 [US12] Implement the OpenAI Realtime cloud transcription provider behind the Utilities provider boundary, including short-lived sessions, 24 kHz PCM streaming, turn detection, cancellation, consent, and redacted diagnostics.
 - [x] T036 [US12] Add copyable transcript/translation output and AI translation controls for Persian, German, and English.
 - [~] T037 [US12] Validate the OpenAI realtime-transcription model matrix and latency behavior on physical Mac/iPhone: keep `gpt-4o-transcribe` as the partially working turn-based baseline; test `gpt-live-transcribe` incremental deltas using `turn_detection: null`, low delay, language hints, and an explicit Stop commit; compare `gpt-realtime-whisper`; and record empty/delayed/error outcomes per model without marking T035 complete prematurely. A 2026-08-22 physical test rejected automatic detection as unsupported for the live transcription mode, so server VAD is no longer sent by the dedicated transcription client.
 - [ ] T038 [US12] Prototype `gpt-realtime` as a separate bidirectional Voice Agent mode. Do not expose it as a pure speech-to-text model: general Realtime audio input/output and transcription-only sessions have different product behavior, event contracts, and costs.
+- [ ] T039 [US12] Redesign the Utilities transcription experience after core provider validation: clarify Local versus Cloud modes, recording state, selected input/model, live input visualization, partial/final transcript hierarchy, errors, translation actions, and responsive macOS/iPhone layout without changing provider semantics.
 
 ## Dependencies and Parallel Work
 

@@ -5,6 +5,7 @@
 - Removed automatic turn detection from the dedicated OpenAI transcription session after physical testing reported that detection is unsupported for the selected live transcription mode.
 - Kept live transcript deltas active and added an explicit `input_audio_buffer.commit` plus a short final-event drain when recording stops.
 - Recorded the OpenAI model-contract evidence and kept the OS 27 `HALC`/`AQMEIO` cleanup logs distinct from the server-side configuration error.
+- Recorded macOS acceptance of the corrected cloud path, kept Apple on-device/local transcription incomplete because it still produces no text, and added a separate Utilities visual-redesign task.
 
 All notable changes to this documentation repository are recorded in this file.
 

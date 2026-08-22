@@ -24,7 +24,7 @@ The first tool is live speech-to-text:
 
 ## Consequences
 
-Utilities can evolve without coupling meeting notes or transcription state to card review. The current prototype provides a privacy-preserving local path immediately. Cloud transcription never sends audio until the learner explicitly chooses it.
+Utilities can evolve without coupling meeting notes or transcription state to card review. Cloud transcription never sends audio until the learner explicitly chooses it. The Apple on-device path remains the intended privacy-preserving local option, but physical macOS testing has not yet produced usable transcript text and it must not be described as functional until that runtime gate passes.
 
 The OS 27 beta audio stack has produced route-specific `AUIOBase` initialization failures with `AVAudioEngine` and non-actionable `CMIO`/dialogue-enhancement diagnostics. The shared `AVCaptureSession` path avoids forcing an Audio Unit configuration and tolerates microphone-format or route changes by rebuilding the converter from the next buffer's declared format. This beta workaround must be revalidated against the final Xcode 27 and OS 27 SDKs.
 
@@ -33,6 +33,8 @@ The OS 27 beta audio stack has produced route-specific `AUIOBase` initialization
 Physical testing on 2026-08-22 established `gpt-4o-transcribe` as a partially working baseline: audio reaches OpenAI and text eventually appears, but partial/final text has excessive latency. Other selectable models were not yet working reliably. This is recorded as progress, not completion.
 
 A later `gpt-live-transcribe` test reached OpenAI but the server rejected the session's automatic detection configuration as unsupported for this transcription mode. The implementation now follows the current dedicated-transcription examples: `turn_detection` is `null`, audio is appended continuously, live deltas are rendered as they arrive, and Stop explicitly commits the buffered turn before closing the socket. The accompanying `HALC`/`AQMEIO` messages are treated as secondary OS 27 beta audio-route cleanup diagnostics unless a capture failure occurs independently of the server error.
+
+Physical macOS retesting after that correction found the OpenAI cloud path acceptable for the current prototype. The Apple on-device/local mode still captures input activity but does not produce transcript text, so its implementation remains incomplete. The Utilities transcription UI also requires a dedicated visual-design pass; that work is tracked separately from transcription correctness so a cosmetic change cannot hide an unresolved provider failure.
 
 OpenAI's current transcription contract distinguishes the models:
 
