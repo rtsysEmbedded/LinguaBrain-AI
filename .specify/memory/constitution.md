@@ -24,7 +24,7 @@ Identity MUST represent meaning, not only spelling: separate lexical senses such
 
 ### VI. Native Apple Architecture with Portable Semantics
 
-The active client baseline is Swift 6.4 and SwiftUI for iOS/iPadOS 27 and macOS 27. Domain and application logic MUST remain independent of SwiftUI, storage frameworks, and individual AI providers through explicit interfaces and adapters. Apple-specific capabilities MUST be availability- and locale-gated. Portable, versioned domain semantics MUST be retained for a future dedicated device or non-Apple client without expanding the current MVP.
+The active client baseline is Swift 6.4 and SwiftUI for iOS/iPadOS 27 and macOS 27. While these platforms and Xcode 27 remain beta, an agent MUST inspect the API declaration in the installed SDK and consult the relevant current official Apple documentation or release notes before changing platform-sensitive code. Legacy or pre-27 sample code MUST NOT be adopted merely because it is more common. Beta-only behavior and workarounds MUST be documented and revalidated after each toolchain update and at GM/final release. Domain and application logic MUST remain independent of SwiftUI, storage frameworks, and individual AI providers through explicit interfaces and adapters. Apple-specific capabilities MUST be availability- and locale-gated. Portable, versioned domain semantics MUST be retained for a future dedicated device or non-Apple client without expanding the current MVP.
 
 ### VII. Evidence Before Completion
 
@@ -57,4 +57,4 @@ New feature work follows: constitution → specify → clarify when needed → p
 
 This constitution governs all human and AI contributors. Amendments require a documented reason, review of affected specs/templates, a migration note for active features, and a semantic version change. Accepted ADRs may specialize this constitution but may not contradict it; a contradiction requires a constitution amendment first. Pull requests and direct commits MUST verify constitution compliance. Complexity beyond the approved plan requires a written justification in the feature plan.
 
-**Version**: 1.0.0 | **Ratified**: 2026-08-16 | **Last Amended**: 2026-08-16
+**Version**: 1.0.1 | **Ratified**: 2026-08-16 | **Last Amended**: 2026-08-22

@@ -7,6 +7,18 @@
 
 This file is the single source of truth for technologies used by LinguaBrain AI. A technology must not be upgraded only because a newer version exists. Every upgrade requires a compatibility review, tests, and a recorded result in the change log.
 
+## Current verified beta baseline
+
+| Component | Verified value |
+|---|---|
+| Host macOS | 27.0 beta (`26A5416b`) |
+| Xcode | 27.0 beta (`27A5228h`) |
+| Apple Swift | 6.4 (`6.4.0.27.1`) |
+| macOS SDK | 27.0 |
+| iOS/iPadOS SDK | 27.0 |
+
+This is an operational constraint, not just documentation. Before editing platform-sensitive code, inspect the matching declaration in the installed Xcode SDK and check the current official documentation or release notes. Old examples are not evidence that an API is correct for OS 27. If the installed versions change, update this table first and re-run the affected compatibility checks.
+
 ## Current stack
 
 | Area | Technology | Version / policy | Where it is used | Update risk |

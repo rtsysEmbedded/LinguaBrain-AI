@@ -8,6 +8,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- Added repository-wide `AGENTS.md`, `CLAUDE.md`, and `GEMINI.md` platform rules and amended the Spec Kit constitution to require installed-SDK and official-documentation verification before OS 27 Apple-framework changes. Pinned the current beta baseline to macOS `26A5416b`, Xcode `27A5228h`, Swift `6.4.0.27.1`, and SDK 27.0.
+
 - Reworked live microphone capture for the iOS/macOS 27 beta: Apple and OpenAI transcription now share `AVCaptureSession`; Core Media buffers are converted from their declared hardware format instead of being parsed as assumed Int16 bytes; OpenAI audio is still normalized to buffered 24 kHz mono Int16 PCM. This avoids the route-specific `AVAudioEngine`/`AUIOBase -50` startup failure and supports converter rebuilds after device-format changes. macOS signed/unsigned builds, the iOS 27 Simulator build, and 38 Swift package tests pass; physical-device streaming remains the T035 completion gate.
 
 - Added `docs/TECHNOLOGY_STACK.md` as the maintained technology inventory, version register, quarterly review process, and release-gate checklist. Linked it from `README.md`.
