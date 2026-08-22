@@ -68,14 +68,13 @@ final class LiveTranscriptionController {
     private var modernCaptureProvider: CaptureInputSequenceProvider?
     private var modernResultsTask: Task<Void, Never>?
     private var audioMeter: AudioInputMeter?
-    private var cloudSession: AVCaptureSession?
-    private var cloudCaptureQueue: DispatchQueue?
+    private var cloudAudioEngine: AVAudioEngine?
+    private var cloudPCMProcessor: RealtimeAudioProcessor?
     private var cloudSocket: URLSessionWebSocketTask?
     private var cloudURLSession: URLSession?
     private var cloudSocketDelegate: CloudWebSocketDelegate?
     private var cloudReceiveTask: Task<Void, Never>?
     private var cloudCommitTask: Task<Void, Never>?
-    private var cloudPCMAccumulator: AudioPCMAccumulator?
 
     var visibleText: String {
         [transcript, partialTranscript].filter { !$0.isEmpty }.joined(separator: transcript.isEmpty ? "" : " ")
@@ -133,18 +132,15 @@ final class LiveTranscriptionController {
             modernResultsTask = nil
             return
         }
-        if let cloudSession {
-            cloudCaptureQueue?.async {
-                guard cloudSession.isRunning else { return }
-                cloudSession.stopRunning()
-            }
-            self.cloudSession = nil
-            cloudCaptureQueue = nil
+        if let cloudAudioEngine {
+            cloudAudioEngine.inputNode.removeTap(onBus: 0)
+            cloudAudioEngine.stop()
+            self.cloudAudioEngine = nil
+            cloudPCMProcessor = nil
             cloudReceiveTask?.cancel()
             cloudReceiveTask = nil
             cloudCommitTask?.cancel()
             cloudCommitTask = nil
-            cloudPCMAccumulator = nil
             let socket = cloudSocket
             cloudSocket = nil
             Task {
@@ -293,8 +289,7 @@ final class LiveTranscriptionController {
             isStarting = false
             return
         }
-        guard await AVCaptureDevice.requestAccess(for: .audio),
-              let device = AVCaptureDevice.default(for: .audio) else {
+        guard await AVCaptureDevice.requestAccess(for: .audio) else {
             errorMessage = "Microphone permission was denied or no microphone is available."
             isStarting = false
             return
@@ -353,53 +348,33 @@ final class LiveTranscriptionController {
             ]
             try await Self.sendCloudMessage(Self.jsonString(sessionUpdate), via: socket)
 
-            let captureSession = AVCaptureSession()
-            captureSession.beginConfiguration()
-            let captureInput = try AVCaptureDeviceInput(device: device)
-            guard captureSession.canAddInput(captureInput) else { throw TranscriptionError.captureInputUnavailable }
-            captureSession.addInput(captureInput)
-            #if os(macOS)
-            let minimumPCMBytes = 9_600 // 24 kHz × 100 ms × 2 bytes
-            #else
-            let minimumPCMBytes = 17_640 // iOS capture default: 44.1 kHz × 100 ms × 2 bytes
-            #endif
-            let pcmAccumulator = AudioPCMAccumulator(minimumBytes: minimumPCMBytes)
-            cloudPCMAccumulator = pcmAccumulator
-            let meter = AudioInputMeter(onLevelAndPCM: { [weak self, weak socket, pcmAccumulator] level, pcmData in
-                let chunks = pcmAccumulator.append(pcmData)
+            let audioEngine = AVAudioEngine()
+            let inputNode = audioEngine.inputNode
+            let inputFormat = inputNode.outputFormat(forBus: 0)
+            guard inputFormat.sampleRate > 0, inputFormat.channelCount > 0 else {
+                throw TranscriptionError.audioFormatUnavailable
+            }
+            guard let pcmProcessor = RealtimeAudioProcessor(inputFormat: inputFormat) else {
+                throw TranscriptionError.audioFormatUnavailable
+            }
+            cloudPCMProcessor = pcmProcessor
+            try inputNode.installAudioTap(onBus: 0, bufferSize: 1_024, format: inputFormat) { [weak self, weak socket, pcmProcessor] readOnlyBuffer, _ in
+                let processed = pcmProcessor.process(AVAudioPCMBuffer(copying: readOnlyBuffer))
                 Task { [weak self, weak socket] in
                     guard let socket else { return }
-                    for chunk in chunks {
+                    for chunk in processed.chunks {
                         let event: [String: Any] = [
                             "type": "input_audio_buffer.append",
                             "audio": chunk.base64EncodedString()
                         ]
                         try? await Self.sendCloudMessage(Self.jsonString(event), via: socket, attempts: 2)
                     }
-                    await MainActor.run { self?.inputLevel = level }
+                    await MainActor.run { self?.inputLevel = processed.level }
                 }
-            })
-            let output = AVCaptureAudioDataOutput()
-            #if os(macOS)
-            output.audioSettings = [
-                AVFormatIDKey: kAudioFormatLinearPCM,
-                AVSampleRateKey: 24_000,
-                AVNumberOfChannelsKey: 1,
-                AVLinearPCMBitDepthKey: 16,
-                AVLinearPCMIsFloatKey: false,
-                AVLinearPCMIsBigEndianKey: false,
-                AVLinearPCMIsNonInterleaved: false
-            ]
-            #endif
-            output.setSampleBufferDelegate(meter, queue: DispatchQueue(label: "ai.linguabrain.cloud-audio"))
-            guard captureSession.canAddOutput(output) else { throw TranscriptionError.captureOutputUnavailable }
-            captureSession.addOutput(output)
-            captureSession.commitConfiguration()
-            cloudSession = captureSession
-            let captureQueue = DispatchQueue(label: "ai.linguabrain.cloud-capture")
-            cloudCaptureQueue = captureQueue
-            audioMeter = meter
-            captureQueue.async { captureSession.startRunning() }
+            }
+            audioEngine.prepare()
+            try audioEngine.start()
+            cloudAudioEngine = audioEngine
             cloudCommitTask = Task { [weak socket] in
                 guard let socket else { return }
                 while !Task.isCancelled {
@@ -411,15 +386,12 @@ final class LiveTranscriptionController {
             isRecording = true
             isStarting = false
         } catch {
-            if let cloudSession {
-                cloudCaptureQueue?.async {
-                    guard cloudSession.isRunning else { return }
-                    cloudSession.stopRunning()
-                }
+            if let cloudAudioEngine {
+                cloudAudioEngine.inputNode.removeTap(onBus: 0)
+                cloudAudioEngine.stop()
             }
-            cloudSession = nil
-            cloudCaptureQueue = nil
-            cloudPCMAccumulator = nil
+            cloudAudioEngine = nil
+            cloudPCMProcessor = nil
             cloudSocket?.cancel(with: .abnormalClosure, reason: nil)
             cloudSocket = nil
             cloudURLSession?.invalidateAndCancel()
@@ -561,6 +533,93 @@ private final class AudioInputMeter: NSObject, AVCaptureAudioDataOutputSampleBuf
         onLevel(level)
         onLevelAndPCM?(level, Data(bytes: pointer, count: length))
         onPCM?(Data(bytes: pointer, count: length))
+    }
+}
+
+/// Converts the hardware microphone format to the Realtime API's required
+/// 24 kHz, mono, signed 16-bit PCM and emits chunks of at least 100 ms.
+private final class RealtimeAudioProcessor: @unchecked Sendable {
+    struct Output: Sendable {
+        let level: Double
+        let chunks: [Data]
+    }
+
+    private let lock = NSLock()
+    private let converter: AVAudioConverter
+    private let outputFormat: AVAudioFormat
+    private let accumulator = AudioPCMAccumulator(minimumBytes: 9_600)
+
+    init?(inputFormat: AVAudioFormat) {
+        guard inputFormat.sampleRate > 0,
+              inputFormat.channelCount > 0,
+              let outputFormat = AVAudioFormat(
+                  commonFormat: .pcmFormatInt16,
+                  sampleRate: 24_000,
+                  channels: 1,
+                  interleaved: true
+              ),
+              let converter = AVAudioConverter(from: inputFormat, to: outputFormat) else {
+            return nil
+        }
+        self.outputFormat = outputFormat
+        self.converter = converter
+    }
+
+    func process(_ input: AVAudioPCMBuffer) -> Output {
+        lock.lock()
+        defer { lock.unlock() }
+
+        let level = Self.inputLevel(input)
+        let ratio = outputFormat.sampleRate / input.format.sampleRate
+        let capacity = AVAudioFrameCount(max(1, ceil(Double(input.frameLength) * ratio) + 32))
+        guard let converted = AVAudioPCMBuffer(pcmFormat: outputFormat, frameCapacity: capacity) else {
+            return Output(level: level, chunks: [])
+        }
+
+        var suppliedInput = false
+        var conversionError: NSError?
+        let status = converter.convert(to: converted, error: &conversionError) { _, inputStatus in
+            guard !suppliedInput else {
+                inputStatus.pointee = .noDataNow
+                return nil
+            }
+            suppliedInput = true
+            inputStatus.pointee = .haveData
+            return input
+        }
+        guard conversionError == nil,
+              status != .error,
+              converted.frameLength > 0,
+              let samples = converted.int16ChannelData?.pointee else {
+            return Output(level: level, chunks: [])
+        }
+
+        let pcm = Data(bytes: samples, count: Int(converted.frameLength) * MemoryLayout<Int16>.size)
+        return Output(level: level, chunks: accumulator.append(pcm))
+    }
+
+    private static func inputLevel(_ buffer: AVAudioPCMBuffer) -> Double {
+        guard buffer.frameLength > 0 else { return 0 }
+        let frameCount = Int(buffer.frameLength)
+        if let channels = buffer.floatChannelData {
+            let samples = channels[0]
+            var energy = 0.0
+            for index in 0..<frameCount {
+                let value = Double(samples[index])
+                energy += value * value
+            }
+            return min(1, max(0, sqrt(energy / Double(frameCount)) * 4))
+        }
+        if let channels = buffer.int16ChannelData {
+            let samples = channels[0]
+            var energy = 0.0
+            for index in 0..<frameCount {
+                let value = Double(samples[index]) / Double(Int16.max)
+                energy += value * value
+            }
+            return min(1, max(0, sqrt(energy / Double(frameCount)) * 4))
+        }
+        return 0
     }
 }
 
