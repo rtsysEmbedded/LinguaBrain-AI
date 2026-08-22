@@ -290,7 +290,11 @@ final class LiveTranscriptionController {
             let socket = URLSession.shared.webSocketTask(with: request)
             socket.resume()
             cloudSocket = socket
+            startCloudReceiveLoop(socket)
 
+            let supportedModels = ["whisper-1", "gpt-4o-mini-transcribe", "gpt-4o-transcribe", "gpt-4o-transcribe-diarize"]
+            let requestedModel = settings.audioModelID == "gpt-4o-mini-tts" ? "gpt-4o-transcribe" : settings.audioModelID
+            let transcriptionModel = supportedModels.contains(requestedModel) ? requestedModel : "gpt-4o-transcribe"
             let sessionUpdate: [String: Any] = [
                 "type": "session.update",
                 "session": [
@@ -298,7 +302,7 @@ final class LiveTranscriptionController {
                     "audio": [
                         "input": [
                             "format": ["type": "audio/pcm", "rate": 24_000],
-                            "transcription": ["model": settings.audioModelID == "gpt-4o-mini-tts" ? "gpt-4o-transcribe" : settings.audioModelID, "language": languageTag]
+                            "transcription": ["model": transcriptionModel, "language": languageTag]
                         ]
                     ]
                 ]
@@ -339,35 +343,6 @@ final class LiveTranscriptionController {
             captureSession.commitConfiguration()
             cloudSession = captureSession
             audioMeter = meter
-            cloudReceiveTask = Task { [weak self, weak socket] in
-                guard let socket else { return }
-                do {
-                    while !Task.isCancelled {
-                        let message = try await socket.receive()
-                        guard case .string(let text) = message,
-                              let data = text.data(using: .utf8),
-                              let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-                              let type = object["type"] as? String else { continue }
-                        await MainActor.run {
-                            if type == "conversation.item.input_audio_transcription.delta",
-                               let delta = object["delta"] as? String {
-                                self?.partialTranscript += delta
-                            } else if type == "conversation.item.input_audio_transcription.completed",
-                                      let completed = object["transcript"] as? String {
-                                self?.transcript = [self?.transcript ?? "", completed].filter { !$0.isEmpty }.joined(separator: " ")
-                                self?.partialTranscript = ""
-                            } else if type == "error",
-                                      let details = object["error"] as? [String: Any],
-                                      let message = details["message"] as? String {
-                                self?.errorMessage = message
-                            }
-                        }
-                    }
-                } catch {
-                    guard !Task.isCancelled else { return }
-                    await MainActor.run { self?.errorMessage = error.localizedDescription }
-                }
-            }
             captureSession.startRunning()
             isRecording = true
             isStarting = false
@@ -378,6 +353,43 @@ final class LiveTranscriptionController {
             cloudSocket = nil
             errorMessage = error.localizedDescription
             isStarting = false
+        }
+    }
+
+    private func startCloudReceiveLoop(_ socket: URLSessionWebSocketTask) {
+        cloudReceiveTask?.cancel()
+        cloudReceiveTask = Task { [weak self, weak socket] in
+            guard let socket else { return }
+            do {
+                while !Task.isCancelled {
+                    let message = try await socket.receive()
+                    guard case .string(let text) = message,
+                          let data = text.data(using: .utf8),
+                          let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                          let type = object["type"] as? String else { continue }
+                    await MainActor.run {
+                        if type == "conversation.item.input_audio_transcription.delta",
+                           let delta = object["delta"] as? String {
+                            self?.partialTranscript += delta
+                        } else if type == "conversation.item.input_audio_transcription.completed",
+                                  let completed = object["transcript"] as? String {
+                            self?.transcript = [self?.transcript ?? "", completed].filter { !$0.isEmpty }.joined(separator: " ")
+                            self?.partialTranscript = ""
+                        } else if type == "error",
+                                  let details = object["error"] as? [String: Any],
+                                  let message = details["message"] as? String {
+                            self?.errorMessage = "OpenAI: \(message)"
+                        }
+                    }
+                }
+            } catch {
+                guard !Task.isCancelled else { return }
+                await MainActor.run {
+                    self?.errorMessage = "Realtime connection closed: \(error.localizedDescription)"
+                    self?.isRecording = false
+                    self?.isStarting = false
+                }
+            }
         }
     }
 
