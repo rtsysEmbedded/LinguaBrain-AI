@@ -4,6 +4,7 @@ import Speech
 import SwiftUI
 #if os(macOS)
 import AppKit
+import CoreAudio
 #else
 import UIKit
 #endif
@@ -352,9 +353,14 @@ final class LiveTranscriptionController {
             ]
             try await Self.sendCloudMessage(Self.jsonString(sessionUpdate), via: socket)
 
+            #if os(macOS)
+            guard Self.hasDefaultAudioInputDevice() else {
+                throw TranscriptionError.noInputDevice
+            }
+            #endif
             let audioEngine = AVAudioEngine()
             let inputNode = audioEngine.inputNode
-            let inputFormat = inputNode.inputFormat(forBus: 0)
+            let inputFormat = inputNode.outputFormat(forBus: 0)
             guard inputFormat.sampleRate > 0, inputFormat.channelCount > 0 else {
                 throw TranscriptionError.audioFormatUnavailable
             }
@@ -362,12 +368,8 @@ final class LiveTranscriptionController {
                 throw TranscriptionError.audioFormatUnavailable
             }
             cloudPCMProcessor = pcmProcessor
-            // macOS/iOS 27 requires installAudioTap buffers in the 100–400 ms
-            // range. A fixed 1,024-frame buffer is only ~21 ms at 48 kHz and
-            // causes Audio Unit initialization to fail with paramErr (-50).
-            let tapBufferSize = AVAudioFrameCount(ceil(inputFormat.sampleRate * 0.1))
-            try inputNode.installAudioTap(onBus: 0, bufferSize: tapBufferSize, format: nil) { [weak self, weak socket, pcmProcessor] readOnlyBuffer, _ in
-                let processed = pcmProcessor.process(AVAudioPCMBuffer(copying: readOnlyBuffer))
+            let handleBuffer: @Sendable (AVAudioPCMBuffer) -> Void = { [weak self, weak socket, pcmProcessor] buffer in
+                let processed = pcmProcessor.process(buffer)
                 Task { [weak self, weak socket] in
                     guard let socket else { return }
                     for chunk in processed.chunks {
@@ -380,6 +382,18 @@ final class LiveTranscriptionController {
                     await MainActor.run { self?.inputLevel = processed.level }
                 }
             }
+            #if os(macOS)
+            // Proven macOS capture pattern used by established Swift dictation
+            // apps: native output format and the mature input-node tap.
+            inputNode.installTap(onBus: 0, bufferSize: 2_048, format: inputFormat) { buffer, _ in
+                handleBuffer(buffer)
+            }
+            #else
+            let tapBufferSize = AVAudioFrameCount(ceil(inputFormat.sampleRate * 0.1))
+            try inputNode.installAudioTap(onBus: 0, bufferSize: tapBufferSize, format: nil) { readOnlyBuffer, _ in
+                handleBuffer(AVAudioPCMBuffer(copying: readOnlyBuffer))
+            }
+            #endif
             audioEngine.prepare()
             try audioEngine.start()
             cloudAudioEngine = audioEngine
@@ -460,6 +474,27 @@ final class LiveTranscriptionController {
         throw lastError ?? URLError(.networkConnectionLost)
     }
 
+    #if os(macOS)
+    private static func hasDefaultAudioInputDevice() -> Bool {
+        var deviceID = AudioDeviceID(kAudioDeviceUnknown)
+        var address = AudioObjectPropertyAddress(
+            mSelector: kAudioHardwarePropertyDefaultInputDevice,
+            mScope: kAudioObjectPropertyScopeGlobal,
+            mElement: kAudioObjectPropertyElementMain
+        )
+        var size = UInt32(MemoryLayout<AudioDeviceID>.size)
+        let status = AudioObjectGetPropertyData(
+            AudioObjectID(kAudioObjectSystemObject),
+            &address,
+            0,
+            nil,
+            &size,
+            &deviceID
+        )
+        return status == noErr && deviceID != kAudioDeviceUnknown
+    }
+    #endif
+
 }
 
 private enum TranscriptionError: LocalizedError {
@@ -467,6 +502,7 @@ private enum TranscriptionError: LocalizedError {
     case captureOutputUnavailable
     case audioFormatUnavailable
     case connectionTimedOut
+    case noInputDevice
 
     var errorDescription: String? {
         switch self {
@@ -474,6 +510,7 @@ private enum TranscriptionError: LocalizedError {
         case .captureOutputUnavailable: "The microphone capture output could not be created."
         case .audioFormatUnavailable: "No compatible audio format is available for live transcription."
         case .connectionTimedOut: "The OpenAI Realtime connection did not open within 10 seconds. Check the endpoint, API key, network, and account access."
+        case .noInputDevice: "macOS does not currently have a valid default microphone. Select an input device in System Settings and try again."
         }
     }
 }
