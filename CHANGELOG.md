@@ -8,6 +8,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- Added `docs/TECHNOLOGY_STACK.md` as the maintained technology inventory, version register, quarterly review process, and release-gate checklist. Linked it from `README.md`.
 - Implemented T030: OpenAI-compatible provider adapter with configurable endpoint, protocol (OpenAI-compatible, Google native), model ID, timeout, and health check support. Added `ProviderConfiguration`, `ProviderCapabilities`, `ProviderHealthCheck`, and `CredentialLoader` protocols for interchangeable providers.
 - Implemented T031: Provider health checks via `/models` endpoint, consent gates, endpoint-scoped credentials through `SecureCredentialStore`, and usage reporting via `UsageEvent`. Added `TestCredentialLoader`, `NoOpCredentialLoader`, and `FailingCredentialLoader` for testing.
 - Implemented T033: Comprehensive tests for no-key errors, timeout configuration, cancellation, retry logic, and Constitution III compliance (no direct mutation of canonical learning state). Added 13 new provider configuration and safety tests.

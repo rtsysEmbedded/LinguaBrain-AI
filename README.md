@@ -10,6 +10,10 @@ LinguaBrain AI combines a deterministic Learning Engine, a learner Knowledge Gra
 
 AI may generate examples, explanations, cards, and exercises. The Learning Engine remains responsible for educational decisions: what to teach, when to review it, and which exercise type best serves the learner.
 
+## Technology stack and update policy
+
+The maintained technology inventory, version policy, quarterly review process, and release gates are documented in [docs/TECHNOLOGY_STACK.md](docs/TECHNOLOGY_STACK.md). Update that register whenever a platform SDK, AI protocol, model, persistence layer, or core algorithm changes.
+
 ## MVP focus
 
 - German ↔ Persian learning
