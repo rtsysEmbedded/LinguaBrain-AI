@@ -108,6 +108,14 @@ Modern `collection.anki21b`, schema 18, Zstandard, SwiftProtobuf, modern templat
 
 ## Agent Handoff Evidence
 
+### T016 — 2026-08-24 (partial)
+
+- **Agent/tool**: Codex with Swift Package XCTest and Xcode 27.0 beta.
+- **Offline evidence**: `swift test --package-path packages/LinguaBrainKit` passed 38 tests with zero failures and no API key or network dependency.
+- **Build evidence**: macOS and iOS Simulator application builds completed successfully with signing disabled.
+- **App-test evidence**: iPhone and iPad simulator test execution reached the application regression suite, but was not clean: `testA1MediaPlanIsOptionalDeterministicAndTextSafe` and `testSettingsAndReviewLocalizationKeysHaveAllSupportedLanguages` failed, and the simulator runner then stopped returning results. The macOS scheme is not configured for the Test action (`Scheme LinguaBrain Mac is not currently configured for the test action`).
+- **Acceptance status**: T016 remains open. The import/review/restart journey has not yet been accepted across all three surfaces; failures and the Mac test-action configuration must be resolved before checking this task.
+
 ### T005 — 2026-08-18
 
 - **Agent/tool**: Codex with Swift/XCTest and the pinned Anki format research baseline.

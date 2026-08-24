@@ -20,6 +20,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Verification
+
+- T016 offline Anki journey verification is partial: 38 package tests pass without credentials or network, and macOS/iOS Simulator builds pass. iPhone/iPad application tests still expose A1 media-plan and localization-key failures; the simulator runner did not return a final result, and the macOS scheme requires a Test action before app tests can run.
+
 ### Added
 
 - Recorded T037 physical model evidence: `gpt-4o-transcribe` produces delayed text while other Realtime transcription candidates remain unverified. Corrected `gpt-live-transcribe` to use `languages` plus `delay: low`, reduced PCM batches to 100 ms, shortened server-VAD silence to 400 ms, kept official live/committed model candidates testable even when `/models` omits their aliases, and separated future bidirectional `gpt-realtime` Voice Agent work into T038.
