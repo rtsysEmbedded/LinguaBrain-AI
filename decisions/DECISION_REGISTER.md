@@ -236,6 +236,7 @@ At every milestone review:
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 0.7.1 | 2026-08-24 | Revalidated the 62-ID register during the T017/T018 convergence review; no decision status changed, and T016 remains the active release gate. |
 | 0.7.0 | 2026-08-17 | Accepted ADR-003, closed LB-DEC-059 with GRDB 7/system SQLite, corrected the maintained register to 62 IDs, and advanced the queue to local-store protection/recovery. |
 | 0.6.1 | 2026-08-16 | Corrected the summary count to 61 stable decision IDs after the addition of LB-DEC-062. |
 | 0.6.0 | 2026-08-10 | Added LB-DEC-062 and accepted ADR-014 for optional Apple/Google accounts and scoped Release 1.0 learner-data synchronization. |

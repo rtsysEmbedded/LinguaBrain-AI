@@ -39,8 +39,8 @@
 
 ## Phase 5 — Convergence
 
-- [ ] T017 Run Spec Kit consistency analysis and resolve critical discrepancies.
-- [ ] T018 Update project status, changelog, affected documents, and decision register with evidence.
+- [x] T017 Run Spec Kit consistency analysis and resolve critical discrepancies.
+- [x] T018 Update project status, changelog, affected documents, and decision register with evidence.
 - [ ] T019 Perform staged-file security review, full relevant verification, and handoff with commit SHA and risks.
 - [ ] T020 [US5] Define and implement internal Anki card generation for all levels, with optional Google Cloud Text-to-Speech pronunciation audio and A1-targeted image assets, local caching, preview/approval, provenance, and offline reuse.
 - [ ] T021 [US6] Replace the OpenRouter-specific AI boundary with a configurable provider connection model supporting endpoint URL, protocol, model identifier, optional credential, local/remote scope, health check, structured card generation, and provider-specific request adapters.
@@ -107,6 +107,12 @@
 Modern `collection.anki21b`, schema 18, Zstandard, SwiftProtobuf, modern templates/tags/media, and modern-package reconciliation are intentionally deferred from this feature. They must be implemented in a separate Spec Kit feature with its own `spec.md`, `plan.md`, `tasks.md`, dependency/license record, fixtures, and acceptance evidence. Legacy APKG support and the offline review prototype remain in scope here.
 
 ## Agent Handoff Evidence
+
+### T017/T018 — 2026-08-24
+
+- **Changed scope**: Added `consistency-review.md` and `security-review.md`, aligned the active next-deliverable status with the open T016 gate, and recorded the distinction between card backup and full review-event sync.
+- **Verification**: Cross-checked feature artifacts, task dependencies, project status, README references, changelog history, decision-register count, and current working-tree boundaries.
+- **Known boundary**: T019 remains open until T016's application-test failures and macOS Test Action are resolved.
 
 ### T016 — 2026-08-24 (partial)
 
