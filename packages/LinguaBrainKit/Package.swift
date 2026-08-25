@@ -15,7 +15,8 @@ let package = Package(
         .library(name: "LinguaBrainAI", targets: ["LinguaBrainAI"]),
         .library(name: "LinguaBrainMedia", targets: ["LinguaBrainMedia"]),
         .library(name: "LinguaBrainPersistence", targets: ["LinguaBrainPersistence"]),
-        .library(name: "LinguaBrainTestSupport", targets: ["LinguaBrainTestSupport"])
+        .library(name: "LinguaBrainTestSupport", targets: ["LinguaBrainTestSupport"]),
+        .library(name: "LinguaBrainAnkiExport", targets: ["LinguaBrainAnkiExport"])
     ],
     targets: [
         .target(
@@ -42,6 +43,15 @@ let package = Package(
             name: "LinguaBrainTestSupport",
             dependencies: ["LinguaBrainDomain", "LinguaBrainApplication", "LinguaBrainAI"]
         ),
+        .target(
+            name: "LinguaBrainAnkiExport",
+            dependencies: [
+                "LinguaBrainDomain",
+                "LinguaBrainApplication",
+                "LinguaBrainMedia",
+                "LinguaBrainPersistence"
+            ]
+        ),
         .testTarget(
             name: "LinguaBrainAITests",
             dependencies: [
@@ -64,6 +74,20 @@ let package = Package(
                 "LinguaBrainAI",
                 "LinguaBrainPersistence",
                 "LinguaBrainTestSupport"
+            ]
+        ),
+        .testTarget(
+            name: "LinguaBrainAnkiExportTests",
+            dependencies: [
+                "LinguaBrainDomain",
+                "LinguaBrainApplication",
+                "LinguaBrainMedia",
+                "LinguaBrainPersistence",
+                "LinguaBrainAnkiExport",
+                "LinguaBrainTestSupport"
+            ],
+            resources: [
+                .copy("Fixtures")
             ]
         ),
     ]

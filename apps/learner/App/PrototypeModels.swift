@@ -151,6 +151,46 @@ final class PrototypeReviewRecord {
     }
 }
 
+@Model
+final class PrototypeSkillMasteryRecord {
+    @Attribute(.unique) var id: String
+    var cardID: UUID
+    var skillRawValue: String
+    var score: Double
+    var attempts: Int
+    var correct: Int
+    var lastUpdated: Date?
+
+    init(cardID: UUID, skillRawValue: String, score: Double = 0, attempts: Int = 0, correct: Int = 0, lastUpdated: Date? = nil) {
+        self.id = "(cardID.uuidString)::(skillRawValue)"
+        self.cardID = cardID
+        self.skillRawValue = skillRawValue
+        self.score = score
+        self.attempts = attempts
+        self.correct = correct
+        self.lastUpdated = lastUpdated
+    }
+}
+
+@Model
+final class PrototypeLearningEventRecord {
+    @Attribute(.unique) var id: UUID
+    var cardID: UUID
+    var skillRawValue: String
+    var correct: Bool
+    var occurredAt: Date
+    var responseTimeMilliseconds: Int?
+
+    init(cardID: UUID, skillRawValue: String, correct: Bool, occurredAt: Date, responseTimeMilliseconds: Int? = nil) {
+        self.id = UUID()
+        self.cardID = cardID
+        self.skillRawValue = skillRawValue
+        self.correct = correct
+        self.occurredAt = occurredAt
+        self.responseTimeMilliseconds = responseTimeMilliseconds
+    }
+}
+
 enum PrototypeFSRSPhase: String, Codable {
     case new, learning, review, relearning
 }
@@ -621,6 +661,8 @@ final class PrototypeStore {
                 for: PrototypeDeckRecord.self,
                 PrototypeCardRecord.self,
                 PrototypeReviewRecord.self,
+                PrototypeSkillMasteryRecord.self,
+                PrototypeLearningEventRecord.self,
                 configurations: configuration
             )
             modelContext = ModelContext(modelContainer)
@@ -707,6 +749,13 @@ final class PrototypeStore {
         grades[reviewKey(for: word, mode: mode)]?.count ?? 0
     }
 
+    func mastery(for word: PrototypeWord, mode: PrototypeReviewMode = .recognition) -> Double {
+        let skill = mode == .reverseTranslation ? "recall" : "recognition"
+        let id = "\(word.id.uuidString)::\(skill)"
+        return (try? modelContext.fetch(FetchDescriptor<PrototypeSkillMasteryRecord>()))?
+            .first(where: { $0.id == id })?.score ?? 0
+    }
+
     func lastGrade(for word: PrototypeWord, mode: PrototypeReviewMode = .recognition) -> PrototypeReviewGrade? {
         grades[reviewKey(for: word, mode: mode)]?.last
     }
@@ -761,7 +810,20 @@ final class PrototypeStore {
             elapsedDays: schedule.elapsedDays,
             algorithmVersion: PrototypeFSRS6Scheduler.version
         )
-        modelContext.insert(record)
+            modelContext.insert(record)
+            let skill = mode == .reverseTranslation ? "recall" : "recognition"
+            let masteryID = "\(word.id.uuidString)::\(skill)"
+            let mastery = (try? modelContext.fetch(FetchDescriptor<PrototypeSkillMasteryRecord>()))?
+                .first(where: { $0.id == masteryID }) ?? {
+                    let value = PrototypeSkillMasteryRecord(cardID: word.id, skillRawValue: skill)
+                    modelContext.insert(value)
+                    return value
+                }()
+            mastery.attempts += 1
+            if grade != .again { mastery.correct += 1 }
+            mastery.score = Double(mastery.correct) / Double(max(mastery.attempts, 1))
+            mastery.lastUpdated = date
+            modelContext.insert(PrototypeLearningEventRecord(cardID: word.id, skillRawValue: skill, correct: grade != .again, occurredAt: date))
 
         do {
             try modelContext.save()
@@ -781,6 +843,8 @@ final class PrototypeStore {
     func reset() -> Bool {
         do {
             try modelContext.delete(model: PrototypeReviewRecord.self)
+            try modelContext.delete(model: PrototypeSkillMasteryRecord.self)
+            try modelContext.delete(model: PrototypeLearningEventRecord.self)
             try modelContext.save()
             grades.removeAll()
             dueDates.removeAll()
