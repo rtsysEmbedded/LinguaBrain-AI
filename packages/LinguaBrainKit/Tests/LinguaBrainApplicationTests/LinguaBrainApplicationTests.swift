@@ -5,6 +5,30 @@ import XCTest
 @testable import LinguaBrainTestSupport
 
 final class LinguaBrainApplicationTests: XCTestCase {
+    func testSkillMasteryTracksIndependentObjectiveEvidence() {
+        let objective = LearningObjective(id: "entlassen.work.recall", senseKey: "entlassen.work", skill: .recall, targetLevel: "B1")
+        var mastery = SkillMastery(objective: objective)
+        mastery.record(correct: true, at: Date(timeIntervalSince1970: 100))
+        mastery.record(correct: false, at: Date(timeIntervalSince1970: 200))
+        XCTAssertEqual(mastery.attempts, 2)
+        XCTAssertEqual(mastery.correct, 1)
+        XCTAssertEqual(mastery.score, 0.5, accuracy: 0.0001)
+        XCTAssertEqual(mastery.objective.skill, .recall)
+    }
+
+    func testAdaptivePlannerIsDeterministicAndRespectsLowEnergyCapacity() {
+        let now = Date(timeIntervalSince1970: 10_000)
+        let weak = LearningObjective(id: "weak", senseKey: "haus", skill: .recall)
+        let strong = LearningObjective(id: "strong", senseKey: "arbeit", skill: .recognition)
+        let candidates = [
+            AdaptiveLearningCandidate(objective: strong, dueAt: now, mastery: 0.9),
+            AdaptiveLearningCandidate(objective: weak, dueAt: now.addingTimeInterval(-86_400), mastery: 0.1)
+        ]
+        let plan = AdaptiveLearningPlanner.makePlan(candidates: candidates, availableMinutes: 10, energy: 2, now: now)
+        XCTAssertEqual(plan.candidates.map { $0.objective.id }, ["weak", "strong"])
+        XCTAssertEqual(plan.energy, 2)
+        XCTAssertTrue(plan.explanation.contains("Low-energy"))
+    }
 
     // Helper: build a deterministically generated proposal with a real language pair.
     private func makeProposal(

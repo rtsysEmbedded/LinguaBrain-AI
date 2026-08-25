@@ -24,6 +24,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - T016 offline Anki journey verification is partial: 38 package tests pass without credentials or network, and macOS/iOS Simulator builds pass. iPhone/iPad application tests still expose A1 media-plan and localization-key failures; the simulator runner did not return a final result, and the macOS scheme requires a Test action before app tests can run.
 - Completed the T017/T018 Spec Kit consistency review and aligned the active project status, task evidence, backup-versus-sync boundary, and unresolved T016 risks. T019 remains open pending clean app-level verification.
+- Added the 2026-08-25 codebase reality audit. It records the actual boundaries of the current prototype: Feature 003 isolation, production persistence, objective-level mastery, and adaptive selection remain the next implementation sequence; signed Apple-account and App Store work stays deferred.
 
 ### Added
 

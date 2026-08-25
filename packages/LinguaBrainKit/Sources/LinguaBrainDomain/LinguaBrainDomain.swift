@@ -56,6 +56,74 @@ public enum ReviewDirection: String, CaseIterable, Codable, Sendable, Equatable 
     case recall
 }
 
+// MARK: - Objective-level learning state
+
+/// A measurable capability for a lexical sense.  The same sense may have
+/// independent objectives for recognition, recall, listening, writing, or
+/// production.
+public enum LearningSkill: String, CaseIterable, Codable, Sendable, Equatable {
+    case recognition
+    case recall
+    case listening
+    case writing
+    case production
+    case grammar
+}
+
+public struct LearningObjective: Hashable, Codable, Sendable, Equatable {
+    public let id: String
+    public let senseKey: String
+    public let skill: LearningSkill
+    public let targetLevel: String?
+
+    public init(id: String, senseKey: String, skill: LearningSkill, targetLevel: String? = nil) {
+        self.id = id
+        self.senseKey = senseKey
+        self.skill = skill
+        self.targetLevel = targetLevel
+    }
+}
+
+public struct SkillMastery: Codable, Sendable, Equatable {
+    public var objective: LearningObjective
+    public private(set) var score: Double
+    public private(set) var attempts: Int
+    public private(set) var correct: Int
+    public private(set) var lastUpdated: Date?
+
+    public init(objective: LearningObjective, score: Double = 0, attempts: Int = 0, correct: Int = 0, lastUpdated: Date? = nil) {
+        self.objective = objective
+        self.score = min(max(score, 0), 1)
+        self.attempts = max(attempts, 0)
+        self.correct = max(min(correct, self.attempts), 0)
+        self.lastUpdated = lastUpdated
+    }
+
+    public mutating func record(correct: Bool, at date: Date) {
+        attempts += 1
+        if correct { self.correct += 1 }
+        let observation = correct ? 1.0 : 0.0
+        score = (score * Double(attempts - 1) + observation) / Double(attempts)
+        lastUpdated = date
+    }
+}
+
+public struct LearningEvent: Codable, Sendable, Equatable {
+    public let id: UUID
+    public let objective: LearningObjective
+    public let correct: Bool
+    public let responseTimeMilliseconds: Int?
+    public let occurredAt: Date
+
+    public init(id: UUID = UUID(), objective: LearningObjective, correct: Bool, responseTimeMilliseconds: Int? = nil, occurredAt: Date) {
+        self.id = id
+        self.objective = objective
+        self.correct = correct
+        self.responseTimeMilliseconds = responseTimeMilliseconds
+        self.occurredAt = occurredAt
+    }
+}
+
 // MARK: - Idempotency (T004)
 
 public struct IdempotencyKey: Hashable, Codable, Sendable, Equatable {

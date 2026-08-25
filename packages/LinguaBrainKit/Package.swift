@@ -65,6 +65,6 @@ let package = Package(
                 "LinguaBrainPersistence",
                 "LinguaBrainTestSupport"
             ]
-        )
+        ),
     ]
 )
