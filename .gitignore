@@ -77,6 +77,7 @@ xcuserdata/
 site/
 build/
 DerivedData/
-Packages/
+.build/
+.swiftpm/
 *.xcodeproj/
 -Xcc/
