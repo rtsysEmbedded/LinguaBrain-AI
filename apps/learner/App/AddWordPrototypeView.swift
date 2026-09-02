@@ -24,6 +24,8 @@ struct AddWordPrototypeView: View {
     @State private var generatedAudio: Data?
     @State private var audioPlayer: AVAudioPlayer?
     @State private var isGeneratingAudio = false
+    @State private var customDomainName = ""
+    @State private var showingDomainEditor = false
 
     var body: some View {
         ScrollView {
@@ -52,8 +54,12 @@ struct AddWordPrototypeView: View {
                             Text(localization.localized("domain.work")).tag("work")
                             Text(localization.localized("domain.software")).tag("software")
                             Text(localization.localized("domain.medical")).tag("medical")
+                            ForEach(PrototypeDomainCatalog.customDomains, id: \.self) { value in
+                                Text(value).tag(value)
+                            }
                         }
-                        .pickerStyle(.segmented)
+                        .pickerStyle(.menu)
+                        Button("افزودن حوزه جدید", systemImage: "plus") { showingDomainEditor = true }
 
                         Button {
                             generateCard()
@@ -80,6 +86,14 @@ struct AddWordPrototypeView: View {
             .frame(maxWidth: 760)
             .frame(maxWidth: .infinity)
         }
+        .alert("حوزهٔ جدید", isPresented: $showingDomainEditor) {
+            TextField("مثلاً Embedded Linux", text: $customDomainName)
+            Button("ذخیره") {
+                if let saved = PrototypeDomainCatalog.add(customDomainName) { domain = saved }
+                customDomainName = ""
+            }
+            Button("انصراف", role: .cancel) { customDomainName = "" }
+        } message: { Text("حوزهٔ سفارشی برای تولید و دسته‌بندی کارت‌ها") }
         .background(PrototypeBackground())
         .navigationTitle(localization.localized("card.addTitle"))
         .onChange(of: word) { _, _ in resetGeneratedPreview() }

@@ -544,6 +544,22 @@ enum PrototypeDomainClassifier {
     }
 }
 
+enum PrototypeDomainCatalog {
+    private static let key = "linguabrain.custom.domains"
+    static var customDomains: [String] {
+        (UserDefaults.standard.array(forKey: key) as? [String] ?? []).sorted()
+    }
+    @discardableResult static func add(_ raw: String) -> String? {
+        let value = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !value.isEmpty else { return nil }
+        var values = customDomains
+        if !values.contains(where: { $0.caseInsensitiveCompare(value) == .orderedSame }) {
+            values.append(value); UserDefaults.standard.set(values, forKey: key)
+        }
+        return value
+    }
+}
+
 enum PrototypeMediaKind: String, Codable, Sendable {
     case pronunciationAudio
     case illustration
