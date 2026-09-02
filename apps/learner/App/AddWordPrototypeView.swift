@@ -5,6 +5,20 @@ import SQLite3
 import zlib
 
 struct AddWordPrototypeView: View {
+    private enum AddSection: String, CaseIterable, Identifiable {
+        case singleCard, ankiFile, contextText, importPackage
+
+        var id: Self { self }
+        var symbol: String {
+            switch self {
+            case .singleCard: "wand.and.stars"
+            case .ankiFile: "doc.text"
+            case .contextText: "text.quote"
+            case .importPackage: "square.and.arrow.down"
+            }
+        }
+    }
+
     @Environment(PrototypeStore.self) private var store
     @Environment(PrototypeAISettings.self) private var aiSettings
     @Environment(PrototypeLocalization.self) private var localization
@@ -26,10 +40,21 @@ struct AddWordPrototypeView: View {
     @State private var isGeneratingAudio = false
     @State private var customDomainName = ""
     @State private var showingDomainEditor = false
+    @State private var domainEditorAppliesToBatch = false
     @State private var batchWords = ""
+    @State private var contextText = ""
+    @State private var contextTranslation: String?
+    @State private var isTranslatingContext = false
     @State private var batchTopic = "general"
+    @State private var batchLevel = "B1"
     @State private var batchOutputName = "linguabrain-cards"
-    @State private var batchTargetLanguage = "de"
+    // Batch input is normally the language being learned (for example German),
+    // while the picker is the language the user wants as the translation.
+    // Keeping those roles separate prevents a German input + Persian translation
+    // from being rendered as a Persian-front card.
+    @State private var batchInputLanguage = "de"
+    @State private var batchTranslationLanguage = "fa"
+    @State private var didInitializeBatchLanguages = false
     @State private var batchIncludeAudio = false
     @State private var batchIncludeImage = false
     @State private var isBatchTextImporterPresented = false
@@ -37,13 +62,12 @@ struct AddWordPrototypeView: View {
     @State private var batchStatus: String?
     @State private var batchExportDocument = AnkiAPKGDocument()
     @State private var isBatchExporterPresented = false
+    @State private var addSection: AddSection = .singleCard
 
     var body: some View {
         ScrollView {
             VStack(spacing: 20) {
                 VStack(alignment: .leading, spacing: 6) {
-                    Text(localization.localized("card.addTitle"))
-                        .font(.largeTitle.bold())
                     Text(aiSettings.textMode == .local || (aiSettings.hasAPIKey && aiSettings.cloudConsent)
                          ? localization.localized("provider.cardReady")
                          : localization.localized("provider.configureText"))
@@ -51,46 +75,26 @@ struct AddWordPrototypeView: View {
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
 
-                packageImporter
-
-                batchBuilder
-
-                PrototypeCard {
-                    VStack(alignment: .leading, spacing: 16) {
-                        TextField(localization.localized("card.wordPlaceholder"), text: $word)
-                            .textFieldStyle(.roundedBorder)
-                            .font(.title3)
-                            .environment(\.layoutDirection, .leftToRight)
-
-                        Picker(localization.localized("card.domain"), selection: $domain) {
-                            Text(localization.localized("domain.general")).tag("general")
-                            Text(localization.localized("domain.work")).tag("work")
-                            Text(localization.localized("domain.software")).tag("software")
-                            Text(localization.localized("domain.medical")).tag("medical")
-                            ForEach(PrototypeDomainCatalog.customDomains, id: \.self) { value in
-                                Text(value).tag(value)
-                            }
-                        }
-                        .pickerStyle(.menu)
-                        Button(localization.localized("domain.addCustom"), systemImage: "plus") { showingDomainEditor = true }
-
-                        Button {
-                            generateCard()
-                        } label: {
-                            if isGeneratingCard {
-                                ProgressView().frame(maxWidth: .infinity).padding(.vertical, 10)
-                            } else {
-                                Label(localization.localized("provider.generateCard"), systemImage: "wand.and.stars")
-                                    .frame(maxWidth: .infinity)
-                                    .padding(.vertical, 10)
-                            }
-                        }
-                        .buttonStyle(.borderedProminent)
-                        .disabled(isGeneratingCard || word.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                Picker(addSectionPickerTitle, selection: $addSection) {
+                    ForEach(AddSection.allCases) { section in
+                        Label(addSectionTitle(section), systemImage: section.symbol).tag(section)
                     }
                 }
+                .pickerStyle(.menu)
+                .frame(maxWidth: .infinity, alignment: .leading)
 
-                if showPreview {
+                switch addSection {
+                case .singleCard:
+                    singleCardBuilder
+                case .ankiFile:
+                    batchBuilder
+                case .contextText:
+                    contextBuilder
+                case .importPackage:
+                    packageImporter
+                }
+
+                if addSection == .singleCard, showPreview {
                     cardPreview
                         .transition(.scale.combined(with: .opacity))
                 }
@@ -102,13 +106,26 @@ struct AddWordPrototypeView: View {
         .alert(localization.localized("domain.newTitle"), isPresented: $showingDomainEditor) {
             TextField(localization.localized("domain.placeholder"), text: $customDomainName)
             Button(localization.localized("common.save")) {
-                if let saved = PrototypeDomainCatalog.add(customDomainName) { domain = saved }
+                if let saved = PrototypeDomainCatalog.add(customDomainName) {
+                    if domainEditorAppliesToBatch { batchTopic = saved }
+                    else { domain = saved }
+                }
                 customDomainName = ""
+                domainEditorAppliesToBatch = false
             }
-            Button(localization.localized("common.cancel"), role: .cancel) { customDomainName = "" }
+            Button(localization.localized("common.cancel"), role: .cancel) {
+                customDomainName = ""
+                domainEditorAppliesToBatch = false
+            }
         } message: { Text(localization.localized("domain.newMessage")) }
         .background(PrototypeBackground())
         .navigationTitle(localization.localized("card.addTitle"))
+        .onAppear {
+            guard !didInitializeBatchLanguages else { return }
+            batchInputLanguage = languageSettings.targetLanguageTag
+            batchTranslationLanguage = languageSettings.sourceLanguageTag
+            didInitializeBatchLanguages = true
+        }
         .onChange(of: word) { _, _ in resetGeneratedPreview() }
         .onChange(of: domain) { _, _ in resetGeneratedPreview() }
         .fileImporter(
@@ -133,7 +150,7 @@ struct AddWordPrototypeView: View {
         ) { result in
             switch result {
             case .success:
-                batchStatus = "فایل Anki آماده و ذخیره شد."
+                batchStatus = batchStatusCopy(.saved)
             case .failure(let error):
                 packageError = error.localizedDescription
             }
@@ -143,6 +160,46 @@ struct AddWordPrototypeView: View {
         } message: {
             Text(packageError ?? localization.localized("common.unknownError"))
         }
+    }
+
+    private var singleCardBuilder: some View {
+        PrototypeCard {
+                    VStack(alignment: .leading, spacing: 16) {
+                        TextField(localization.localized("card.wordPlaceholder"), text: $word)
+                            .textFieldStyle(.roundedBorder)
+                            .font(.title3)
+                            .environment(\.layoutDirection, .leftToRight)
+
+                        Picker(localization.localized("card.domain"), selection: $domain) {
+                            Text(localization.localized("domain.general")).tag("general")
+                            Text(localization.localized("domain.work")).tag("work")
+                            Text(localization.localized("domain.software")).tag("software")
+                            Text(localization.localized("domain.medical")).tag("medical")
+                            ForEach(PrototypeDomainCatalog.customDomains, id: \.self) { value in
+                                Text(value).tag(value)
+                            }
+                        }
+                        .pickerStyle(.menu)
+                        Button(addCustomDomainLabel, systemImage: "plus") {
+                            domainEditorAppliesToBatch = false
+                            showingDomainEditor = true
+                        }
+
+                        Button {
+                            generateCard()
+                        } label: {
+                            if isGeneratingCard {
+                                ProgressView().frame(maxWidth: .infinity).padding(.vertical, 10)
+                            } else {
+                                Label(localization.localized("provider.generateCard"), systemImage: "wand.and.stars")
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 10)
+                            }
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .disabled(isGeneratingCard || word.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                    }
+                }
     }
 
     private func generateCard() {
@@ -172,12 +229,6 @@ struct AddWordPrototypeView: View {
                     sourceLanguageTag: languageSettings.sourceLanguageTag,
                     targetLanguageTag: languageSettings.targetLanguageTag
                 )
-                guard !draft.targetText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
-                      !draft.sourceMeaning.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
-                      !draft.example.target.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
-                      !draft.example.source.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-                    throw ProviderError.invalidResponse
-                }
                 generatedCard = draft
                 // Generate pronunciation as part of card creation. The explicit
                 // preview button remains available for retry/regeneration.
@@ -211,6 +262,61 @@ struct AddWordPrototypeView: View {
         audioPlayer = nil
     }
 
+    private var addSectionPickerTitle: String {
+        switch localization.language {
+        case .english: "Add method"
+        case .german: "Hinzufügen mit"
+        case .persian: "روش افزودن"
+        }
+    }
+
+    private func addSectionTitle(_ section: AddSection) -> String {
+        switch (localization.language, section) {
+        case (.english, .singleCard): "Create one card"
+        case (.english, .ankiFile): "Build Anki from file/list"
+        case (.english, .contextText): "Build from passage"
+        case (.english, .importPackage): "Import Anki package"
+        case (.german, .singleCard): "Einzelne Karte erstellen"
+        case (.german, .ankiFile): "Anki aus Datei/Liste erstellen"
+        case (.german, .contextText): "Aus Text erstellen"
+        case (.german, .importPackage): "Anki-Paket importieren"
+        case (.persian, .singleCard): "ساخت یک کارت"
+        case (.persian, .ankiFile): "ساخت Anki از فایل یا فهرست"
+        case (.persian, .contextText): "ساخت از متن"
+        case (.persian, .importPackage): "ورود بستهٔ Anki"
+        }
+    }
+
+    private func batchStep(_ number: Int, _ title: String) -> some View {
+        Text("\(number). \(title)")
+            .font(.subheadline.weight(.semibold))
+            .foregroundStyle(PrototypeTheme.accent)
+    }
+
+    private var batchInputStepTitle: String {
+        switch localization.language {
+        case .english: "Words"
+        case .german: "Wörter"
+        case .persian: "کلمه‌ها"
+        }
+    }
+
+    private var batchSettingsStepTitle: String {
+        switch localization.language {
+        case .english: "Card settings"
+        case .german: "Karteneinstellungen"
+        case .persian: "تنظیمات کارت"
+        }
+    }
+
+    private var batchExportStepTitle: String {
+        switch localization.language {
+        case .english: "Media and output"
+        case .german: "Medien und Ausgabe"
+        case .persian: "رسانه و خروجی"
+        }
+    }
+
     private func generateAudio() {
         guard let preview = generatedCard else { return }
         isGeneratingAudio = true
@@ -227,14 +333,13 @@ struct AddWordPrototypeView: View {
     private var batchBuilder: some View {
         PrototypeCard {
             VStack(alignment: .leading, spacing: 14) {
-                Label("ساخت دسته‌ای فایل Anki", systemImage: "rectangle.stack.badge.plus")
+                Label(batchCopy(.title), systemImage: "rectangle.stack.badge.plus")
                     .font(.headline)
-                Text("کلمه‌ها را با کاما، خط جدید، یا یک فایل متنی وارد کنید. کارت‌ها با مدل انتخاب‌شده در تنظیمات ساخته می‌شوند.")
+                Text(batchCopy(.subtitle))
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
 
-                TextField("موضوع، مثلاً سفر یا برنامه‌نویسی", text: $batchTopic)
-                    .textFieldStyle(.roundedBorder)
+                batchStep(1, batchInputStepTitle)
                 TextEditor(text: $batchWords)
                     .font(.body)
                     .frame(minHeight: 90)
@@ -243,30 +348,66 @@ struct AddWordPrototypeView: View {
                     .accessibilityLabel("فهرست کلمات")
 
                 HStack {
-                    Button("انتخاب فایل .txt", systemImage: "doc.badge.plus") {
+                    Button(batchCopy(.chooseTextFile), systemImage: "doc.badge.plus") {
                         isBatchTextImporterPresented = true
                     }
                     .buttonStyle(.bordered)
                     Spacer()
-                    Text("\(parsedBatchWords.count) کلمه")
+                    Text(batchCopy(.wordCount).replacingOccurrences(of: "%d", with: "\(parsedBatchWords.count)"))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
 
+                Divider()
+                batchStep(2, batchSettingsStepTitle)
                 HStack {
-                    Picker("زبان مقصد", selection: $batchTargetLanguage) {
-                        Text("آلمانی").tag("de")
-                        Text("انگلیسی").tag("en")
-                        Text("فارسی").tag("fa")
+                    Picker(batchCopy(.topicPlaceholder), selection: $batchTopic) {
+                        Text(localization.localized("domain.general")).tag("general")
+                        Text(localization.localized("domain.work")).tag("work")
+                        Text(localization.localized("domain.software")).tag("software")
+                        Text(localization.localized("domain.medical")).tag("medical")
+                        ForEach(PrototypeDomainCatalog.customDomains, id: \.self) { value in
+                            Text(value).tag(value)
+                        }
                     }
                     .pickerStyle(.menu)
-                    TextField("نام فایل خروجی", text: $batchOutputName)
+                    Button(addCustomDomainLabel, systemImage: "plus") {
+                        domainEditorAppliesToBatch = true
+                        showingDomainEditor = true
+                    }
+                    .buttonStyle(.bordered)
+                }
+                HStack {
+                    Picker(batchCopy(.inputLanguage), selection: $batchInputLanguage) {
+                        Text(localization.localized("language.german")).tag("de")
+                        Text(localization.localized("language.english")).tag("en")
+                        Text(localization.localized("language.persian")).tag("fa")
+                    }
+                    .pickerStyle(.menu)
+                    Picker(batchCopy(.translationLanguage), selection: $batchTranslationLanguage) {
+                        Text(localization.localized("language.persian")).tag("fa")
+                        Text(localization.localized("language.german")).tag("de")
+                        Text(localization.localized("language.english")).tag("en")
+                    }
+                    .pickerStyle(.menu)
+                }
+                Text(batchCopy(.cardDirection))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+
+                Divider()
+                batchStep(3, batchExportStepTitle)
+                HStack {
+                    TextField(batchCopy(.outputName), text: $batchOutputName)
                         .textFieldStyle(.roundedBorder)
                         .environment(\.layoutDirection, .leftToRight)
+                    Text(".apkg")
+                        .font(.caption.monospaced())
+                        .foregroundStyle(.secondary)
                 }
 
-                Toggle("تولید صدای تلفظ", isOn: $batchIncludeAudio)
-                Toggle("تولید تصویر آموزشی", isOn: $batchIncludeImage)
+                Toggle(batchCopy(.includeAudio), isOn: $batchIncludeAudio)
+                Toggle(batchCopy(.includeImage), isOn: $batchIncludeImage)
 
                 Button {
                     buildBatchAPKG()
@@ -274,12 +415,17 @@ struct AddWordPrototypeView: View {
                     if isBuildingBatch {
                         ProgressView().frame(maxWidth: .infinity)
                     } else {
-                        Label("ساخت و ذخیرهٔ فایل .apkg", systemImage: "square.and.arrow.up")
+                        Label(batchCopy(.buildAndSave), systemImage: "square.and.arrow.up")
                             .frame(maxWidth: .infinity)
                     }
                 }
                 .buttonStyle(.borderedProminent)
-                .disabled(isBuildingBatch || parsedBatchWords.isEmpty || batchTopic.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                .disabled(
+                    isBuildingBatch ||
+                    parsedBatchWords.isEmpty ||
+                    batchTopic.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ||
+                    batchInputLanguage == batchTranslationLanguage
+                )
 
                 if let batchStatus {
                     Text(batchStatus)
@@ -288,6 +434,88 @@ struct AddWordPrototypeView: View {
                 }
             }
         }
+    }
+
+    private var contextBuilder: some View {
+        PrototypeCard {
+            VStack(alignment: .leading, spacing: 14) {
+                Label(contextCopy(.title), systemImage: "text.quote")
+                    .font(.headline)
+                Text(contextCopy(.subtitle)).font(.subheadline).foregroundStyle(.secondary)
+                TextEditor(text: $contextText)
+                    .frame(minHeight: 180)
+                    .padding(6)
+                    .overlay(RoundedRectangle(cornerRadius: 8).stroke(.secondary.opacity(0.35)))
+                Button { translateContext() } label: {
+                    Label(contextCopy(.translate), systemImage: "character.book.closed")
+                }.disabled(isTranslatingContext || contextText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                if let contextTranslation {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(contextCopy(.translation)).font(.headline)
+                        Text(contextTranslation).textSelection(.enabled)
+                    }.padding(10).background(.thinMaterial, in: RoundedRectangle(cornerRadius: 8))
+                }
+                Picker(contextCopy(.topic), selection: $batchTopic) {
+                    Text(localization.localized("domain.general")).tag("general")
+                    Text(localization.localized("domain.work")).tag("work")
+                    Text(localization.localized("domain.software")).tag("software")
+                    Text(localization.localized("domain.medical")).tag("medical")
+                    ForEach(PrototypeDomainCatalog.customDomains, id: \.self) { Text($0).tag($0) }
+                }.pickerStyle(.menu)
+                Picker(contextCopy(.level), selection: $batchLevel) {
+                    ForEach(["A1", "A2", "B1", "B2", "C1"], id: \.self) { Text($0).tag($0) }
+                }.pickerStyle(.menu)
+                HStack {
+                    Picker(contextCopy(.inputLanguage), selection: $batchInputLanguage) {
+                        Text(localization.localized("language.german")).tag("de")
+                        Text(localization.localized("language.english")).tag("en")
+                        Text(localization.localized("language.persian")).tag("fa")
+                    }.pickerStyle(.menu)
+                    Picker(contextCopy(.translationLanguage), selection: $batchTranslationLanguage) {
+                        Text(localization.localized("language.persian")).tag("fa")
+                        Text(localization.localized("language.german")).tag("de")
+                        Text(localization.localized("language.english")).tag("en")
+                    }.pickerStyle(.menu)
+                }
+                Toggle(batchCopy(.includeAudio), isOn: $batchIncludeAudio)
+                Toggle(batchCopy(.includeImage), isOn: $batchIncludeImage)
+                Button { buildFromContext() } label: {
+                    Label(contextCopy(.build), systemImage: "wand.and.stars").frame(maxWidth: .infinity)
+                }.buttonStyle(.borderedProminent)
+                    .disabled(isBuildingBatch || contextText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || batchInputLanguage == batchTranslationLanguage)
+                if let batchStatus { Text(batchStatus).font(.caption).foregroundStyle(PrototypeTheme.mint) }
+            }
+        }
+    }
+
+    private enum ContextCopy { case title, subtitle, topic, level, inputLanguage, translationLanguage, build, translate, translation }
+    private func contextCopy(_ key: ContextCopy) -> String {
+        switch (localization.language, key) {
+        case (.english, .title): "Build cards from a passage"; case (.english, .subtitle): "Paste a text. Important content words—not every word—become contextual cards."; case (.english, .topic): "Topic"; case (.english, .level): "Word level"; case (.english, .inputLanguage): "Text language"; case (.english, .translationLanguage): "Translation language"; case (.english, .build): "Extract words and add cards"; case (.english, .translate): "Translate passage"; case (.english, .translation): "Translation"
+        case (.german, .title): "Karten aus einem Text erstellen"; case (.german, .subtitle): "Text einfügen. Nur wichtige Inhaltswörter werden als Kontextkarten erstellt."; case (.german, .topic): "Thema"; case (.german, .level): "Wortniveau"; case (.german, .inputLanguage): "Textsprache"; case (.german, .translationLanguage): "Übersetzungssprache"; case (.german, .build): "Wörter extrahieren und Karten hinzufügen"; case (.german, .translate): "Text übersetzen"; case (.german, .translation): "Übersetzung"
+        case (.persian, .title): "ساخت کارت از متن"; case (.persian, .subtitle): "یک متن وارد کنید؛ فقط واژه‌های محتوایی و مهم، نه همهٔ کلمات، به کارت تبدیل می‌شوند."; case (.persian, .topic): "موضوع"; case (.persian, .level): "سطح واژه"; case (.persian, .inputLanguage): "زبان متن"; case (.persian, .translationLanguage): "زبان ترجمه"; case (.persian, .build): "استخراج واژه و افزودن کارت"; case (.persian, .translate): "ترجمهٔ متن"; case (.persian, .translation): "ترجمه"
+        }
+    }
+
+    private func translateContext() {
+        isTranslatingContext = true
+        Task {
+            do {
+                let gateway = AIProviderGateway(endpoint: aiSettings.endpoint, protocolName: aiSettings.protocolName, apiKey: try aiSettings.apiKey())
+                contextTranslation = try await gateway.translateText(contextText, model: aiSettings.modelID, sourceLanguageTag: batchInputLanguage, targetLanguageTag: batchTranslationLanguage)
+            } catch { packageError = error.localizedDescription }
+            isTranslatingContext = false
+        }
+    }
+
+    private func buildFromContext() {
+        let stopWords: Set<String> = ["the","and","that","this","with","from","have","were","eine","einer","einem","und","der","die","das","den","dem","ist","sind","nicht","für","mit","auf","von","zu","ein","eine"]
+        let tokens = contextText.split { !$0.isLetter }.map(String.init)
+            .filter { $0.count >= 4 && !stopWords.contains($0.lowercased()) }
+        var seen = Set<String>()
+        let words = tokens.filter { seen.insert($0.lowercased()).inserted }.prefix(15)
+        batchWords = words.joined(separator: ",")
+        buildBatchAPKG(wordsOverride: Array(words))
     }
 
     private var parsedBatchWords: [String] {
@@ -305,7 +533,31 @@ struct AddWordPrototypeView: View {
     private var normalizedOutputName: String {
         let trimmed = batchOutputName.trimmingCharacters(in: .whitespacesAndNewlines)
         let base = trimmed.isEmpty ? "linguabrain-cards" : trimmed
-        return base.hasSuffix(".apkg") ? String(base.dropLast(5)) : base
+        return base.lowercased().hasSuffix(".apkg") ? base : "\(base).apkg"
+    }
+
+    private enum BatchStatusCopy {
+        case saved, fileLoaded(Int), building(Int, Int, String), readyToSave(Int), partialSuccess(Int, Int, String)
+    }
+
+    private func batchStatusCopy(_ status: BatchStatusCopy) -> String {
+        switch (localization.language, status) {
+        case (.english, .saved): "Anki file is ready and saved."
+        case (.german, .saved): "Die Anki-Datei ist fertig und gespeichert."
+        case (.persian, .saved): "فایل Anki آماده و ذخیره شد."
+        case (.english, .fileLoaded(let count)): "Text file loaded; \(count) words are ready."
+        case (.german, .fileLoaded(let count)): "Textdatei geladen; \(count) Wörter sind bereit."
+        case (.persian, .fileLoaded(let count)): "فایل خوانده شد؛ \(count) کلمه آماده است."
+        case (.english, .building(let current, let total, let word)): "Building card \(current) of \(total): \(word)"
+        case (.german, .building(let current, let total, let word)): "Karte \(current) von \(total) wird erstellt: \(word)"
+        case (.persian, .building(let current, let total, let word)): "در حال ساخت کارت \(current) از \(total): \(word)"
+        case (.english, .readyToSave(let count)): "\(count) cards are ready; choose where to save the file."
+        case (.german, .readyToSave(let count)): "\(count) Karten sind bereit; Speicherort auswählen."
+        case (.persian, .readyToSave(let count)): "\(count) کارت آماده است؛ محل ذخیرهٔ فایل را انتخاب کنید."
+        case (.english, .partialSuccess(let cards, let failures, let details)): "\(cards) cards ready; \(failures) inputs failed: \(details)"
+        case (.german, .partialSuccess(let cards, let failures, let details)): "\(cards) Karten bereit; \(failures) Eingaben fehlgeschlagen: \(details)"
+        case (.persian, .partialSuccess(let cards, let failures, let details)): "\(cards) کارت آماده شد؛ \(failures) ورودی ناموفق بود: \(details)"
+        }
     }
 
     private func loadBatchText(_ result: Result<[URL], Error>) {
@@ -314,15 +566,16 @@ struct AddWordPrototypeView: View {
             let hasAccess = url.startAccessingSecurityScopedResource()
             defer { if hasAccess { url.stopAccessingSecurityScopedResource() } }
             batchWords = try String(contentsOf: url, encoding: .utf8)
-            batchStatus = "فایل خوانده شد؛ \(parsedBatchWords.count) کلمه آماده است."
+            batchStatus = batchStatusCopy(.fileLoaded(parsedBatchWords.count))
         } catch {
             packageError = error.localizedDescription
         }
     }
 
-    private func buildBatchAPKG() {
-        let words = parsedBatchWords
+    private func buildBatchAPKG(wordsOverride: [String]? = nil) {
+        let words = wordsOverride ?? parsedBatchWords
         guard !words.isEmpty else { return }
+        _ = PrototypeDomainCatalog.add(batchTopic)
         isBuildingBatch = true
         batchStatus = nil
         Task {
@@ -347,16 +600,22 @@ struct AddWordPrototypeView: View {
                 var savedWords: [PrototypeWord] = []
                 var failures: [String] = []
                 for (index, input) in words.enumerated() {
-                    batchStatus = "در حال ساخت کارت \(index + 1) از \(words.count): \(input)"
+                    batchStatus = batchStatusCopy(.building(index + 1, words.count, input))
                     do {
                         let draft = try await textGateway.generateCard(
                             word: input,
                             domain: batchTopic,
                             model: aiSettings.modelID,
-                            sourceLanguageTag: languageSettings.sourceLanguageTag,
-                            targetLanguageTag: batchTargetLanguage
+                            sourceLanguageTag: batchTranslationLanguage,
+                            targetLanguageTag: batchInputLanguage,
+                            context: addSection == .contextText ? contextText : nil,
+                            level: addSection == .contextText ? batchLevel : nil
                         )
-                        let senses = draft.prototypeWords(domain: batchTopic, sourceLanguageTag: languageSettings.sourceLanguageTag, targetLanguageTag: batchTargetLanguage)
+                        let cards = draft.prototypeWords(
+                            domain: batchTopic,
+                            sourceLanguageTag: batchTranslationLanguage,
+                            targetLanguageTag: batchInputLanguage
+                        )
                         let audio: Data?
                         if let audioGateway {
                             audio = try? await audioGateway.synthesizeSpeech(
@@ -376,25 +635,105 @@ struct AddWordPrototypeView: View {
                         } else {
                             image = nil
                         }
-                        for (senseIndex, sense) in senses.enumerated() {
-                            if store.addGeneratedCard(sense, pronunciationAudio: senseIndex == 0 ? audio : nil, illustrationImage: senseIndex == 0 ? image : nil) {
-                                savedWords.append(sense)
-                            }
+                        // Each genuinely independent sense is its own review card.
+                        // The generated media is shared by those cards, not duplicated.
+                        if store.addGeneratedCards(
+                            cards,
+                            sharedPronunciationAudio: audio,
+                            sharedIllustrationImage: image
+                        ) {
+                            savedWords.append(contentsOf: cards)
+                        } else {
+                            failures.append("\(input): \(store.lastPersistenceError ?? "کارت ذخیره نشد.")")
                         }
                     } catch {
-                        failures.append(input)
+                        failures.append("\(input): \(error.localizedDescription)")
                     }
                 }
-                guard !savedWords.isEmpty else { throw NSError(domain: "LinguaBrain", code: 1, userInfo: [NSLocalizedDescriptionKey: "هیچ کارتی ساخته نشد. تنظیمات مدل و اتصال را بررسی کنید."]) }
+                guard !savedWords.isEmpty else {
+                    throw NSError(
+                        domain: "LinguaBrain",
+                        code: 1,
+                        userInfo: [NSLocalizedDescriptionKey: noCardsMessage(failures)]
+                    )
+                }
                 batchExportDocument = try await PrototypeAPKGExporter.makeDocument(from: savedWords, store: store)
                 batchStatus = failures.isEmpty
-                    ? "\(savedWords.count) کارت آماده است؛ محل ذخیرهٔ فایل را انتخاب کنید."
-                    : "\(savedWords.count) کارت آماده شد؛ \(failures.count) ورودی ناموفق بود."
+                    ? batchStatusCopy(.readyToSave(savedWords.count))
+                    : batchStatusCopy(.partialSuccess(savedWords.count, failures.count, failures.joined(separator: " · ")))
                 isBatchExporterPresented = true
             } catch {
                 packageError = error.localizedDescription
             }
             isBuildingBatch = false
+        }
+    }
+
+    private var addCustomDomainLabel: String {
+        switch localization.language {
+        case .english: "Add custom category"
+        case .german: "Eigene Kategorie hinzufügen"
+        case .persian: "افزودن دستهٔ جدید"
+        }
+    }
+
+    private func noCardsMessage(_ failures: [String]) -> String {
+        let details = failures.joined(separator: "\n")
+        switch localization.language {
+        case .english: return "No cards were created.\(details.isEmpty ? "" : "\n\(details)")"
+        case .german: return "Es wurden keine Karten erstellt.\(details.isEmpty ? "" : "\n\(details)")"
+        case .persian: return "هیچ کارتی ساخته نشد.\(details.isEmpty ? "" : "\n\(details)")"
+        }
+    }
+
+    private enum BatchCopy {
+        case title, subtitle, topicPlaceholder, chooseTextFile, wordCount, inputLanguage, translationLanguage, cardDirection, outputName, includeAudio, includeImage, buildAndSave, awaitingAI, independentSenses
+    }
+
+    private func batchCopy(_ key: BatchCopy) -> String {
+        switch (localization.language, key) {
+        case (.english, .title): "Build Anki deck"
+        case (.english, .subtitle): "Enter comma- or line-separated words, or choose a text file. Independent meanings become separate cards."
+        case (.english, .topicPlaceholder): "Topic, e.g. travel or software"
+        case (.english, .chooseTextFile): "Choose .txt file"
+        case (.english, .wordCount): "%d words"
+        case (.english, .inputLanguage): "Input language"
+        case (.english, .translationLanguage): "Translation language"
+        case (.english, .cardDirection): "Card front: input word · Card back: translation"
+        case (.english, .outputName): "Output filename"
+        case (.english, .includeAudio): "Generate pronunciation audio"
+        case (.english, .includeImage): "Generate learning image"
+        case (.english, .buildAndSave): "Build and save .apkg"
+        case (.english, .awaitingAI): "Waiting for AI"
+        case (.english, .independentSenses): "Independent meanings and usage"
+        case (.german, .title): "Anki-Stapel erstellen"
+        case (.german, .subtitle): "Wörter durch Kommas oder Zeilen trennen oder eine Textdatei wählen. Eigenständige Bedeutungen werden getrennte Karten."
+        case (.german, .topicPlaceholder): "Thema, z. B. Reisen oder Software"
+        case (.german, .chooseTextFile): ".txt-Datei auswählen"
+        case (.german, .wordCount): "%d Wörter"
+        case (.german, .inputLanguage): "Eingabesprache"
+        case (.german, .translationLanguage): "Übersetzungssprache"
+        case (.german, .cardDirection): "Vorderseite: Eingabewort · Rückseite: Übersetzung"
+        case (.german, .outputName): "Ausgabedatei"
+        case (.german, .includeAudio): "Aussprache erzeugen"
+        case (.german, .includeImage): "Lernbild erzeugen"
+        case (.german, .buildAndSave): ".apkg erstellen und speichern"
+        case (.german, .awaitingAI): "Warten auf KI"
+        case (.german, .independentSenses): "Eigenständige Bedeutungen und Verwendung"
+        case (.persian, .title): "ساخت دسته‌ای فایل Anki"
+        case (.persian, .subtitle): "کلمه‌ها را با کاما، خط جدید، یا یک فایل متنی وارد کنید. هر معنی مستقل یک کارت جدا می‌شود."
+        case (.persian, .topicPlaceholder): "موضوع، مثلاً سفر یا برنامه‌نویسی"
+        case (.persian, .chooseTextFile): "انتخاب فایل .txt"
+        case (.persian, .wordCount): "%d کلمه"
+        case (.persian, .inputLanguage): "زبان واژه‌های ورودی"
+        case (.persian, .translationLanguage): "زبان ترجمه"
+        case (.persian, .cardDirection): "روی کارت: واژهٔ ورودی · پشت کارت: ترجمه"
+        case (.persian, .outputName): "نام فایل خروجی"
+        case (.persian, .includeAudio): "تولید صدای تلفظ"
+        case (.persian, .includeImage): "تولید تصویر آموزشی"
+        case (.persian, .buildAndSave): "ساخت و ذخیرهٔ فایل .apkg"
+        case (.persian, .awaitingAI): "در انتظار AI"
+        case (.persian, .independentSenses): "معنی‌ها و کاربردهای مستقل"
         }
     }
 
@@ -537,7 +876,7 @@ struct AddWordPrototypeView: View {
             german: word.isEmpty ? "arbeiten" : word,
             persian: "—",
             level: "—",
-            partOfSpeech: "در انتظار AI",
+            partOfSpeech: batchCopy(.awaitingAI),
             example: "",
             exampleTranslation: "",
             domain: domain
@@ -565,7 +904,7 @@ struct AddWordPrototypeView: View {
                 }
                 if let generatedCard, !generatedCard.senses.isEmpty {
                     Divider()
-                    Text("معنی‌ها و کاربردهای مستقل")
+                    Text(batchCopy(.independentSenses))
                         .font(.headline)
                     ForEach(Array(generatedCard.senses.enumerated()), id: \.offset) { index, sense in
                         VStack(alignment: .leading, spacing: 4) {
@@ -605,14 +944,12 @@ struct AddWordPrototypeView: View {
                 }
                 Button {
                     guard generatedCard != nil else { return }
-                    let senses = generatedCard?.prototypeWords(
+                    let cards = generatedCard?.prototypeWords(
                         domain: domain,
                         sourceLanguageTag: languageSettings.sourceLanguageTag,
                         targetLanguageTag: languageSettings.targetLanguageTag
                     ) ?? [preview]
-                    let saved = senses.enumerated().allSatisfy { index, sense in
-                        store.addGeneratedCard(sense, pronunciationAudio: index == 0 ? generatedAudio : nil)
-                    }
+                    let saved = store.addGeneratedCards(cards, sharedPronunciationAudio: generatedAudio)
                     if saved {
                         generatedCardSaved = true
                     } else {
@@ -790,7 +1127,7 @@ struct APKGArchiveInspector: Sendable {
                         localHeaderOffset: localHeaderOffset
                     )
                 }
-            } else if name == "media" || name.allSatisfy(\.isNumber) {
+            } else if name == "media" || Self.isPotentialMediaEntry(name) {
                 mediaEntries += 1
             }
             cursor = end
@@ -832,6 +1169,11 @@ struct APKGArchiveInspector: Sendable {
         let priority = ["collection.anki2": 0, "collection.anki21": 1, "collection.anki21b": 2]
         guard let current else { return candidate }
         return (priority[candidate] ?? 0) > (priority[current] ?? 0) ? candidate : current
+    }
+
+    private static func isPotentialMediaEntry(_ name: String) -> Bool {
+        let stem = (name as NSString).deletingPathExtension
+        return name.allSatisfy(\.isNumber) || (!stem.isEmpty && stem.allSatisfy(\.isNumber))
     }
 }
 
@@ -875,7 +1217,11 @@ struct APKGCardReader: Sendable {
         var result: [String: Data] = [:]
         var numeric: [String: Data] = [:]
         var manifest: [String: String] = [:]
-        for entry in preview.entries where entry.name == "media" || entry.name.allSatisfy(\.isNumber) {
+        let mediaEntryNames = Set(preview.entries.compactMap { entry -> String? in
+            guard !["collection.anki21b", "collection.anki21", "collection.anki2", "manifest.json"].contains(entry.name) else { return nil }
+            return entry.name
+        })
+        for entry in preview.entries where mediaEntryNames.contains(entry.name) {
             try handle.seek(toOffset: entry.localHeaderOffset)
             guard let header = try handle.read(upToCount: 30), header.count == 30 else { continue }
             let nameLength = Int(header.uint16LE(at: 26)); let extraLength = Int(header.uint16LE(at: 28))
@@ -892,7 +1238,15 @@ struct APKGCardReader: Sendable {
             }
         }
         result = numeric
-        for (index, filename) in manifest { if let data = numeric[index] { result[filename] = data } }
+        for (index, filename) in manifest {
+            if let data = numeric[index] ?? numeric[filename] {
+                result[filename] = data
+            } else if let matchingEntry = numeric.first(where: {
+                ($0.key as NSString).deletingPathExtension == index
+            }) {
+                result[filename] = matchingEntry.value
+            }
+        }
         return result
     }
 
@@ -959,10 +1313,16 @@ struct APKGCardReader: Sendable {
         defer { sqlite3_close(database) }
 
         let modelFields = try readModelFields(from: database)
-        let sql = "SELECT c.id, n.mid, n.flds, n.tags FROM cards c JOIN notes n ON n.id = c.nid ORDER BY c.id LIMIT \(maximumCards)"
         var statement: OpaquePointer?
-        guard sqlite3_prepare_v2(database, sql, -1, &statement, nil) == SQLITE_OK,
-              let statement else {
+        let standardSQL = "SELECT c.id, n.mid, n.flds, n.tags FROM cards c JOIN notes n ON n.id = c.nid ORDER BY c.id LIMIT \(maximumCards)"
+        let legacySQL = "SELECT c.id, n.mid, n.fields, n.tags FROM cards c JOIN notes n ON n.id = c.nid ORDER BY c.id LIMIT \(maximumCards)"
+        if sqlite3_prepare_v2(database, standardSQL, -1, &statement, nil) != SQLITE_OK {
+            statement = nil
+            guard sqlite3_prepare_v2(database, legacySQL, -1, &statement, nil) == SQLITE_OK else {
+                throw APKGImportError.databaseQueryFailed(String(cString: sqlite3_errmsg(database)))
+            }
+        }
+        guard let statement else {
             throw APKGImportError.databaseQueryFailed(String(cString: sqlite3_errmsg(database)))
         }
         defer { sqlite3_finalize(statement) }
@@ -972,25 +1332,35 @@ struct APKGCardReader: Sendable {
             let cardID = sqlite3_column_int64(statement, 0)
             let modelID = sqlite3_column_int64(statement, 1)
             guard let fieldsText = sqlite3_column_text(statement, 2) else { continue }
-            let fields = String(cString: fieldsText).split(separator: "\u{001F}", omittingEmptySubsequences: false)
+            let rawFields = String(cString: fieldsText)
+            let fieldValues: [String]
+            if rawFields.hasPrefix("["),
+               let data = rawFields.data(using: .utf8),
+               let decoded = try? JSONDecoder().decode([String].self, from: data) {
+                fieldValues = decoded
+            } else {
+                fieldValues = rawFields.split(separator: "\u{001F}", omittingEmptySubsequences: false).map(String.init)
+            }
             let names = modelFields[String(modelID)] ?? []
-            var values = Dictionary(uniqueKeysWithValues: zip(names, fields.map(String.init)))
+            var values = Dictionary(uniqueKeysWithValues: zip(names, fieldValues))
             if let tagsText = sqlite3_column_text(statement, 3) {
                 values["Tags"] = String(cString: tagsText)
             }
-            guard let word = mapWord(fields: fields.map(String.init), named: values) else { continue }
+            guard let word = mapWord(fields: fieldValues, named: values) else { continue }
             let mediaNames = values.values.flatMap { value -> [String] in
                 let sound = value.matches(of: /\[sound:([^\]]+)\]/).compactMap { String($0.output.1) }
                 let images = value.matches(of: /(?:src|href)=["']([^"']+)["']/).compactMap { String($0.output.1) }
-                return sound + images
+                return (sound + images).map(Self.normalizedMediaName)
             }
             let audio = mediaNames.first(where: { media[$0] != nil && !($0.lowercased().hasSuffix(".png") || $0.lowercased().hasSuffix(".jpg") || $0.lowercased().hasSuffix(".jpeg") || $0.lowercased().hasSuffix(".webp")) }).flatMap { media[$0] }
             let image = mediaNames.first(where: { media[$0] != nil && ["png", "jpg", "jpeg", "webp", "gif"].contains(($0 as NSString).pathExtension.lowercased()) }).flatMap { media[$0] }
             // Some Anki exporters omit extensions in the media manifest or
             // rewrite HTML references. Fall back to file signatures so media
             // is still attached safely instead of silently disappearing.
-            let fallbackImage = image ?? media.values.first(where: Self.isImageData)
-            let fallbackAudio = audio ?? media.values.first(where: Self.isAudioData)
+            let imageCandidates = media.values.filter(Self.isImageData)
+            let audioCandidates = media.values.filter(Self.isAudioData)
+            let fallbackImage = image ?? (imageCandidates.count == 1 ? imageCandidates[0] : nil)
+            let fallbackAudio = audio ?? (audioCandidates.count == 1 ? audioCandidates[0] : nil)
             cards.append(
                 PrototypeImportedCard(
                     sourceIdentifier: "\(packageName.lowercased())::\(cardID)",
@@ -1011,22 +1381,48 @@ struct APKGCardReader: Sendable {
 
     private func readModelFields(from database: OpaquePointer) throws -> [String: [String]] {
         var statement: OpaquePointer?
-        guard sqlite3_prepare_v2(database, "SELECT models FROM col LIMIT 1", -1, &statement, nil) == SQLITE_OK,
-              let statement else {
+        if sqlite3_prepare_v2(database, "SELECT models FROM col LIMIT 1", -1, &statement, nil) == SQLITE_OK,
+           let statement {
+            defer { sqlite3_finalize(statement) }
+            if sqlite3_step(statement) == SQLITE_ROW,
+               let text = sqlite3_column_text(statement, 0),
+               let data = String(cString: text).data(using: .utf8),
+               let models = try JSONSerialization.jsonObject(with: data) as? [String: [String: Any]] {
+                return models.mapValues { model in
+                    guard let fields = model["flds"] as? [[String: Any]] else { return [] }
+                    return fields.sorted { ($0["ord"] as? Int ?? 0) < ($1["ord"] as? Int ?? 0) }
+                        .compactMap { $0["name"] as? String }
+                }
+            }
+        }
+
+        // LinguaBrain's legacy collection writer stores model fields in its
+        // normalized `models` table instead of the standard `col.models` JSON.
+        statement = nil
+        guard sqlite3_prepare_v2(database, "SELECT id, fields FROM models", -1, &statement, nil) == SQLITE_OK,
+              let fallbackStatement = statement else {
             throw APKGImportError.databaseQueryFailed(String(cString: sqlite3_errmsg(database)))
         }
-        defer { sqlite3_finalize(statement) }
-        guard sqlite3_step(statement) == SQLITE_ROW,
-              let text = sqlite3_column_text(statement, 0),
-              let data = String(cString: text).data(using: .utf8),
-              let models = try JSONSerialization.jsonObject(with: data) as? [String: [String: Any]] else {
-            throw APKGImportError.databaseQueryFailed("تعریف فیلدهای مدل کارت معتبر نیست.")
+        defer { sqlite3_finalize(fallbackStatement) }
+        var result: [String: [String]] = [:]
+        while sqlite3_step(fallbackStatement) == SQLITE_ROW {
+            let modelID = sqlite3_column_int64(fallbackStatement, 0)
+            guard let text = sqlite3_column_text(fallbackStatement, 1) else { continue }
+            result[String(modelID)] = String(cString: text)
+                .split(separator: ",", omittingEmptySubsequences: false)
+                .map(String.init)
         }
-        return models.mapValues { model in
-            guard let fields = model["flds"] as? [[String: Any]] else { return [] }
-            return fields.sorted { ($0["ord"] as? Int ?? 0) < ($1["ord"] as? Int ?? 0) }
-                .compactMap { $0["name"] as? String }
-        }
+        guard !result.isEmpty else { throw APKGImportError.databaseQueryFailed("تعریف فیلدهای مدل کارت معتبر نیست.") }
+        return result
+    }
+
+    private static func normalizedMediaName(_ raw: String) -> String {
+        let decoded = raw.removingPercentEncoding ?? raw
+        return decoded
+            .replacingOccurrences(of: "&amp;", with: "&")
+            .replacingOccurrences(of: "&#39;", with: "'")
+            .replacingOccurrences(of: "&quot;", with: "\"")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
     private func mapWord(fields: [String], named values: [String: String]) -> PrototypeWord? {
@@ -1069,6 +1465,32 @@ struct APKGCardReader: Sendable {
                 example: firstExample.map { sanitize($0.de) } ?? "",
                 exampleTranslation: firstExample.map { sanitize($0.fa) } ?? "",
                 examples: examples
+            )
+        }
+
+        // LinguaBrain batch exports carry explicit language and example fields.
+        // Read this contract before the legacy Front/Back format below, whose
+        // front side was historically Persian and back side German.
+        if let front = values["Front"], let back = values["Back"],
+           let sourceLanguage = values["SourceLanguageTag"],
+           let targetLanguage = values["TargetLanguageTag"] {
+            let target = sanitize(front)
+            let source = sanitize(back)
+            guard !target.isEmpty else { return nil }
+            let targetExample = sanitize(values["Example"] ?? "")
+            let sourceExample = sanitize(values["ExampleTranslation"] ?? "")
+            return PrototypeWord(
+                german: target,
+                persian: source.isEmpty ? "—" : source,
+                article: germanArticle(in: target),
+                level: sanitize(values["Level"] ?? "—"),
+                partOfSpeech: sanitize(values["PartOfSpeech"] ?? "Imported"),
+                example: targetExample,
+                exampleTranslation: sourceExample,
+                examples: PrototypeExamplePairing.pair(target: targetExample, source: sourceExample),
+                domain: sanitize(values["Domain"] ?? PrototypeDomainClassifier.general),
+                sourceLanguageTag: sanitize(sourceLanguage),
+                targetLanguageTag: sanitize(targetLanguage)
             )
         }
 
