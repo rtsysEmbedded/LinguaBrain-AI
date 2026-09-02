@@ -59,7 +59,7 @@ struct AddWordPrototypeView: View {
                             }
                         }
                         .pickerStyle(.menu)
-                        Button("افزودن حوزه جدید", systemImage: "plus") { showingDomainEditor = true }
+                        Button(localization.localized("domain.addCustom"), systemImage: "plus") { showingDomainEditor = true }
 
                         Button {
                             generateCard()
@@ -86,14 +86,14 @@ struct AddWordPrototypeView: View {
             .frame(maxWidth: 760)
             .frame(maxWidth: .infinity)
         }
-        .alert("حوزهٔ جدید", isPresented: $showingDomainEditor) {
-            TextField("مثلاً Embedded Linux", text: $customDomainName)
-            Button("ذخیره") {
+        .alert(localization.localized("domain.newTitle"), isPresented: $showingDomainEditor) {
+            TextField(localization.localized("domain.placeholder"), text: $customDomainName)
+            Button(localization.localized("common.save")) {
                 if let saved = PrototypeDomainCatalog.add(customDomainName) { domain = saved }
                 customDomainName = ""
             }
-            Button("انصراف", role: .cancel) { customDomainName = "" }
-        } message: { Text("حوزهٔ سفارشی برای تولید و دسته‌بندی کارت‌ها") }
+            Button(localization.localized("common.cancel"), role: .cancel) { customDomainName = "" }
+        } message: { Text(localization.localized("domain.newMessage")) }
         .background(PrototypeBackground())
         .navigationTitle(localization.localized("card.addTitle"))
         .onChange(of: word) { _, _ in resetGeneratedPreview() }

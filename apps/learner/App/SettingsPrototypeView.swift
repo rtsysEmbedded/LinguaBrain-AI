@@ -62,14 +62,14 @@ struct SettingsPrototypeView: View {
     private var customDomainsCard: some View {
         PrototypeCard {
             VStack(alignment: .leading, spacing: 12) {
-                Label("حوزه‌های سفارشی کارت", systemImage: "square.grid.2x2")
+                Label(localization.localized("domain.customTitle"), systemImage: "square.grid.2x2")
                     .font(.headline)
-                Text("حوزه‌های تخصصی خودت را برای تولید و فیلتر کارت‌ها تعریف کن.")
+                Text(localization.localized("domain.customSubtitle"))
                     .font(.caption).foregroundStyle(.secondary)
                 HStack {
-                    TextField("مثلاً Embedded Linux", text: $newDomain)
+                    TextField(localization.localized("domain.placeholder"), text: $newDomain)
                         .textFieldStyle(.roundedBorder)
-                    Button("افزودن") {
+                    Button(localization.localized("common.add")) {
                         if PrototypeDomainCatalog.add(newDomain) != nil {
                             customDomains = PrototypeDomainCatalog.customDomains
                             newDomain = ""
@@ -78,7 +78,7 @@ struct SettingsPrototypeView: View {
                     .buttonStyle(.borderedProminent)
                 }
                 if customDomains.isEmpty {
-                    Text("هنوز حوزه‌ای تعریف نشده است.").font(.caption).foregroundStyle(.secondary)
+                    Text(localization.localized("domain.empty")).font(.caption).foregroundStyle(.secondary)
                 } else {
                     ForEach(customDomains, id: \.self) { domain in
                         HStack {
