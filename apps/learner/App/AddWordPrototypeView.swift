@@ -771,14 +771,19 @@ struct APKGCardReader: Sendable {
             }
             let audio = mediaNames.first(where: { media[$0] != nil && !($0.lowercased().hasSuffix(".png") || $0.lowercased().hasSuffix(".jpg") || $0.lowercased().hasSuffix(".jpeg") || $0.lowercased().hasSuffix(".webp")) }).flatMap { media[$0] }
             let image = mediaNames.first(where: { media[$0] != nil && ["png", "jpg", "jpeg", "webp", "gif"].contains(($0 as NSString).pathExtension.lowercased()) }).flatMap { media[$0] }
+            // Some Anki exporters omit extensions in the media manifest or
+            // rewrite HTML references. Fall back to file signatures so media
+            // is still attached safely instead of silently disappearing.
+            let fallbackImage = image ?? media.values.first(where: Self.isImageData)
+            let fallbackAudio = audio ?? media.values.first(where: Self.isAudioData)
             cards.append(
                 PrototypeImportedCard(
                     sourceIdentifier: "\(packageName.lowercased())::\(cardID)",
                     word: word,
                     sourceLanguageTag: sanitize(values["SourceLanguageTag"] ?? word.sourceLanguageTag),
                     targetLanguageTag: sanitize(values["TargetLanguageTag"] ?? word.targetLanguageTag)
-                    , pronunciationAudio: audio
-                    , illustrationImage: image
+                    , pronunciationAudio: fallbackAudio
+                    , illustrationImage: fallbackImage
                 )
             )
         }
@@ -934,6 +939,14 @@ struct APKGCardReader: Sendable {
             result = result.replacingOccurrences(of: entity, with: replacement)
         }
         return result.split(whereSeparator: \.isWhitespace).joined(separator: " ")
+    }
+
+    private static func isImageData(_ data: Data) -> Bool {
+        data.starts(with: [0x89, 0x50, 0x4E, 0x47]) || data.starts(with: [0xFF, 0xD8, 0xFF]) || data.starts(with: [0x47, 0x49, 0x46, 0x38])
+    }
+
+    private static func isAudioData(_ data: Data) -> Bool {
+        data.starts(with: Array("RIFF".utf8)) || data.starts(with: Array("ID3".utf8)) || data.starts(with: [0xFF, 0xFB])
     }
 }
 
