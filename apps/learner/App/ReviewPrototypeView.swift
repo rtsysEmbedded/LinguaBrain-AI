@@ -1,5 +1,10 @@
 import SwiftUI
 import AVFoundation
+#if os(macOS)
+import AppKit
+#else
+import UIKit
+#endif
 
 private enum MixedPracticeKind: CaseIterable {
     case direct, reverse, article, collocation, oddMeaning
@@ -147,6 +152,16 @@ struct ReviewPrototypeView: View {
                     }
                     .buttonStyle(.bordered)
                 }
+
+                #if os(macOS)
+                if let data = store.illustrationImage(for: word), let image = NSImage(data: data) {
+                    Image(nsImage: image).resizable().scaledToFit().frame(maxHeight: 180)
+                }
+                #else
+                if let data = store.illustrationImage(for: word), let image = UIImage(data: data) {
+                    Image(uiImage: image).resizable().scaledToFit().frame(maxHeight: 180)
+                }
+                #endif
 
                 if mode == .mixedGame && mixedKind == .article && !articleAnswered {
                     HStack(spacing: 12) {
