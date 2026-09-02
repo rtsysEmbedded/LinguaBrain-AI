@@ -2,6 +2,11 @@ import SwiftUI
 import UniformTypeIdentifiers
 import LinguaBrainDomain
 import LinguaBrainAnkiExport
+#if os(macOS)
+import AppKit
+#else
+import UIKit
+#endif
 
 enum ExportFormat: String, CaseIterable {
     case tsv, apkg
@@ -777,6 +782,7 @@ private struct CardSpecPrototypeView: View {
 struct WordDetailPrototypeView: View {
     @Environment(PrototypeStore.self) private var store
     let word: PrototypeWord
+    @State private var audioPlayer: AVAudioPlayer?
 
     private var relatedWords: [PrototypeWord] {
         store.relatedWords(to: word)
@@ -798,12 +804,35 @@ struct WordDetailPrototypeView: View {
                                 .font(.caption)
                                 .foregroundStyle(PrototypeTheme.accent)
                             Spacer()
-                            Button(action: {}) { Image(systemName: "speaker.wave.2.fill") }
+                            if let audio = store.pronunciationAudio(for: word) {
+                                Button {
+                                    audioPlayer = try? AVAudioPlayer(data: audio)
+                                    audioPlayer?.play()
+                                } label: { Image(systemName: "speaker.wave.2.fill") }
+                            }
                         }
                         LanguageText(text: word.german, languageTag: word.targetLanguageTag, font: .largeTitle.weight(.bold))
                         LanguageText(text: word.persian, languageTag: word.sourceLanguageTag, font: .title3)
                     }
                 }
+
+                #if os(macOS)
+                if let image = store.illustrationImage(for: word), let nsImage = NSImage(data: image) {
+                    PrototypeCard {
+                        Image(nsImage: nsImage)
+                            .resizable().scaledToFit().frame(maxHeight: 220)
+                            .frame(maxWidth: .infinity)
+                    }
+                }
+                #else
+                if let image = store.illustrationImage(for: word), let uiImage = UIImage(data: image) {
+                    PrototypeCard {
+                        Image(uiImage: uiImage)
+                            .resizable().scaledToFit().frame(maxHeight: 220)
+                            .frame(maxWidth: .infinity)
+                    }
+                }
+                #endif
 
                 PrototypeCard {
                     VStack(alignment: .leading, spacing: 10) {
