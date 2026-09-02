@@ -83,6 +83,7 @@ This file is the single progress checklist for LinguaBrain AI. It must be update
 - [~] Complete physical Mac/iPhone verification of the implemented OpenAI Realtime cloud transcription path (T035/T037); the corrected cloud path is acceptable in the current macOS test, while iPhone verification and the remaining model/latency matrix are still open.
 - [x] Separate Audio provider model roles: card pronunciation uses Speech/TTS, completed audio uses Transcript, and low-latency microphone text uses Live Stream; Utilities reads the selected Transcript/Live model directly from Settings.
 - [ ] Complete the Utilities transcription visual-design pass after provider behavior is explicit and testable (T039).
+- [x] Add user-defined learning domains with Settings management, Library filtering, and Today-plan scoping.
 - [x] Classify and place the vocabulary prototype at `experiments/vocabulary-mvp/` according to [ADR-001](decisions/ADR-001-Repository-Package-and-Module-Layout.md).
 - [ ] Configure a Git remote and push `main`.
 - [ ] Create an annotated MVP specification baseline tag.
@@ -177,7 +178,7 @@ This file is the single progress checklist for LinguaBrain AI. It must be update
 ## Anki Core validation release — Current product priority
 
 - [x] Implement sandboxed `.apkg` inspection and import preview.
-- [ ] Map supported decks, notes, cards, templates, tags, images, and audio into LinguaBrain-owned records.
+- [~] Map supported decks, notes, cards, templates, tags, images, and audio into LinguaBrain-owned records; legacy APKG image/audio extraction and card-detail display are implemented, while modern `collection.anki21b` media remains deferred.
 - [ ] Preserve import provenance and deterministic re-import identity.
 - [ ] Implement deck library, due queue, question/answer reveal, and session summary.
 - [ ] Connect Again, Hard, Good, and Easy to the pinned FSRS scheduler.
@@ -297,6 +298,7 @@ Complete these actions with every milestone or architectural change:
 | Version | Date | Description |
 | --- | --- | --- |
 | 0.5.0 | 2026-08-20 | Completed Spec Kit tasks T030-T033: OpenAI-compatible provider adapter with health checks, credential loaders, comprehensive safety tests, and fully-localized provider settings UI. |
+| 0.5.1 | 2026-08-26 | Completed APKG export feature (spec 003): 61 package tests pass, fixed ID computation bug for ARM64e, integrated export types into LibraryPrototypeView.swift. Documentation and quickstart evidence updated. |
 | 0.4.4 | 2026-08-17 | Accepted ADR-003 for GRDB 7/system SQLite, explicit migrations/transactions, and the one-time SwiftData compatibility import; completed Spec Kit task T002. |
 | 0.4.1 | 2026-08-16 | Audited the real repository and Xcode state, verified iOS/macOS builds, corrected Release 1.0 account/sync scope, decision counts, and the completed native target checkpoint. |
 | 0.4.0 | 2026-08-10 | Accepted optional Apple/Google accounts and secure learner-data synchronization as Release 1.0 scope while retaining complete local-only operation. |
