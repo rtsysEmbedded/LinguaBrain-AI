@@ -558,6 +558,9 @@ enum PrototypeDomainCatalog {
         }
         return value
     }
+    static func remove(_ value: String) {
+        UserDefaults.standard.set(customDomains.filter { $0 != value }, forKey: key)
+    }
 }
 
 enum PrototypeMediaKind: String, Codable, Sendable {

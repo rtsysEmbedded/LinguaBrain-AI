@@ -6,6 +6,8 @@ import Security
 struct SettingsPrototypeView: View {
     @Environment(PrototypeLocalization.self) private var localization
     @Environment(PrototypeLanguageSettings.self) private var languageSettings
+    @State private var customDomains = PrototypeDomainCatalog.customDomains
+    @State private var newDomain = ""
 
     var body: some View {
         ZStack {
@@ -29,6 +31,7 @@ struct SettingsPrototypeView: View {
                             .init(title: localization.text(.audioAndPronunciation), detail: localization.localized("صدای آلمانی · سرعت عادی"), symbol: "waveform", color: PrototypeTheme.mint, destination: .audio)
                         ]
                     )
+                    customDomainsCard
                     settingsGroup(
                         title: localization.localized("هوش مصنوعی و آفلاین"),
                         subtitle: localization.localized("مدل‌ها، دانلودها و هزینه"),
@@ -54,6 +57,43 @@ struct SettingsPrototypeView: View {
             }
         }
         .navigationTitle(localization.text(.settingsTitle))
+    }
+
+    private var customDomainsCard: some View {
+        PrototypeCard {
+            VStack(alignment: .leading, spacing: 12) {
+                Label("حوزه‌های سفارشی کارت", systemImage: "square.grid.2x2")
+                    .font(.headline)
+                Text("حوزه‌های تخصصی خودت را برای تولید و فیلتر کارت‌ها تعریف کن.")
+                    .font(.caption).foregroundStyle(.secondary)
+                HStack {
+                    TextField("مثلاً Embedded Linux", text: $newDomain)
+                        .textFieldStyle(.roundedBorder)
+                    Button("افزودن") {
+                        if PrototypeDomainCatalog.add(newDomain) != nil {
+                            customDomains = PrototypeDomainCatalog.customDomains
+                            newDomain = ""
+                        }
+                    }
+                    .buttonStyle(.borderedProminent)
+                }
+                if customDomains.isEmpty {
+                    Text("هنوز حوزه‌ای تعریف نشده است.").font(.caption).foregroundStyle(.secondary)
+                } else {
+                    ForEach(customDomains, id: \.self) { domain in
+                        HStack {
+                            Text(domain)
+                            Spacer()
+                            Button(role: .destructive) {
+                                PrototypeDomainCatalog.remove(domain)
+                                customDomains = PrototypeDomainCatalog.customDomains
+                            } label: { Image(systemName: "trash") }
+                            .buttonStyle(.borderless)
+                        }
+                    }
+                }
+            }
+        }
     }
 
     private var profileCard: some View {
