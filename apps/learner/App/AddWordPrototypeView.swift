@@ -26,6 +26,17 @@ struct AddWordPrototypeView: View {
     @State private var isGeneratingAudio = false
     @State private var customDomainName = ""
     @State private var showingDomainEditor = false
+    @State private var batchWords = ""
+    @State private var batchTopic = "general"
+    @State private var batchOutputName = "linguabrain-cards"
+    @State private var batchTargetLanguage = "de"
+    @State private var batchIncludeAudio = false
+    @State private var batchIncludeImage = false
+    @State private var isBatchTextImporterPresented = false
+    @State private var isBuildingBatch = false
+    @State private var batchStatus: String?
+    @State private var batchExportDocument = AnkiAPKGDocument()
+    @State private var isBatchExporterPresented = false
 
     var body: some View {
         ScrollView {
@@ -41,6 +52,8 @@ struct AddWordPrototypeView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
 
                 packageImporter
+
+                batchBuilder
 
                 PrototypeCard {
                     VStack(alignment: .leading, spacing: 16) {
@@ -104,6 +117,26 @@ struct AddWordPrototypeView: View {
             allowsMultipleSelection: false
         ) { result in
             inspectSelectedPackage(result)
+        }
+        .fileImporter(
+            isPresented: $isBatchTextImporterPresented,
+            allowedContentTypes: [.plainText, .utf8PlainText],
+            allowsMultipleSelection: false
+        ) { result in
+            loadBatchText(result)
+        }
+        .fileExporter(
+            isPresented: $isBatchExporterPresented,
+            document: batchExportDocument,
+            contentType: AnkiExportDocument.apkg,
+            defaultFilename: normalizedOutputName
+        ) { result in
+            switch result {
+            case .success:
+                batchStatus = "فایل Anki آماده و ذخیره شد."
+            case .failure(let error):
+                packageError = error.localizedDescription
+            }
         }
         .alert(localization.localized("card.operationFailed"), isPresented: packageErrorBinding) {
             Button(localization.localized("common.ok"), role: .cancel) { packageError = nil }
@@ -188,6 +221,180 @@ struct AddWordPrototypeView: View {
                 generatedAudio = try await gateway.synthesizeSpeech(text: preview.targetText, model: aiSettings.audioModelID, voice: aiSettings.audioVoice)
             } catch { packageError = error.localizedDescription }
             isGeneratingAudio = false
+        }
+    }
+
+    private var batchBuilder: some View {
+        PrototypeCard {
+            VStack(alignment: .leading, spacing: 14) {
+                Label("ساخت دسته‌ای فایل Anki", systemImage: "rectangle.stack.badge.plus")
+                    .font(.headline)
+                Text("کلمه‌ها را با کاما، خط جدید، یا یک فایل متنی وارد کنید. کارت‌ها با مدل انتخاب‌شده در تنظیمات ساخته می‌شوند.")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+
+                TextField("موضوع، مثلاً سفر یا برنامه‌نویسی", text: $batchTopic)
+                    .textFieldStyle(.roundedBorder)
+                TextEditor(text: $batchWords)
+                    .font(.body)
+                    .frame(minHeight: 90)
+                    .padding(6)
+                    .overlay(RoundedRectangle(cornerRadius: 8).stroke(.secondary.opacity(0.35)))
+                    .accessibilityLabel("فهرست کلمات")
+
+                HStack {
+                    Button("انتخاب فایل .txt", systemImage: "doc.badge.plus") {
+                        isBatchTextImporterPresented = true
+                    }
+                    .buttonStyle(.bordered)
+                    Spacer()
+                    Text("\(parsedBatchWords.count) کلمه")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+
+                HStack {
+                    Picker("زبان مقصد", selection: $batchTargetLanguage) {
+                        Text("آلمانی").tag("de")
+                        Text("انگلیسی").tag("en")
+                        Text("فارسی").tag("fa")
+                    }
+                    .pickerStyle(.menu)
+                    TextField("نام فایل خروجی", text: $batchOutputName)
+                        .textFieldStyle(.roundedBorder)
+                        .environment(\.layoutDirection, .leftToRight)
+                }
+
+                Toggle("تولید صدای تلفظ", isOn: $batchIncludeAudio)
+                Toggle("تولید تصویر آموزشی", isOn: $batchIncludeImage)
+
+                Button {
+                    buildBatchAPKG()
+                } label: {
+                    if isBuildingBatch {
+                        ProgressView().frame(maxWidth: .infinity)
+                    } else {
+                        Label("ساخت و ذخیرهٔ فایل .apkg", systemImage: "square.and.arrow.up")
+                            .frame(maxWidth: .infinity)
+                    }
+                }
+                .buttonStyle(.borderedProminent)
+                .disabled(isBuildingBatch || parsedBatchWords.isEmpty || batchTopic.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+
+                if let batchStatus {
+                    Text(batchStatus)
+                        .font(.caption)
+                        .foregroundStyle(PrototypeTheme.mint)
+                }
+            }
+        }
+    }
+
+    private var parsedBatchWords: [String] {
+        let separators = CharacterSet(charactersIn: ",،\n\r;")
+        var seen = Set<String>()
+        return batchWords
+            .components(separatedBy: separators)
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+            .filter { seen.insert($0.folding(options: [.caseInsensitive, .diacriticInsensitive], locale: .current)).inserted }
+            .prefix(50)
+            .map { $0 }
+    }
+
+    private var normalizedOutputName: String {
+        let trimmed = batchOutputName.trimmingCharacters(in: .whitespacesAndNewlines)
+        let base = trimmed.isEmpty ? "linguabrain-cards" : trimmed
+        return base.hasSuffix(".apkg") ? String(base.dropLast(5)) : base
+    }
+
+    private func loadBatchText(_ result: Result<[URL], Error>) {
+        do {
+            guard let url = try result.get().first else { return }
+            let hasAccess = url.startAccessingSecurityScopedResource()
+            defer { if hasAccess { url.stopAccessingSecurityScopedResource() } }
+            batchWords = try String(contentsOf: url, encoding: .utf8)
+            batchStatus = "فایل خوانده شد؛ \(parsedBatchWords.count) کلمه آماده است."
+        } catch {
+            packageError = error.localizedDescription
+        }
+    }
+
+    private func buildBatchAPKG() {
+        let words = parsedBatchWords
+        guard !words.isEmpty else { return }
+        isBuildingBatch = true
+        batchStatus = nil
+        Task {
+            do {
+                guard aiSettings.textMode != .off else { throw ProviderError.providerDisabled }
+                if aiSettings.textMode == .cloud {
+                    guard aiSettings.cloudConsent else { throw ProviderError.consentRequired }
+                    guard aiSettings.hasAPIKey else { throw ProviderError.missingAPIKey }
+                }
+                let textGateway = AIProviderGateway(
+                    endpoint: aiSettings.endpoint,
+                    protocolName: aiSettings.protocolName,
+                    apiKey: try aiSettings.apiKey()
+                )
+                let audioGateway = batchIncludeAudio && aiSettings.audioMode != .off
+                    ? try? AIProviderGateway(endpoint: aiSettings.audioEndpoint, protocolName: aiSettings.audioProtocolName, apiKey: aiSettings.apiKey(for: "audio"))
+                    : nil
+                let imageGateway = batchIncludeImage && aiSettings.imageMode != .off
+                    ? try? AIProviderGateway(endpoint: aiSettings.imageEndpoint, protocolName: "openai-compatible", apiKey: aiSettings.apiKey(for: "image"))
+                    : nil
+
+                var savedWords: [PrototypeWord] = []
+                var failures: [String] = []
+                for (index, input) in words.enumerated() {
+                    batchStatus = "در حال ساخت کارت \(index + 1) از \(words.count): \(input)"
+                    do {
+                        let draft = try await textGateway.generateCard(
+                            word: input,
+                            domain: batchTopic,
+                            model: aiSettings.modelID,
+                            sourceLanguageTag: languageSettings.sourceLanguageTag,
+                            targetLanguageTag: batchTargetLanguage
+                        )
+                        let senses = draft.prototypeWords(domain: batchTopic, sourceLanguageTag: languageSettings.sourceLanguageTag, targetLanguageTag: batchTargetLanguage)
+                        let audio: Data?
+                        if let audioGateway {
+                            audio = try? await audioGateway.synthesizeSpeech(
+                                text: draft.targetText,
+                                model: aiSettings.audioModelID,
+                                voice: aiSettings.audioVoice
+                            )
+                        } else {
+                            audio = nil
+                        }
+                        let image: Data?
+                        if let imageGateway {
+                            image = try? await imageGateway.generateImage(
+                                prompt: "A clear, literal educational illustration of \(draft.targetText), no text",
+                                model: aiSettings.imageModelID
+                            )
+                        } else {
+                            image = nil
+                        }
+                        for (senseIndex, sense) in senses.enumerated() {
+                            if store.addGeneratedCard(sense, pronunciationAudio: senseIndex == 0 ? audio : nil, illustrationImage: senseIndex == 0 ? image : nil) {
+                                savedWords.append(sense)
+                            }
+                        }
+                    } catch {
+                        failures.append(input)
+                    }
+                }
+                guard !savedWords.isEmpty else { throw NSError(domain: "LinguaBrain", code: 1, userInfo: [NSLocalizedDescriptionKey: "هیچ کارتی ساخته نشد. تنظیمات مدل و اتصال را بررسی کنید."]) }
+                batchExportDocument = try await PrototypeAPKGExporter.makeDocument(from: savedWords, store: store)
+                batchStatus = failures.isEmpty
+                    ? "\(savedWords.count) کارت آماده است؛ محل ذخیرهٔ فایل را انتخاب کنید."
+                    : "\(savedWords.count) کارت آماده شد؛ \(failures.count) ورودی ناموفق بود."
+                isBatchExporterPresented = true
+            } catch {
+                packageError = error.localizedDescription
+            }
+            isBuildingBatch = false
         }
     }
 
@@ -666,7 +873,9 @@ struct APKGCardReader: Sendable {
         let handle = try FileHandle(forReadingFrom: preview.stagedPackageURL)
         defer { try? handle.close() }
         var result: [String: Data] = [:]
-        for entry in preview.entries where entry.name != "media" && entry.name.allSatisfy(\.isNumber) {
+        var numeric: [String: Data] = [:]
+        var manifest: [String: String] = [:]
+        for entry in preview.entries where entry.name == "media" || entry.name.allSatisfy(\.isNumber) {
             try handle.seek(toOffset: entry.localHeaderOffset)
             guard let header = try handle.read(upToCount: 30), header.count == 30 else { continue }
             let nameLength = Int(header.uint16LE(at: 26)); let extraLength = Int(header.uint16LE(at: 28))
@@ -676,8 +885,14 @@ struct APKGCardReader: Sendable {
             if entry.compressionMethod == 0 { data = compressed }
             else if entry.compressionMethod == 8 { data = try inflateRaw(compressed, expandedSize: entry.expandedSize) }
             else { continue }
-            if data.count == entry.expandedSize { result[entry.name] = data }
+            if data.count == entry.expandedSize {
+                if entry.name == "media", let object = try? JSONSerialization.jsonObject(with: data) as? [String: String] {
+                    manifest = object
+                } else { numeric[entry.name] = data }
+            }
         }
+        result = numeric
+        for (index, filename) in manifest { if let data = numeric[index] { result[filename] = data } }
         return result
     }
 
