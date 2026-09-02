@@ -1,4 +1,6 @@
 import SwiftUI
+import LinguaBrainDomain
+import LinguaBrainApplication
 
 struct TodayPrototypeView: View {
     @Environment(PrototypeStore.self) private var store
@@ -23,6 +25,18 @@ struct TodayPrototypeView: View {
         let energyFactor = 0.45 + (energy / 12)
         let timeCapacity = Double(selectedTime) / 1.8
         return min(unreviewedCount, max(0, min(20, Int((timeCapacity * energyFactor).rounded()))))
+    }
+
+    private var adaptivePlan: AdaptiveLearningPlan {
+        let candidates = activeWords.map { word in
+            AdaptiveLearningCandidate(
+                objective: LearningObjective(id: "\(word.id.uuidString)::recognition", senseKey: word.reviewIdentityKey, skill: .recognition),
+                dueAt: store.dueDate(for: word),
+                mastery: store.mastery(for: word),
+                missionWeight: word.domain == "عمومی" ? 0 : 0.25
+            )
+        }
+        return AdaptiveLearningPlanner.makePlan(candidates: candidates, availableMinutes: selectedTime, energy: Int(energy), now: .now)
     }
 
     private var learningMode: String {
@@ -111,7 +125,7 @@ struct TodayPrototypeView: View {
             SectionHeader(title: "برنامه پیشنهادی", subtitle: "\(localization.minutes(selectedTime)) · \(learningMode)")
             PrototypeCard {
                 VStack(spacing: 0) {
-                    planRow(symbol: "rectangle.stack.fill", color: PrototypeTheme.accent, title: "مرور هوشمند", detail: localization.reviewSummary(due: dueCount, new: newCardLimit), time: localization.minutes(selectedTime))
+                    planRow(symbol: "rectangle.stack.fill", color: PrototypeTheme.accent, title: "مرور هوشمند", detail: localization.reviewSummary(due: adaptivePlan.candidates.count, new: newCardLimit), time: localization.minutes(selectedTime))
                     Divider().padding(.vertical, 12)
                     planRow(symbol: "text.book.closed.fill", color: PrototypeTheme.blue, title: "متن کوتاه", detail: "محیط کار · سطح B1", time: localization.minutes(7))
                     Divider().padding(.vertical, 12)

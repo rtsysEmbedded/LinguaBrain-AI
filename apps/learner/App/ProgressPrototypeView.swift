@@ -15,6 +15,8 @@ struct ProgressPrototypeView: View {
     private var reviewedCount: Int { store.reviewedCount(in: activeWords) }
     private var averageStrength: Double { store.averageStrength(in: activeWords) }
     private var totalReviews: Int { store.totalReviews(in: activeWords) }
+    private var recognitionMastery: Double { averageMastery(mode: .recognition) }
+    private var recallMastery: Double { averageMastery(mode: .reverseTranslation) }
     private var week: [Int] { [0, 0, 0, 0, 0, 0, min(totalReviews, 50)] }
 
     var body: some View {
@@ -112,8 +114,8 @@ struct ProgressPrototypeView: View {
         PrototypeCard {
             VStack(spacing: 17) {
                 SectionHeader(title: "نقشه مهارت‌ها", subtitle: "تسلط واقعی، نه فقط تعداد واژه‌ها")
-                SkillProgressRow(label: "تشخیص واژه", value: averageStrength, color: PrototypeTheme.mint)
-                SkillProgressRow(label: "یادآوری فعال", value: averageStrength * 0.72, color: PrototypeTheme.accent)
+                SkillProgressRow(label: "تشخیص واژه", value: recognitionMastery, color: PrototypeTheme.mint)
+                SkillProgressRow(label: "یادآوری فعال", value: recallMastery, color: PrototypeTheme.accent)
                 SkillProgressRow(label: "شنیداری", value: 0, color: PrototypeTheme.pink)
                 SkillProgressRow(label: "نوشتن", value: 0, color: PrototypeTheme.blue)
                 SkillProgressRow(label: "استفاده در جمله", value: 0, color: .orange)
@@ -163,6 +165,12 @@ struct ProgressPrototypeView: View {
             persistenceError = store.lastPersistenceError
             return
         }
+    }
+
+    private func averageMastery(mode: PrototypeReviewMode) -> Double {
+        let reviewed = activeWords.filter { store.reviewCount(for: $0, mode: mode) > 0 }
+        guard !reviewed.isEmpty else { return 0 }
+        return reviewed.reduce(0) { $0 + store.mastery(for: $1, mode: mode) } / Double(reviewed.count)
     }
 
     private var persistenceErrorBinding: Binding<Bool> {
