@@ -15,8 +15,8 @@ let package = Package(
         .library(name: "LinguaBrainAI", targets: ["LinguaBrainAI"]),
         .library(name: "LinguaBrainMedia", targets: ["LinguaBrainMedia"]),
         .library(name: "LinguaBrainPersistence", targets: ["LinguaBrainPersistence"]),
+        .library(name: "LinguaBrainAnkiExport", targets: ["LinguaBrainAnkiExport"]),
         .library(name: "LinguaBrainTestSupport", targets: ["LinguaBrainTestSupport"]),
-        .library(name: "LinguaBrainAnkiExport", targets: ["LinguaBrainAnkiExport"])
     ],
     targets: [
         .target(
@@ -40,17 +40,12 @@ let package = Package(
             dependencies: ["LinguaBrainDomain", "LinguaBrainApplication"]
         ),
         .target(
-            name: "LinguaBrainTestSupport",
-            dependencies: ["LinguaBrainDomain", "LinguaBrainApplication", "LinguaBrainAI"]
+            name: "LinguaBrainAnkiExport",
+            dependencies: ["LinguaBrainDomain", "LinguaBrainApplication", "LinguaBrainMedia", "LinguaBrainPersistence"]
         ),
         .target(
-            name: "LinguaBrainAnkiExport",
-            dependencies: [
-                "LinguaBrainDomain",
-                "LinguaBrainApplication",
-                "LinguaBrainMedia",
-                "LinguaBrainPersistence"
-            ]
+            name: "LinguaBrainTestSupport",
+            dependencies: ["LinguaBrainDomain", "LinguaBrainApplication", "LinguaBrainAI"]
         ),
         .testTarget(
             name: "LinguaBrainAITests",
@@ -78,17 +73,8 @@ let package = Package(
         ),
         .testTarget(
             name: "LinguaBrainAnkiExportTests",
-            dependencies: [
-                "LinguaBrainDomain",
-                "LinguaBrainApplication",
-                "LinguaBrainMedia",
-                "LinguaBrainPersistence",
-                "LinguaBrainAnkiExport",
-                "LinguaBrainTestSupport"
-            ],
-            resources: [
-                .copy("Fixtures")
-            ]
+            dependencies: ["LinguaBrainDomain", "LinguaBrainApplication", "LinguaBrainMedia", "LinguaBrainPersistence", "LinguaBrainAnkiExport", "LinguaBrainTestSupport"],
+            resources: [.copy("Fixtures")]
         ),
     ]
 )
