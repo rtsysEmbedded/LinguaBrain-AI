@@ -8,12 +8,15 @@ struct TodayPrototypeView: View {
     @Environment(PrototypeLanguageSettings.self) private var languageSettings
     @State private var energy = 6.0
     @State private var selectedTime = 20
+    @State private var selectedDomain = "همه حوزه‌ها"
+    @State private var customDomains = PrototypeDomainCatalog.customDomains
 
     private var activeWords: [PrototypeWord] {
-        store.words(
+        let words = store.words(
             sourceLanguageTag: languageSettings.sourceLanguageTag,
             targetLanguageTag: languageSettings.targetLanguageTag
         )
+        return selectedDomain == "همه حوزه‌ها" ? words : words.filter { $0.domain == selectedDomain }
     }
 
     private var reviewedCount: Int { store.reviewedCount(in: activeWords) }
@@ -124,6 +127,11 @@ struct TodayPrototypeView: View {
                     Text("۳۰ دقیقه").tag(30)
                 }
                 .pickerStyle(.segmented)
+                Picker("حوزهٔ امروز", selection: $selectedDomain) {
+                    Text("همه حوزه‌ها").tag("همه حوزه‌ها")
+                    ForEach(customDomains, id: \.self) { Text($0).tag($0) }
+                }
+                .onAppear { customDomains = PrototypeDomainCatalog.customDomains }
             }
         }
     }
