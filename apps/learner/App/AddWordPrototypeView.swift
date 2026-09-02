@@ -279,12 +279,21 @@ struct AddWordPrototypeView: View {
                 let candidates = try await Task.detached(priority: .userInitiated) {
                     try APKGCardReader().readCards(from: preview)
                 }.value
+                guard !candidates.isEmpty else { throw APKGImportError.noCards }
                 guard let result = store.importCards(
                     candidates,
                     deckName: preview.deckName,
                     sourcePackage: preview.fileName
                 ) else {
                     throw APKGImportError.databaseWriteFailed(store.lastPersistenceError ?? "خطای ناشناخته")
+                }
+                // Keep the learner's target language (German) and align the
+                // support language with the imported deck (English). Without
+                // this, Library's language-pair filter can hide a successful
+                // import even though the cards are persisted.
+                if let first = candidates.first {
+                    languageSettings.selectSource(first.sourceLanguageTag)
+                    languageSettings.selectTarget(first.targetLanguageTag)
                 }
                 importResult = result
                 try? FileManager.default.removeItem(at: preview.stagedPackageURL)
@@ -411,6 +420,7 @@ struct APKGImportPreview: Sendable {
     let collectionName: String
     let stagedPackageURL: URL
     let collectionEntry: APKGCollectionEntry
+    let entries: [APKGCollectionEntry]
 
     var deckName: String {
         URL(fileURLWithPath: fileName).deletingPathExtension().lastPathComponent
@@ -507,6 +517,7 @@ struct APKGArchiveInspector: Sendable {
         var collectionName: String?
         var collectionEntry: APKGCollectionEntry?
         var mediaEntries = 0
+        var archiveEntries: [APKGCollectionEntry] = []
 
         for _ in 0..<Int(entryCount) {
             guard cursor + 46 <= central.count,
@@ -544,6 +555,8 @@ struct APKGArchiveInspector: Sendable {
                 throw APKGInspectionError.suspiciousCompressionRatio(name)
             }
 
+            let parsedEntry = APKGCollectionEntry(name: name, compressionMethod: method, compressedSize: Int(compressed), expandedSize: Int(expanded), localHeaderOffset: localHeaderOffset)
+            archiveEntries.append(parsedEntry)
             if ["collection.anki21b", "collection.anki21", "collection.anki2"].contains(name) {
                 let preferred = preferredCollection(current: collectionName, candidate: name)
                 if preferred != collectionName {
@@ -578,6 +591,7 @@ struct APKGArchiveInspector: Sendable {
             collectionName: collectionName,
             stagedPackageURL: stagedURL,
             collectionEntry: collectionEntry
+            , entries: archiveEntries
         )
     }
 
@@ -630,7 +644,27 @@ struct APKGCardReader: Sendable {
         }
         let databaseURL = try extractCollection(from: preview)
         defer { try? FileManager.default.removeItem(at: databaseURL) }
-        return try readSQLiteCards(at: databaseURL, packageName: preview.fileName)
+        let media = try extractMedia(from: preview)
+        return try readSQLiteCards(at: databaseURL, packageName: preview.fileName, media: media)
+    }
+
+    private func extractMedia(from preview: APKGImportPreview) throws -> [String: Data] {
+        let handle = try FileHandle(forReadingFrom: preview.stagedPackageURL)
+        defer { try? handle.close() }
+        var result: [String: Data] = [:]
+        for entry in preview.entries where entry.name != "media" && entry.name.allSatisfy(\.isNumber) {
+            try handle.seek(toOffset: entry.localHeaderOffset)
+            guard let header = try handle.read(upToCount: 30), header.count == 30 else { continue }
+            let nameLength = Int(header.uint16LE(at: 26)); let extraLength = Int(header.uint16LE(at: 28))
+            try handle.seek(toOffset: entry.localHeaderOffset + UInt64(30 + nameLength + extraLength))
+            guard let compressed = try handle.read(upToCount: entry.compressedSize), compressed.count == entry.compressedSize else { continue }
+            let data: Data
+            if entry.compressionMethod == 0 { data = compressed }
+            else if entry.compressionMethod == 8 { data = try inflateRaw(compressed, expandedSize: entry.expandedSize) }
+            else { continue }
+            if data.count == entry.expandedSize { result[entry.name] = data }
+        }
+        return result
     }
 
     private func extractCollection(from preview: APKGImportPreview) throws -> URL {
@@ -687,7 +721,7 @@ struct APKGCardReader: Sendable {
         return output
     }
 
-    private func readSQLiteCards(at url: URL, packageName: String) throws -> [PrototypeImportedCard] {
+    private func readSQLiteCards(at url: URL, packageName: String, media: [String: Data]) throws -> [PrototypeImportedCard] {
         var database: OpaquePointer?
         guard sqlite3_open_v2(url.path, &database, SQLITE_OPEN_READONLY | SQLITE_OPEN_NOMUTEX, nil) == SQLITE_OK,
               let database else {
@@ -696,7 +730,7 @@ struct APKGCardReader: Sendable {
         defer { sqlite3_close(database) }
 
         let modelFields = try readModelFields(from: database)
-        let sql = "SELECT c.id, n.mid, n.flds FROM cards c JOIN notes n ON n.id = c.nid ORDER BY c.id LIMIT \(maximumCards)"
+        let sql = "SELECT c.id, n.mid, n.flds, n.tags FROM cards c JOIN notes n ON n.id = c.nid ORDER BY c.id LIMIT \(maximumCards)"
         var statement: OpaquePointer?
         guard sqlite3_prepare_v2(database, sql, -1, &statement, nil) == SQLITE_OK,
               let statement else {
@@ -711,14 +745,26 @@ struct APKGCardReader: Sendable {
             guard let fieldsText = sqlite3_column_text(statement, 2) else { continue }
             let fields = String(cString: fieldsText).split(separator: "\u{001F}", omittingEmptySubsequences: false)
             let names = modelFields[String(modelID)] ?? []
-            let values = Dictionary(uniqueKeysWithValues: zip(names, fields.map(String.init)))
+            var values = Dictionary(uniqueKeysWithValues: zip(names, fields.map(String.init)))
+            if let tagsText = sqlite3_column_text(statement, 3) {
+                values["Tags"] = String(cString: tagsText)
+            }
             guard let word = mapWord(fields: fields.map(String.init), named: values) else { continue }
+            let mediaNames = values.values.flatMap { value -> [String] in
+                let sound = value.matches(of: /\[sound:([^\]]+)\]/).compactMap { String($0.output.1) }
+                let images = value.matches(of: /(?:src|href)=["']([^"']+)["']/).compactMap { String($0.output.1) }
+                return sound + images
+            }
+            let audio = mediaNames.first(where: { media[$0] != nil && !($0.lowercased().hasSuffix(".png") || $0.lowercased().hasSuffix(".jpg") || $0.lowercased().hasSuffix(".jpeg") || $0.lowercased().hasSuffix(".webp")) }).flatMap { media[$0] }
+            let image = mediaNames.first(where: { media[$0] != nil && ["png", "jpg", "jpeg", "webp", "gif"].contains(($0 as NSString).pathExtension.lowercased()) }).flatMap { media[$0] }
             cards.append(
                 PrototypeImportedCard(
                     sourceIdentifier: "\(packageName.lowercased())::\(cardID)",
                     word: word,
-                    sourceLanguageTag: sanitize(values["SourceLanguageTag"] ?? "de"),
-                    targetLanguageTag: sanitize(values["TargetLanguageTag"] ?? "fa")
+                    sourceLanguageTag: sanitize(values["SourceLanguageTag"] ?? word.sourceLanguageTag),
+                    targetLanguageTag: sanitize(values["TargetLanguageTag"] ?? word.targetLanguageTag)
+                    , pronunciationAudio: audio
+                    , illustrationImage: image
                 )
             )
         }
@@ -806,6 +852,34 @@ struct APKGCardReader: Sendable {
                 partOfSpeech: extractPartOfSpeech(from: back) ?? "Imported",
                 example: "",
                 exampleTranslation: ""
+            )
+        }
+
+        // Standard frequency decks often use semantic field names instead of
+        // Hermes' contract names. Prefer those names before the positional
+        // fallback so German-English decks are not silently imported as fa-de.
+        if let german = values["German"], let english = values["English"] {
+            let normalizedGerman = sanitize(german)
+            let normalizedEnglish = sanitize(english)
+            guard !normalizedGerman.isEmpty, !normalizedEnglish.isEmpty else { return nil }
+            return PrototypeWord(
+                german: normalizedGerman,
+                persian: normalizedEnglish,
+                article: germanArticle(in: normalizedGerman),
+                level: sanitize(values["Level"] ?? "—"),
+                partOfSpeech: sanitize(values["Part of speech"] ?? values["PartOfSpeech"] ?? "Imported"),
+                example: sanitize(values["Sample sentence"] ?? ""),
+                exampleTranslation: sanitize(values["Sample sentence translation"] ?? ""),
+                domain: PrototypeDomainClassifier.classify(
+                    german: normalizedGerman,
+                    source: normalizedEnglish,
+                    example: sanitize(values["Sample sentence"] ?? ""),
+                    explicitDomain: values["Domain"] ?? values["Topic"] ?? values["Category"] ?? values["Tags"]
+                ),
+                // The German headword is the learning target in LinguaBrain;
+                // English is the support/source language for this frequency deck.
+                sourceLanguageTag: "en",
+                targetLanguageTag: "de"
             )
         }
 

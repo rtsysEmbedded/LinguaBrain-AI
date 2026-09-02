@@ -55,8 +55,10 @@ final class PrototypeCardRecord {
     var sourcePackage: String?
     var sourceLanguageTag: String = "fa"
     var targetLanguageTag: String = "de"
-    var pronunciationAudio: Data?
+    @Attribute(.externalStorage) var pronunciationAudio: Data?
     var pronunciationAudioFilename: String?
+    @Attribute(.externalStorage) var illustrationImage: Data?
+    var illustrationImageFilename: String?
 
     init(
         word: PrototypeWord,
@@ -66,7 +68,9 @@ final class PrototypeCardRecord {
         sourceIdentifier: String? = nil,
         sourcePackage: String? = nil,
         pronunciationAudio: Data? = nil,
-        pronunciationAudioFilename: String? = nil
+        pronunciationAudioFilename: String? = nil,
+        illustrationImage: Data? = nil,
+        illustrationImageFilename: String? = nil
     ) {
         id = word.id
         self.deckID = deckID
@@ -87,6 +91,8 @@ final class PrototypeCardRecord {
         targetLanguageTag = word.targetLanguageTag
         self.pronunciationAudio = pronunciationAudio
         self.pronunciationAudioFilename = pronunciationAudioFilename
+        self.illustrationImage = illustrationImage
+        self.illustrationImageFilename = illustrationImageFilename
     }
 
     var word: PrototypeWord {
@@ -493,6 +499,51 @@ struct PrototypeWord: Identifiable, Hashable, Sendable {
     }
 }
 
+/// Stable, provider-independent topic inference for imported decks that do not
+/// carry a topic field. Explicit APKG topics always win; this fallback only
+/// uses card text and therefore works offline and remains deterministic.
+enum PrototypeDomainClassifier {
+    static let general = "general"
+
+    private static let keywords: [(domain: String, terms: [String])] = [
+        ("work", ["arbeit", "beruf", "job", "büro", "firma", "geschäft", "chef", "kolleg", "mitarbeiter", "arbeitgeber", "work", "career", "office", "company", "business", "employee", "employer", "meeting"]),
+        ("software", ["computer", "internet", "software", "datei", "daten", "digital", "programm", "webseite", "telefon", "handy", "data", "technology", "website", "phone"]),
+        ("medical", ["arzt", "ärzt", "medizin", "gesund", "krank", "körper", "schmerz", "apotheke", "health", "doctor", "medical", "sick", "body", "pain", "hospital", "pharmacy"]),
+        ("travel", ["reise", "reisen", "flug", "flughafen", "bahnhof", "zug", "hotel", "urlaub", "bus", "straße", "travel", "flight", "airport", "station", "train", "hotel", "holiday", "road"]),
+        ("food", ["essen", "trinken", "küche", "restaurant", "brot", "fleisch", "gemüse", "obst", "kaffee", "food", "drink", "kitchen", "restaurant", "bread", "meat", "vegetable", "fruit", "coffee"]),
+        ("family", ["familie", "mutter", "vater", "eltern", "kind", "sohn", "tochter", "bruder", "schwester", "family", "mother", "father", "parent", "child", "son", "daughter", "brother", "sister"]),
+        ("education", ["schule", "universität", "lehrer", "student", "lernen", "unterricht", "prüfung", "buch", "school", "university", "teacher", "student", "learn", "lesson", "exam", "book"]),
+        ("home", ["haus", "wohnung", "zimmer", "tür", "fenster", "tisch", "stuhl", "bett", "home", "house", "apartment", "room", "door", "window", "table", "chair", "bed"]),
+        ("nature", ["natur", "tier", "pflanze", "baum", "blume", "wasser", "berg", "wald", "wetter", "nature", "animal", "plant", "tree", "flower", "water", "mountain", "forest", "weather"]),
+        ("time", ["zeit", "tag", "woche", "monat", "jahr", "uhr", "morgen", "gestern", "heute", "time", "day", "week", "month", "year", "clock", "tomorrow", "yesterday", "today"])
+    ]
+
+    static func classify(german: String, source: String, example: String = "", explicitDomain: String? = nil) -> String {
+        if let explicitDomain = normalizedExplicitDomain(explicitDomain) { return explicitDomain }
+        let haystack = "\(german) \(source) \(example)".lowercased()
+        var best: (domain: String, score: Int)?
+        for entry in keywords {
+            let score = entry.terms.reduce(into: 0) { result, term in
+                if haystack.contains(term) { result += 1 }
+            }
+            if score > (best?.score ?? 0) { best = (entry.domain, score) }
+        }
+        return best?.domain ?? general
+    }
+
+    static func isGeneric(_ domain: String) -> Bool {
+        let value = domain.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        return value.isEmpty || ["general", "imported", "عمومی", "allgemein"].contains(value)
+    }
+
+    private static func normalizedExplicitDomain(_ value: String?) -> String? {
+        guard let value else { return nil }
+        let normalized = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !isGeneric(normalized) else { return nil }
+        return normalized
+    }
+}
+
 enum PrototypeMediaKind: String, Codable, Sendable {
     case pronunciationAudio
     case illustration
@@ -528,17 +579,23 @@ struct PrototypeImportedCard: Sendable {
     let word: PrototypeWord
     let sourceLanguageTag: String
     let targetLanguageTag: String
+    let pronunciationAudio: Data?
+    let illustrationImage: Data?
 
     init(
         sourceIdentifier: String,
         word: PrototypeWord,
         sourceLanguageTag: String = "fa",
-        targetLanguageTag: String = "de"
+        targetLanguageTag: String = "de",
+        pronunciationAudio: Data? = nil,
+        illustrationImage: Data? = nil
     ) {
         self.sourceIdentifier = sourceIdentifier
         self.word = word
         self.sourceLanguageTag = sourceLanguageTag
         self.targetLanguageTag = targetLanguageTag
+        self.pronunciationAudio = pronunciationAudio
+        self.illustrationImage = illustrationImage
     }
 }
 
@@ -635,6 +692,12 @@ enum PrototypeReviewMode: String, Sendable {
     }
 }
 
+private struct PrototypeRelatedWordScore {
+    let word: PrototypeWord
+    let relevance: Int
+    let score: Int
+}
+
 @MainActor
 @Observable
 final class PrototypeStore {
@@ -696,9 +759,41 @@ final class PrototypeStore {
         }
     }
 
+    func relatedWords(to word: PrototypeWord, limit: Int = 8) -> [PrototypeWord] {
+        let sourceTokens = meaningfulTokens(in: word.persian)
+        let germanRoot = word.german.lowercased().prefix(4)
+        let candidates = words(sourceLanguageTag: word.sourceLanguageTag, targetLanguageTag: word.targetLanguageTag)
+        var scored: [PrototypeRelatedWordScore] = []
+        for candidate in candidates where candidate.id != word.id {
+            var relevance = 0
+            if !PrototypeDomainClassifier.isGeneric(word.domain), candidate.domain == word.domain { relevance += 8 }
+            if germanRoot.count == 4, candidate.german.lowercased().hasPrefix(germanRoot) { relevance += 5 }
+            relevance += sourceTokens.intersection(meaningfulTokens(in: candidate.persian)).count * 3
+            guard relevance > 0 else { continue }
+            var score = relevance
+            if candidate.partOfSpeech == word.partOfSpeech { score += 2 }
+            if candidate.level == word.level { score += 1 }
+            scored.append(PrototypeRelatedWordScore(word: candidate, relevance: relevance, score: score))
+        }
+        scored.sort {
+            $0.score == $1.score
+                ? $0.word.german.localizedCaseInsensitiveCompare($1.word.german) == .orderedAscending
+                : $0.score > $1.score
+        }
+        return scored.prefix(limit).map(\.word)
+    }
+
+    private func meaningfulTokens(in value: String) -> Set<String> {
+        Set(value.lowercased().split { !$0.isLetter }.map(String.init).filter { $0.count >= 4 })
+    }
+
     func provenance(of word: PrototypeWord) -> PrototypeCardProvenance {
-        (try? modelContext.fetch(FetchDescriptor<PrototypeCardRecord>()))?
-            .first(where: { $0.id == word.id })?.sourcePackage == nil ? .generated : .imported
+        let wordID = word.id
+        var descriptor = FetchDescriptor<PrototypeCardRecord>(
+            predicate: #Predicate { $0.id == wordID }
+        )
+        descriptor.fetchLimit = 1
+        return (try? modelContext.fetch(descriptor).first)?.sourcePackage == nil ? .generated : .imported
     }
 
     func words(sourceLanguageTag: String, targetLanguageTag: String, provenance: PrototypeCardProvenance) -> [PrototypeWord] {
@@ -707,8 +802,20 @@ final class PrototypeStore {
     }
 
     func pronunciationAudio(for word: PrototypeWord) -> Data? {
-        (try? modelContext.fetch(FetchDescriptor<PrototypeCardRecord>()))?
-            .first(where: { $0.id == word.id })?.pronunciationAudio
+        mediaRecord(for: word.id)?.pronunciationAudio
+    }
+
+    func illustrationImage(for word: PrototypeWord) -> Data? {
+        mediaRecord(for: word.id)?.illustrationImage
+    }
+
+    private func mediaRecord(for id: UUID) -> PrototypeCardRecord? {
+        let requestedID = id
+        var descriptor = FetchDescriptor<PrototypeCardRecord>(
+            predicate: #Predicate { $0.id == requestedID }
+        )
+        descriptor.fetchLimit = 1
+        return try? modelContext.fetch(descriptor).first
     }
 
     func reviewedCount(in words: [PrototypeWord]) -> Int {
@@ -977,6 +1084,8 @@ final class PrototypeStore {
                     record.sourceLanguageTag = candidate.sourceLanguageTag
                     record.targetLanguageTag = candidate.targetLanguageTag
                     record.sourcePackage = sourcePackage
+                    if candidate.pronunciationAudio != nil { record.pronunciationAudio = candidate.pronunciationAudio }
+                    if candidate.illustrationImage != nil { record.illustrationImage = candidate.illustrationImage }
                     existingKeys.insert(candidate.word.semanticKey)
                     updated += 1
                     continue
@@ -993,12 +1102,23 @@ final class PrototypeStore {
                     deckID: deck.id,
                     position: existingRecords.count + added,
                     sourceIdentifier: candidate.sourceIdentifier,
-                    sourcePackage: sourcePackage
+                    sourcePackage: sourcePackage,
+                    pronunciationAudio: candidate.pronunciationAudio,
+                    pronunciationAudioFilename: candidate.pronunciationAudio == nil ? nil : "imported-audio-\(candidate.sourceIdentifier.hashValue).audio",
+                    illustrationImage: candidate.illustrationImage,
+                    illustrationImageFilename: candidate.illustrationImage == nil ? nil : "imported-image-\(candidate.sourceIdentifier.hashValue).image"
                 )
                 modelContext.insert(record)
                 recordsBySource[candidate.sourceIdentifier] = record
                 existingKeys.insert(candidate.word.semanticKey)
                 added += 1
+
+                // Keep large APKG imports in bounded SwiftData transactions.
+                // This prevents a several-thousand-card deck from retaining
+                // the complete pending object graph until the final save.
+                if added.isMultiple(of: 250) {
+                    try modelContext.save()
+                }
             }
 
             if added == 0 {
@@ -1130,6 +1250,18 @@ final class PrototypeStore {
             sortBy: [SortDescriptor(\.position), SortDescriptor(\.createdAt)]
         )
         let records = try modelContext.fetch(descriptor)
+        var reclassified = false
+        for record in records where record.sourcePackage != nil && PrototypeDomainClassifier.isGeneric(record.domain) {
+            let inferred = PrototypeDomainClassifier.classify(
+                german: record.german,
+                source: record.persian,
+                example: record.example
+            )
+            guard inferred != PrototypeDomainClassifier.general else { continue }
+            record.domain = inferred
+            reclassified = true
+        }
+        if reclassified { try modelContext.save() }
         words = records.map(\.word)
         let grouped = Dictionary(grouping: records.compactMap { record in
             record.sourcePackage.map { ($0, record.id) }
