@@ -72,8 +72,8 @@
 - [x] T037 [P] Validate every command in `specs/003-apkg-export-approved-cards/quickstart.md` and record actual build/test evidence.
 - [x] T038 [P] Add APKG export architecture and user-flow documentation under `docs/apkg-export/`.
 - [x] T039 [P] Add security review findings and mitigations to `specs/003-apkg-export-approved-cards/security-review.md`.
-- [ ] T040 [P] Measure the 500-card export target and record results in `specs/003-apkg-export-approved-cards/performance-results.md`. Requires working macOS/iOS build.
-- [x] T041 Run package tests; record evidence in quickstart.md (macOS/iOS builds blocked by Xcode 27 beta compiler timeout on large SwiftUI files).
+- [ ] T040 [P] Measure the 500-card export target and record results in `specs/003-apkg-export-approved-cards/performance-results.md`. Requires a repeatable wall-clock/memory harness.
+- [x] T041 Run package tests; record evidence in quickstart.md (package passes; app-level verification remains open).
 - [x] T042 Confirm no generated artifacts, credentials, or temporary APKG files are staged before committing.
 
 ## Dependencies and execution order

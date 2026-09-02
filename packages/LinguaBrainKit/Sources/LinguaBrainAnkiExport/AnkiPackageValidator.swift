@@ -11,7 +11,7 @@ public class AnkiPackageValidator {
 
     public func validatePackage(at url: URL) async throws -> ValidationReport {
         var errors: [ValidationError] = []
-        var warnings: [ValidationWarning] = []
+        let warnings: [ValidationWarning] = []
 
         guard FileManager.default.fileExists(atPath: url.path) else {
             errors.append(ValidationError(

@@ -50,9 +50,8 @@ xcodebuild -project apps/learner/LinguaBrain.xcodeproj -scheme 'LinguaBrain' -sd
 
 ### Build Status
 - **Package**: ✅ Compiles and tests pass
-- **macOS App**: ❌ Xcode 27 beta compiler timeout on large SwiftUI files (LibraryPrototypeView.swift ~760 lines)
-- **iOS App**: Requires same SwiftUI workaround for Xcode 27 beta
+- **macOS App**: ⚠️ `xcodebuild` reaches the package compile but Xcode 27 beta reports a Swift compiler diagnostic in `AnkiPackageValidator.swift` while returning exit code 0; investigate before release.
+- **iOS App**: ⚠️ Not yet re-verified after the export package targets were re-enabled.
 
 ### Known Issue
-The macOS/iOS app builds encounter a compiler timeout issue in Xcode 27 beta when compiling large SwiftUI view structures. This is a beta toolchain limitation, not a code issue. The package implementation is complete and all package tests pass.
-
+The package implementation is complete and all package tests pass. App-level verification remains open because the Xcode 27 beta build currently emits a compiler diagnostic during package compilation and the iOS simulator build has not yet been re-run.
