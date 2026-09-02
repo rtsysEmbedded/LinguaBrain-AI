@@ -1117,6 +1117,21 @@ struct APKGCardReader: Sendable {
             )
         }
 
+        // Compatibility fallback for common LinguaBrain/Anki exports whose
+        // model JSON is absent or has non-standard field names.
+        if fields.count >= 9 {
+            let source = sanitize(fields[2]); let target = sanitize(fields[3])
+            if !source.isEmpty && !target.isEmpty {
+                return PrototypeWord(
+                    german: target, persian: source,
+                    level: sanitize(fields[6]), partOfSpeech: sanitize(fields[7]),
+                    example: sanitize(fields[4]), exampleTranslation: sanitize(fields[5]),
+                    examples: PrototypeExamplePairing.pair(target: fields[4], source: fields[5]),
+                    domain: sanitize(fields[8]), sourceLanguageTag: "fa", targetLanguageTag: "de"
+                )
+            }
+        }
+
         guard let first = fields.first else { return nil }
         let front = sanitize(first)
         let back = fields.count > 1 ? sanitize(fields[1]) : ""
