@@ -39,6 +39,14 @@ struct TodayPrototypeView: View {
         return AdaptiveLearningPlanner.makePlan(candidates: candidates, availableMinutes: selectedTime, energy: Int(energy), now: .now)
     }
 
+    private var recommendedReviewMode: PrototypeReviewMode {
+        let reviewed = activeWords.filter { store.reviewCount(for: $0, mode: .recognition) > 0 || store.reviewCount(for: $0, mode: .reverseTranslation) > 0 }
+        guard !reviewed.isEmpty else { return .recognition }
+        let recognition = reviewed.reduce(0) { $0 + store.mastery(for: $1, mode: .recognition) } / Double(reviewed.count)
+        let recall = reviewed.reduce(0) { $0 + store.mastery(for: $1, mode: .reverseTranslation) } / Double(reviewed.count)
+        return recall < recognition ? .reverseTranslation : .recognition
+    }
+
     private var learningMode: String {
         if energy <= 3 { return localization.localized("حالت بازیابی") }
         if energy >= 8 { return localization.localized("حالت چالش") }
@@ -134,9 +142,9 @@ struct TodayPrototypeView: View {
             }
 
             NavigationLink {
-                ReviewPrototypeView(newCardLimit: newCardLimit)
+                ReviewPrototypeView(newCardLimit: newCardLimit, mode: recommendedReviewMode)
             } label: {
-                Label("شروع جلسه امروز", systemImage: "play.fill")
+                Label(recommendedReviewMode == .reverseTranslation ? "شروع مرور پیشنهادی: ترجمه معکوس" : "شروع جلسه امروز", systemImage: "play.fill")
                     .font(.headline)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 14)
