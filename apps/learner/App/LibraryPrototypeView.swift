@@ -1,5 +1,11 @@
 import SwiftUI
 import UniformTypeIdentifiers
+import LinguaBrainDomain
+import LinguaBrainAnkiExport
+
+enum ExportFormat: String, CaseIterable {
+    case tsv, apkg
+}
 
 struct LibraryPrototypeView: View {
     @Environment(PrototypeStore.self) private var store
@@ -7,14 +13,36 @@ struct LibraryPrototypeView: View {
     @Environment(PrototypeLanguageSettings.self) private var languageSettings
     @State private var searchText = ""
     @State private var filter = "همه"
+    @State private var customDomains = PrototypeDomainCatalog.customDomains
     @State private var packagePendingDeletion: PrototypeImportedPackage?
     @State private var deletionError: String?
     @State private var exportGroup: PrototypeCardProvenance?
     @State private var isExporting = false
-    @State private var exportDocument = AnkiTSVDocument(text: "")
+    @State private var exportTSVDocument = AnkiTSVDocument(text: "")
+    @State private var exportAPKGDocument = AnkiAPKGDocument()
     @State private var isSelectingExportCards = false
     @State private var exportCandidates: [PrototypeWord] = []
     @State private var selectedExportIDs: Set<UUID> = []
+    @State private var exportFormat: ExportFormat = .tsv
+    @State private var exportProgress: Double = 0.0
+    @State private var exportStatus: ExportStatus = .notStarted
+
+    fileprivate struct ExportStatusView: View {
+        let progress: Double
+        let status: ExportStatus
+
+        var body: some View {
+            VStack(spacing: 8) {
+                if status == .inProgress {
+                    ProgressView(value: progress)
+                        .progressViewStyle(LinearProgressViewStyle())
+                }
+                Text(status.localizedDescription)
+                    .font(.caption)
+                    .foregroundStyle(progress > 0 && progress < 1 ? .orange : .primary)
+            }
+        }
+    }
 
     private var activeWords: [PrototypeWord] {
         store.words(
@@ -26,13 +54,13 @@ struct LibraryPrototypeView: View {
     private var filteredWords: [PrototypeWord] {
         activeWords.filter { word in
             let matchesSearch = searchText.isEmpty || word.german.localizedCaseInsensitiveContains(searchText) || word.persian.contains(searchText)
-            let matchesFilter = filter == "همه" || (filter == "ضعیف" && store.reviewCount(for: word) > 0 && store.strength(for: word) < 0.5) || filter == word.level
+            let matchesFilter = filter == "همه" || (filter == "ضعیف" && store.reviewCount(for: word) > 0 && store.strength(for: word) < 0.5) || filter == word.level || filter == word.domain
             return matchesSearch && matchesFilter
         }
     }
 
     var body: some View {
-        ScrollView {
+        AnyView(ScrollView {
             VStack(alignment: .leading, spacing: 18) {
                 HStack(spacing: 12) {
                     MetricPill(value: "\(activeWords.count)", label: "واژه", symbol: "textformat.abc", color: PrototypeTheme.accent)
@@ -75,11 +103,14 @@ struct LibraryPrototypeView: View {
 
                 Picker("فیلتر", selection: $filter) {
                     ForEach(["همه", "ضعیف", "A1", "B1", "B2"], id: \.self) { Text($0) }
+                    ForEach(customDomains, id: \.self) { Text($0).tag($0) }
                 }
-                .pickerStyle(.segmented)
+                .pickerStyle(.menu)
 
                 LazyVStack(spacing: 12) {
-                    ForEach(filteredWords) { word in
+                    // Keep the prototype library responsive for large imports;
+                    // review sessions still use the full persisted collection.
+                    ForEach(Array(filteredWords.prefix(250))) { word in
                         NavigationLink {
                             WordDetailPrototypeView(word: word)
                         } label: {
@@ -88,11 +119,18 @@ struct LibraryPrototypeView: View {
                         .buttonStyle(.plain)
                     }
                 }
+                if filteredWords.count > 250 {
+                    Text("نمایش ۲۵۰ کارت اول از \(filteredWords.count) کارت؛ برای مرور از جلسهٔ امروز استفاده کن.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .frame(maxWidth: .infinity)
+                }
             }
             .padding()
             .frame(maxWidth: 820)
             .frame(maxWidth: .infinity)
-        }
+        })
+        .onAppear { customDomains = PrototypeDomainCatalog.customDomains }
         .background(PrototypeBackground())
         .navigationTitle("کتابخانه")
         .searchable(text: $searchText, prompt: "جست‌وجوی فارسی یا آلمانی")
@@ -116,17 +154,73 @@ struct LibraryPrototypeView: View {
         } message: {
             Text(deletionError ?? "خطای ناشناخته")
         }
-        .fileExporter(isPresented: $isExporting, document: exportDocument, contentType: .plainText, defaultFilename: "linguabrain-cards.tsv") { _ in }
-        .sheet(isPresented: $isSelectingExportCards) {
-            ExportCardSelectionView(cards: exportCandidates, selectedIDs: $selectedExportIDs, onCancel: {
-                isSelectingExportCards = false
-            }, onExport: {
-                let selected = exportCandidates.filter { selectedExportIDs.contains($0.id) }
-                exportDocument = AnkiTSVDocument(text: AnkiTSVExporter.makeTSV(selected))
-                isSelectingExportCards = false
-                isExporting = true
-            })
+        .fileExporter(isPresented: apkgExportBinding, document: exportAPKGDocument, contentType: AnkiExportDocument.apkg, defaultFilename: "linguabrain-export.apkg") { result in
+                switch result {
+                case .success:
+                    exportStatus = .completed
+                    exportProgress = 1.0
+                case .failure(let error):
+                    exportStatus = .failed
+                    deletionError = error.localizedDescription
+                }
+            }
+        .fileExporter(isPresented: tsvExportBinding, document: exportTSVDocument, contentType: .plainText, defaultFilename: "linguabrain-cards.tsv") { result in
+            switch result {
+            case .success:
+                exportStatus = .completed
+                exportProgress = 1.0
+            case .failure(let error):
+                exportStatus = .failed
+                deletionError = error.localizedDescription
+            }
         }
+        .sheet(isPresented: $isSelectingExportCards) {
+            ExportCardSelectionView(
+                cards: exportCandidates,
+                selectedIDs: $selectedExportIDs,
+                exportFormat: $exportFormat,
+                onCancel: {
+                    isSelectingExportCards = false
+                },
+                onExport: {
+                    if exportFormat == .apkg {
+                        let selected = exportCandidates.filter { selectedExportIDs.contains($0.id) }
+                        isSelectingExportCards = false
+                        Task {
+                            do {
+                                exportStatus = .inProgress
+                                exportAPKGDocument = try await PrototypeAPKGExporter.makeDocument(from: selected, store: store)
+                                exportStatus = .completed
+                                isExporting = true
+                            } catch {
+                                exportStatus = .failed
+                                deletionError = error.localizedDescription
+                            }
+                        }
+                        return
+                    } else {
+                        let selected = exportCandidates.filter { selectedExportIDs.contains($0.id) }
+                        exportTSVDocument = AnkiTSVDocument(text: AnkiTSVExporter.makeTSV(selected))
+                    }
+                    isSelectingExportCards = false
+                    isExporting = true
+                }
+            )
+        }
+    }
+
+    private var apkgExportBinding: Binding<Bool> {
+        Binding(
+            get: { isExporting && exportFormat == .apkg },
+            set: { if !$0 { isExporting = false } }
+        )
+    }
+
+    private var tsvExportBinding: Binding<Bool> {
+        Binding(
+            get: { isExporting && exportFormat == .tsv },
+            set: { if !$0 { isExporting = false } }
+        )
     }
 
     private var exportSection: some View {
@@ -134,6 +228,14 @@ struct LibraryPrototypeView: View {
             VStack(alignment: .leading, spacing: 10) {
                 Text(localization.localized("export.title")).font(.headline)
                 Text(localization.localized("export.subtitle")).font(.caption).foregroundStyle(.secondary)
+
+                Picker("Export Format", selection: $exportFormat) {
+                    Text(localization.localized("export.format.tsv")).tag(ExportFormat.tsv)
+                    Text(localization.localized("export.format.apkg")).tag(ExportFormat.apkg)
+                }
+                .pickerStyle(.segmented)
+                .padding(.bottom, 8)
+
                 ForEach(PrototypeCardProvenance.allCases) { provenance in
                     let cards = store.words(sourceLanguageTag: languageSettings.sourceLanguageTag, targetLanguageTag: languageSettings.targetLanguageTag, provenance: provenance)
                     Button {
@@ -151,6 +253,7 @@ struct LibraryPrototypeView: View {
                     .disabled(cards.isEmpty)
                 }
             }
+            .padding()
         }
     }
 
@@ -246,6 +349,87 @@ struct AnkiTSVDocument: FileDocument {
     }
 }
 
+struct AnkiAPKGDocument: FileDocument {
+    static var readableContentTypes: [UTType] { [AnkiExportDocument.apkg] }
+    static var writableContentTypes: [UTType] { [AnkiExportDocument.apkg] }
+
+    let sourceGroups: [String]
+    let cardCount: Int
+    let mediaCount: Int
+    let data: Data
+
+    init(
+        sourceGroups: [String] = [],
+        cardCount: Int = 0,
+        mediaCount: Int = 0
+        , data: Data = Data()
+    ) {
+        self.sourceGroups = sourceGroups
+        self.cardCount = cardCount
+        self.mediaCount = mediaCount
+        self.data = data
+    }
+
+    init(configuration: ReadConfiguration) throws {
+        sourceGroups = []
+        cardCount = 0
+        mediaCount = 0
+        data = configuration.file.regularFileContents ?? Data()
+    }
+
+    func fileWrapper(configuration: WriteConfiguration) throws -> FileWrapper {
+        return FileWrapper(regularFileWithContents: data)
+    }
+}
+
+private enum PrototypeAPKGExporter {
+    @MainActor
+    static func makeDocument(from words: [PrototypeWord], store: PrototypeStore) async throws -> AnkiAPKGDocument {
+        guard !words.isEmpty else { throw AnkiExportError.noApprovedCards }
+        let workspace = AppOwnedExportWorkspace()
+        guard let directory = workspace.workspaceDirectory else {
+            throw AnkiExportError.invalidPath(path: "export workspace unavailable")
+        }
+        let databaseURL = directory.appendingPathComponent("collection.anki21")
+        let mediaDirectory = directory.appendingPathComponent("media", isDirectory: true)
+        try FileManager.default.createDirectory(at: mediaDirectory, withIntermediateDirectories: true)
+        let model = AnkiCollectionMapper.mapBundleToModel(name: "HermesCard", fieldNames: ["Front", "Back", "Direction", "Provider", "GeneratedAt"])
+        let deck = AnkiCollectionMapper.mapBundleToDeck(sourceGroup: "hermes", languagePair: (words[0].sourceLanguageTag, words[0].targetLanguageTag))
+        var builder = try AnkiCollectionBuilder(dbURL: databaseURL)
+        try builder.insertModel(model)
+        try builder.insertDeck(deck)
+        var bundles: [GeneratedCardBundle] = []
+        for word in words {
+            let sense = LexicalSense(sourceLanguage: word.sourceLanguageTag, targetLanguage: word.targetLanguageTag, lemma: word.german, senseKey: word.id.uuidString, partOfSpeech: word.partOfSpeech, meaning: word.persian, translation: word.persian, level: word.level, direction: .recognition)
+            let identity = CardIdentity(sourceLanguage: word.sourceLanguageTag, targetLanguage: word.targetLanguageTag, lemma: word.german, senseKey: sense.senseKey, partOfSpeech: word.partOfSpeech, direction: .recognition)
+            var mediaAssets: [MediaAsset] = []
+            if let audio = store.pronunciationAudio(for: word) {
+                let url = mediaDirectory.appendingPathComponent("\(mediaAssets.count).media")
+                try audio.write(to: url, options: .atomic)
+                mediaAssets.append(MediaAsset(kind: .audio, locale: word.targetLanguageTag, checksum: "", fileSize: audio.count, provider: "local", model: "prototype", cacheReference: url.path))
+            }
+            if let image = store.illustrationImage(for: word) {
+                let url = mediaDirectory.appendingPathComponent("\(mediaAssets.count).media")
+                try image.write(to: url, options: .atomic)
+                mediaAssets.append(MediaAsset(kind: .image, locale: word.targetLanguageTag, checksum: "", fileSize: image.count, provider: "local", model: "prototype", cacheReference: url.path))
+            }
+            let bundle = GeneratedCardBundle(identity: identity, senses: [sense], directions: [.recognition], mediaAssets: mediaAssets, approvalState: .approved, provenance: Provenance(provider: "hermes", model: "prototype"))
+            bundles.append(bundle)
+            let note = AnkiCollectionMapper.mapBundleToNote(bundle, modelID: model.modelID, deckID: deck.deckID)
+            try builder.insertNote(note)
+            try builder.insertCard(AnkiCollectionMapper.mapBundleToCard(bundle: bundle, noteID: note.noteID, deckID: deck.deckID))
+            for tag in AnkiCollectionMapper.mapBundleToTags(bundle: bundle) { try builder.insertTag(tag) }
+        }
+        try builder.finalizeCollection()
+        builder.close()
+        let manifest = ExportManifest(sourceGroups: ["hermes"], cardIdentities: bundles.map { $0.identity.compositeKey })
+        let destination = directory.appendingPathComponent("prototype.apkg")
+        _ = try await AnkiPackageWriter().createAPKG(collectionURL: databaseURL, mediaDirectory: mediaDirectory, manifest: manifest, destination: destination)
+        let data = try Data(contentsOf: destination)
+        return AnkiAPKGDocument(sourceGroups: ["hermes"], cardCount: words.count, data: data)
+    }
+}
+
 enum AnkiTSVExporter {
     static func makeTSV(_ cards: [PrototypeWord]) -> String {
         let header = ["Front", "Back", "Example", "Example translation", "Level", "Part of speech", "Tags"].joined(separator: "\t")
@@ -264,6 +448,7 @@ private struct ExportCardSelectionView: View {
     @Environment(PrototypeLocalization.self) private var localization
     let cards: [PrototypeWord]
     @Binding var selectedIDs: Set<UUID>
+    @Binding var exportFormat: ExportFormat
     let onCancel: () -> Void
     let onExport: () -> Void
 
@@ -288,8 +473,14 @@ private struct ExportCardSelectionView: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button(localization.localized("common.cancel"), action: onCancel) }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button(localization.localized("export.exportSelected"), action: onExport)
-                        .disabled(selectedIDs.isEmpty)
+                    Button(localization.localized("export.exportSelected")) {
+                        if exportFormat == .apkg {
+                            onExport()
+                        } else {
+                            onExport()
+                        }
+                    }
+                    .disabled(selectedIDs.isEmpty)
                 }
             }
         }
@@ -584,7 +775,12 @@ private struct CardSpecPrototypeView: View {
 }
 
 struct WordDetailPrototypeView: View {
+    @Environment(PrototypeStore.self) private var store
     let word: PrototypeWord
+
+    private var relatedWords: [PrototypeWord] {
+        store.relatedWords(to: word)
+    }
 
     var body: some View {
         ScrollView {
@@ -620,14 +816,25 @@ struct WordDetailPrototypeView: View {
                 PrototypeCard {
                     VStack(alignment: .leading, spacing: 14) {
                         Text("شبکه واژگان").font(.headline)
-                        HStack {
-                            ForEach(["Arbeit", "Arbeitsplatz", "Arbeitgeber"], id: \.self) { item in
-                                Text(item)
-                                    .font(.subheadline)
-                                    .environment(\.layoutDirection, .leftToRight)
-                                    .padding(.horizontal, 12)
-                                    .padding(.vertical, 7)
-                                    .background(PrototypeTheme.accent.opacity(0.1), in: Capsule())
+                        if relatedWords.isEmpty {
+                            Text("هنوز واژهٔ مرتبطی در کتابخانه پیدا نشد.")
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                        } else {
+                            LazyVGrid(columns: [GridItem(.adaptive(minimum: 110), alignment: .leading)], alignment: .leading, spacing: 10) {
+                                ForEach(relatedWords) { related in
+                                    NavigationLink {
+                                        WordDetailPrototypeView(word: related)
+                                    } label: {
+                                        Text(related.german)
+                                            .font(.subheadline)
+                                            .environment(\.layoutDirection, .leftToRight)
+                                            .padding(.horizontal, 12)
+                                            .padding(.vertical, 7)
+                                            .background(PrototypeTheme.accent.opacity(0.1), in: Capsule())
+                                    }
+                                    .buttonStyle(.plain)
+                                }
                             }
                         }
                     }
@@ -640,4 +847,28 @@ struct WordDetailPrototypeView: View {
         .background(PrototypeBackground())
         .navigationTitle(word.german)
     }
+}
+
+public enum ExportStatus: String, Codable, Sendable {
+    case notStarted
+    case inProgress
+    case completed
+    case failed
+    case cancelled
+
+    public var localizedDescription: String {
+        switch self {
+        case .notStarted: return "notStarted"
+        case .inProgress: return "inProgress"
+        case .completed: return "completed"
+        case .failed: return "failed"
+        case .cancelled: return "cancelled"
+        }
+    }
+}
+
+public struct AnkiExportDocument {
+    public static let apkg: UTType = {
+        UTType("com.anki.apkg") ?? UTType("public.data")!
+    }()
 }
