@@ -333,6 +333,11 @@ struct LibraryPrototypeView: View {
                 Spacer()
                 VStack(alignment: .trailing, spacing: 6) {
                     Text("\(word.partOfSpeech) · \(word.domain)").font(.caption).foregroundStyle(.secondary)
+                    HStack(spacing: 6) {
+                        if store.illustrationImage(for: word) != nil { Image(systemName: "photo.fill") }
+                        if store.pronunciationAudio(for: word) != nil { Image(systemName: "speaker.wave.2.fill") }
+                    }
+                    .font(.caption2).foregroundStyle(PrototypeTheme.accent)
                     ProgressView(value: store.strength(for: word))
                         .frame(width: 72)
                         .tint(store.strength(for: word) < 0.5 ? .orange : PrototypeTheme.mint)
