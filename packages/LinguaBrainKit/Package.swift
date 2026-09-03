@@ -72,6 +72,10 @@ let package = Package(
             ]
         ),
         .testTarget(
+            name: "LinguaBrainDomainTests",
+            dependencies: ["LinguaBrainDomain"]
+        ),
+        .testTarget(
             name: "LinguaBrainAnkiExportTests",
             dependencies: ["LinguaBrainDomain", "LinguaBrainApplication", "LinguaBrainMedia", "LinguaBrainPersistence", "LinguaBrainAnkiExport", "LinguaBrainTestSupport"],
             resources: [.copy("Fixtures")]
