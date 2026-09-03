@@ -13,4 +13,10 @@ final class ReviewAnswerEvaluationTests: XCTestCase {
     func testWrongAnswerIsRejected() {
         XCTAssertFalse(ReviewAnswerEvaluator.reverseRecall(answer: "gehen", acceptedForms: ["arbeiten"]).correct)
     }
+
+    func testMissionPreservesUserDefinedDomainAndClampsWeight() {
+        let mission = LearningMission(id: "m1", title: "Embedded German", domain: "Embedded Linux", targetLevel: "B2", weight: 2)
+        XCTAssertEqual(mission.domain, "Embedded Linux")
+        XCTAssertEqual(mission.weight, 1)
+    }
 }

@@ -84,6 +84,20 @@ public struct LearningObjective: Hashable, Codable, Sendable, Equatable {
     }
 }
 
+/// A learner-owned goal that scopes adaptive selection without changing the
+/// canonical KnowledgeItem. Domains are user-defined labels, not an enum.
+public struct LearningMission: Hashable, Codable, Sendable, Equatable {
+    public let id: String
+    public var title: String
+    public var domain: String?
+    public var targetLevel: String?
+    public var weight: Double
+
+    public init(id: String, title: String, domain: String? = nil, targetLevel: String? = nil, weight: Double = 1) {
+        self.id = id; self.title = title; self.domain = domain; self.targetLevel = targetLevel; self.weight = min(max(weight, 0), 1)
+    }
+}
+
 public struct SkillMastery: Codable, Sendable, Equatable {
     public var objective: LearningObjective
     public private(set) var score: Double
@@ -353,7 +367,7 @@ public enum MediaAvailability: String, Codable, Sendable, Equatable {
 
 // MARK: - Provenance (T005, FR-015)
 
-public struct Provenance: Equatable, Sendable {
+public struct Provenance: Codable, Equatable, Sendable {
     public var provider: String
     public var model: String
     public var promptVersion: String?
@@ -536,6 +550,57 @@ public struct DuplicateDetector {
             senseKey: sense.senseKey,
             partOfSpeech: sense.partOfSpeech,
             direction: direction
+        )
+    }
+}
+
+// MARK: - Export Provenance (T020, FR-015)
+
+public struct ExportProvenance: Equatable, Sendable {
+    public let sourceGroup: CardSource
+    public let cardsSelected: Int
+    public let mediaAssets: Int
+    public let exportTimestamp: Date
+    public let exportID: String
+    
+    public init(
+        sourceGroup: CardSource = .generated,
+        cardsSelected: Int = 0,
+        mediaAssets: Int = 0,
+        exportTimestamp: Date = Date(),
+        exportID: String = UUID().uuidString
+    ) {
+        self.sourceGroup = sourceGroup
+        self.cardsSelected = cardsSelected
+        self.mediaAssets = mediaAssets
+        self.exportTimestamp = exportTimestamp
+        self.exportID = exportID
+    }
+    
+    public var isGenerated: Bool {
+        sourceGroup == .generated
+    }
+
+    public var isImported: Bool {
+        sourceGroup == .imported
+    }
+
+    public var provenanceTag: String {
+        switch sourceGroup {
+        case .generated:
+            return "hermes-generated"
+        case .imported:
+            return "imported"
+        }
+    }
+
+    public static func mapToProvenanceTag(
+        sourceGroup: CardSource,
+        cardCount: Int
+    ) -> ExportProvenance {
+        ExportProvenance(
+            sourceGroup: sourceGroup,
+            cardsSelected: cardCount
         )
     }
 }
