@@ -8,6 +8,15 @@ struct PrototypeExample: Codable, Hashable, Sendable {
     let source: String
 }
 
+/// Provider-produced meaning data that must survive beyond the generation
+/// preview.  It is deliberately independent of a particular AI provider.
+struct PrototypeSense: Codable, Hashable, Sendable {
+    let meaning: String
+    let usage: String
+    let example: PrototypeExample
+    let collocations: [String]
+}
+
 enum PrototypeExamplePairing {
     static func pair(target: String, source: String) -> [PrototypeExample] {
         let targets = split(target)
@@ -36,6 +45,25 @@ final class PrototypeDeckRecord {
     }
 }
 
+/// A single generated pronunciation or illustration may be used by several
+/// cards when one headword has genuinely independent meanings.  Keeping it in
+/// its own record makes that ownership explicit instead of duplicating a blob
+/// per card.
+@Model
+final class PrototypeMediaAssetRecord {
+    @Attribute(.unique) var id: UUID
+    var kind: String
+    @Attribute(.externalStorage) var data: Data
+    var filename: String
+
+    init(id: UUID = UUID(), kind: String, data: Data, filename: String) {
+        self.id = id
+        self.kind = kind
+        self.data = data
+        self.filename = filename
+    }
+}
+
 @Model
 final class PrototypeCardRecord {
     @Attribute(.unique) var id: UUID
@@ -49,6 +77,7 @@ final class PrototypeCardRecord {
     var example: String
     var exampleTranslation: String
     var examplesJSON: String = "[]"
+    var sensesJSON: String = "[]"
     var domain: String = "عمومی"
     var createdAt: Date
     var sourceIdentifier: String?
@@ -57,8 +86,10 @@ final class PrototypeCardRecord {
     var targetLanguageTag: String = "de"
     @Attribute(.externalStorage) var pronunciationAudio: Data?
     var pronunciationAudioFilename: String?
+    var pronunciationAudioAssetID: UUID?
     @Attribute(.externalStorage) var illustrationImage: Data?
     var illustrationImageFilename: String?
+    var illustrationImageAssetID: UUID?
 
     init(
         word: PrototypeWord,
@@ -69,8 +100,10 @@ final class PrototypeCardRecord {
         sourcePackage: String? = nil,
         pronunciationAudio: Data? = nil,
         pronunciationAudioFilename: String? = nil,
+        pronunciationAudioAssetID: UUID? = nil,
         illustrationImage: Data? = nil,
-        illustrationImageFilename: String? = nil
+        illustrationImageFilename: String? = nil,
+        illustrationImageAssetID: UUID? = nil
     ) {
         id = word.id
         self.deckID = deckID
@@ -83,6 +116,7 @@ final class PrototypeCardRecord {
         example = word.example
         exampleTranslation = word.exampleTranslation
         examplesJSON = (try? String(data: JSONEncoder().encode(word.examples), encoding: .utf8)) ?? "[]"
+        sensesJSON = (try? String(data: JSONEncoder().encode(word.senses), encoding: .utf8)) ?? "[]"
         domain = word.domain
         self.createdAt = createdAt
         self.sourceIdentifier = sourceIdentifier
@@ -91,8 +125,10 @@ final class PrototypeCardRecord {
         targetLanguageTag = word.targetLanguageTag
         self.pronunciationAudio = pronunciationAudio
         self.pronunciationAudioFilename = pronunciationAudioFilename
+        self.pronunciationAudioAssetID = pronunciationAudioAssetID
         self.illustrationImage = illustrationImage
         self.illustrationImageFilename = illustrationImageFilename
+        self.illustrationImageAssetID = illustrationImageAssetID
     }
 
     var word: PrototypeWord {
@@ -106,6 +142,7 @@ final class PrototypeCardRecord {
             example: example,
             exampleTranslation: exampleTranslation,
             examples: (try? JSONDecoder().decode([PrototypeExample].self, from: Data(examplesJSON.utf8))) ?? [],
+            senses: (try? JSONDecoder().decode([PrototypeSense].self, from: Data(sensesJSON.utf8))) ?? [],
             domain: domain,
             sourceLanguageTag: sourceLanguageTag,
             targetLanguageTag: targetLanguageTag
@@ -194,6 +231,22 @@ final class PrototypeLearningEventRecord {
         self.correct = correct
         self.occurredAt = occurredAt
         self.responseTimeMilliseconds = responseTimeMilliseconds
+    }
+}
+
+@Model
+final class PrototypeLearningMissionRecord {
+    @Attribute(.unique) var id: String
+    var title: String
+    var domain: String?
+    var targetLevel: String?
+    var weight: Double
+    var isActive: Bool
+    var updatedAt: Date
+
+    init(id: String = "active", title: String, domain: String? = nil, targetLevel: String? = nil, weight: Double = 1, isActive: Bool = true, updatedAt: Date = .now) {
+        self.id = id; self.title = title; self.domain = domain; self.targetLevel = targetLevel
+        self.weight = min(max(weight, 0), 1); self.isActive = isActive; self.updatedAt = updatedAt
     }
 }
 
@@ -466,6 +519,7 @@ struct PrototypeWord: Identifiable, Hashable, Sendable {
     let example: String
     let exampleTranslation: String
     let examples: [PrototypeExample]
+    let senses: [PrototypeSense]
     let domain: String
     let sourceLanguageTag: String
     let targetLanguageTag: String
@@ -480,6 +534,7 @@ struct PrototypeWord: Identifiable, Hashable, Sendable {
         example: String,
         exampleTranslation: String,
         examples: [PrototypeExample] = [],
+        senses: [PrototypeSense] = [],
         domain: String = "عمومی",
         sourceLanguageTag: String = "fa",
         targetLanguageTag: String = "de"
@@ -493,6 +548,7 @@ struct PrototypeWord: Identifiable, Hashable, Sendable {
         self.example = example
         self.exampleTranslation = exampleTranslation
         self.examples = examples.isEmpty ? [PrototypeExample(target: example, source: exampleTranslation)] : examples
+        self.senses = senses
         self.domain = domain
         self.sourceLanguageTag = sourceLanguageTag
         self.targetLanguageTag = targetLanguageTag
@@ -725,6 +781,7 @@ final class PrototypeStore {
     private(set) var memoryStates: [String: PrototypeFSRSMemoryState] = [:]
     private(set) var lastPersistenceError: String?
     private(set) var importedPackages: [PrototypeImportedPackage] = []
+    private(set) var activeMission: LearningMission?
 
     private let modelContainer: ModelContainer
     private let modelContext: ModelContext
@@ -741,20 +798,39 @@ final class PrototypeStore {
             let configuration = ModelConfiguration(isStoredInMemoryOnly: inMemory)
             modelContainer = try ModelContainer(
                 for: PrototypeDeckRecord.self,
+                PrototypeMediaAssetRecord.self,
                 PrototypeCardRecord.self,
                 PrototypeReviewRecord.self,
                 PrototypeSkillMasteryRecord.self,
                 PrototypeLearningEventRecord.self,
+                PrototypeLearningMissionRecord.self,
                 configurations: configuration
             )
             modelContext = ModelContext(modelContainer)
             try seedCardsIfNeeded()
             try ensureMultilingualSampleCards()
             try restoreCards()
+            restoreMission()
             restorePersistedReviews()
         } catch {
             fatalError("Unable to initialize the review store: \(error.localizedDescription)")
         }
+    }
+
+    func setActiveMission(_ mission: LearningMission?) {
+        do {
+            let records = try modelContext.fetch(FetchDescriptor<PrototypeLearningMissionRecord>())
+            records.forEach { modelContext.delete($0) }
+            if let mission {
+                modelContext.insert(PrototypeLearningMissionRecord(id: mission.id, title: mission.title, domain: mission.domain, targetLevel: mission.targetLevel, weight: mission.weight))
+            }
+            try modelContext.save(); activeMission = mission
+        } catch { lastPersistenceError = "Mission save failed: \(error.localizedDescription)" }
+    }
+
+    private func restoreMission() {
+        guard let result = try? modelContext.fetch(FetchDescriptor<PrototypeLearningMissionRecord>()), let record = result.first else { return }
+        activeMission = LearningMission(id: record.id, title: record.title, domain: record.domain, targetLevel: record.targetLevel, weight: record.weight)
     }
 
     var reviewedCount: Int { words.filter { reviewCount(for: $0) > 0 }.count }
@@ -821,11 +897,13 @@ final class PrototypeStore {
     }
 
     func pronunciationAudio(for word: PrototypeWord) -> Data? {
-        mediaRecord(for: word.id)?.pronunciationAudio
+        guard let record = mediaRecord(for: word.id) else { return nil }
+        return record.pronunciationAudioAssetID.flatMap(mediaData(for:)) ?? record.pronunciationAudio
     }
 
     func illustrationImage(for word: PrototypeWord) -> Data? {
-        mediaRecord(for: word.id)?.illustrationImage
+        guard let record = mediaRecord(for: word.id) else { return nil }
+        return record.illustrationImageAssetID.flatMap(mediaData(for:)) ?? record.illustrationImage
     }
 
     private func mediaRecord(for id: UUID) -> PrototypeCardRecord? {
@@ -835,6 +913,15 @@ final class PrototypeStore {
         )
         descriptor.fetchLimit = 1
         return try? modelContext.fetch(descriptor).first
+    }
+
+    private func mediaData(for assetID: UUID) -> Data? {
+        let requestedID = assetID
+        var descriptor = FetchDescriptor<PrototypeMediaAssetRecord>(
+            predicate: #Predicate { $0.id == requestedID }
+        )
+        descriptor.fetchLimit = 1
+        return try? modelContext.fetch(descriptor).first?.data
     }
 
     func reviewedCount(in words: [PrototypeWord]) -> Int {
@@ -1012,7 +1099,7 @@ final class PrototypeStore {
                 sourcePackage: record.sourcePackage,
                 sourceLanguageTag: record.sourceLanguageTag,
                 targetLanguageTag: record.targetLanguageTag,
-                pronunciationAudio: record.pronunciationAudio,
+                pronunciationAudio: pronunciationAudio(for: record.word),
                 pronunciationAudioFilename: record.pronunciationAudioFilename
             )
         }
@@ -1099,6 +1186,7 @@ final class PrototypeStore {
                     record.example = candidate.word.example
                     record.exampleTranslation = candidate.word.exampleTranslation
                     record.examplesJSON = (try? String(data: JSONEncoder().encode(candidate.word.examples), encoding: .utf8)) ?? "[]"
+                    record.sensesJSON = (try? String(data: JSONEncoder().encode(candidate.word.senses), encoding: .utf8)) ?? "[]"
                     record.domain = candidate.word.domain
                     record.sourceLanguageTag = candidate.sourceLanguageTag
                     record.targetLanguageTag = candidate.targetLanguageTag
@@ -1155,11 +1243,37 @@ final class PrototypeStore {
     }
 
     @discardableResult
-    func addGeneratedCard(_ word: PrototypeWord, pronunciationAudio: Data? = nil) -> Bool {
+    func addGeneratedCard(
+        _ word: PrototypeWord,
+        pronunciationAudio: Data? = nil,
+        illustrationImage: Data? = nil
+    ) -> Bool {
+        addGeneratedCards(
+            [word],
+            sharedPronunciationAudio: pronunciationAudio,
+            sharedIllustrationImage: illustrationImage
+        )
+    }
+
+    /// Persists each independent meaning as a card while creating at most one
+    /// audio asset and one image asset for the submitted headword.
+    @discardableResult
+    func addGeneratedCards(
+        _ words: [PrototypeWord],
+        sharedPronunciationAudio: Data? = nil,
+        sharedIllustrationImage: Data? = nil
+    ) -> Bool {
+        guard !words.isEmpty else { return true }
         do {
             let cards = try modelContext.fetch(FetchDescriptor<PrototypeCardRecord>())
-            guard !cards.contains(where: { $0.word.semanticKey == word.semanticKey }) else {
-                lastPersistenceError = "این معنی از واژه در همین حوزه از قبل وجود دارد."
+            func generatedLemmaKey(_ word: PrototypeWord) -> String {
+                [word.sourceLanguageTag, word.targetLanguageTag, word.normalizedGerman, word.domain]
+                    .map { $0.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() }
+                    .joined(separator: "::generated-lemma::")
+            }
+            var generatedLemmaKeys = Set(cards.map { generatedLemmaKey($0.word) })
+            guard words.allSatisfy({ generatedLemmaKeys.insert(generatedLemmaKey($0)).inserted }) else {
+                lastPersistenceError = "این واژه در همین حوزه از قبل وجود دارد."
                 return false
             }
             let decks = try modelContext.fetch(FetchDescriptor<PrototypeDeckRecord>())
@@ -1168,14 +1282,23 @@ final class PrototypeStore {
                 modelContext.insert(deck)
                 return deck
             }()
-            let audioFilename = pronunciationAudio.map { _ in "audio-\(word.id.uuidString).mp3" }
-            modelContext.insert(PrototypeCardRecord(
-                word: word,
-                deckID: deck.id,
-                position: cards.count,
-                pronunciationAudio: pronunciationAudio,
-                pronunciationAudioFilename: audioFilename
-            ))
+            let audioAsset = sharedPronunciationAudio.map {
+                PrototypeMediaAssetRecord(kind: "audio", data: $0, filename: "audio-\(UUID().uuidString).mp3")
+            }
+            let imageAsset = sharedIllustrationImage.map {
+                PrototypeMediaAssetRecord(kind: "image", data: $0, filename: "image-\(UUID().uuidString).png")
+            }
+            if let audioAsset { modelContext.insert(audioAsset) }
+            if let imageAsset { modelContext.insert(imageAsset) }
+            for (offset, word) in words.enumerated() {
+                modelContext.insert(PrototypeCardRecord(
+                    word: word,
+                    deckID: deck.id,
+                    position: cards.count + offset,
+                    pronunciationAudioAssetID: audioAsset?.id,
+                    illustrationImageAssetID: imageAsset?.id
+                ))
+            }
             try modelContext.save()
             try restoreCards()
             lastPersistenceError = nil
@@ -1196,40 +1319,82 @@ final class PrototypeStore {
                 lastPersistenceError = "بستهٔ واردشده پیدا نشد."
                 return false
             }
-
-            let deletedWordKeys = Set(cardsToDelete.map { $0.word.reviewIdentityKey })
-            let affectedDeckIDs = Set(cardsToDelete.map(\.deckID))
-            for card in cardsToDelete {
-                modelContext.delete(card)
-            }
-
-            let allReviews = try modelContext.fetch(FetchDescriptor<PrototypeReviewRecord>())
-            for review in allReviews where deletedWordKeys.contains(where: {
-                review.wordKey == $0 || review.wordKey.hasPrefix("\($0)::")
-            }) {
-                modelContext.delete(review)
-            }
-
-            let remainingDeckIDs = Set(
-                allCards.lazy
-                    .filter { $0.sourcePackage != fileName }
-                    .map(\.deckID)
-            )
-            let allDecks = try modelContext.fetch(FetchDescriptor<PrototypeDeckRecord>())
-            for deck in allDecks where affectedDeckIDs.contains(deck.id) && !remainingDeckIDs.contains(deck.id) {
-                modelContext.delete(deck)
-            }
-
-            try modelContext.save()
-            try restoreCards()
-            restorePersistedReviews()
-            lastPersistenceError = nil
-            return true
+            return try deleteCards(cardsToDelete, allCards: allCards)
         } catch {
             modelContext.rollback()
             lastPersistenceError = "حذف بسته انجام نشد: \(error.localizedDescription)"
             return false
         }
+    }
+
+    /// Removes selected cards as one transaction. Shared media is removed only
+    /// after the last card that references it has also been removed.
+    @discardableResult
+    func deleteCards(ids: Set<UUID>) -> Bool {
+        guard !ids.isEmpty else { return true }
+        do {
+            let allCards = try modelContext.fetch(FetchDescriptor<PrototypeCardRecord>())
+            let cardsToDelete = allCards.filter { ids.contains($0.id) }
+            guard cardsToDelete.count == ids.count else {
+                lastPersistenceError = "برخی از کارت‌های انتخاب‌شده دیگر وجود ندارند. فهرست را تازه کنید."
+                return false
+            }
+            return try deleteCards(cardsToDelete, allCards: allCards)
+        } catch {
+            modelContext.rollback()
+            lastPersistenceError = "حذف کارت انجام نشد: \(error.localizedDescription)"
+            return false
+        }
+    }
+
+    private func deleteCards(_ cardsToDelete: [PrototypeCardRecord], allCards: [PrototypeCardRecord]) throws -> Bool {
+        let deletedWordKeys = Set(cardsToDelete.map { $0.word.reviewIdentityKey })
+        let deletedCardIDs = Set(cardsToDelete.map(\.id))
+        let affectedDeckIDs = Set(cardsToDelete.map(\.deckID))
+        let candidateMediaAssetIDs = Set(cardsToDelete.flatMap { [$0.pronunciationAudioAssetID, $0.illustrationImageAssetID].compactMap { $0 } })
+        let remainingMediaAssetIDs = Set(allCards
+            .filter { !deletedCardIDs.contains($0.id) }
+            .flatMap { [$0.pronunciationAudioAssetID, $0.illustrationImageAssetID].compactMap { $0 } })
+
+        for card in cardsToDelete {
+            modelContext.delete(card)
+        }
+
+        let allReviews = try modelContext.fetch(FetchDescriptor<PrototypeReviewRecord>())
+        for review in allReviews where deletedWordKeys.contains(where: {
+            review.wordKey == $0 || review.wordKey.hasPrefix("\($0)::")
+        }) {
+            modelContext.delete(review)
+        }
+
+        let allSkillMasteries = try modelContext.fetch(FetchDescriptor<PrototypeSkillMasteryRecord>())
+        for mastery in allSkillMasteries where deletedCardIDs.contains(mastery.cardID) {
+            modelContext.delete(mastery)
+        }
+
+        let allLearningEvents = try modelContext.fetch(FetchDescriptor<PrototypeLearningEventRecord>())
+        for event in allLearningEvents where deletedCardIDs.contains(event.cardID) {
+            modelContext.delete(event)
+        }
+
+        if !candidateMediaAssetIDs.isEmpty {
+            let assets = try modelContext.fetch(FetchDescriptor<PrototypeMediaAssetRecord>())
+            for asset in assets where candidateMediaAssetIDs.contains(asset.id) && !remainingMediaAssetIDs.contains(asset.id) {
+                modelContext.delete(asset)
+            }
+        }
+
+        let remainingDeckIDs = Set(allCards.lazy.filter { !deletedCardIDs.contains($0.id) }.map(\.deckID))
+        let allDecks = try modelContext.fetch(FetchDescriptor<PrototypeDeckRecord>())
+        for deck in allDecks where affectedDeckIDs.contains(deck.id) && !remainingDeckIDs.contains(deck.id) {
+            modelContext.delete(deck)
+        }
+
+        try modelContext.save()
+        try restoreCards()
+        restorePersistedReviews()
+        lastPersistenceError = nil
+        return true
     }
 
     private func seedCardsIfNeeded() throws {
@@ -1269,7 +1434,7 @@ final class PrototypeStore {
             sortBy: [SortDescriptor(\.position), SortDescriptor(\.createdAt)]
         )
         let records = try modelContext.fetch(descriptor)
-        var reclassified = false
+        var requiresSave = false
         for record in records where record.sourcePackage != nil && PrototypeDomainClassifier.isGeneric(record.domain) {
             let inferred = PrototypeDomainClassifier.classify(
                 german: record.german,
@@ -1278,9 +1443,12 @@ final class PrototypeStore {
             )
             guard inferred != PrototypeDomainClassifier.general else { continue }
             record.domain = inferred
-            reclassified = true
+            requiresSave = true
         }
-        if reclassified { try modelContext.save() }
+        if try removeDanglingLearningReferences(liveCards: records) {
+            requiresSave = true
+        }
+        if requiresSave { try modelContext.save() }
         words = records.map(\.word)
         let grouped = Dictionary(grouping: records.compactMap { record in
             record.sourcePackage.map { ($0, record.id) }
@@ -1289,6 +1457,44 @@ final class PrototypeStore {
             PrototypeImportedPackage(fileName: fileName, cardCount: records.count)
         }
         .sorted { $0.fileName.localizedCaseInsensitiveCompare($1.fileName) == .orderedAscending }
+    }
+
+    /// Older builds removed imported cards without removing every record keyed
+    /// by their UUID. Repair those dangling references whenever the store is
+    /// restored, so a past incomplete deletion cannot affect later reviews.
+    private func removeDanglingLearningReferences(liveCards: [PrototypeCardRecord]) throws -> Bool {
+        let liveCardIDs = Set(liveCards.map(\.id))
+        var changed = false
+
+        let masteries = try modelContext.fetch(FetchDescriptor<PrototypeSkillMasteryRecord>())
+        for mastery in masteries where !liveCardIDs.contains(mastery.cardID) {
+            modelContext.delete(mastery)
+            changed = true
+        }
+
+        let events = try modelContext.fetch(FetchDescriptor<PrototypeLearningEventRecord>())
+        for event in events where !liveCardIDs.contains(event.cardID) {
+            modelContext.delete(event)
+            changed = true
+        }
+
+        let reviews = try modelContext.fetch(FetchDescriptor<PrototypeReviewRecord>())
+        for review in reviews {
+            guard let cardID = Self.cardID(in: review.wordKey), !liveCardIDs.contains(cardID) else { continue }
+            modelContext.delete(review)
+            changed = true
+        }
+        return changed
+    }
+
+    private static func cardID(in reviewKey: String) -> UUID? {
+        guard reviewKey.hasPrefix("card:") else { return nil }
+        let value = reviewKey
+            .dropFirst("card:".count)
+            .split(separator: ":", maxSplits: 1, omittingEmptySubsequences: false)
+            .first
+            .map(String.init)
+        return value.flatMap(UUID.init(uuidString:))
     }
 
     private func restorePersistedReviews() {
