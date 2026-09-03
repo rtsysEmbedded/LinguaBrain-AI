@@ -24,6 +24,16 @@ struct TodayPrototypeView: View {
     private var dueCount: Int { store.dueCount(in: activeWords) }
     private var weakCount: Int { store.weakCount(in: activeWords) }
 
+    private var activeMission: LearningMission {
+        LearningMission(
+            id: "today-domain",
+            title: selectedDomain == "همه حوزه‌ها" ? "General learning" : selectedDomain,
+            domain: selectedDomain == "همه حوزه‌ها" ? nil : selectedDomain,
+            targetLevel: nil,
+            weight: selectedDomain == "همه حوزه‌ها" ? 0.25 : 1.0
+        )
+    }
+
     private var newCardLimit: Int {
         let energyFactor = 0.45 + (energy / 12)
         let timeCapacity = Double(selectedTime) / 1.8
@@ -36,7 +46,7 @@ struct TodayPrototypeView: View {
                 objective: LearningObjective(id: "\(word.id.uuidString)::recognition", senseKey: word.reviewIdentityKey, skill: .recognition),
                 dueAt: store.dueDate(for: word),
                 mastery: store.mastery(for: word),
-                missionWeight: word.domain == "عمومی" ? 0 : 0.25
+                missionWeight: activeMission.domain == nil ? (word.domain == "عمومی" ? 0 : 0.25) : (word.domain == activeMission.domain ? activeMission.weight : 0)
             )
         }
         return AdaptiveLearningPlanner.makePlan(candidates: candidates, availableMinutes: selectedTime, energy: Int(energy), now: .now)
