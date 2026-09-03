@@ -26,7 +26,7 @@ struct TodayPrototypeView: View {
 
     private var missionForToday: LearningMission {
         if let mission = store.activeMission { return mission }
-        LearningMission(
+        return LearningMission(
             id: "today-domain",
             title: selectedDomain == "همه حوزه‌ها" ? "General learning" : selectedDomain,
             domain: selectedDomain == "همه حوزه‌ها" ? nil : selectedDomain,
