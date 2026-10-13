@@ -1362,7 +1362,7 @@ struct ConfiguredProviderClient: Sendable {
     }
 
     func extractImportantWords(from text: String, topic: String, languageTag: String, minimumLevel: String, model: String, apiKey: String) async throws -> [String] {
-        let candidateProperties: [String: Any] = ["surfaceForm": ["type": "string"], "lemma": ["type": "string"], "partOfSpeech": ["type": "string", "enum": ["noun", "verb", "adjective", "adverb", "fixedExpression"]], "estimatedLevel": ["type": "string", "enum": ["A1", "A2", "B1", "B2", "C1", "C2"]], "topicRelevance": ["type": "string", "enum": ["direct", "contextual"]], "confidence": ["type": "number", "minimum": 0, "maximum": 1], "reason": ["type": "string"]]
+        let candidateProperties: [String: Any] = ["surfaceForm": ["type": "string"], "lemma": ["type": "string"], "partOfSpeech": ["type": "string", "enum": ["noun", "verb", "adjective", "adverb", "fixedExpression"]], "estimatedLevel": ["type": "string", "enum": LearningContentRules.bundled.levels.cefr], "topicRelevance": ["type": "string", "enum": ["direct", "contextual"]], "confidence": ["type": "number", "minimum": 0, "maximum": 1], "reason": ["type": "string"]]
         let schema: [String: Any] = ["type": "object", "properties": ["candidates": ["type": "array", "minItems": 1, "maxItems": 8, "items": ["type": "object", "properties": candidateProperties, "required": ["surfaceForm", "lemma", "partOfSpeech", "estimatedLevel", "topicRelevance", "confidence", "reason"], "additionalProperties": false]]], "required": ["candidates"], "additionalProperties": false]
         let profile = ProviderCatalog.bundled.requests.extractImportantWords
         let instruction = PromptTemplate.render(AIPromptCatalog.bundled.templates.extractImportantWords, [
@@ -1381,7 +1381,7 @@ struct ConfiguredProviderClient: Sendable {
               let content = message["content"] as? String,
               let payload = try JSONSerialization.jsonObject(with: Data(content.utf8)) as? [String: Any],
               let candidates = payload["candidates"] as? [[String: Any]] else { throw ProviderError.invalidResponse }
-        let levels = ["A1", "A2", "B1", "B2", "C1", "C2"]
+        let levels = LearningContentRules.bundled.levels.cefr
         let minimumIndex = levels.firstIndex(of: minimumLevel) ?? 0
         let words = candidates.compactMap { candidate -> String? in
             guard let lemma = candidate["lemma"] as? String, let estimatedLevel = candidate["estimatedLevel"] as? String,
@@ -1394,7 +1394,7 @@ struct ConfiguredProviderClient: Sendable {
     }
 
     func normalizeVocabularyItem(_ surfaceForm: String, passage: String, languageTag: String, model: String, apiKey: String) async throws -> NormalizedVocabularyItem {
-        let schema: [String: Any] = ["type": "object", "properties": ["lemma": ["type": "string"], "actualLevel": ["type": "string", "enum": ["A1", "A2", "B1", "B2", "C1", "C2"]], "confidence": ["type": "number", "minimum": 0, "maximum": 1]], "required": ["lemma", "actualLevel", "confidence"], "additionalProperties": false]
+        let schema: [String: Any] = ["type": "object", "properties": ["lemma": ["type": "string"], "actualLevel": ["type": "string", "enum": LearningContentRules.bundled.levels.cefr], "confidence": ["type": "number", "minimum": 0, "maximum": 1]], "required": ["lemma", "actualLevel", "confidence"], "additionalProperties": false]
         let profile = ProviderCatalog.bundled.requests.normalizeVocabularyItem
         let instruction = PromptTemplate.render(AIPromptCatalog.bundled.templates.normalizeVocabularyItem, ["languageTag": languageTag])
         let userPayload = try JSONSerialization.data(withJSONObject: ["surfaceForm": surfaceForm, "passage": passage])

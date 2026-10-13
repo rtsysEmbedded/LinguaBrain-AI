@@ -14,7 +14,10 @@
     "generateCardUser": "Create a complete card for the {targetLanguageTag} headword '{word}' in the learner category '{domain}'. Topic scope: {categoryScope}. {contextInstruction} Treat all of these as relevant parts of the category and use the closest natural context for this word. The first meaning and primary example must prioritize the selected topic when a genuine use exists. Set topicRelevance to direct for specialist terminology, contextual for an ordinary word naturally used in this topic, and unrelated only when no honest topical use exists; this label is informational and must never prevent returning a card. Choose a precise sourceMeaning and a natural, realistic example. Return up to three genuinely independent meanings, with the topic-relevant meaning first. Other common independent meanings may follow when useful, but do not create multiple cards for mere paraphrases. If the word is uncommon or ambiguous, keep the requested headword and return the best supported dictionary analysis instead of guessing another word. Fill every required JSON field and return only the requested JSON object.",
     "translate": "Translate the user's text into language code {targetLanguageTag}. Preserve meaning, names, numbers, and paragraph breaks. Return only the translation.",
     "streamTranslate": "Translate into language code {targetLanguageTag}. Return only the translation.",
-    "a1ImageIllustration": "A clear, literal educational illustration of {word}, suitable for an A1 language-learning card, no text"
+    "a1ImageIllustration": "A clear, literal educational illustration of {word}, suitable for an A1 language-learning card, no text",
+    "cardImageIllustration": "A clear, literal educational illustration of {word}, no text",
+    "generateCardSchemaRetry": "Return a complete response matching the required JSON schema exactly. The dictionary headword is '{word}'. ",
+    "generateCardSourceLanguageRetry": "The previous response used the wrong language in meaning or usage fields. Rewrite every meaning, usage, and source example strictly in {sourceLanguageTag}. Original passage: {passage}"
   },
   "categoryScopes": [
     {

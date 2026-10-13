@@ -108,7 +108,8 @@
     "minimumConfidence": 0.8
   },
   "cardGeneration": {
-    "maximumPassageCharacters": 4000
+    "maximumPassageCharacters": 4000,
+    "minimumNormalizationConfidence": 0.8
   },
   "imageGeneration": {
     "size": "1024x1024",

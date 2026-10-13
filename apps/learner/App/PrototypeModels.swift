@@ -1008,7 +1008,7 @@ final class PrototypeStore {
         words.filter { reviewCount(for: $0) > 0 && isReviewable($0) }.count
     }
     var weakCount: Int {
-        words.filter { reviewCount(for: $0) > 0 && strength(for: $0) < 0.5 }.count
+        words.filter { reviewCount(for: $0) > 0 && strength(for: $0) < LearningContentRules.bundled.weakStrengthThreshold }.count
     }
     var totalReviews: Int { grades.values.reduce(0) { $0 + $1.count } }
     var averageStrength: Double {
@@ -1106,7 +1106,7 @@ final class PrototypeStore {
     }
 
     func weakCount(in words: [PrototypeWord]) -> Int {
-        words.filter { reviewCount(for: $0) > 0 && strength(for: $0) < 0.5 }.count
+        words.filter { reviewCount(for: $0) > 0 && strength(for: $0) < LearningContentRules.bundled.weakStrengthThreshold }.count
     }
 
     func averageStrength(in words: [PrototypeWord]) -> Double {

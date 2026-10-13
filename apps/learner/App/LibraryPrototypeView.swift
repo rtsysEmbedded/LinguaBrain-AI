@@ -71,7 +71,7 @@ struct LibraryPrototypeView: View {
             // defensively before applying a live search to imported data.
             guard seenIDs.insert(word.id).inserted else { return false }
             let matchesSearch = needle.isEmpty || normalizedSearchText(for: word.german).contains(needle) || normalizedSearchText(for: word.persian).contains(needle)
-            let matchesFilter = filter == "all" || (filter == "weak" && store.reviewCount(for: word) > 0 && store.strength(for: word) < 0.5) || filter == word.level || filter == word.domain
+            let matchesFilter = filter == "all" || (filter == "weak" && store.reviewCount(for: word) > 0 && store.strength(for: word) < LearningContentRules.bundled.weakStrengthThreshold) || filter == word.level || filter == word.domain
             return matchesSearch && matchesFilter
         }
     }
@@ -505,7 +505,7 @@ struct LibraryPrototypeView: View {
                     .font(.caption2).foregroundStyle(PrototypeTheme.accent)
                     ProgressView(value: store.strength(for: word))
                         .frame(width: 72)
-                        .tint(store.strength(for: word) < 0.5 ? .orange : PrototypeTheme.mint)
+                        .tint(store.strength(for: word) < LearningContentRules.bundled.weakStrengthThreshold ? .orange : PrototypeTheme.mint)
                 }
                 Image(systemName: "chevron.left").font(.caption).foregroundStyle(.tertiary)
             }

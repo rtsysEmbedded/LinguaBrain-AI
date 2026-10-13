@@ -6,7 +6,7 @@ The learner app reads provider settings and AI prompt text from the JSON files i
 | --- | --- | --- |
 | `provider-catalog.json` | `ProviderCatalog.bundled` | Default provider mode and protocol, endpoints, model identifiers, model lists, voices, request parameters, and Realtime transcription profiles. |
 | `ai-prompts.json` | `AIPromptCatalog.bundled` | Prompt templates sent to text and image providers, and topic scopes for card generation. |
-| `content-rules.json` | `LearningContentRules.bundled` | Default language pair and domain, stored deck names, generic domain names, part-of-speech markers, and topic-classification terms. |
+| `content-rules.json` | `LearningContentRules.bundled` | Default language pair and domain, stored deck names, generic domain names, part-of-speech markers, topic-classification terms, CEFR level lists, the weak-card threshold, skill-practice session limits, and the daily-plan coefficients. |
 | `seed-cards.json` | `SeedCardCatalog.bundled` | Built-in vocabulary seeded into an empty installation and the multilingual sample cards. |
 
 All files are bundled into the iOS and macOS app targets. The loader is `apps/learner/App/AppConfiguration.swift`.
@@ -16,7 +16,7 @@ All files are bundled into the iOS and macOS app targets. The loader is `apps/le
 - The files are decoded once, on first use.
 - A missing file, a malformed file, or a missing field stops the app with a diagnostic that names the file. There is deliberately no second, hardcoded copy of the values in code.
 - `schemaVersion` is currently `1`. Increase it when the structure changes incompatibly.
-- `AppConfigurationTests` in `apps/learner/Tests` verifies that both bundled files decode and that defaults are consistent.
+- `AppConfigurationTests` in `apps/learner/Tests` verifies that the bundled files decode, that defaults are consistent, and that the daily-plan formula reproduces reference values.
 
 ## Values that apply only to new installations
 
@@ -42,6 +42,7 @@ The defaults are used only when the learner has not saved a value yet. Values th
 | `requests.<operation>` | `timeoutSeconds`, `temperature`, and optional `maxTokens` per text operation. When `maxTokens` is absent, no `max_tokens` field is sent. |
 | `vocabularyExtraction.minimumConfidence` | Candidates with a lower model confidence are discarded. |
 | `cardGeneration.maximumPassageCharacters` | Maximum learner passage length included in a card-generation prompt. |
+| `cardGeneration.minimumNormalizationConfidence` | In the passage flow, a word whose dictionary form the model normalized with a lower confidence is not turned into a card. |
 | `imageGeneration` | Image `size`, image `count`, and `responseFormat`. |
 | `realtimeTranscription.connectionTimeoutSeconds` | Time allowed for the WebSocket to open. |
 | `realtimeTranscription.noiseReduction` | Input noise-reduction type sent in the session update. |
@@ -68,6 +69,9 @@ Templates use `{name}` placeholders. Rendering is single-pass: a substituted val
 | `generateCardUser` | `targetLanguageTag`, `word`, `domain`, `categoryScope`, `contextInstruction` |
 | `translate`, `streamTranslate` | `targetLanguageTag` |
 | `a1ImageIllustration` | `word` |
+| `cardImageIllustration` | `word` (batch and passage card images) |
+| `generateCardSchemaRetry` | `word`; the learner passage, if any, is appended after rendering |
+| `generateCardSourceLanguageRetry` | `sourceLanguageTag`, `passage` |
 
 The card-generation user message is assembled as:
 
@@ -90,6 +94,20 @@ The card-generation user message is assembled as:
 | `genericDomainNames` | Lower-cased domain names treated as "no topic"; such cards may be reclassified. |
 | `nounPartOfSpeechMarkers`, `verbPartOfSpeechMarkers` | Case-insensitive fragments that identify nouns (article practice) and verbs (odd-meaning practice) in a stored part of speech. |
 | `domainKeywords` | Ordered topic terms; the domain with the most matching terms in a card's text wins. |
+| `levels.cefr` | Ordered CEFR scale. Used to compare levels and as the allowed values in structured model output. |
+| `levels.cardGeneration`, `levels.cardGenerationDefault` | Minimum-level choices and default in the batch and passage flows of Add Word. |
+| `onboarding.levels`, `onboarding.defaultLevel` | Current-level choices and default in onboarding. A value that is not in `levels.cefr` is displayed with the localization key `onboarding.level.<value>`. |
+| `onboarding.missionKeys`, `onboarding.defaultMissionKey` | Localization keys of the learning goals offered in onboarding, and the preselected goal. |
+| `addWord.initialWord` | Word prefilled in the single-word field of Add Word. |
+| `addWord.defaultTopic` | Topic preselected for single-word and batch generation. |
+| `addWord.defaultExportFileName` | Package name used when the batch export name is empty; `.apkg` is appended. |
+| `weakStrengthThreshold` | A reviewed card whose memory strength is below this value counts as weak (Today, Library filter and tint). |
+| `skillPractice.cardLimitWithoutNewCardLimit` | Session size of the legacy skill practice when today's new-card limit is 0. |
+| `skillPractice.maximumCardLimit` | Upper bound of a legacy skill-practice session, and its size when no limit is passed. |
+| `dailyPlan.defaultEnergy`, `defaultAvailableMinutes`, `defaultMotivation` | Today check-in values before the learner answers. |
+| `dailyPlan.availableMinuteOptions` | Time choices in the Today check-in. |
+| `dailyPlan.*Factor*`, `minutesPerNewCard`, `modeFactors`, `maximumNewCards` | New cards per session = `min(maximumNewCards, round(minutes / minutesPerNewCard × (energyFactorBase + energy / energyFactorDivisor) × (motivationFactorBase + (motivation − 1) × motivationFactorStep) × modeFactor))`, then capped by the number of unreviewed cards. |
+| `dailyPlan.recoveryEnergyAtMost`, `challengeEnergyAtLeast` | Energy bounds for the recovery and challenge labels on Today. |
 
 **Stable identifiers.** `defaults`, `deckNames`, and `genericDomainNames` are compared with values already stored on learners' devices. Changing them after release orphans existing records or creates duplicate decks. The three `defaults` values are also mirrored by the SwiftData schema defaults of `PrototypeCardRecord` (`domain`, `sourceLanguageTag`, `targetLanguageTag`), which are needed for lightweight migration of older stores and must stay literal; keep both in sync and never change either after release.
 
@@ -105,10 +123,12 @@ The card-generation user message is assembled as:
 
 These values are part of code contracts rather than settings and stay in Swift:
 
-- JSON Schemas for structured model output, which must match the Swift decoding types.
+- JSON Schemas for structured model output, which must match the Swift decoding types. Their CEFR enumerations are read from `levels.cefr`.
 - Realtime and chat-completion protocol event names, field names, and the 24 kHz PCM input format.
 - Substring heuristics that classify fetched model identifiers into speech, transcript, and stream roles.
 - Persisted protocol identifiers (`openai-compatible`, `google-native`).
 - The SwiftData schema defaults of `PrototypeCardRecord` described above.
 - Language facts used as logic, such as treating Persian (`fa`) as right-to-left.
 - Format-specific import mappings, such as the field names of known Anki deck layouts.
+- Input scales that are part of stored data: daily energy 1–10 and motivation 1–5 (clamped by `PrototypeStore.saveDailyLearningState` and `DailyLearningState`).
+- FSRS-6 algorithm constants and numeric tolerances, which are defined by the scheduler specification rather than by product settings.

@@ -57,6 +57,46 @@ final class AppConfigurationTests: XCTestCase {
         )
     }
 
+    func testLevelListsAreConsistent() {
+        let levels = LearningContentRules.bundled.levels
+        XCTAssertEqual(levels.cefr, ["A1", "A2", "B1", "B2", "C1", "C2"])
+        XCTAssertTrue(Set(levels.cardGeneration).isSubset(of: levels.cefr))
+        XCTAssertTrue(levels.cardGeneration.contains(levels.cardGenerationDefault))
+        let onboarding = LearningContentRules.bundled.onboarding
+        XCTAssertTrue(onboarding.levels.contains(onboarding.defaultLevel))
+        XCTAssertTrue(onboarding.missionKeys.contains(onboarding.defaultMissionKey))
+        XCTAssertFalse(LearningContentRules.bundled.addWord.defaultExportFileName.isEmpty)
+        XCTAssertTrue(levels.meets("b2", minimum: "B1"))
+        XCTAssertFalse(levels.meets("A2", minimum: "B1"))
+        XCTAssertFalse(levels.meets("unknown", minimum: "A1"))
+    }
+
+    /// Reference values from the formula that was previously written inline
+    /// in `TodayPrototypeView`.
+    func testDailyPlanReproducesReferenceValues() {
+        let plan = LearningContentRules.bundled.dailyPlan
+        XCTAssertEqual(plan.newCardCount(energy: 6, availableMinutes: 20, motivation: 3, modeRawValue: "balanced"), 11)
+        XCTAssertEqual(plan.newCardCount(energy: 6, availableMinutes: 20, motivation: 3, modeRawValue: "lightReview"), 8)
+        XCTAssertEqual(plan.newCardCount(energy: 6, availableMinutes: 20, motivation: 3, modeRawValue: "challenge"), 13)
+        XCTAssertEqual(plan.newCardCount(energy: 6, availableMinutes: 20, motivation: 3, modeRawValue: "unknown"), 11)
+        XCTAssertEqual(plan.newCardCount(energy: 10, availableMinutes: 30, motivation: 5, modeRawValue: "challenge"), plan.maximumNewCards)
+        XCTAssertEqual(plan.newCardCount(energy: 1, availableMinutes: 5, motivation: 1, modeRawValue: "lightReview"), 1)
+        XCTAssertTrue(plan.availableMinuteOptions.contains(plan.defaultAvailableMinutes))
+        XCTAssertLessThan(plan.recoveryEnergyAtMost, plan.challengeEnergyAtLeast)
+    }
+
+    func testBatchGenerationPromptsRender() {
+        let templates = AIPromptCatalog.bundled.templates
+        XCTAssertEqual(
+            PromptTemplate.render(templates.cardImageIllustration, ["word": "das Haus"]),
+            "A clear, literal educational illustration of das Haus, no text"
+        )
+        XCTAssertTrue(PromptTemplate.render(templates.generateCardSchemaRetry, ["word": "Haus"]).contains("'Haus'"))
+        let retry = PromptTemplate.render(templates.generateCardSourceLanguageRetry, ["sourceLanguageTag": "fa", "passage": "{x}"])
+        XCTAssertTrue(retry.contains("strictly in fa."))
+        XCTAssertTrue(retry.hasSuffix("Original passage: {x}"))
+    }
+
     func testTemplateRenderingIsSinglePass() {
         XCTAssertEqual(PromptTemplate.render("{a} and {b}", ["a": "{b}", "b": "x"]), "{b} and x")
         XCTAssertEqual(PromptTemplate.render("keep {unknown}", [:]), "keep {unknown}")

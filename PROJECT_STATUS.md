@@ -1,7 +1,7 @@
 ---
 title: Project Status and Delivery Checklist
 document_id: LB-STATUS
-version: 0.4.24
+version: 0.4.25
 status: Active
 last_updated: 2026-10-13
 ---
@@ -174,6 +174,11 @@ claim final Feature 004 completion or physical-device/provider coverage.
 - Feature 004 update (2026-09-08): T015 and T028 are verified complete. Writing UI tests pass on iPhone 17 Simulator. Pronunciation research reached a valid negative capability decision, so no numeric speaking score is enabled and T030–T032 remain open pending an approved audio-based provider and physical-device benchmark.
 - Feature 004 update (2026-09-08): T021–T026 and T023 are now verified. Grammar uses a canonical-rule evaluator boundary; listening requires exact sentence revision plus audio checksum and hides transcript/translation until feedback or reveal. Apple sentence playback builds on iOS Simulator. T027 and T029 remain open for complete audio QA; T030–T032 remain blocked by the unapproved pronunciation provider/device benchmark.
 - Feature 004 gate audit (2026-09-08): macOS Debug, localization parity, and diff checks pass after the Apple playback/recorder work. T027 and T029 remain evidence-gated by real licensed audio and physical-device recording QA. T030–T032 remain capability-gated by the approved negative pronunciation-provider decision; consequently T033–T036 cannot yet be truthfully closed.
+
+#### Updates — 2026-10-13
+
+- Feature 004 T033 remains open. Phase A1 (package layer) of the [T033 integration design](specs/004-adaptive-skill-practice/T033-integration-design.md) is implemented: card-based writing and listening retrieval, per-skill capability gate, skill-routed evaluator, and read-only progress from persisted projections, with 10 new tests. A session-scope defect that prevented a completed review unit from being practised again was fixed. The package suite passes on the Linux Swift 6.4.1 harness (204 tests); no Xcode 27 run has been made for these changes. Phase A2 (app wiring) has not started; design decision 5 and the listening-material question (design Section 7.3) are open.
+- Audit finding C5: remaining prompts, level lists, thresholds, and daily-plan coefficients moved to `Resources/Configuration`. The learner profile (level, goal, daily goal, audio speed) is recorded as not implemented; Settings and onboarding show placeholders.
 
 ## M0 — Implementation preparation
 
@@ -361,6 +366,7 @@ Complete these actions with every milestone or architectural change:
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 0.4.25 | 2026-10-13 | Recorded Feature 004 T033 Phase A1 (package layer) and the session-scope fix; recorded audit finding C5 and the learner-profile gap. T033 stays open. |
 | 0.4.24 | 2026-10-13 | Recorded the 2026-10-13 project audit, stopped tracking the unreferenced 95.7 MiB third-party deck, corrected stale remote/package facts, moved Feature 004 progress notes into the snapshot section, and ordered this table by date. |
 | 0.4.23 | 2026-09-06 | Completed Feature 004 T012 with the versioned writing-evaluation rubric, 13 synthetic fixtures, six offline validation tests, malformed/uncertain safety checks, and iOS/macOS Debug build evidence; T013 remains open. |
 | 0.4.22 | 2026-09-06 | Completed Feature 004 T011 with rendered-surface state smoke, independent answer-language direction, localized accessibility labels/hints/values, fa/en/de catalog validation, large-text/narrow-width simulator evidence, and documented VoiceOver/device limits; T012 remained open. |

@@ -1,4 +1,5 @@
 import Foundation
+import LinguaBrainApplication
 
 /// Loads editable configuration files bundled from `Resources/Configuration`.
 ///
@@ -87,6 +88,9 @@ struct ProviderCatalog: Decodable, Sendable {
 
     struct CardGeneration: Decodable, Sendable {
         let maximumPassageCharacters: Int
+        /// A passage word whose dictionary form the model normalized with a
+        /// lower confidence is not turned into a card.
+        let minimumNormalizationConfidence: Double
     }
 
     struct ImageGeneration: Decodable, Sendable {
@@ -165,6 +169,9 @@ struct AIPromptCatalog: Decodable, Sendable {
         let translate: String
         let streamTranslate: String
         let a1ImageIllustration: String
+        let cardImageIllustration: String
+        let generateCardSchemaRetry: String
+        let generateCardSourceLanguageRetry: String
     }
 
     /// A topic scope applies when the folded domain equals one of `equals`
@@ -216,6 +223,87 @@ struct LearningContentRules: Decodable, Sendable {
         let terms: [String]
     }
 
+    struct Levels: Decodable, Sendable {
+        /// Ordered CEFR scale used for level comparisons and model output.
+        let cefr: [String]
+        /// Minimum levels offered for card generation from words or a passage.
+        let cardGeneration: [String]
+        let cardGenerationDefault: String
+
+        /// Whether `actual` is at or above `minimum` on the CEFR scale.
+        /// Unknown levels never qualify.
+        func meets(_ actual: String, minimum: String) -> Bool {
+            guard let actualIndex = cefr.firstIndex(of: actual.uppercased()),
+                  let minimumIndex = cefr.firstIndex(of: minimum.uppercased()) else { return false }
+            return actualIndex >= minimumIndex
+        }
+    }
+
+    /// Inputs and coefficients of Today's daily plan. The input scales
+    /// (energy 1–10, motivation 1–5) are part of the stored daily state and
+    /// stay in code.
+    struct DailyPlan: Decodable, Sendable {
+        struct ModeFactors: Decodable, Sendable {
+            let lightReview: Double
+            let balanced: Double
+            let challenge: Double
+        }
+
+        let defaultEnergy: Double
+        let defaultAvailableMinutes: Int
+        let defaultMotivation: Int
+        let availableMinuteOptions: [Int]
+        let minutesPerNewCard: Double
+        let energyFactorBase: Double
+        let energyFactorDivisor: Double
+        let motivationFactorBase: Double
+        let motivationFactorStep: Double
+        let modeFactors: ModeFactors
+        let maximumNewCards: Int
+        /// Energy at or below this value selects the recovery mode label.
+        let recoveryEnergyAtMost: Double
+        /// Energy at or above this value selects the challenge mode label.
+        let challengeEnergyAtLeast: Double
+
+        /// New cards suggested for one session, before the unreviewed-card cap.
+        func newCardCount(energy: Double, availableMinutes: Int, motivation: Int, modeRawValue: String) -> Int {
+            let energyFactor = energyFactorBase + (energy / energyFactorDivisor)
+            let timeCapacity = Double(availableMinutes) / minutesPerNewCard
+            let motivationFactor = motivationFactorBase + (Double(motivation - 1) * motivationFactorStep)
+            let modeFactor = switch LearningSessionMode(rawValue: modeRawValue) {
+            case .lightReview: modeFactors.lightReview
+            case .challenge: modeFactors.challenge
+            case .balanced, nil: modeFactors.balanced
+            }
+            return max(0, min(maximumNewCards, Int((timeCapacity * energyFactor * motivationFactor * modeFactor).rounded())))
+        }
+    }
+
+    struct Onboarding: Decodable, Sendable {
+        /// Current-level choices. Values outside `levels.cefr` are shown with
+        /// the localization key `onboarding.level.<value>`.
+        let levels: [String]
+        let defaultLevel: String
+        /// Localization keys of the learning goals.
+        let missionKeys: [String]
+        let defaultMissionKey: String
+    }
+
+    struct AddWord: Decodable, Sendable {
+        /// Word prefilled in the single-word field.
+        let initialWord: String
+        /// Topic preselected for single-word and batch generation.
+        let defaultTopic: String
+        /// Package name used when the export name field is empty (without `.apkg`).
+        let defaultExportFileName: String
+    }
+
+    struct SkillPractice: Decodable, Sendable {
+        /// Session size when the daily new-card limit is 0 (unlimited).
+        let cardLimitWithoutNewCardLimit: Int
+        let maximumCardLimit: Int
+    }
+
     let schemaVersion: Int
     let defaults: Defaults
     let deckNames: DeckNames
@@ -224,6 +312,13 @@ struct LearningContentRules: Decodable, Sendable {
     let nounPartOfSpeechMarkers: [String]
     let verbPartOfSpeechMarkers: [String]
     let domainKeywords: [DomainKeywords]
+    let levels: Levels
+    let onboarding: Onboarding
+    let addWord: AddWord
+    /// A reviewed card whose memory strength is below this value is weak.
+    let weakStrengthThreshold: Double
+    let skillPractice: SkillPractice
+    let dailyPlan: DailyPlan
 
     static let bundled = AppConfigurationResource.load(LearningContentRules.self, named: "content-rules")
 }

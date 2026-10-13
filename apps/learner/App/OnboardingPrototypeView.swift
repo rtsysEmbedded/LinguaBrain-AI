@@ -1,15 +1,11 @@
 import SwiftUI
 
 struct OnboardingPrototypeView: View {
-    private static let beginnerLevel = "beginner"
-    private static let levels = [beginnerLevel, "A1", "A2", "B1", "B2"]
-    private static let missionKeys = [
-        "onboarding.mission.everyday", "onboarding.mission.work", "onboarding.mission.goethe", "onboarding.mission.travel"
-    ]
+    private static let rules = LearningContentRules.bundled
 
     @Environment(PrototypeLocalization.self) private var localization
-    @State private var level = "B1"
-    @State private var mission = "onboarding.mission.work"
+    @State private var level = LearningContentRules.bundled.onboarding.defaultLevel
+    @State private var mission = LearningContentRules.bundled.onboarding.defaultMissionKey
 
     var body: some View {
         ScrollView {
@@ -37,12 +33,12 @@ struct OnboardingPrototypeView: View {
                         LabeledContent(localization.text(.explanationLanguage), value: PrototypeAppLanguage.persian.nativeName)
                         LabeledContent(localization.text(.learningLanguage), value: PrototypeAppLanguage.german.nativeName)
                         Picker(localization.text(.currentLevel), selection: $level) {
-                            ForEach(Self.levels, id: \.self) { level in
-                                Text(level == Self.beginnerLevel ? localization.localized("onboarding.level.beginner") : level)
+                            ForEach(Self.rules.onboarding.levels, id: \.self) { level in
+                                Text(Self.rules.levels.cefr.contains(level) ? level : localization.localized("onboarding.level.\(level)"))
                             }
                         }
                         Picker(localization.localized("onboarding.goal"), selection: $mission) {
-                            ForEach(Self.missionKeys, id: \.self) { Text(localization.localized($0)) }
+                            ForEach(Self.rules.onboarding.missionKeys, id: \.self) { Text(localization.localized($0)) }
                         }
                     }
                 }

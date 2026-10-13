@@ -814,7 +814,7 @@ struct SkillPracticeView: View {
                     .font(.headline)
                     .foregroundStyle(PrototypeTheme.accent)
                 Spacer()
-                Text("\(queue.count + 1) / \(max(queue.count + 1, cardLimit ?? 10))")
+                Text("\(queue.count + 1) / \(max(queue.count + 1, cardLimit ?? LearningContentRules.bundled.skillPractice.maximumCardLimit))")
                     .font(.subheadline.monospacedDigit().weight(.semibold))
                     .foregroundStyle(.secondary)
             }
@@ -1059,7 +1059,7 @@ struct SkillPracticeView: View {
             if (leftDue <= now) != (rightDue <= now) { return leftDue <= now }
             return lhs.id.uuidString < rhs.id.uuidString
         }
-        let limit = max(1, cardLimit ?? 10)
+        let limit = max(1, cardLimit ?? LearningContentRules.bundled.skillPractice.maximumCardLimit)
         queue = Array(sorted.prefix(limit)).map(\.id)
         started = true
         completed = queue.isEmpty

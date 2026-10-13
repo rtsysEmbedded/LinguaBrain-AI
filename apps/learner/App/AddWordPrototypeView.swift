@@ -23,8 +23,8 @@ struct AddWordPrototypeView: View {
     @Environment(PrototypeAISettings.self) private var aiSettings
     @Environment(PrototypeLocalization.self) private var localization
     @Environment(PrototypeLanguageSettings.self) private var languageSettings
-    @State private var word = "arbeiten"
-    @State private var domain = "general"
+    @State private var word = LearningContentRules.bundled.addWord.initialWord
+    @State private var domain = LearningContentRules.bundled.addWord.defaultTopic
     @State private var showPreview = true
     @State private var isImporterPresented = false
     @State private var isInspectingPackage = false
@@ -47,10 +47,10 @@ struct AddWordPrototypeView: View {
     @State private var contextCandidateText = ""
     @State private var isTranslatingContext = false
     @FocusState private var contextFieldFocused: Bool
-    @State private var batchTopic = "general"
+    @State private var batchTopic = LearningContentRules.bundled.addWord.defaultTopic
     @State private var availableDomains = PrototypeDomainCatalog.customDomains
-    @State private var batchLevel = "B1"
-    @State private var batchOutputName = "linguabrain-cards"
+    @State private var batchLevel = LearningContentRules.bundled.levels.cardGenerationDefault
+    @State private var batchOutputName = LearningContentRules.bundled.addWord.defaultExportFileName
     // Batch input is normally the language being learned (for example German),
     // while the picker is the language the user wants as the translation.
     // Keeping those roles separate prevents a German input + Persian translation
@@ -363,7 +363,7 @@ struct AddWordPrototypeView: View {
                     .buttonStyle(.bordered)
                 }
                 Picker(contextCopy(.level), selection: $batchLevel) {
-                    ForEach(["A1", "A2", "B1", "B2", "C1"], id: \.self) { Text($0).tag($0) }
+                    ForEach(LearningContentRules.bundled.levels.cardGeneration, id: \.self) { Text($0).tag($0) }
                 }.pickerStyle(.menu)
                 HStack {
                     Picker(batchCopy(.inputLanguage), selection: $batchInputLanguage) {
@@ -452,7 +452,7 @@ struct AddWordPrototypeView: View {
                     ForEach(availableDomains, id: \.self) { Text($0).tag($0) }
                 }.pickerStyle(.menu)
                 Picker(contextCopy(.level), selection: $batchLevel) {
-                    ForEach(["A1", "A2", "B1", "B2", "C1"], id: \.self) { Text($0).tag($0) }
+                    ForEach(LearningContentRules.bundled.levels.cardGeneration, id: \.self) { Text($0).tag($0) }
                 }.pickerStyle(.menu)
                 HStack {
                     Picker(contextCopy(.inputLanguage), selection: $batchInputLanguage) {
@@ -556,7 +556,7 @@ struct AddWordPrototypeView: View {
 
     private var normalizedOutputName: String {
         let trimmed = batchOutputName.trimmingCharacters(in: .whitespacesAndNewlines)
-        let base = trimmed.isEmpty ? "linguabrain-cards" : trimmed
+        let base = trimmed.isEmpty ? LearningContentRules.bundled.addWord.defaultExportFileName : trimmed
         return base.lowercased().hasSuffix(".apkg") ? base : "\(base).apkg"
     }
 
@@ -624,7 +624,7 @@ struct AddWordPrototypeView: View {
                         let generationInput: String
                         if addSection == .contextText {
                             let normalized = try await textGateway.normalizeVocabularyItem(input, passage: contextText, languageTag: batchInputLanguage, model: aiSettings.modelID)
-                            guard normalized.confidence >= 0.8 else { throw BatchGenerationError.normalizationUncertain }
+                            guard normalized.confidence >= ProviderCatalog.bundled.cardGeneration.minimumNormalizationConfidence else { throw BatchGenerationError.normalizationUncertain }
                             guard meetsMinimumLevel(normalized.actualLevel, minimum: batchLevel) else {
                                 throw BatchGenerationError.belowMinimum(actual: normalized.actualLevel, minimum: batchLevel)
                             }
@@ -640,7 +640,9 @@ struct AddWordPrototypeView: View {
                                 model: aiSettings.modelID,
                                 sourceLanguageTag: batchTranslationLanguage,
                                 targetLanguageTag: batchInputLanguage,
-                                context: "The previous response used the wrong language in meaning or usage fields. Rewrite every meaning, usage, and source example strictly in \(batchTranslationLanguage). Original passage: \(contextText)",
+                                context: PromptTemplate.render(AIPromptCatalog.bundled.templates.generateCardSourceLanguageRetry, [
+                                    "sourceLanguageTag": batchTranslationLanguage, "passage": contextText
+                                ]),
                                 level: batchLevel
                             )
                         }
@@ -666,7 +668,7 @@ struct AddWordPrototypeView: View {
                         let image: Data?
                         if let imageGateway {
                             image = try? await imageGateway.generateImage(
-                                prompt: "A clear, literal educational illustration of \(draft.targetText), no text",
+                                prompt: PromptTemplate.render(AIPromptCatalog.bundled.templates.cardImageIllustration, ["word": draft.targetText]),
                                 model: aiSettings.imageModelID
                             )
                         } else {
@@ -720,16 +722,13 @@ struct AddWordPrototypeView: View {
         do {
             return try await gateway.generateCard(word: word, domain: batchTopic, model: aiSettings.modelID, sourceLanguageTag: batchTranslationLanguage, targetLanguageTag: batchInputLanguage, context: suppliedContext, level: batchLevel)
         } catch ProviderError.invalidResponse {
-            let retryContext = "Return a complete response matching the required JSON schema exactly. The dictionary headword is '\(word)'. " + (suppliedContext ?? "")
+            let retryContext = PromptTemplate.render(AIPromptCatalog.bundled.templates.generateCardSchemaRetry, ["word": word]) + (suppliedContext ?? "")
             return try await gateway.generateCard(word: word, domain: batchTopic, model: aiSettings.modelID, sourceLanguageTag: batchTranslationLanguage, targetLanguageTag: batchInputLanguage, context: retryContext, level: batchLevel)
         }
     }
 
     private func meetsMinimumLevel(_ actual: String, minimum: String) -> Bool {
-        let levels = ["A1", "A2", "B1", "B2", "C1", "C2"]
-        guard let actualIndex = levels.firstIndex(of: actual.uppercased()),
-              let minimumIndex = levels.firstIndex(of: minimum.uppercased()) else { return false }
-        return actualIndex >= minimumIndex
+        LearningContentRules.bundled.levels.meets(actual, minimum: minimum)
     }
 
     private enum BatchGenerationError: Error {

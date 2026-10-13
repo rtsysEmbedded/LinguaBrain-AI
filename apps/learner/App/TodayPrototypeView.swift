@@ -11,9 +11,9 @@ struct TodayPrototypeView: View {
     @Environment(PrototypeStore.self) private var store
     @Environment(PrototypeLocalization.self) private var localization
     @Environment(PrototypeLanguageSettings.self) private var languageSettings
-    @State private var energy = 6.0
-    @State private var selectedTime = 20
-    @State private var motivation = 3
+    @State private var energy = LearningContentRules.bundled.dailyPlan.defaultEnergy
+    @State private var selectedTime = LearningContentRules.bundled.dailyPlan.defaultAvailableMinutes
+    @State private var motivation = LearningContentRules.bundled.dailyPlan.defaultMotivation
     @State private var selectedMode = LearningSessionMode.balanced.rawValue
     @State private var selectedDomain = Self.allDomains
     @State private var customDomains = PrototypeDomainCatalog.customDomains
@@ -22,7 +22,7 @@ struct TodayPrototypeView: View {
 
     /// Picker tag for "all topics"; never stored as a learner domain.
     private static let allDomains = "today.domain.all"
-    private static let availableMinuteOptions = [5, 10, 20, 30]
+    private static let availableMinuteOptions = LearningContentRules.bundled.dailyPlan.availableMinuteOptions
 
     init(practiceComposition: PracticeComposition? = nil) {
         self.practiceComposition = practiceComposition
@@ -42,20 +42,24 @@ struct TodayPrototypeView: View {
     private var weakCount: Int { store.weakCount(in: activeWords) }
 
     private var newCardLimit: Int {
-        let energyFactor = 0.45 + (energy / 12)
-        let timeCapacity = Double(selectedTime) / 1.8
-        let motivationFactor = 0.82 + (Double(motivation - 1) * 0.10)
-        let modeFactor: Double = switch selectedMode {
-        case LearningSessionMode.lightReview.rawValue: 0.70
-        case LearningSessionMode.challenge.rawValue: 1.25
-        default: 1.0
-        }
-        return min(unreviewedCount, max(0, min(20, Int((timeCapacity * energyFactor * motivationFactor * modeFactor).rounded()))))
+        min(unreviewedCount, LearningContentRules.bundled.dailyPlan.newCardCount(
+            energy: energy,
+            availableMinutes: selectedTime,
+            motivation: motivation,
+            modeRawValue: selectedMode
+        ))
+    }
+
+    /// Skill-practice session size derived from today's new-card limit.
+    private var skillPracticeCardLimit: Int {
+        let rules = LearningContentRules.bundled.skillPractice
+        return max(1, min(newCardLimit == 0 ? rules.cardLimitWithoutNewCardLimit : newCardLimit, rules.maximumCardLimit))
     }
 
     private var learningMode: String {
-        if energy <= 3 { return localization.localized("today.mode.recovery") }
-        if energy >= 8 { return localization.localized("today.mode.challenge") }
+        let plan = LearningContentRules.bundled.dailyPlan
+        if energy <= plan.recoveryEnergyAtMost { return localization.localized("today.mode.recovery") }
+        if energy >= plan.challengeEnergyAtLeast { return localization.localized("today.mode.challenge") }
         return localization.localized("today.mode.growth")
     }
 
@@ -265,7 +269,7 @@ struct TodayPrototypeView: View {
                                 composition: practiceComposition,
                                 exercise: nil
                             ) {
-                                SkillPracticeView(practiceMode: practiceMode, cardLimit: max(1, min(newCardLimit == 0 ? 5 : newCardLimit, 10)))
+                                SkillPracticeView(practiceMode: practiceMode, cardLimit: skillPracticeCardLimit)
                             }
                         } label: {
                             HStack(spacing: 12) {
