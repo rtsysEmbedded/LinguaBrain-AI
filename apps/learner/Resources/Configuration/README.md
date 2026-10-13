@@ -39,7 +39,7 @@ The defaults are used only when the learner has not saved a value yet. Values th
 | `hostMarkers.googleTextToSpeech` | Host fragment of a stale Google audio endpoint that is repaired for OpenAI-compatible audio. |
 | `hostMarkers.legacyGoogleVoice` | Voice-name fragment of a stale Google voice that is replaced by the OpenAI-compatible default. |
 | `hostMarkers.replacedTextEndpoints` | Host fragments of stored text endpoints that are replaced with `endpoints.text` at launch. See audit finding A3 in `docs/PROJECT_AUDIT_2026-10-13.md`; an empty list disables the replacement. |
-| `requests.<operation>` | `timeoutSeconds`, `temperature`, and optional `maxTokens` per text operation. When `maxTokens` is absent, no `max_tokens` field is sent. |
+| `requests.<operation>` | `timeoutSeconds`, `temperature`, and optional `maxTokens` per text operation. When `maxTokens` is absent, no `max_tokens` field is sent. `practiceEvaluation` applies to writing, grammar, and listening evaluation. |
 | `vocabularyExtraction.minimumConfidence` | Candidates with a lower model confidence are discarded. |
 | `cardGeneration.maximumPassageCharacters` | Maximum learner passage length included in a card-generation prompt. |
 | `cardGeneration.minimumNormalizationConfidence` | In the passage flow, a word whose dictionary form the model normalized with a lower confidence is not turned into a card. |
@@ -72,6 +72,9 @@ Templates use `{name}` placeholders. Rendering is single-pass: a substituted val
 | `cardImageIllustration` | `word` (batch and passage card images) |
 | `generateCardSchemaRetry` | `word`; the learner passage, if any, is appended after rendering |
 | `generateCardSourceLanguageRetry` | `sourceLanguageTag`, `passage` |
+| `practiceWritingEvaluation` | `ruleIDs` (the rule IDs the writing decoder accepts). System message for writing evaluation; the user message is the JSON `WritingEvaluationRequest`. |
+| `practiceGrammarEvaluation` | — System message for grammar evaluation; the user message is JSON with the prompt, the learner's explanation, the rule, and the reviewed reference. |
+| `practiceListeningEvaluation` | — System message for listening evaluation; the user message is JSON with the sentence, its reviewed translation, and the learner's response. |
 
 The card-generation user message is assembled as:
 

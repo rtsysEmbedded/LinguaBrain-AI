@@ -172,3 +172,16 @@ Option 1 meets the contract; it is a decision for the Product Owner before Phase
 
 Grammar stays unavailable (`noReviewedGrammarContent`) until reviewed templates exist (Phase C). Speaking stays unavailable (`pronunciationNotValidated`).
 
+### 7.5 Phase B — graded evaluation
+
+| Area | Implementation |
+| --- | --- |
+| Settings and consent | `SettingsBackedPracticeEvaluator` copies the Text provider settings on the main actor for every evaluation (`PracticeEvaluationEnvironment`). Without a provider, an OpenAI-compatible protocol, a key (cloud), or cloud consent, the answer stays saved and the result is `unavailable(providerUnavailable)`; no request is made. The capability notice uses the same rule (`PracticeEvaluationEnvironment.state`). |
+| Writing | `WritingEvaluationProvider` now sends the configured system prompt (`practiceWritingEvaluation`), the JSON `WritingEvaluationRequest` with the card's target word, part of speech, level, and meaning (`CardWritingContextResolver`), and a strict `json_schema` response format whose `enum` values fix the schema, rubric, validator, and evaluator versions, the rule IDs, the explanation language, and the provider and model. Previously the request hardcoded level `A1`, part of speech `other`, and the target word as context, and gave no output format. |
+| Grammar | `ChatGrammarEvaluationTransport` with `practiceGrammarEvaluation`; the response schema fixes the rule code. `GrammarEvaluationProvider` now resolves the rule and the reviewed reference through `GrammarEvaluationContextResolving` (it previously looked the rule up by the unit's objective key, which differs from the rule code) and records the real provider and model in provenance. |
+| Listening | `ChatListeningEvaluationTransport` with `practiceListeningEvaluation`; `RepositoryListeningContextResolver` loads the exact sentence revision from GRDB and recomputes the playback checksum (`AppleSentencePlayback.checksum`). |
+| Request profile | `provider-catalog.json` `requests.practiceEvaluation` (timeout, temperature). |
+| Tests | Package: `ChatPracticeEvaluationTests` (4 tests: request content, pinned schema, error mapping, grammar reference, listening revision). App: `SkillPracticeRoutingTests` (no-provider result, graded skills). |
+
+Not verified: a live call to a provider. The schema uses `type` arrays with `null` and `enum`, which OpenAI structured outputs accept in strict mode; other OpenAI-compatible servers may not support `json_schema` and will then return an error that is shown as ungraded.
+

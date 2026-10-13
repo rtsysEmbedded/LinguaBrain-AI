@@ -1,7 +1,7 @@
 ---
 title: Project Status and Delivery Checklist
 document_id: LB-STATUS
-version: 0.4.28
+version: 0.4.29
 status: Active
 last_updated: 2026-10-13
 ---
@@ -180,6 +180,7 @@ claim final Feature 004 completion or physical-device/provider coverage.
 - Feature 004 T033 remains open. Phase A1 (package layer) of the [T033 integration design](specs/004-adaptive-skill-practice/T033-integration-design.md) is implemented: card-based writing and listening retrieval, per-skill capability gate, skill-routed evaluator, and read-only progress from persisted projections, with 10 new tests. A session-scope defect that prevented a completed review unit from being practised again was fixed. The package suite passes on the Linux Swift 6.4.1 harness (204 tests); no Xcode 27 run has been made for these changes. Phase A2 (app wiring) has not started; design decision 5 and the listening-material question (design Section 7.3) are open.
 - Audit item 1 (A1, A3–A6, B1–B4) fixed: valid `.specify/extensions.yml`; stored OpenRouter endpoints are kept; no Darwin type in the Application layer; lock-based export cancellation; real MP3/JPEG fixtures; orphaned tests moved into compiled targets; `.gitignore` no longer hides Xcode project files; package platforms iOS/macOS 27. Reopened Feature 003 T025 and Feature 002 T035, whose only deliverables were placeholder or uncompiled tests. The package suite passes on the Linux harness (236 tests).
 - Audit finding C5: remaining prompts, level lists, thresholds, and daily-plan coefficients moved to `Resources/Configuration`.
+- Feature 004 T033 Phase B: writing, grammar, and listening answers are graded by the configured Text provider when Settings and consent allow; otherwise they are saved as ungraded. Not verified against a live provider.
 - Feature 004 T033 Phase A2: Today's skill rows open the Feature 004 writing and listening views built from the learner's own cards; grammar and speaking show explicit unavailable reasons; Today recommends the weakest evidenced skill; Progress reads GRDB evidence per language pair. The legacy `SkillPracticeView` was removed. T033 stays open (grammar content review, Xcode 27 build, device QA).
 - Learner profile implemented (level, goal, target level, daily goal, playback speed, onboarding). Remaining Settings placeholders are listed in the audit (Section 3). Cards now record whether their content was reviewed; listening practice will use only reviewed examples.
 
@@ -369,6 +370,7 @@ Complete these actions with every milestone or architectural change:
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 0.4.29 | 2026-10-13 | Recorded Feature 004 T033 Phase B (provider-backed, consent-gated evaluation). |
 | 0.4.28 | 2026-10-13 | Recorded Feature 004 T033 Phase A2 (app wiring); T033 stays open. |
 | 0.4.27 | 2026-10-13 | Recorded the reviewed-content marker for cards and the persisted learner profile. |
 | 0.4.26 | 2026-10-13 | Recorded the audit item 1 fixes and reopened Feature 003 T025 and Feature 002 T035 (placeholder or uncompiled test deliverables). |

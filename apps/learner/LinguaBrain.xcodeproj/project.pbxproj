@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		CB0000000000000000000014 /* PracticeEvaluation.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB0000000000000000000012 /* PracticeEvaluation.swift */; };
+		CB0000000000000000000013 /* PracticeEvaluation.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB0000000000000000000012 /* PracticeEvaluation.swift */; };
 		CB0000000000000000000011 /* SkillPracticeRoutingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB0000000000000000000010 /* SkillPracticeRoutingTests.swift */; };
 		CB000000000000000000000F /* SkillPracticeEntryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB000000000000000000000D /* SkillPracticeEntryView.swift */; };
 		CB000000000000000000000E /* SkillPracticeEntryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB000000000000000000000D /* SkillPracticeEntryView.swift */; };
@@ -125,6 +127,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		CB0000000000000000000012 /* PracticeEvaluation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PracticeEvaluation.swift; sourceTree = "<group>"; };
 		CB0000000000000000000010 /* SkillPracticeRoutingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SkillPracticeRoutingTests.swift; sourceTree = "<group>"; };
 		CB000000000000000000000D /* SkillPracticeEntryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SkillPracticeEntryView.swift; sourceTree = "<group>"; };
 		CB000000000000000000000A /* PracticeContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PracticeContent.swift; sourceTree = "<group>"; };
@@ -263,6 +266,7 @@
 		DEADBEEF0000000000000050 /* Practice */ = {
 			isa = PBXGroup;
 			children = (
+				CB0000000000000000000012 /* PracticeEvaluation.swift */,
 				CB000000000000000000000D /* SkillPracticeEntryView.swift */,
 				CB000000000000000000000A /* PracticeContent.swift */,
 				DEADBEEF0000000000000059 /* Shared */,
@@ -573,6 +577,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				CB0000000000000000000013 /* PracticeEvaluation.swift in Sources */,
 				CB000000000000000000000E /* SkillPracticeEntryView.swift in Sources */,
 				CB000000000000000000000B /* PracticeContent.swift in Sources */,
 				CB0000000000000000000006 /* LearnerProfile.swift in Sources */,
@@ -611,6 +616,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				CB0000000000000000000014 /* PracticeEvaluation.swift in Sources */,
 				CB000000000000000000000F /* SkillPracticeEntryView.swift in Sources */,
 				CB000000000000000000000C /* PracticeContent.swift in Sources */,
 				CB0000000000000000000007 /* LearnerProfile.swift in Sources */,

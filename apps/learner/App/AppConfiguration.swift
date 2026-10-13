@@ -80,6 +80,7 @@ struct ProviderCatalog: Decodable, Sendable {
         let generateCard: RequestProfile
         let translate: RequestProfile
         let streamTranslate: RequestProfile
+        let practiceEvaluation: RequestProfile
     }
 
     struct VocabularyExtraction: Decodable, Sendable {
@@ -172,6 +173,9 @@ struct AIPromptCatalog: Decodable, Sendable {
         let cardImageIllustration: String
         let generateCardSchemaRetry: String
         let generateCardSourceLanguageRetry: String
+        let practiceWritingEvaluation: String
+        let practiceGrammarEvaluation: String
+        let practiceListeningEvaluation: String
     }
 
     /// A topic scope applies when the folded domain equals one of `equals`

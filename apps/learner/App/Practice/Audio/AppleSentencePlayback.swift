@@ -66,15 +66,22 @@ actor AppleSentencePlayback: PracticeSentencePlayback {
         synthesizer.speak(utterance)
     }
 
-    private func asset(for sentence: Sentence) -> MediaAsset {
+    /// Identifies the audio of one sentence revision for a locale and voice.
+    /// The listening evaluator recomputes it to bind feedback to the exact
+    /// audio the learner heard.
+    static func checksum(for sentence: Sentence, locale: String, voiceIdentifier: String?) -> String {
         var checksum: UInt64 = 0xcbf29ce484222325
         for byte in "\(sentence.id.uuidString)|\(sentence.revision)|\(sentence.text)|\(locale)|\(voiceIdentifier ?? "system")".utf8 {
             checksum = (checksum ^ UInt64(byte)) &* 0x100000001b3
         }
-        return MediaAsset(
+        return String(checksum, radix: 16)
+    }
+
+    private func asset(for sentence: Sentence) -> MediaAsset {
+        MediaAsset(
             kind: .audio,
             locale: locale,
-            checksum: String(checksum, radix: 16),
+            checksum: Self.checksum(for: sentence, locale: locale, voiceIdentifier: voiceIdentifier),
             provider: "apple-system",
             model: voiceIdentifier ?? "system-voice",
             cacheReference: nil,

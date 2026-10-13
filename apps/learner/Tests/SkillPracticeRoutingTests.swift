@@ -1,4 +1,5 @@
 import XCTest
+import LinguaBrainAI
 import LinguaBrainApplication
 import LinguaBrainDomain
 import LinguaBrainPersistence
@@ -81,5 +82,31 @@ final class SkillPracticeRoutingTests: XCTestCase {
                 XCTAssertNotEqual(PrototypeLocalization.localized(key, language: language), key, "\(key) missing for \(language)")
             }
         }
+    }
+
+    func testEvaluationWithoutAProviderIsExplicitlyUngraded() async throws {
+        let unit = ReviewUnit(learnerID: PracticeLearner.localID, skill: .writing, objectiveKey: "writing.card.test")
+        let exercise = ExerciseInstance(reviewUnit: unit, prompt: "gehen", sourceLanguage: "fa", targetLanguage: "de")
+        let attempt = Attempt(exerciseID: exercise.id, reviewUnitID: unit.id, response: "Ich gehe.", submittedAt: Date())
+        let evaluator = SettingsBackedPracticeEvaluator(
+            skill: .writing,
+            repository: InMemoryPracticeRepository(),
+            grammarContext: FactoryGrammarContextResolver(),
+            environment: { nil }
+        )
+        let result = try await evaluator.evaluate(attempt, exercise: exercise)
+        XCTAssertEqual(result.outcome, .unavailable)
+        XCTAssertEqual(result.unavailableReason, .providerUnavailable)
+        XCTAssertEqual(result.evaluatorVersion, SettingsBackedPracticeEvaluator.notConfiguredVersion)
+    }
+
+    func testLiveCompositionGradesWritingGrammarAndListeningOnly() {
+        let composition = PracticeComposition.live(
+            repository: InMemoryPracticeRepository(),
+            settings: PrototypeAISettings(),
+            store: PrototypeStore(inMemory: true),
+            grammarContext: FactoryGrammarContextResolver()
+        )
+        XCTAssertEqual(composition.gradedSkills, [.writing, .grammar, .listening])
     }
 }

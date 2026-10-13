@@ -17,65 +17,69 @@ public struct URLSessionWritingEvaluationTransport: WritingEvaluationTransport {
 }
 
 public struct WritingEvaluationProvider: PracticeEvaluator, Sendable {
+    public static let evaluatorVersion = "writing-evaluator-v1"
+    public static let schemaName = "writing_evaluation"
+
     private let configuration: ProviderConfiguration
     private let credentialLoader: any CredentialLoader
     private let transport: any WritingEvaluationTransport
     private let decoder: PracticeEvaluationDecoder
+    private let options: PracticeChatOptions
+    private let contextResolver: (any WritingExerciseContextResolving)?
 
-    public init(configuration: ProviderConfiguration, credentialLoader: any CredentialLoader, transport: any WritingEvaluationTransport = URLSessionWritingEvaluationTransport(), decoder: PracticeEvaluationDecoder = PracticeEvaluationDecoder()) {
+    /// - Parameters:
+    ///   - options: System instructions (from the app's prompt configuration)
+    ///     and sampling options.
+    ///   - contextResolver: Supplies the target word, part of speech, level,
+    ///     and allowed context of the exercise. Without it, only the exercise
+    ///     prompt is sent as the target word.
+    public init(
+        configuration: ProviderConfiguration,
+        credentialLoader: any CredentialLoader,
+        transport: any WritingEvaluationTransport = URLSessionWritingEvaluationTransport(),
+        decoder: PracticeEvaluationDecoder = PracticeEvaluationDecoder(),
+        options: PracticeChatOptions = PracticeChatOptions(instructions: ""),
+        contextResolver: (any WritingExerciseContextResolving)? = nil
+    ) {
         self.configuration = configuration
         self.credentialLoader = credentialLoader
         self.transport = transport
         self.decoder = decoder
+        self.options = options
+        self.contextResolver = contextResolver
     }
 
     public func evaluate(_ attempt: Attempt, exercise: ExerciseInstance) async throws -> EvaluationResult {
         guard configuration.mode != .off else { throw PracticeEvaluationError.providerUnavailable }
+        let context = try await contextResolver?.context(for: exercise)
+            ?? WritingExerciseContext(targetWord: exercise.prompt, partOfSpeech: "", cefrLevel: "", allowedContext: "")
         let request = WritingEvaluationRequest(
             learnerID: exercise.reviewUnit.learnerID,
             sourceLanguage: exercise.sourceLanguage,
             targetLanguage: exercise.targetLanguage,
-            cefrLevel: "A1",
-            targetWord: exercise.prompt,
-            partOfSpeech: "other",
+            cefrLevel: context.cefrLevel,
+            targetWord: context.targetWord,
+            partOfSpeech: context.partOfSpeech,
             sentenceRevision: exercise.reviewUnit.sentenceRevision ?? 1,
-            allowedContext: exercise.prompt,
+            allowedContext: context.allowedContext,
             learnerSentence: attempt.response
         )
-        let endpoint = configuration.endpoint.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
-        guard let url = URL(string: "\(endpoint)/chat/completions") else { throw PracticeEvaluationError.transportFailure }
-        var urlRequest = URLRequest(url: url)
-        urlRequest.httpMethod = "POST"
-        urlRequest.timeoutInterval = configuration.timeoutSeconds
-        urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        if let key = try credentialLoader.loadCredential(for: configuration.apiKeyScope) {
-            urlRequest.setValue("Bearer \(key)", forHTTPHeaderField: "Authorization")
-        }
-        let body: [String: Any] = [
-            "model": configuration.modelID,
-            "temperature": 0,
-            "messages": [["role": "user", "content": "Evaluate this writing response under writing-evaluation-v1. Return JSON only.\nPrompt: \(exercise.prompt)\nResponse: \(attempt.response)"]]
-        ]
-        urlRequest.httpBody = try JSONSerialization.data(withJSONObject: body)
+        let client = PracticeChatClient(configuration: configuration, credentialLoader: credentialLoader, transport: transport, options: options)
+        let schema = PracticeEvaluationDecoder.responseSchema(
+            sourceLanguage: exercise.sourceLanguage,
+            provider: configuration.providerName,
+            model: configuration.modelID,
+            evaluatorVersion: Self.evaluatorVersion
+        )
+        let content = try await client.send(userContent: try PracticeChatClient.encode(request), schemaName: Self.schemaName, schema: schema)
         do {
-            let (data, response) = try await transport.send(request: urlRequest)
-            guard (200..<300).contains(response.statusCode) else { throw PracticeEvaluationError.providerUnavailable }
-            guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
-                  let choices = json["choices"] as? [[String: Any]],
-                  let message = choices.first?["message"] as? [String: Any],
-                  let content = message["content"] as? String,
-                  let contentData = content.data(using: .utf8) else { throw PracticeEvaluationError.malformedOutput }
-            do {
-                return try decoder.decode(data: contentData, request: request, attemptID: attempt.id, exerciseID: exercise.id, reviewUnitID: exercise.reviewUnit.id)
-            } catch PracticeEvaluationDecoderError.lowConfidence { throw PracticeEvaluationError.lowConfidence }
-            catch PracticeEvaluationDecoderError.unsupportedLanguage { throw PracticeEvaluationError.unsupported }
-            catch { throw PracticeEvaluationError.malformedOutput }
-        } catch is CancellationError {
-            throw PracticeEvaluationError.cancelled
-        } catch let error as PracticeEvaluationError {
-            throw error
+            return try decoder.decode(data: content, request: request, attemptID: attempt.id, exerciseID: exercise.id, reviewUnitID: exercise.reviewUnit.id)
+        } catch PracticeEvaluationDecoderError.lowConfidence {
+            throw PracticeEvaluationError.lowConfidence
+        } catch PracticeEvaluationDecoderError.unsupportedLanguage {
+            throw PracticeEvaluationError.unsupported
         } catch {
-            throw PracticeEvaluationError.transportFailure
+            throw PracticeEvaluationError.malformedOutput
         }
     }
 }

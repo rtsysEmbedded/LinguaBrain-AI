@@ -1,4 +1,5 @@
 import SwiftUI
+import LinguaBrainAI
 import LinguaBrainApplication
 import LinguaBrainPersistence
 
@@ -56,14 +57,14 @@ struct PrototypeRootView: View {
             await practiceCutover.start()
             if practiceCutover.state.isActive {
                 if practiceComposition == nil, let repository = practiceCutover.repository {
-                    // This is an explicit composition choice, not a hidden
-                    // fallback: no provider adapter is enabled in T009, so
-                    // the capability reports unavailable until a later task.
-                    practiceComposition = PracticeComposition(
+                    // Answers are evaluated by the configured Text provider
+                    // only when Settings allow it (mode, key, cloud consent);
+                    // otherwise they are saved and reported as ungraded.
+                    practiceComposition = PracticeComposition.live(
                         repository: repository,
-                        evaluator: UnavailablePracticeEvaluator(),
-                        clock: SystemPracticeClock(),
-                        scheduler: PracticeFSRS6Scheduler()
+                        settings: aiSettings,
+                        store: store,
+                        grammarContext: FactoryGrammarContextResolver()
                     )
                 }
             }

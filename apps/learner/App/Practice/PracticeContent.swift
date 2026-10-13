@@ -75,12 +75,8 @@ struct PracticeCapabilityProbe {
     /// Answers are graded only when the composition routes the skill to an
     /// evaluator and the Text provider may receive the answer.
     func evaluatorState(for skill: PracticeSkill) -> PracticeCapabilityFacts.EvaluatorState {
-        guard composition.gradedSkills.contains(skill), aiSettings.textMode != .off else { return .notConfigured }
-        if aiSettings.textMode == .cloud {
-            guard aiSettings.hasAPIKey else { return .notConfigured }
-            guard aiSettings.cloudConsent else { return .consentRequired }
-        }
-        return .ready
+        guard composition.gradedSkills.contains(skill) else { return .notConfigured }
+        return PracticeEvaluationEnvironment.state(settings: aiSettings)
     }
 
     /// Evidence-based progress for the active pair, one entry per skill.
