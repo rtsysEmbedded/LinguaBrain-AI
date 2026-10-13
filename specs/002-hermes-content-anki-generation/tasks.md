@@ -76,7 +76,7 @@ T044 and T045 are duplicates of T030 and T033 and are complete via those tasks.
 
 - [X] T040 Add sense-aware card rendering, audio playback, and text-only fallback UI in `apps/learner/App/` per US-02 (done - audioEnabled now configurable via UI toggle, CardGenerationView.swift:99-100)
 - [X] T042 Implement export selection/manifest models and provenance-aware TSV export with Unicode/RTL/LTR preservation per FR-012, SC-006 (done - TSVExporter in LinguaBrainApplication.swift:167-217)
-- [ ] T043 Implement APKG export only after collection/templates/media round-trip fixtures pass per export-contract, SC-006 (BLOCKED - requires Anki package format, SQLite integration, ZIP packaging; separate feature scope)
+- [ ] T043 Implement APKG export only after collection/templates/media round-trip fixtures pass per export-contract, SC-006 (BLOCKED - requires Anki package format, SQLite integration, ZIP packaging; separate feature scope). **Superseded in practice (2026-10-13 audit):** APKG export was delivered by [Feature 003](../003-apkg-export-approved-cards/tasks.md); close this task after confirming SC-006 against the Feature 003 round-trip evidence.
 - [X] T046 Wire `LinguaBrainKit` into the app Xcode target and add app-level approval-journey tests per US-01/T018 (done - Kit integrated, GenerationPrototypeIntegrationTests.swift exists)
 - [X] T047 Execute polish and cross-cutting verification: accessibility/RTL UI tests, feature quickstart (lib + macOS), security review, and `PROJECT_STATUS.md`/`CHANGELOG.md` updates per plan (done - tests created, security review documented)
 

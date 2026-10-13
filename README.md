@@ -91,6 +91,8 @@ LinguaBrain AI/
 └── .gitignore
 ```
 
+The tree above is the normative target layout. Package targets that exist today are `LinguaBrainDomain`, `LinguaBrainApplication`, `LinguaBrainAI`, `LinguaBrainMedia`, `LinguaBrainPersistence`, `LinguaBrainAnkiExport`, and `LinguaBrainTestSupport`. `LinguaBrainAnkiExport` is documented in [docs/apkg-export/README.md](docs/apkg-export/README.md) and is not yet recorded in ADR-010. `services/`, `contracts/`, and `tooling/` have not been created.
+
 ## Documentation index
 
 Track current progress and the next verified task in the [Project Status and Delivery Checklist](PROJECT_STATUS.md). Open, decided, and deferred choices are indexed in the [Decision Register](decisions/DECISION_REGISTER.md).
@@ -118,13 +120,13 @@ Supporting product artifacts:
 
 ## Spec-driven delivery
 
-Feature execution uses GitHub Spec Kit so Codex, Claude Code, and Gemini CLI can share one approved specification, plan, and task list. Read the [Spec Kit workflow](SPEC_KIT_WORKFLOW.md), [project constitution](.specify/memory/constitution.md), and active [Anki Core feature](specs/001-anki-core-modern-import/spec.md) before implementation.
+Feature execution uses GitHub Spec Kit so Codex, Claude Code, and Gemini CLI can share one approved specification, plan, and task list. Read the [Spec Kit workflow](SPEC_KIT_WORKFLOW.md), [project constitution](.specify/memory/constitution.md), and the active [adaptive skill practice feature](specs/004-adaptive-skill-practice/spec.md) before implementation. Features [001](specs/001-anki-core-modern-import/spec.md), [002](specs/002-hermes-content-anki-generation/spec.md), and [003](specs/003-apkg-export-approved-cards/spec.md) remain the reference for Anki import, generation, and export.
 
 The existing `docs/` and accepted ADRs remain the product and architecture baseline. Feature-local artifacts translate that baseline into bounded work; they do not replace it.
 
 ## Status
 
-Documents 01–15 remain reviewed drafts. [ADR-003](decisions/ADR-003-Swift-Persistence-and-Migration-Stack.md) selects GRDB 7/system SQLite persistence, [ADR-009](decisions/ADR-009-Native-Apple-Client-and-Platform-Baseline.md) defines the native Apple OS 27 targets, [ADR-010](decisions/ADR-010-Swift-Package-and-Module-Layout.md) defines the Swift/Xcode/SwiftPM repository boundary, [ADR-011](decisions/ADR-011-SwiftUI-State-Observation-Navigation-and-Dependency-Composition.md) defines presentation composition, and [ADR-012](decisions/ADR-012-Anki-Core-First-and-APKG-Import-Boundary.md) establishes the Anki Core-first delivery gate. The active Spec Kit feature now advances to modern Anki format research and import contracts.
+Documents 01–15 remain reviewed drafts. [ADR-003](decisions/ADR-003-Swift-Persistence-and-Migration-Stack.md) selects GRDB 7/system SQLite persistence, [ADR-009](decisions/ADR-009-Native-Apple-Client-and-Platform-Baseline.md) defines the native Apple OS 27 targets, [ADR-010](decisions/ADR-010-Swift-Package-and-Module-Layout.md) defines the Swift/Xcode/SwiftPM repository boundary, [ADR-011](decisions/ADR-011-SwiftUI-State-Observation-Navigation-and-Dependency-Composition.md) defines presentation composition, and [ADR-012](decisions/ADR-012-Anki-Core-First-and-APKG-Import-Boundary.md) establishes the Anki Core-first delivery gate. The active Spec Kit feature is [Feature 004 — adaptive skill practice](specs/004-adaptive-skill-practice/spec.md). Current progress and open findings are tracked in [PROJECT_STATUS.md](PROJECT_STATUS.md) and the [2026-10-13 project audit](docs/PROJECT_AUDIT_2026-10-13.md).
 
 ## Key resolved contracts
 

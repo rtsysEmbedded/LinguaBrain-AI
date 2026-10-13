@@ -1,9 +1,9 @@
 ---
 title: Project Status and Delivery Checklist
 document_id: LB-STATUS
-version: 0.4.23
+version: 0.4.24
 status: Active
-last_updated: 2026-09-06
+last_updated: 2026-10-13
 ---
 
 # Project Status and Delivery Checklist
@@ -20,9 +20,14 @@ This file is the single progress checklist for LinguaBrain AI. It must be update
 
 ## Current snapshot
 
+### Audit remediation — 2026-10-13
+
+- [ ] Resolve the findings in the [2026-10-13 project audit](docs/PROJECT_AUDIT_2026-10-13.md). Its Section 5 records which groups are complete, in progress, or still open.
+- [x] Stop tracking the 95.7 MiB third-party `German_Top_4000_vocabulary.apkg` deck and ignore it; Git history is unchanged.
+
 ### Planned work — 2026-09-06
 
-- [ ] Feature 004 — Adaptive skill practice: 36 implementation tasks prepared in [tasks.md](specs/004-adaptive-skill-practice/tasks.md), with [specification](specs/004-adaptive-skill-practice/spec.md), [plan](specs/004-adaptive-skill-practice/plan.md), and [Persian handoff](specs/004-adaptive-skill-practice/HANDOFF.fa.md). T001–T012 are verified: accepted scope, audited contracts, portable Domain model, provider-independent ports/policy, production GRDB adapter, migration bridge, application-owned review/mastery/FSRS boundary, bounded session orchestration, deterministic cross-layer verification, injected shared composition/model, reusable scaffold/feedback UI, rendered-surface localization/accessibility QA, and the writing-evaluation rubric/fixture contract. T013 remains open; no mode-specific story or AI-provider work is claimed.
+- [ ] Feature 004 — Adaptive skill practice: 36 implementation tasks prepared in [tasks.md](specs/004-adaptive-skill-practice/tasks.md), with [specification](specs/004-adaptive-skill-practice/spec.md), [plan](specs/004-adaptive-skill-practice/plan.md), and [Persian handoff](specs/004-adaptive-skill-practice/HANDOFF.fa.md). T001–T012 are verified: accepted scope, audited contracts, portable Domain model, provider-independent ports/policy, production GRDB adapter, migration bridge, application-owned review/mastery/FSRS boundary, bounded session orchestration, deterministic cross-layer verification, injected shared composition/model, reusable scaffold/feedback UI, rendered-surface localization/accessibility QA, and the writing-evaluation rubric/fixture contract. Later progress notes record T013–T026 and T028 as verified, giving 27 of 36 tasks; T027 and T029–T036 remain open, and T033 (four-skill UI integration) is the main functional gap identified by the [2026-10-13 audit](docs/PROJECT_AUDIT_2026-10-13.md).
 - [x] Feature 004 / T001 — scope and controlled cutover accepted in ADR-017, with roadmap/status/changelog traceability.
 - [x] Feature 004 / T005 — production GRDB 7.11.1 repository, ordered migrations, constraints, transactions, and restart/rollback evidence.
 - [x] Feature 004 / T003 — portable practice Domain model with stable ReviewUnit identity, immutable sentence revisions, typed outcomes/evaluator evidence, assistance events, session transitions, and unknown mastery semantics.
@@ -37,17 +42,18 @@ This file is the single progress checklist for LinguaBrain AI. It must be update
 
 | Field | Current value |
 | --- | --- |
-| Current phase | Feature 004 writing-evaluation rubric and synthetic fixture gate verified; next safe dependency is T013 |
+| Current phase | Feature 004: 27 of 36 tasks verified; T027 and T029–T036 remain open. 2026-10-13 audit remediation is in progress |
 | Product scope | German–Persian local-first native Apple Release 1.0 (iOS/iPadOS/macOS 27), with optional Apple/Google account and scoped sync |
 | Documentation | Documents 01–15 complete as reviewed drafts |
 | Architecture baseline | Native Swift migration; DOC-10 at 0.5.1, DOC-11 at 0.3.1, DOC-14 at 0.3.2, and DOC-15 at 0.2.2 |
 | Local Apple toolchain | Xcode 27.0 (`27A5228h`) is active with Swift 6.4 and iOS/iPadOS/macOS 27 SDKs; beta-era evidence remains provisional |
 | Latest accepted ADRs | Native baseline ADR-009 through ADR-016, plus [ADR-004](decisions/ADR-004-FSRS-Implementation-and-Version.md) for the pinned scheduler |
-| Active Git branch | `main` |
+| Active Git branch | `main`, tracked on `origin`; agent work uses `claude/*` branches and draft pull requests |
 | Native platform migration commit | `3c75a70` |
 | Visual prototype | Buildable SwiftUI prototype for iPhone, iPad, and Mac; review state persists, APKG cards can be imported, approved learner cards have opt-in private iCloud backup/recovery, and Utilities includes on-device live transcription |
 | Next primary deliverable | Execute the four learning-core workstreams documented in `docs/CODEBASE_REALITY_AUDIT_2026-08-25.md`; Apple Developer-account-dependent release work remains deferred |
 | Current delivery strategy | Anki Core first: secure APKG import and reliable offline review gate before AI and final visual approval |
+| Latest audit | 2026-10-13: [Project Audit](docs/PROJECT_AUDIT_2026-10-13.md). `LinguaBrainKit` built with Swift 6.4.1 on Linux (scratch copy with documented Linux-only shims): 194 tests, 0 failures (Domain 20, Application 69, Anki Export 64, AI 41). Two package defects block an unmodified Linux build (`OSStatus` in the Application layer; non-`Sendable` `ExportCancellation`). The Apple app targets were not built in that audit. |
 | Latest verification | 2026-09-06: 169 Swift package tests pass (Domain 20, Application 56, Anki Export 64, AI 29 including six T012 fixture-validation tests); iOS Simulator Debug and macOS Debug builds pass; 13 synthetic writing fixtures validate with malformed/oversized/language/span/score/confidence/rule rejection coverage. No provider call or live learner store was used. |
 
 ## Completed foundation
@@ -101,7 +107,7 @@ This file is the single progress checklist for LinguaBrain AI. It must be update
 - [ ] Complete the Utilities transcription visual-design pass after provider behavior is explicit and testable (T039).
 - [x] Add user-defined learning domains with Settings management, Library filtering, and Today-plan scoping.
 - [x] Classify and place the vocabulary prototype at `experiments/vocabulary-mvp/` according to [ADR-001](decisions/ADR-001-Repository-Package-and-Module-Layout.md).
-- [ ] Configure a Git remote and push `main`.
+- [x] Configure a Git remote and push `main` (`origin` is configured and `main` is pushed).
 - [ ] Create an annotated MVP specification baseline tag.
 
 ### Product and architecture specifications
@@ -132,6 +138,42 @@ Feature 004 T006–T012 verification: T001–T012 are verified. `PracticeReviewS
 Migration regression fix: the activation check now counts unique legacy review units rather than every historical review attempt, so valid cards with repeated reviews no longer enter a false recovery state. The regression is covered by the app migration suite; no retained source or backup is deleted.
 
 Cutover correction: the existing Anki review route continues to write through `PrototypeStore`; its writer remains enabled until that route is migrated atomically to GRDB. This avoids the post-update storage error when a learner rates a card. No source or backup is removed.
+
+### Feature 004 progress notes
+
+#### Writing contract adapter
+
+T013 and T014 are verified complete. The writing decoder/provider boundary is validated and ungraded failure-safe, and the application service preserves local responses before evaluation. T015 and the later writing-reuse, grammar, listening, speaking, integration, ownership, and final-QA tasks remain open; no live learner data was accessed.
+
+#### Sentence reuse and planning
+
+T016 and T017 are verified complete. Sentence acceptance is scoped, transactional, revision-safe, and original-response preserving. Adaptive planning is deterministic and does not mutate mastery or schedules. T018 onward remains open.
+
+#### Sentence history
+
+T018 is verified complete. Sentence history is an injected UI boundary with localized original/correction/natural/reason/next-exercise/mastery presentation and no direct progress or persistence mutation. T019 remains the next task.
+
+#### Dynamic reuse loop
+
+T019 is verified complete. Writing acceptance survives restart, feeds deterministic future planning, preserves revisions, and does not fabricate evidence for unavailable or unrelated skills. T020 is the next task.
+
+#### Grammar contract
+
+Feature 004 T020 is complete. The versioned grammar contract and deterministic, curated exercise factory are implemented and verified offline; T021 is the next safe task.
+
+#### Integration status — 2026-09-07
+
+Feature 004 integration status (2026-09-07): T033–T036 are still open. The
+application ownership boundary now has synthetic export/delete/consent tests,
+but the production GRDB ownership adapter, all four-skill navigation/progress
+integration, and final device/accessibility QA are not yet complete. Do not
+claim final Feature 004 completion or physical-device/provider coverage.
+
+#### Updates — 2026-09-08
+
+- Feature 004 update (2026-09-08): T015 and T028 are verified complete. Writing UI tests pass on iPhone 17 Simulator. Pronunciation research reached a valid negative capability decision, so no numeric speaking score is enabled and T030–T032 remain open pending an approved audio-based provider and physical-device benchmark.
+- Feature 004 update (2026-09-08): T021–T026 and T023 are now verified. Grammar uses a canonical-rule evaluator boundary; listening requires exact sentence revision plus audio checksum and hides transcript/translation until feedback or reveal. Apple sentence playback builds on iOS Simulator. T027 and T029 remain open for complete audio QA; T030–T032 remain blocked by the unapproved pronunciation provider/device benchmark.
+- Feature 004 gate audit (2026-09-08): macOS Debug, localization parity, and diff checks pass after the Apple playback/recorder work. T027 and T029 remain evidence-gated by real licensed audio and physical-device recording QA. T030–T032 remain capability-gated by the approved negative pronunciation-provider decision; consequently T033–T036 cannot yet be truthfully closed.
 
 ## M0 — Implementation preparation
 
@@ -185,7 +227,7 @@ Cutover correction: the existing Anki review route continues to write through `P
 
 - [x] Install and verify Xcode 27.0 build `27A5228h`, Swift 6.4, and version 27 Apple SDKs; beta builds remain provisional until stable Xcode and final OS 27 verification.
 - [x] Create and verify the native SwiftUI universal iPhone/iPadOS 27 application and macOS 27 Golden Gate target.
-- [ ] Create the local multi-target `LinguaBrainKit` Swift package and composition root.
+- [~] Create the local multi-target `LinguaBrainKit` Swift package and composition root; the package exists with Domain, Application, AI, Media, Persistence, Anki Export, and TestSupport targets, while an app-wide composition root is not yet complete.
 - [ ] Establish domain, application, infrastructure, and presentation boundaries.
 - [ ] Add the first native local-store schema and migration runner using the adapter selected by ADR-003.
 - [ ] Implement `KnowledgeItem` and its repository contract.
@@ -319,6 +361,7 @@ Complete these actions with every milestone or architectural change:
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 0.4.24 | 2026-10-13 | Recorded the 2026-10-13 project audit, stopped tracking the unreferenced 95.7 MiB third-party deck, corrected stale remote/package facts, moved Feature 004 progress notes into the snapshot section, and ordered this table by date. |
 | 0.4.23 | 2026-09-06 | Completed Feature 004 T012 with the versioned writing-evaluation rubric, 13 synthetic fixtures, six offline validation tests, malformed/uncertain safety checks, and iOS/macOS Debug build evidence; T013 remains open. |
 | 0.4.22 | 2026-09-06 | Completed Feature 004 T011 with rendered-surface state smoke, independent answer-language direction, localized accessibility labels/hints/values, fa/en/de catalog validation, large-text/narrow-width simulator evidence, and documented VoiceOver/device limits; T012 remained open. |
 | 0.4.21 | 2026-09-06 | Completed Feature 004 T010 with responsive shared scaffold/feedback views, finite state rendering, assistance-aware messaging, accessibility semantics, fa/en/de localization, injected content, and iPhone 17 Simulator tests; T011 remained open. |
@@ -329,8 +372,8 @@ Complete these actions with every milestone or architectural change:
 | 0.4.16 | 2026-09-05 | Completed Feature 004 T004 provider-independent practice ports and deterministic assistance-aware evidence policy; T006–T008 remain open. |
 | 0.4.15 | 2026-09-05 | Completed Feature 004 T003 Domain evidence: stable practice identity, immutable sentence revisions, typed outcomes/evaluator evidence, assistance events, legal session transitions, unknown mastery semantics, and fixed-ID/fixed-date tests. T004/T006–T008 remain open. |
 | 0.4.14 | 2026-09-04 | Audited Feature 004 T002 contracts, added state/mastery/FSRS effects and fixed-clock scoring examples, corrected the T006 service-path mismatch, and reopened T006 pending an application review/mastery/FSRS owner. |
-| 0.5.0 | 2026-08-20 | Completed Spec Kit tasks T030-T033: OpenAI-compatible provider adapter with health checks, credential loaders, comprehensive safety tests, and fully-localized provider settings UI. |
 | 0.5.1 | 2026-08-26 | Completed APKG export feature (spec 003): 61 package tests pass, fixed ID computation bug for ARM64e, integrated export types into LibraryPrototypeView.swift. Documentation and quickstart evidence updated. |
+| 0.5.0 | 2026-08-20 | Completed Spec Kit tasks T030-T033: OpenAI-compatible provider adapter with health checks, credential loaders, comprehensive safety tests, and fully-localized provider settings UI. |
 | 0.4.4 | 2026-08-17 | Accepted ADR-003 for GRDB 7/system SQLite, explicit migrations/transactions, and the one-time SwiftData compatibility import; completed Spec Kit task T002. |
 | 0.4.1 | 2026-08-16 | Audited the real repository and Xcode state, verified iOS/macOS builds, corrected Release 1.0 account/sync scope, decision counts, and the completed native target checkpoint. |
 | 0.4.0 | 2026-08-10 | Accepted optional Apple/Google accounts and secure learner-data synchronization as Release 1.0 scope while retaining complete local-only operation. |
@@ -351,25 +394,3 @@ Complete these actions with every milestone or architectural change:
 | 0.1.2 | 2026-07-15 | Completed the 56-entry Decision Register, classified every source question, aligned ADRs with their milestone gates, and advanced the next task to ADR-001. |
 | 0.1.1 | 2026-07-15 | Completed Document 15 and linked requirements to milestones, backlog work, acceptance evidence, and issue governance. |
 | 0.1.0 | 2026-07-15 | Created the central completed/remaining-work checklist for repository, documentation, milestones, and post-MVP work. |
-## Feature 004 progress note — writing contract adapter
-
-T013 and T014 are verified complete. The writing decoder/provider boundary is validated and ungraded failure-safe, and the application service preserves local responses before evaluation. T015 and the later writing-reuse, grammar, listening, speaking, integration, ownership, and final-QA tasks remain open; no live learner data was accessed.
-## Feature 004 progress note — sentence reuse and planning
-
-T016 and T017 are verified complete. Sentence acceptance is scoped, transactional, revision-safe, and original-response preserving. Adaptive planning is deterministic and does not mutate mastery or schedules. T018 onward remains open.
-## Feature 004 progress note — sentence history
-
-T018 is verified complete. Sentence history is an injected UI boundary with localized original/correction/natural/reason/next-exercise/mastery presentation and no direct progress or persistence mutation. T019 remains the next task.
-## Feature 004 progress note — dynamic reuse loop
-
-T019 is verified complete. Writing acceptance survives restart, feeds deterministic future planning, preserves revisions, and does not fabricate evidence for unavailable or unrelated skills. T020 is the next task.
-Feature 004 T020 is complete. The versioned grammar contract and deterministic, curated exercise factory are implemented and verified offline; T021 is the next safe task.
-
-Feature 004 integration status (2026-09-07): T033–T036 are still open. The
-application ownership boundary now has synthetic export/delete/consent tests,
-but the production GRDB ownership adapter, all four-skill navigation/progress
-integration, and final device/accessibility QA are not yet complete. Do not
-claim final Feature 004 completion or physical-device/provider coverage.
-Feature 004 update (2026-09-08): T015 and T028 are verified complete. Writing UI tests pass on iPhone 17 Simulator. Pronunciation research reached a valid negative capability decision, so no numeric speaking score is enabled and T030–T032 remain open pending an approved audio-based provider and physical-device benchmark.
-Feature 004 update (2026-09-08): T021–T026 and T023 are now verified. Grammar uses a canonical-rule evaluator boundary; listening requires exact sentence revision plus audio checksum and hides transcript/translation until feedback or reveal. Apple sentence playback builds on iOS Simulator. T027 and T029 remain open for complete audio QA; T030–T032 remain blocked by the unapproved pronunciation provider/device benchmark.
-Feature 004 gate audit (2026-09-08): macOS Debug, localization parity, and diff checks pass after the Apple playback/recorder work. T027 and T029 remain evidence-gated by real licensed audio and physical-device recording QA. T030–T032 remain capability-gated by the approved negative pronunciation-provider decision; consequently T033–T036 cannot yet be truthfully closed.

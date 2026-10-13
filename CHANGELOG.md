@@ -20,6 +20,12 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Audit — 2026-10-13
+
+- Added the verified [2026-10-13 project audit](docs/PROJECT_AUDIT_2026-10-13.md) with file/line evidence for defects, repository hygiene, hardcoded configuration and text, documentation drift, and incomplete work. `LinguaBrainKit` was built with Swift 6.4.1 on Linux using documented Linux-only shims: 194 tests passed; the Apple app targets were not built.
+- Stopped tracking the unreferenced 95.7 MiB third-party `assets/German_Top_4000_vocabulary.apkg` deck and added an ignore rule. Git history was not rewritten.
+- Synchronized `PROJECT_STATUS.md` (remote, package existence, Feature 004 progress, revision order), the README module/status text, an ADR-013 implementation note on the OpenRouter-to-generic-provider change, and cross-feature export task notes.
+
 - Feature 004 T020: added the versioned grammar-practice contract and deterministic curated grammar exercise factory with explicit rule roles, bounded hints, traceable references, and rejection of ambiguous or multi-issue prompts.
 
 ### Planned — 2026-09-04
