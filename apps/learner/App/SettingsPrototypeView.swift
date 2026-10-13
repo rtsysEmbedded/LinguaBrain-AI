@@ -25,26 +25,26 @@ struct SettingsPrototypeView: View {
                                 symbol: "character.book.closed.fill", color: .blue, destination: .languages
                             ),
                             .init(title: customDomainsTitle, detail: customDomainsSubtitle, symbol: "square.grid.2x2", color: .purple, destination: .domains),
-                            .init(title: localization.text(.goalsAndDailyPlan), detail: localization.localized("کار در آلمان · ۲۰ دقیقه"), symbol: "target", color: PrototypeTheme.pink, destination: .learning),
-                            .init(title: localization.text(.reviewAndPractice), detail: localization.localized("مرور تطبیقی · حالت متعادل"), symbol: "rectangle.stack.fill", color: .orange, destination: .review),
-                            .init(title: localization.text(.audioAndPronunciation), detail: localization.localized("صدای آلمانی · سرعت عادی"), symbol: "waveform", color: PrototypeTheme.mint, destination: .audio)
+                            .init(title: localization.text(.goalsAndDailyPlan), detail: localization.localized("settings.summary.learning"), symbol: "target", color: PrototypeTheme.pink, destination: .learning),
+                            .init(title: localization.text(.reviewAndPractice), detail: localization.localized("settings.summary.review"), symbol: "rectangle.stack.fill", color: .orange, destination: .review),
+                            .init(title: localization.text(.audioAndPronunciation), detail: localization.localized("settings.summary.audio"), symbol: "waveform", color: PrototypeTheme.mint, destination: .audio)
                         ]
                     )
                     settingsGroup(
-                        title: localization.localized("هوش مصنوعی و آفلاین"),
-                        subtitle: localization.localized("مدل‌ها، دانلودها و هزینه"),
+                        title: localization.localized("settings.group.aiOffline"),
+                        subtitle: localization.localized("settings.group.aiOfflineSubtitle"),
                         items: [
-                            .init(title: localization.localized("دستیار هوشمند"), detail: localization.localized("provider.configurable"), symbol: "wand.and.stars", color: PrototypeTheme.accent, destination: .ai),
-                            .init(title: localization.localized("محتوای آفلاین"), detail: localization.localized("۱۸۴ مگابایت روی دستگاه"), symbol: "arrow.down.circle.fill", color: .indigo, destination: .offline)
+                            .init(title: localization.localized("settings.item.assistant"), detail: localization.localized("provider.configurable"), symbol: "wand.and.stars", color: PrototypeTheme.accent, destination: .ai),
+                            .init(title: localization.localized("settings.item.offlineContent"), detail: localization.localized("settings.summary.offline"), symbol: "arrow.down.circle.fill", color: .indigo, destination: .offline)
                         ]
                     )
                     settingsGroup(
-                        title: localization.localized("برنامه و حساب"),
+                        title: localization.localized("settings.group.appAccount"),
                         subtitle: nil,
                         items: [
-                            .init(title: localization.localized("حریم خصوصی و داده‌ها"), detail: localization.localized("محلی · پشتیبان اختیاری iCloud"), symbol: "lock.shield.fill", color: .green, destination: .privacy),
-                            .init(title: localization.localized("دسترس‌پذیری و ظاهر"), detail: localization.localized("هماهنگ با سیستم"), symbol: "accessibility", color: .teal, destination: .accessibility),
-                            .init(title: localization.localized("دربارهٔ LinguaBrain"), detail: localization.localized("Visual Prototype 0.2"), symbol: "info.circle.fill", color: .gray, destination: .about)
+                            .init(title: localization.localized("settings.item.privacy"), detail: localization.localized("settings.summary.privacy"), symbol: "lock.shield.fill", color: .green, destination: .privacy),
+                            .init(title: localization.localized("settings.item.accessibility"), detail: localization.localized("settings.summary.system"), symbol: "accessibility", color: .teal, destination: .accessibility),
+                            .init(title: localization.localized("settings.item.about"), detail: localization.localized("settings.about.versionValue"), symbol: "info.circle.fill", color: .gray, destination: .about)
                         ]
                     )
                 }
@@ -58,19 +58,11 @@ struct SettingsPrototypeView: View {
     }
 
     private var customDomainsTitle: String {
-        switch localization.language {
-        case .english: "Custom categories"
-        case .german: "Eigene Kategorien"
-        case .persian: "دسته‌های سفارشی"
-        }
+        localization.localized("settings.customDomains.title")
     }
 
     private var customDomainsSubtitle: String {
-        switch localization.language {
-        case .english: "Create and manage your learning topics"
-        case .german: "Eigene Lernthemen erstellen und verwalten"
-        case .persian: "ساخت و مدیریت موضوع‌های یادگیری"
-        }
+        localization.localized("settings.customDomains.subtitle")
     }
 
     private var profileCard: some View {
@@ -97,7 +89,7 @@ struct SettingsPrototypeView: View {
                 }
 
                 VStack(alignment: .leading, spacing: 5) {
-                    Text("سعید رضایی")
+                    Text(localization.localized("settings.profile.placeholderName"))
                         .font(.title3.weight(.bold))
                     Text(localization.text(.learnerSubtitle))
                         .font(.subheadline)
@@ -119,11 +111,11 @@ struct SettingsPrototypeView: View {
 
     private var learningSummary: some View {
         VStack(alignment: .leading, spacing: 10) {
-            SectionHeader(title: "خلاصهٔ مسیر شما", subtitle: "تنظیماتی که برنامهٔ امروز را شکل می‌دهند")
+            SectionHeader(title: "settings.pathSummary.title", subtitle: "settings.pathSummary.subtitle")
             HStack(spacing: 10) {
-                MetricPill(value: "B2", label: "سطح هدف", symbol: "flag.checkered", color: PrototypeTheme.accent)
-                MetricPill(value: "۲۰ دقیقه", label: "هدف روزانه", symbol: "clock.fill", color: .orange)
-                MetricPill(value: "آلمان", label: "مأموریت", symbol: "briefcase.fill", color: PrototypeTheme.mint)
+                MetricPill(value: "settings.pathSummary.targetLevelValue", label: "settings.pathSummary.targetLevel", symbol: "flag.checkered", color: PrototypeTheme.accent)
+                MetricPill(value: localization.minutesLong(20), label: "settings.pathSummary.dailyGoal", symbol: "clock.fill", color: .orange)
+                MetricPill(value: "settings.pathSummary.missionValue", label: "settings.pathSummary.mission", symbol: "briefcase.fill", color: PrototypeTheme.mint)
             }
         }
     }
@@ -199,12 +191,7 @@ private enum SettingsSection {
     func title(for localization: PrototypeLocalization) -> String {
         switch self {
         case .languages: localization.text(.languagesAndLevel)
-        case .domains:
-            switch localization.language {
-            case .english: "Custom categories"
-            case .german: "Eigene Kategorien"
-            case .persian: "دسته‌های سفارشی"
-            }
+        case .domains: localization.localized("settings.customDomains.title")
         case .learning: localization.text(.goalsAndDailyPlan)
         case .review: localization.text(.reviewAndPractice)
         case .audio: localization.text(.audioAndPronunciation)
@@ -225,6 +212,8 @@ private enum SettingsSection {
 }
 
 private struct SettingsDetailPrototypeView: View {
+    private static let dailyGoalOptions = [10, 20, 30, 60]
+
     let section: SettingsSection
     @Environment(PrototypeLocalization.self) private var localization
     @Environment(PrototypeLanguageSettings.self) private var languageSettings
@@ -258,82 +247,81 @@ private struct SettingsDetailPrototypeView: View {
                     LabeledContent(localization.text(.currentLevel), value: "B1")
                     LabeledContent(localization.text(.targetLevel), value: "B2")
                     if !languageSettings.isValidPair {
-                        Label(localization.localized("Source and learning languages must be different."), systemImage: "exclamationmark.triangle.fill")
+                        Label(localization.localized("settings.languages.mustDiffer"), systemImage: "exclamationmark.triangle.fill")
                             .foregroundStyle(.orange)
                     }
                 }
             case .domains:
                 CustomDomainsSettingsContent()
             case .learning:
-                Section(localization.localized("برنامهٔ روزانه")) {
-                    Picker(localization.localized("هدف روزانه"), selection: $dailyGoal) {
-                        Text(localization.localized("۱۰ دقیقه")).tag(10)
-                        Text(localization.localized("۲۰ دقیقه")).tag(20)
-                        Text(localization.localized("۳۰ دقیقه")).tag(30)
-                        Text(localization.localized("۶۰ دقیقه")).tag(60)
+                Section(localization.localized("settings.learning.dailyPlan")) {
+                    Picker(localization.localized("settings.pathSummary.dailyGoal"), selection: $dailyGoal) {
+                        ForEach(Self.dailyGoalOptions, id: \.self) { minutes in
+                            Text(localization.minutesLong(minutes)).tag(minutes)
+                        }
                     }
-                    LabeledContent(localization.localized("مأموریت فعال"), value: localization.localized("کار در آلمان"))
-                    Toggle(localization.localized("یادآوری روزانه"), isOn: $notifications)
+                    LabeledContent(localization.localized("settings.learning.activeMission"), value: localization.localized("onboarding.mission.work"))
+                    Toggle(localization.localized("settings.learning.dailyReminder"), isOn: $notifications)
                 }
             case .review:
-                Section(localization.localized("روش تمرین")) {
-                    LabeledContent(localization.localized("الگوریتم مرور"), value: localization.localized("تطبیقی"))
-                    LabeledContent(localization.localized("جهت ترجمه"), value: localization.localized("هر دو جهت"))
-                    Toggle(localization.localized("مرور شنیداری"), isOn: $notifications)
+                Section(localization.localized("settings.review.method")) {
+                    LabeledContent(localization.localized("settings.review.algorithm"), value: localization.localized("settings.review.algorithmValue"))
+                    LabeledContent(localization.localized("settings.review.direction"), value: localization.localized("settings.review.directionValue"))
+                    Toggle(localization.localized("settings.review.listening"), isOn: $notifications)
                 }
             case .audio:
-                Section(localization.localized("پخش")) {
-                    LabeledContent(localization.localized("صدای آلمانی"), value: "Anna")
+                Section(localization.localized("settings.audio.playback")) {
+                    LabeledContent(localization.localized("settings.audio.germanVoice"), value: localization.localized("settings.audio.voicePlaceholder"))
                     Slider(value: $audioSpeed, in: 0.5...1.5, step: 0.1) {
-                        Text(localization.localized("سرعت پخش"))
+                        Text(localization.localized("settings.audio.playbackSpeed"))
                     }
-                    LabeledContent("سرعت", value: audioSpeed.formatted(.number.precision(.fractionLength(1))) + "×")
+                    LabeledContent(localization.localized("settings.audio.speed"), value: audioSpeed.formatted(.number.precision(.fractionLength(1))) + "×")
                 }
             case .ai:
                 ProviderMenuIndex()
-                Section("Apple Intelligence — آینده") {
-                    Label("Apple Foundation Models · بدون API Key", systemImage: "apple.intelligence")
-                    Text("پس از ارزیابی پشتیبانی و کیفیت فارسی، پردازش محلی Apple به‌عنوان Provider اختیاری اضافه می‌شود.")
+                Section(localization.localized("settings.ai.appleSection")) {
+                    Label(localization.localized("settings.ai.appleModels"), systemImage: "apple.intelligence")
+                    Text(localization.localized("settings.ai.appleNote"))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
-                Section("سایر ارائه‌دهندگان آینده") {
-                    Label("LM Studio / Ollama", systemImage: "desktopcomputer")
-                    Toggle("فقط حالت آفلاین", isOn: $offlineOnly)
+                Section(localization.localized("settings.ai.futureProviders")) {
+                    Label(localization.localized("settings.ai.localProviders"), systemImage: "desktopcomputer")
+                    Toggle(localization.localized("settings.ai.offlineOnly"), isOn: $offlineOnly)
                 }
             case .offline:
-                Section("دانلودشده") {
-                    LabeledContent("واژگان پایه", value: "۱۲۰ مگابایت")
-                    LabeledContent("صداهای آلمانی", value: "۶۴ مگابایت")
-                    Button("مدیریت دانلودها") { }
+                Section(localization.localized("settings.offline.downloaded")) {
+                    LabeledContent(localization.localized("settings.offline.vocabulary"), value: localization.localized("settings.offline.vocabularySize"))
+                    LabeledContent(localization.localized("settings.offline.voices"), value: localization.localized("settings.offline.voicesSize"))
+                    Button(localization.localized("settings.offline.manage")) { }
                 }
             case .privacy:
                 @Bindable var cloudBackup = cloudBackup
-                Section("پشتیبان iCloud") {
-                    Toggle("ذخیرهٔ کارت‌های من در iCloud", isOn: $cloudBackup.isEnabled)
-                    Text("کارت‌های ساخته‌شده و بسته‌های Anki واردشده در پایگاه خصوصی iCloud شما نگهداری می‌شوند. کارت‌های نمونهٔ برنامه ارسال نمی‌شوند.")
+                Section(localization.localized("settings.privacy.iCloudBackup")) {
+                    Toggle(localization.localized("settings.privacy.backupToggle"), isOn: $cloudBackup.isEnabled)
+                    Text(localization.localized("settings.privacy.backupNote"))
                         .font(.caption)
                         .foregroundStyle(.secondary)
-                    Button("همگام‌سازی اکنون") {
+                    Button(localization.localized("settings.privacy.syncNow")) {
                         Task { await cloudBackup.sync(store: store) }
                     }
                     .disabled(!cloudBackup.isEnabled || isCloudSyncBusy)
                     cloudStatusView
                 }
-                Section("داده‌های محلی") {
-                    Button("خروجی گرفتن از داده‌ها") { }
-                    Button("حذف تمام داده‌ها", role: .destructive) { }
+                Section(localization.localized("settings.privacy.localData")) {
+                    Button(localization.localized("settings.privacy.export")) { }
+                    Button(localization.localized("settings.privacy.deleteAll"), role: .destructive) { }
                 }
             case .accessibility:
-                Section("نمایش و دسترسی") {
-                    Toggle("متن خواناتر", isOn: $notifications)
-                    LabeledContent("اندازهٔ نوشته", value: "هماهنگ با سیستم")
-                    LabeledContent("ظاهر", value: "خودکار")
+                Section(localization.localized("settings.accessibility.display")) {
+                    Toggle(localization.localized("settings.accessibility.readableText"), isOn: $notifications)
+                    LabeledContent(localization.localized("settings.accessibility.textSize"), value: localization.localized("settings.summary.system"))
+                    LabeledContent(localization.localized("settings.accessibility.appearance"), value: localization.localized("settings.accessibility.automatic"))
                 }
             case .about:
                 Section {
-                    LabeledContent("نسخه", value: "Visual Prototype 0.2")
-                    NavigationLink("نمایش راه‌اندازی اولیه") {
+                    LabeledContent(localization.localized("settings.about.version"), value: localization.localized("settings.about.versionValue"))
+                    NavigationLink(localization.localized("settings.about.showOnboarding")) {
                         OnboardingPrototypeView()
                     }
                 }
@@ -366,19 +354,23 @@ private struct SettingsDetailPrototypeView: View {
     private var cloudStatusView: some View {
         switch cloudBackup.status {
         case .idle:
-            Label("هنوز همگام‌سازی نشده است", systemImage: "icloud")
+            Label(localization.localized("cloudBackup.status.idle"), systemImage: "icloud")
         case .checking:
-            Label("در حال بررسی حساب iCloud…", systemImage: "icloud")
+            Label(localization.localized("cloudBackup.status.checking"), systemImage: "icloud")
         case .syncing:
-            HStack { ProgressView(); Text("در حال پشتیبان‌گیری و بازیابی…") }
+            HStack { ProgressView(); Text(localization.localized("cloudBackup.status.syncing")) }
         case let .synced(date, count):
-            Label("آخرین همگام‌سازی: \(date.formatted(date: .abbreviated, time: .shortened)) · \(count) کارت", systemImage: "checkmark.icloud.fill")
+            Label(localization.formatted(
+                "cloudBackup.status.synced",
+                date.formatted(Date.FormatStyle(date: .abbreviated, time: .shortened).locale(localization.language.locale)),
+                "\(count)"
+            ), systemImage: "checkmark.icloud.fill")
                 .foregroundStyle(.green)
         case let .unavailable(message):
             Label(message, systemImage: "icloud.slash")
                 .foregroundStyle(.orange)
         case let .failed(message):
-            Label("همگام‌سازی ناموفق بود: \(message)", systemImage: "exclamationmark.icloud.fill")
+            Label(localization.formatted("cloudBackup.status.failed", message), systemImage: "exclamationmark.icloud.fill")
                 .foregroundStyle(.red)
         }
     }
@@ -428,11 +420,14 @@ private struct CustomDomainsSettingsContent: View {
     }
 
     private var copy: (title: String, subtitle: String, placeholder: String, add: String, empty: String, delete: String) {
-        switch localization.language {
-        case .english: ("Custom categories", "Create topics that constrain AI card generation.", "Category name", "Add", "No custom categories yet.", "Delete")
-        case .german: ("Eigene Kategorien", "Erstellen Sie Themen, die die KI-Kartenerstellung eingrenzen.", "Kategoriename", "Hinzufügen", "Noch keine eigenen Kategorien.", "Löschen")
-        case .persian: ("دسته‌های سفارشی", "موضوع‌هایی بسازید که تولید کارت با هوش مصنوعی را محدود می‌کنند.", "نام دسته", "افزودن", "هنوز دستهٔ سفارشی ندارید.", "حذف")
-        }
+        (
+            localization.localized("settings.customDomains.title"),
+            localization.localized("settings.customDomains.description"),
+            localization.localized("settings.customDomains.placeholder"),
+            localization.localized("common.add"),
+            localization.localized("settings.customDomains.empty"),
+            localization.localized("common.delete")
+        )
     }
 }
 
@@ -441,6 +436,7 @@ private struct LegacyProviderSettingsForm: View {
     @Environment(PrototypeAISettings.self) private var settings
     @State private var apiKey = ""
     @State private var statusMessage: String?
+    @State private var statusIsSuccess = false
     @State private var isTesting = false
 
     var body: some View {
@@ -449,7 +445,7 @@ private struct LegacyProviderSettingsForm: View {
             SecureField(settings.hasAPIKey ? localization.localized("provider.savedKeyChange") : localization.localized("provider.apiKey"), text: $apiKey)
                 .textContentType(.password)
                 .environment(\.layoutDirection, .leftToRight)
-            TextField("Model ID", text: $settings.modelID)
+            TextField(localization.localized("provider.modelID"), text: $settings.modelID)
                 .environment(\.layoutDirection, .leftToRight)
             Toggle(localization.localized("provider.cloudConsent"), isOn: $settings.cloudConsent)
             Text(localization.localized("provider.keychainNotice"))
@@ -457,33 +453,35 @@ private struct LegacyProviderSettingsForm: View {
                 .foregroundStyle(.secondary)
 
             HStack {
-                Button(localization.localized("ذخیرهٔ امن کلید")) {
+                Button(localization.localized("provider.saveKey")) {
                     do {
                         try settings.saveAPIKey(apiKey)
                         apiKey = ""
-                        statusMessage = "کلید در Keychain ذخیره شد."
+                        statusMessage = localization.localized("provider.keySaved")
                     } catch {
                         statusMessage = error.localizedDescription
                     }
+                    statusIsSuccess = false
                 }
                 .disabled(apiKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
 
-                Button(localization.localized("تست اتصال")) { testConnection() }
+                Button(localization.localized("provider.testConnection")) { testConnection() }
                     .disabled(!settings.hasAPIKey || isTesting)
 
                 if settings.hasAPIKey {
-                    Button(localization.localized("حذف کلید"), role: .destructive) {
+                    Button(localization.localized("provider.deleteKey"), role: .destructive) {
                         settings.deleteAPIKey()
-                        statusMessage = "کلید حذف شد."
+                        statusMessage = localization.localized("provider.keyDeleted")
+                        statusIsSuccess = false
                     }
                 }
             }
 
-            if isTesting { ProgressView(localization.localized("در حال آزمایش…")) }
+            if isTesting { ProgressView(localization.localized("provider.testing")) }
             if let statusMessage {
                 Text(statusMessage)
                     .font(.caption)
-                    .foregroundStyle(statusMessage.contains("موفق") ? PrototypeTheme.mint : .secondary)
+                    .foregroundStyle(statusIsSuccess ? PrototypeTheme.mint : .secondary)
             }
         }
     }
@@ -493,9 +491,11 @@ private struct LegacyProviderSettingsForm: View {
         Task {
             do {
                 try await ConfiguredProviderClient(baseURL: settings.endpoint, protocolName: settings.protocolName).testConnection(apiKey: try settings.apiKey())
-                statusMessage = "اتصال موفق بود."
+                statusMessage = localization.localized("provider.connectionSucceeded")
+                statusIsSuccess = true
             } catch {
                 statusMessage = error.localizedDescription
+                statusIsSuccess = false
             }
             isTesting = false
         }
@@ -1081,13 +1081,13 @@ enum ProviderError: LocalizedError {
 
     var errorDescription: String? {
         switch self {
-        case .missingAPIKey: "ابتدا API Key مربوط به provider انتخاب‌شده را در تنظیمات ذخیره کن."
-        case .consentRequired: "برای provider ابری، اجازهٔ ارسال داده را در تنظیمات فعال کن."
-        case .providerDisabled: "تولید متن در تنظیمات خاموش است."
-        case .unsupportedProtocol: "پروتکل انتخاب‌شده هنوز برای تولید کارت پشتیبانی نمی‌شود."
-        case .invalidResponse: "پاسخ provider با ساختار کارت سازگار نبود."
-        case .service(let status, let message): "Provider (\(status)): \(message)"
-        case .keychain(let status): "ذخیره یا خواندن Keychain انجام نشد (\(status))."
+        case .missingAPIKey: PrototypeLocalization.current("provider.error.missingKey")
+        case .consentRequired: PrototypeLocalization.current("provider.error.consent")
+        case .providerDisabled: PrototypeLocalization.current("provider.error.disabled")
+        case .unsupportedProtocol: PrototypeLocalization.current("provider.error.protocol")
+        case .invalidResponse: PrototypeLocalization.current("provider.error.invalidResponse")
+        case .service(let status, let message): PrototypeLocalization.current("provider.error.service", "\(status)", message)
+        case .keychain(let status): PrototypeLocalization.current("provider.error.keychain", "\(status)")
         }
     }
 }
@@ -1254,7 +1254,7 @@ struct ConfiguredProviderClient: Sendable {
         let (_, response) = try await URLSession.shared.data(for: request)
         guard let http = response as? HTTPURLResponse else { throw ProviderError.invalidResponse }
         guard (200..<300).contains(http.statusCode) else {
-            throw ProviderError.service(http.statusCode, http.statusCode == 401 ? "کلید API معتبر نیست یا برای این endpoint قابل استفاده نیست." : "کلید یا اتصال معتبر نیست.")
+            throw ProviderError.service(http.statusCode, PrototypeLocalization.current(http.statusCode == 401 ? "provider.error.invalidKey" : "provider.error.keyOrConnection"))
         }
     }
 
@@ -1270,7 +1270,7 @@ struct ConfiguredProviderClient: Sendable {
         let (data, response) = try await URLSession.shared.data(for: request)
         guard let http = response as? HTTPURLResponse else { throw ProviderError.invalidResponse }
         guard (200..<300).contains(http.statusCode) else {
-            throw ProviderError.service(http.statusCode, http.statusCode == 401 ? "کلید API معتبر نیست یا برای این endpoint قابل استفاده نیست." : "دریافت فهرست مدل‌ها ناموفق بود.")
+            throw ProviderError.service(http.statusCode, PrototypeLocalization.current(http.statusCode == 401 ? "provider.error.invalidKey" : "provider.error.modelList"))
         }
         guard let envelope = try? JSONDecoder().decode(ProviderModelsEnvelope.self, from: data) else {
             throw ProviderError.invalidResponse
@@ -1495,8 +1495,8 @@ struct ConfiguredProviderClient: Sendable {
         guard let http = response as? HTTPURLResponse else { throw ProviderError.invalidResponse }
         guard (200..<300).contains(http.statusCode) else {
             let message = (try? JSONSerialization.jsonObject(with: data) as? [String: Any])
-                .flatMap { $0["error"] as? [String: Any] }?["message"] as? String ?? "درخواست ناموفق بود."
-            let normalizedMessage = http.statusCode == 401 ? "کلید API معتبر نیست یا برای این endpoint قابل استفاده نیست." : message
+                .flatMap { $0["error"] as? [String: Any] }?["message"] as? String ?? PrototypeLocalization.current("provider.error.requestFailed")
+            let normalizedMessage = http.statusCode == 401 ? PrototypeLocalization.current("provider.error.invalidKey") : message
             throw ProviderError.service(http.statusCode, normalizedMessage)
         }
         let envelope = try JSONDecoder().decode(ProviderChatEnvelope.self, from: data)
@@ -1525,7 +1525,7 @@ struct ConfiguredProviderClient: Sendable {
         guard let http = response as? HTTPURLResponse else { throw ProviderError.invalidResponse }
         guard (200..<300).contains(http.statusCode) else {
             let message = (try? JSONSerialization.jsonObject(with: data) as? [String: Any])
-                .flatMap { $0["error"] as? [String: Any] }?["message"] as? String ?? "ترجمه ناموفق بود."
+                .flatMap { $0["error"] as? [String: Any] }?["message"] as? String ?? PrototypeLocalization.current("provider.error.translationFailed")
             throw ProviderError.service(http.statusCode, message)
         }
         let envelope = try JSONDecoder().decode(ProviderChatEnvelope.self, from: data)

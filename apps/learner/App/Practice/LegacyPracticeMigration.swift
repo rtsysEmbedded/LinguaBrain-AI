@@ -14,17 +14,8 @@ enum PracticeCutoverFailure: String, Error, Codable, Sendable, Equatable {
     case activationFailed
     case recoveryFailed
 
-    var recoveryGuidance: String {
-        switch self {
-        case .legacyStoreMissing: "The legacy learning store was not found. No migration was attempted."
-        case .legacyStoreUnreadable: "The legacy store could not be read. Keep the retained source and use the verified backup before retrying."
-        case .backupFailed: "The required pre-migration backup could not be created. Nothing was activated."
-        case .migrationFailed: "Migration stopped safely. The retained source and any checkpoint remain available for recovery and retry."
-        case .validationFailed: "Validation did not pass. GRDB was not activated; compare counts, identities, and the retained source."
-        case .activationFailed: "The new store was not activated. Keep the backup and retry after diagnosing the local store."
-        case .recoveryFailed: "Recovery did not complete. Keep both stores intact and use the platform recovery procedure."
-        }
-    }
+    /// Localization key for the learner-facing recovery guidance.
+    var recoveryGuidanceKey: String { "cutover.recovery.\(rawValue)" }
 }
 
 enum PracticeCutoverState: Codable, Sendable, Equatable {

@@ -110,7 +110,7 @@ struct AddWordPrototypeView: View {
         .toolbar {
             ToolbarItemGroup(placement: .keyboard) {
                 Spacer()
-                Button(localization.language == .persian ? "بستن" : "Done") { contextFieldFocused = false }
+                Button(localization.localized("common.done")) { contextFieldFocused = false }
             }
         }
         .alert(localization.localized("domain.newTitle"), isPresented: $showingDomainEditor) {
@@ -276,28 +276,11 @@ struct AddWordPrototypeView: View {
     }
 
     private var addSectionPickerTitle: String {
-        switch localization.language {
-        case .english: "Add method"
-        case .german: "Hinzufügen mit"
-        case .persian: "روش افزودن"
-        }
+        localization.localized("addWord.method")
     }
 
     private func addSectionTitle(_ section: AddSection) -> String {
-        switch (localization.language, section) {
-        case (.english, .singleCard): "Create one card"
-        case (.english, .ankiFile): "Build Anki from file/list"
-        case (.english, .contextText): "Build from passage"
-        case (.english, .importPackage): "Import Anki package"
-        case (.german, .singleCard): "Einzelne Karte erstellen"
-        case (.german, .ankiFile): "Anki aus Datei/Liste erstellen"
-        case (.german, .contextText): "Aus Text erstellen"
-        case (.german, .importPackage): "Anki-Paket importieren"
-        case (.persian, .singleCard): "ساخت یک کارت"
-        case (.persian, .ankiFile): "ساخت Anki از فایل یا فهرست"
-        case (.persian, .contextText): "ساخت از متن"
-        case (.persian, .importPackage): "ورود بستهٔ Anki"
-        }
+        localization.localized("addWord.section.\(section.rawValue)")
     }
 
     private func batchStep(_ number: Int, _ title: String) -> some View {
@@ -307,27 +290,15 @@ struct AddWordPrototypeView: View {
     }
 
     private var batchInputStepTitle: String {
-        switch localization.language {
-        case .english: "Words"
-        case .german: "Wörter"
-        case .persian: "کلمه‌ها"
-        }
+        localization.localized("addWord.batch.step.words")
     }
 
     private var batchSettingsStepTitle: String {
-        switch localization.language {
-        case .english: "Card settings"
-        case .german: "Karteneinstellungen"
-        case .persian: "تنظیمات کارت"
-        }
+        localization.localized("addWord.batch.step.settings")
     }
 
     private var batchExportStepTitle: String {
-        switch localization.language {
-        case .english: "Media and output"
-        case .german: "Medien und Ausgabe"
-        case .persian: "رسانه و خروجی"
-        }
+        localization.localized("addWord.batch.step.output")
     }
 
     private func generateAudio() {
@@ -358,7 +329,7 @@ struct AddWordPrototypeView: View {
                     .frame(minHeight: 90)
                     .padding(6)
                     .overlay(RoundedRectangle(cornerRadius: 8).stroke(.secondary.opacity(0.35)))
-                    .accessibilityLabel("فهرست کلمات")
+                    .accessibilityLabel(localization.localized("addWord.batch.wordListAccessibility"))
 
                 HStack {
                     Button(batchCopy(.chooseTextFile), systemImage: "doc.badge.plus") {
@@ -366,7 +337,7 @@ struct AddWordPrototypeView: View {
                     }
                     .buttonStyle(.bordered)
                     Spacer()
-                    Text(batchCopy(.wordCount).replacingOccurrences(of: "%d", with: "\(parsedBatchWords.count)"))
+                    Text(localization.formatted("addWord.batch.wordCount", "\(parsedBatchWords.count)"))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -519,13 +490,9 @@ struct AddWordPrototypeView: View {
         }
     }
 
-    private enum ContextCopy { case title, subtitle, topic, level, inputLanguage, translationLanguage, select, candidates, candidatesHint, build, translate, translation }
+    private enum ContextCopy: String { case title, subtitle, topic, level, inputLanguage, translationLanguage, select, candidates, candidatesHint, build, translate, translation }
     private func contextCopy(_ key: ContextCopy) -> String {
-        switch (localization.language, key) {
-        case (.english, .title): "Build cards from a passage"; case (.english, .subtitle): "Paste a text. AI selects important content words in context."; case (.english, .topic): "Topic"; case (.english, .level): "Word level"; case (.english, .inputLanguage): "Text language"; case (.english, .translationLanguage): "Translation language"; case (.english, .select): "Select important words"; case (.english, .candidates): "Suggested words"; case (.english, .candidatesHint): "Edit, remove, or add words before creating cards."; case (.english, .build): "Create cards from selected words"; case (.english, .translate): "Translate passage"; case (.english, .translation): "Translation"
-        case (.german, .title): "Karten aus einem Text erstellen"; case (.german, .subtitle): "Text einfügen. Die KI wählt wichtige Inhaltswörter im Kontext aus."; case (.german, .topic): "Thema"; case (.german, .level): "Wortniveau"; case (.german, .inputLanguage): "Textsprache"; case (.german, .translationLanguage): "Übersetzungssprache"; case (.german, .select): "Wichtige Wörter auswählen"; case (.german, .candidates): "Vorgeschlagene Wörter"; case (.german, .candidatesHint): "Wörter vor dem Erstellen bearbeiten, entfernen oder ergänzen."; case (.german, .build): "Karten aus ausgewählten Wörtern erstellen"; case (.german, .translate): "Text übersetzen"; case (.german, .translation): "Übersetzung"
-        case (.persian, .title): "ساخت کارت از متن"; case (.persian, .subtitle): "یک متن وارد کنید؛ هوش مصنوعی واژه‌های محتوایی و مهم را با توجه به زمینه انتخاب می‌کند."; case (.persian, .topic): "موضوع"; case (.persian, .level): "حداقل سطح واژه"; case (.persian, .inputLanguage): "زبان متن"; case (.persian, .translationLanguage): "زبان ترجمه"; case (.persian, .select): "انتخاب واژه‌های مهم"; case (.persian, .candidates): "واژه‌های پیشنهادی"; case (.persian, .candidatesHint): "پیش از ساخت کارت، واژه‌ها را حذف، ویرایش یا اضافه کنید."; case (.persian, .build): "ساخت کارت از واژه‌های انتخاب‌شده"; case (.persian, .translate): "ترجمهٔ متن"; case (.persian, .translation): "ترجمه"
-        }
+        localization.localized("addWord.context.\(key.rawValue)")
     }
 
     private func translateContext() {
@@ -541,7 +508,7 @@ struct AddWordPrototypeView: View {
 
     private func buildFromContext() {
         isBuildingBatch = true
-        batchStatus = localization.language == .persian ? "در حال انتخاب واژه‌های مهم متن…" : "Selecting important words from the text…"
+        batchStatus = localization.localized("addWord.context.selecting")
         Task {
             do {
                 guard aiSettings.textMode != .off else { throw ProviderError.providerDisabled }
@@ -597,22 +564,17 @@ struct AddWordPrototypeView: View {
     }
 
     private func batchStatusCopy(_ status: BatchStatusCopy) -> String {
-        switch (localization.language, status) {
-        case (.english, .saved): "Anki file is ready and saved."
-        case (.german, .saved): "Die Anki-Datei ist fertig und gespeichert."
-        case (.persian, .saved): "فایل Anki آماده و ذخیره شد."
-        case (.english, .fileLoaded(let count)): "Text file loaded; \(count) words are ready."
-        case (.german, .fileLoaded(let count)): "Textdatei geladen; \(count) Wörter sind bereit."
-        case (.persian, .fileLoaded(let count)): "فایل خوانده شد؛ \(count) کلمه آماده است."
-        case (.english, .building(let current, let total, let word)): "Building card \(current) of \(total): \(word)"
-        case (.german, .building(let current, let total, let word)): "Karte \(current) von \(total) wird erstellt: \(word)"
-        case (.persian, .building(let current, let total, let word)): "در حال ساخت کارت \(current) از \(total): \(word)"
-        case (.english, .readyToSave(let count)): "\(count) cards are ready; choose where to save the file."
-        case (.german, .readyToSave(let count)): "\(count) Karten sind bereit; Speicherort auswählen."
-        case (.persian, .readyToSave(let count)): "\(count) کارت آماده است؛ محل ذخیرهٔ فایل را انتخاب کنید."
-        case (.english, .partialSuccess(let cards, let failures, let details)): "\(cards) cards ready; \(failures) inputs failed: \(details)"
-        case (.german, .partialSuccess(let cards, let failures, let details)): "\(cards) Karten bereit; \(failures) Eingaben fehlgeschlagen: \(details)"
-        case (.persian, .partialSuccess(let cards, let failures, let details)): "\(cards) کارت آماده شد؛ \(failures) ورودی ناموفق بود: \(details)"
+        switch status {
+        case .saved:
+            localization.localized("addWord.batch.status.saved")
+        case .fileLoaded(let count):
+            localization.formatted("addWord.batch.status.fileLoaded", "\(count)")
+        case .building(let current, let total, let word):
+            localization.formatted("addWord.batch.status.building", "\(current)", "\(total)", word)
+        case .readyToSave(let count):
+            localization.formatted("addWord.batch.status.readyToSave", "\(count)")
+        case .partialSuccess(let cards, let failures, let details):
+            localization.formatted("addWord.batch.status.partialSuccess", "\(cards)", "\(failures)", details)
         }
     }
 
@@ -718,7 +680,7 @@ struct AddWordPrototypeView: View {
                         ) {
                             savedWords.append(contentsOf: cards)
                         } else {
-                            failures.append("\(input): \(store.lastPersistenceError ?? "کارت ذخیره نشد.")")
+                            failures.append("\(input): \(store.lastPersistenceError ?? localization.localized("addWord.batch.cardNotSaved"))")
                         }
                     } catch {
                         failures.append("\(input): \(batchFailureMessage(error))")
@@ -811,110 +773,66 @@ struct AddWordPrototypeView: View {
     }
 
     private var addCustomDomainLabel: String {
-        switch localization.language {
-        case .english: "Add custom category"
-        case .german: "Eigene Kategorie hinzufügen"
-        case .persian: "افزودن دستهٔ جدید"
-        }
+        localization.localized("addWord.customDomain.add")
     }
 
     private func noCardsMessage(_ failures: [String]) -> String {
         let details = failures.joined(separator: "\n")
-        switch localization.language {
-        case .english: return "No cards were created.\(details.isEmpty ? "" : "\n\(details)")"
-        case .german: return "Es wurden keine Karten erstellt.\(details.isEmpty ? "" : "\n\(details)")"
-        case .persian: return "هیچ کارتی ساخته نشد.\(details.isEmpty ? "" : "\n\(details)")"
-        }
+        let message = localization.localized("addWord.batch.noCards")
+        return details.isEmpty ? message : "\(message)\n\(details)"
     }
 
-    private enum BatchCopy {
+    private enum BatchCopy: String {
         case title, subtitle, topicPlaceholder, chooseTextFile, wordCount, inputLanguage, translationLanguage, cardDirection, outputName, includeAudio, includeImage, buildAndSave, awaitingAI, independentSenses
     }
 
     private func batchCopy(_ key: BatchCopy) -> String {
-        switch (localization.language, key) {
-        case (.english, .title): "Build Anki deck"
-        case (.english, .subtitle): "Enter comma- or line-separated words, or choose a text file. Independent meanings become separate cards."
-        case (.english, .topicPlaceholder): "Topic, e.g. travel or software"
-        case (.english, .chooseTextFile): "Choose .txt file"
-        case (.english, .wordCount): "%d words"
-        case (.english, .inputLanguage): "Input language"
-        case (.english, .translationLanguage): "Translation language"
-        case (.english, .cardDirection): "Card front: input word · Card back: translation"
-        case (.english, .outputName): "Output filename"
-        case (.english, .includeAudio): "Generate pronunciation audio"
-        case (.english, .includeImage): "Generate learning image"
-        case (.english, .buildAndSave): "Build and save .apkg"
-        case (.english, .awaitingAI): "Waiting for AI"
-        case (.english, .independentSenses): "Independent meanings and usage"
-        case (.german, .title): "Anki-Stapel erstellen"
-        case (.german, .subtitle): "Wörter durch Kommas oder Zeilen trennen oder eine Textdatei wählen. Eigenständige Bedeutungen werden getrennte Karten."
-        case (.german, .topicPlaceholder): "Thema, z. B. Reisen oder Software"
-        case (.german, .chooseTextFile): ".txt-Datei auswählen"
-        case (.german, .wordCount): "%d Wörter"
-        case (.german, .inputLanguage): "Eingabesprache"
-        case (.german, .translationLanguage): "Übersetzungssprache"
-        case (.german, .cardDirection): "Vorderseite: Eingabewort · Rückseite: Übersetzung"
-        case (.german, .outputName): "Ausgabedatei"
-        case (.german, .includeAudio): "Aussprache erzeugen"
-        case (.german, .includeImage): "Lernbild erzeugen"
-        case (.german, .buildAndSave): ".apkg erstellen und speichern"
-        case (.german, .awaitingAI): "Warten auf KI"
-        case (.german, .independentSenses): "Eigenständige Bedeutungen und Verwendung"
-        case (.persian, .title): "ساخت دسته‌ای فایل Anki"
-        case (.persian, .subtitle): "کلمه‌ها را با کاما، خط جدید، یا یک فایل متنی وارد کنید. هر معنی مستقل یک کارت جدا می‌شود."
-        case (.persian, .topicPlaceholder): "موضوع، مثلاً سفر یا برنامه‌نویسی"
-        case (.persian, .chooseTextFile): "انتخاب فایل .txt"
-        case (.persian, .wordCount): "%d کلمه"
-        case (.persian, .inputLanguage): "زبان واژه‌های ورودی"
-        case (.persian, .translationLanguage): "زبان ترجمه"
-        case (.persian, .cardDirection): "روی کارت: واژهٔ ورودی · پشت کارت: ترجمه"
-        case (.persian, .outputName): "نام فایل خروجی"
-        case (.persian, .includeAudio): "تولید صدای تلفظ"
-        case (.persian, .includeImage): "تولید تصویر آموزشی"
-        case (.persian, .buildAndSave): "ساخت و ذخیرهٔ فایل .apkg"
-        case (.persian, .awaitingAI): "در انتظار AI"
-        case (.persian, .independentSenses): "معنی‌ها و کاربردهای مستقل"
-        }
+        localization.localized("addWord.batch.\(key.rawValue)")
     }
 
     private var packageImporter: some View {
         return PrototypeCard {
             VStack(alignment: .leading, spacing: 14) {
                 HStack {
-                    Label("ورود فایل Anki", systemImage: "square.and.arrow.down")
+                    Label(localization.localized("addWord.import.title"), systemImage: "square.and.arrow.down")
                         .font(.headline)
                     Spacer()
-                    Text("پیش‌بررسی امن")
+                    Text(localization.localized("addWord.import.safePreflight"))
                         .font(.caption.weight(.semibold))
                         .foregroundStyle(PrototypeTheme.accent)
                 }
 
                 if isInspectingPackage {
-                    ProgressView("در حال بررسی ساختار بسته…")
+                    ProgressView(localization.localized("addWord.import.inspecting"))
                 } else if let packagePreview {
                     VStack(alignment: .leading, spacing: 8) {
                         Label(packagePreview.fileName, systemImage: "checkmark.shield.fill")
                             .foregroundStyle(PrototypeTheme.mint)
-                        Text("\(packagePreview.entryCount) فایل · \(packagePreview.mediaEntryCount) رسانه · دیتابیس: \(packagePreview.collectionName)")
+                        Text(localization.formatted(
+                            "addWord.import.summary",
+                            "\(packagePreview.entryCount)", "\(packagePreview.mediaEntryCount)", packagePreview.collectionName
+                        ))
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
-                        Text("حجم بازشدهٔ اعلام‌شده: \(packagePreview.expandedBytes.formatted(.byteCount(style: .file)))")
+                        Text(localization.formatted("addWord.import.expandedSize", packagePreview.expandedBytes.formatted(.byteCount(style: .file))))
                             .font(.caption)
                             .foregroundStyle(.secondary)
                         if let importResult {
-                            Label("\(importResult.addedCount) جدید · \(importResult.updatedCount) اصلاح‌شده · \(importResult.skippedCount) تکراری", systemImage: "checkmark.circle.fill")
+                            Label(localization.formatted(
+                                "addWord.import.result",
+                                "\(importResult.addedCount)", "\(importResult.updatedCount)", "\(importResult.skippedCount)"
+                            ), systemImage: "checkmark.circle.fill")
                                 .font(.caption.weight(.semibold))
                                 .foregroundStyle(PrototypeTheme.mint)
                             importCompletionActions
                         } else {
-                            Text("فایل آماده است؛ برای ثبت کارت‌ها دکمهٔ ورود را بزن.")
+                            Text(localization.localized("addWord.import.readyHint"))
                                 .font(.caption.weight(.semibold))
                                 .foregroundStyle(.orange)
                         }
                     }
                 } else {
-                    Text("فایل قبل از استخراج از نظر مسیرهای خطرناک، رمزگذاری، تعداد فایل، حجم بازشده و نسبت فشرده‌سازی بررسی می‌شود.")
+                    Text(localization.localized("addWord.import.checksDescription"))
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                 }
@@ -922,7 +840,7 @@ struct AddWordPrototypeView: View {
                 Button {
                     isImporterPresented = true
                 } label: {
-                    Label("انتخاب فایل .apkg", systemImage: "doc.badge.plus")
+                    Label(localization.localized("addWord.import.choose"), systemImage: "doc.badge.plus")
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.bordered)
@@ -936,7 +854,7 @@ struct AddWordPrototypeView: View {
                             ProgressView()
                                 .frame(maxWidth: .infinity)
                         } else {
-                            Label("تأیید و ورود به LinguaBrain", systemImage: "square.and.arrow.down.fill")
+                            Label(localization.localized("addWord.import.confirm"), systemImage: "square.and.arrow.down.fill")
                                 .frame(maxWidth: .infinity)
                         }
                     }
@@ -948,11 +866,7 @@ struct AddWordPrototypeView: View {
     }
 
     private var importReturnCopy: String {
-        switch localization.language {
-        case .english: "Back to add options"
-        case .german: "Zurück zu den Hinzufügeoptionen"
-        case .persian: "بازگشت به گزینه‌های افزودن"
-        }
+        localization.localized("addWord.import.back")
     }
 
     @ViewBuilder
@@ -1005,7 +919,7 @@ struct AddWordPrototypeView: View {
                     deckName: preview.deckName,
                     sourcePackage: preview.fileName
                 ) else {
-                    throw APKGImportError.databaseWriteFailed(store.lastPersistenceError ?? "خطای ناشناخته")
+                    throw APKGImportError.databaseWriteFailed(store.lastPersistenceError ?? localization.localized("common.unknownError"))
                 }
                 // Keep the learner's target language (German) and align the
                 // support language with the imported deck (English). Without
@@ -1154,7 +1068,7 @@ struct APKGCollectionEntry: Sendable {
 }
 
 enum APKGInspectionError: LocalizedError {
-    case fileTooLarge
+    case fileTooLarge(limit: UInt64)
     case malformedArchive
     case unsupportedZip64
     case tooManyEntries
@@ -1168,17 +1082,21 @@ enum APKGInspectionError: LocalizedError {
 
     var errorDescription: String? {
         switch self {
-        case .fileTooLarge: "حجم فایل از حد مجاز ۵۱۲ مگابایت بیشتر است."
-        case .malformedArchive: "ساختار ZIP فایل معتبر نیست."
-        case .unsupportedZip64: "بسته‌های ZIP64 فعلاً پشتیبانی نمی‌شوند."
-        case .tooManyEntries: "تعداد فایل‌های داخل بسته از حد ایمن بیشتر است."
-        case .unsafePath(let path): "مسیر ناامن داخل بسته پیدا شد: \(path)"
-        case .encryptedEntry(let path): "فایل رمزگذاری‌شده پشتیبانی نمی‌شود: \(path)"
-        case .unsupportedCompression(let path): "روش فشرده‌سازی این فایل پشتیبانی نمی‌شود: \(path)"
-        case .expandedSizeExceeded: "حجم بازشدهٔ بسته از حد ایمن بیشتر است."
-        case .suspiciousCompressionRatio(let path): "نسبت فشرده‌سازی مشکوک است: \(path)"
-        case .duplicateEntry(let path): "نام تکراری داخل بسته پیدا شد: \(path)"
-        case .missingCollection: "فایل دیتابیس Anki داخل بسته پیدا نشد."
+        case .fileTooLarge(let limit):
+            PrototypeLocalization.current(
+                "apkg.error.fileTooLarge",
+                Int64(limit).formatted(.byteCount(style: .memory).locale(PrototypeLocalization.currentLanguage.locale))
+            )
+        case .malformedArchive: PrototypeLocalization.current("apkg.error.malformedArchive")
+        case .unsupportedZip64: PrototypeLocalization.current("apkg.error.unsupportedZip64")
+        case .tooManyEntries: PrototypeLocalization.current("apkg.error.tooManyEntries")
+        case .unsafePath(let path): PrototypeLocalization.current("apkg.error.unsafePath", path)
+        case .encryptedEntry(let path): PrototypeLocalization.current("apkg.error.encryptedEntry", path)
+        case .unsupportedCompression(let path): PrototypeLocalization.current("apkg.error.unsupportedCompression", path)
+        case .expandedSizeExceeded: PrototypeLocalization.current("apkg.error.expandedSizeExceeded")
+        case .suspiciousCompressionRatio(let path): PrototypeLocalization.current("apkg.error.suspiciousCompressionRatio", path)
+        case .duplicateEntry(let path): PrototypeLocalization.current("apkg.error.duplicateEntry", path)
+        case .missingCollection: PrototypeLocalization.current("apkg.error.missingCollection")
         }
     }
 }
@@ -1194,7 +1112,7 @@ struct APKGArchiveInspector: Sendable {
         let handle = try FileHandle(forReadingFrom: url)
         defer { try? handle.close() }
         let fileSize = try handle.seekToEnd()
-        guard fileSize <= maximumArchiveBytes else { throw APKGInspectionError.fileTooLarge }
+        guard fileSize <= maximumArchiveBytes else { throw APKGInspectionError.fileTooLarge(limit: maximumArchiveBytes) }
 
         let tailSize = min(fileSize, 65_557)
         try handle.seek(toOffset: fileSize - tailSize)
@@ -1347,12 +1265,11 @@ enum APKGImportError: LocalizedError {
 
     var errorDescription: String? {
         switch self {
-        case .unsupportedModernCollection:
-            "این بسته از فرمت جدید collection.anki21b استفاده می‌کند که هنوز پشتیبانی نمی‌شود. خروجی سازگار collection.anki21 یا collection.anki2 را وارد کن."
-        case .malformedCollection: "دیتابیس داخل بسته معتبر نیست."
-        case .noCards: "هیچ کارت قابل ورود در فایل پیدا نشد."
-        case .databaseOpenFailed: "دیتابیس Anki به‌صورت امن باز نشد."
-        case .databaseQueryFailed(let message): "خواندن کارت‌های Anki انجام نشد: \(message)"
+        case .unsupportedModernCollection: PrototypeLocalization.current("apkg.error.unsupportedModernCollection")
+        case .malformedCollection: PrototypeLocalization.current("apkg.error.malformedCollection")
+        case .noCards: PrototypeLocalization.current("apkg.error.noCards")
+        case .databaseOpenFailed: PrototypeLocalization.current("apkg.error.databaseOpenFailed")
+        case .databaseQueryFailed(let message): PrototypeLocalization.current("apkg.error.databaseQueryFailed", message)
         case .databaseWriteFailed(let message): message
         }
     }
@@ -1572,7 +1489,7 @@ struct APKGCardReader: Sendable {
                 .split(separator: ",", omittingEmptySubsequences: false)
                 .map(String.init)
         }
-        guard !result.isEmpty else { throw APKGImportError.databaseQueryFailed("تعریف فیلدهای مدل کارت معتبر نیست.") }
+        guard !result.isEmpty else { throw APKGImportError.databaseQueryFailed(PrototypeLocalization.current("apkg.error.invalidFieldDefinitions")) }
         return result
     }
 

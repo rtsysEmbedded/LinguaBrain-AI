@@ -39,53 +39,53 @@ struct ProgressPrototypeView: View {
             .frame(maxWidth: .infinity)
         }
         .background(PrototypeBackground())
-        .navigationTitle("پیشرفت")
+        .navigationTitle(localization.localized("progress.title"))
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
-                Button("ریست وضعیت", systemImage: "arrow.counterclockwise") {
+                Button(localization.localized("progress.resetStatus"), systemImage: "arrow.counterclockwise") {
                     isResetConfirmationPresented = true
                 }
             }
         }
         .confirmationDialog(
-            "همهٔ سابقه‌های مرور پاک شوند؟",
+            localization.localized("progress.resetConfirmTitle"),
             isPresented: $isResetConfirmationPresented,
             titleVisibility: .visible
         ) {
-            Button("پاک‌کردن کامل سابقه", role: .destructive) {
+            Button(localization.localized("progress.resetConfirmAction"), role: .destructive) {
                 resetProgress()
             }
-            Button("انصراف", role: .cancel) {}
+            Button(localization.localized("common.cancel"), role: .cancel) {}
         } message: {
-            Text("این کار تمام واژه‌ها را به حالت اولیه برمی‌گرداند و قابل بازگشت نیست.")
+            Text(localization.localized("progress.resetConfirmMessage"))
         }
-        .alert("خطای ذخیره‌سازی", isPresented: persistenceErrorBinding) {
-            Button("باشه", role: .cancel) {
+        .alert(localization.localized("common.storageError"), isPresented: persistenceErrorBinding) {
+            Button(localization.localized("common.ok"), role: .cancel) {
                 persistenceError = nil
                 store.clearPersistenceError()
             }
         } message: {
-            Text(persistenceError ?? "خطای ناشناخته")
+            Text(persistenceError ?? localization.localized("common.unknownError"))
         }
     }
 
     private var summary: some View {
         VStack(alignment: .leading, spacing: 18) {
-            Text("رشد این ماه").font(.title2.bold()).foregroundStyle(.white)
+            Text(localization.localized("progress.monthGrowth")).font(.title2.bold()).foregroundStyle(.white)
             HStack(spacing: 12) {
                 VStack(alignment: .leading) {
                     Text("\(reviewedCount)").font(.largeTitle.bold())
-                    Text("واژه مرورشده").font(.caption).foregroundStyle(.white.opacity(0.8))
+                    Text(localization.localized("progress.reviewedWords")).font(.caption).foregroundStyle(.white.opacity(0.8))
                 }
                 Spacer()
                 VStack(alignment: .leading) {
                     Text(averageStrength.formatted(.percent.precision(.fractionLength(0)))).font(.largeTitle.bold())
-                    Text("قدرت میانگین").font(.caption).foregroundStyle(.white.opacity(0.8))
+                    Text(localization.localized("progress.averageStrength")).font(.caption).foregroundStyle(.white.opacity(0.8))
                 }
                 Spacer()
                 VStack(alignment: .leading) {
                     Text("\(totalReviews)").font(.largeTitle.bold())
-                    Text("کل پاسخ‌ها").font(.caption).foregroundStyle(.white.opacity(0.8))
+                    Text(localization.localized("progress.totalAnswers")).font(.caption).foregroundStyle(.white.opacity(0.8))
                 }
             }
         }
@@ -97,14 +97,14 @@ struct ProgressPrototypeView: View {
     private var weeklyActivity: some View {
         PrototypeCard {
             VStack(alignment: .leading, spacing: 16) {
-                SectionHeader(title: "فعالیت هفتگی", subtitle: "دقیقه مطالعه در هر روز")
+                SectionHeader(title: "progress.weeklyActivity", subtitle: "progress.weeklyActivitySubtitle")
                 HStack(alignment: .bottom, spacing: 12) {
                     ForEach(Array(week.enumerated()), id: \.offset) { index, value in
                         VStack(spacing: 7) {
                             RoundedRectangle(cornerRadius: 7)
                                 .fill(index == 5 ? PrototypeTheme.heroGradient : LinearGradient(colors: [PrototypeTheme.accent.opacity(0.36)], startPoint: .top, endPoint: .bottom))
                                 .frame(height: CGFloat(value) * 2.2)
-                            Text(["ش", "ی", "د", "س", "چ", "پ", "ج"][index])
+                            Text(weekdayInitials[index])
                                 .font(.caption2)
                                 .foregroundStyle(.secondary)
                         }
@@ -119,13 +119,13 @@ struct ProgressPrototypeView: View {
     private var skills: some View {
         PrototypeCard {
             VStack(spacing: 17) {
-                SectionHeader(title: "نقشه مهارت‌ها", subtitle: "تسلط واقعی، نه فقط تعداد واژه‌ها")
-                SkillProgressRow(label: "تشخیص واژه", value: recognitionMastery, color: PrototypeTheme.mint)
-                SkillProgressRow(label: "یادآوری فعال", value: recallMastery, color: PrototypeTheme.accent)
-                SkillProgressRow(label: "شنیداری", value: listeningMastery, color: PrototypeTheme.pink)
-                SkillProgressRow(label: "نوشتن", value: writingMastery, color: PrototypeTheme.blue)
-                SkillProgressRow(label: "استفاده در جمله", value: productionMastery, color: .orange)
-                SkillProgressRow(label: "گرامر", value: grammarMastery, color: .purple)
+                SectionHeader(title: "progress.skillMap", subtitle: "progress.skillMapSubtitle")
+                SkillProgressRow(label: "progress.skill.recognition", value: recognitionMastery, color: PrototypeTheme.mint)
+                SkillProgressRow(label: "progress.skill.recall", value: recallMastery, color: PrototypeTheme.accent)
+                SkillProgressRow(label: "progress.skill.listening", value: listeningMastery, color: PrototypeTheme.pink)
+                SkillProgressRow(label: "progress.skill.writing", value: writingMastery, color: PrototypeTheme.blue)
+                SkillProgressRow(label: "progress.skill.production", value: productionMastery, color: .orange)
+                SkillProgressRow(label: "progress.skill.grammar", value: grammarMastery, color: .purple)
             }
         }
     }
@@ -137,7 +137,7 @@ struct ProgressPrototypeView: View {
                     .font(.title2)
                     .foregroundStyle(.yellow)
                 VStack(alignment: .leading, spacing: 5) {
-                    Text("بینش این هفته").font(.headline)
+                    Text(localization.localized("progress.weeklyInsight")).font(.headline)
                     Text(insightDescription)
                         .foregroundStyle(.secondary)
                 }
@@ -152,13 +152,13 @@ struct ProgressPrototypeView: View {
                     .font(.title2)
                     .foregroundStyle(PrototypeTheme.accent)
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("حالت آزمایش عملکرد").font(.headline)
+                    Text(localization.localized("progress.testMode")).font(.headline)
                     Text(resetDescription)
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                 }
                 Spacer()
-                Button("ریست") {
+                Button(localization.localized("progress.reset")) {
                     isResetConfirmationPresented = true
                 }
                 .buttonStyle(.bordered)
@@ -187,22 +187,22 @@ struct ProgressPrototypeView: View {
     }
 
     private var insightDescription: String {
-        switch (localization.language, reviewedCount == 0) {
-        case (.english, true): "No data has been recorded yet. This section will update after you review cards."
-        case (.german, true): "Es wurden noch keine Daten erfasst. Dieser Bereich wird nach dem Wiederholen aktualisiert."
-        case (.persian, true): "هنوز هیچ داده‌ای ثبت نشده است. پس از مرور، این بخش تغییر می‌کند."
-        case (.english, false): "Current data comes from \(totalReviews) answers across \(reviewedCount) words; listening and writing have no data yet."
-        case (.german, false): "Die aktuellen Daten stammen aus \(totalReviews) Antworten zu \(reviewedCount) Wörtern; für Hören und Schreiben gibt es noch keine Daten."
-        case (.persian, false): "داده‌های فعلی از \(totalReviews) پاسخ روی \(reviewedCount) واژه ساخته شده‌اند؛ شنیداری و نوشتن هنوز داده ندارند."
-        }
+        reviewedCount == 0
+            ? localization.localized("progress.insight.empty")
+            : localization.formatted("progress.insight.summary", "\(totalReviews)", "\(reviewedCount)")
     }
 
     private var resetDescription: String {
-        switch localization.language {
-        case .english: "Return every word to its initial, unreviewed state."
-        case .german: "Alle Wörter in ihren ursprünglichen, nicht wiederholten Zustand zurücksetzen."
-        case .persian: "همهٔ واژه‌ها را به وضعیت اولیه و بدون مرور برگردان."
-        }
+        localization.localized("progress.resetDescription")
+    }
+
+    /// Very short weekday symbols in the interface language, Saturday first to
+    /// match the order of `week`.
+    private var weekdayInitials: [String] {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.locale = localization.language.locale
+        let symbols = calendar.veryShortStandaloneWeekdaySymbols
+        return Array(symbols[6...] + symbols[..<6])
     }
 
     private var persistenceErrorBinding: Binding<Bool> {

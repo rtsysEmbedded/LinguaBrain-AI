@@ -60,7 +60,7 @@ final class AnkiCoreRegressionTests: XCTestCase {
 
     func testSettingsAndReviewLocalizationKeysHaveAllSupportedLanguages() {
         let requiredKeys = [
-            "برنامهٔ روزانه", "روش تمرین", "provider.cloudConsent",
+            "settings.learning.dailyPlan", "settings.review.method", "provider.cloudConsent",
             "recognitionReviewFormat", "reverseReviewTitle", "recordedResponses", "queueCount",
             "duration.minute", "duration.day", "duration.year"
         ]
@@ -68,8 +68,8 @@ final class AnkiCoreRegressionTests: XCTestCase {
             let localization = PrototypeLocalization()
             localization.language = language
             for key in requiredKeys {
-                XCTAssertFalse(localization.localized(key).isEmpty, "Missing (key) for (language.rawValue)")
-                XCTAssertNotEqual(localization.localized(key), key, "Untranslated (key) for (language.rawValue)")
+                XCTAssertFalse(localization.localized(key).isEmpty, "Missing \(key) for \(language.rawValue)")
+                XCTAssertNotEqual(localization.localized(key), key, "Untranslated \(key) for \(language.rawValue)")
             }
         }
     }

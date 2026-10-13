@@ -107,7 +107,7 @@ final class GenerationPrototypeModel {
         do {
             let job = try await useCase.startGeneration(from: command)
             guard let proposal = job.proposal else {
-                errorMessage = "No preview produced"
+                errorMessage = "generation.error.noPreview"
                 return
             }
             currentProposal = proposal
@@ -131,7 +131,7 @@ final class GenerationPrototypeModel {
             for direction in [ReviewDirection.recognition, .recall] {
                 // Determine media availability based on whether audio was requested (T040)
                 let mediaAvailable = includeAudioInPreview
-                let fallbackReason = includeAudioInPreview ? nil : "Audio not requested in generation settings"
+                let fallbackReason = includeAudioInPreview ? nil : "generation.media.audioNotRequested"
                 
                 let mediaStatus = MediaStatus(
                     audioAvailable: mediaAvailable,
@@ -297,7 +297,8 @@ struct CardGenerationView: View {
                 }
             }
             if let errorMessage = model.errorMessage {
-                Text(errorMessage).foregroundStyle(.red)
+                // Model errors are catalog keys or provider-supplied text; unknown keys fall back to the text itself.
+                Text(localization.localized(errorMessage)).foregroundStyle(.red)
             }
         }
     }

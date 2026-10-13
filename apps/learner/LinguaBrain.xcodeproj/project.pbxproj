@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		CF0000000000000000000018 /* InfoPlist.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = CF0000000000000000000006 /* InfoPlist.xcstrings */; };
+		CF0000000000000000000019 /* InfoPlist.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = CF0000000000000000000006 /* InfoPlist.xcstrings */; };
 		CF0000000000000000000017 /* AppConfigurationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF0000000000000000000005 /* AppConfigurationTests.swift */; };
 		CF0000000000000000000011 /* AppConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF0000000000000000000001 /* AppConfiguration.swift */; };
 		CF0000000000000000000012 /* AppConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF0000000000000000000001 /* AppConfiguration.swift */; };
@@ -109,6 +111,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		CF0000000000000000000006 /* InfoPlist.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = InfoPlist.xcstrings; sourceTree = "<group>"; };
 		CF0000000000000000000005 /* AppConfigurationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConfigurationTests.swift; sourceTree = "<group>"; };
 		CF0000000000000000000001 /* AppConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConfiguration.swift; sourceTree = "<group>"; };
 		CF0000000000000000000002 /* provider-catalog.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "provider-catalog.json"; sourceTree = "<group>"; };
@@ -282,6 +285,7 @@
 			children = (
 				20000000000000000000000C /* Assets.xcassets */,
 				200000000000000000000010 /* Localizable.xcstrings */,
+				CF0000000000000000000006 /* InfoPlist.xcstrings */,
 				400000000000000000000005 /* Localization */,
 				CF0000000000000000000004 /* Configuration */,
 			);
@@ -494,6 +498,7 @@
 			files = (
 				10000000000000000000000C /* Assets.xcassets in Resources */,
 				10000000000000000000000E /* Localizable.xcstrings in Resources */,
+				CF0000000000000000000018 /* InfoPlist.xcstrings in Resources */,
 				100000000000000000000011 /* en.json in Resources */,
 				100000000000000000000012 /* de.json in Resources */,
 				100000000000000000000013 /* fa.json in Resources */,
@@ -508,6 +513,7 @@
 			files = (
 				11000000000000000000000C /* Assets.xcassets in Resources */,
 				11000000000000000000000E /* Localizable.xcstrings in Resources */,
+				CF0000000000000000000019 /* InfoPlist.xcstrings in Resources */,
 				110000000000000000000011 /* en.json in Resources */,
 				110000000000000000000012 /* de.json in Resources */,
 				110000000000000000000013 /* fa.json in Resources */,

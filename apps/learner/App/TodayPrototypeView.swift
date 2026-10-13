@@ -15,10 +15,14 @@ struct TodayPrototypeView: View {
     @State private var selectedTime = 20
     @State private var motivation = 3
     @State private var selectedMode = LearningSessionMode.balanced.rawValue
-    @State private var selectedDomain = "همه حوزه‌ها"
+    @State private var selectedDomain = Self.allDomains
     @State private var customDomains = PrototypeDomainCatalog.customDomains
     @State private var didLoadDailyState = false
     @State private var dailyStateCapturedAt: Date?
+
+    /// Picker tag for "all topics"; never stored as a learner domain.
+    private static let allDomains = "today.domain.all"
+    private static let availableMinuteOptions = [5, 10, 20, 30]
 
     init(practiceComposition: PracticeComposition? = nil) {
         self.practiceComposition = practiceComposition
@@ -29,7 +33,7 @@ struct TodayPrototypeView: View {
             sourceLanguageTag: languageSettings.sourceLanguageTag,
             targetLanguageTag: languageSettings.targetLanguageTag
         )
-        return selectedDomain == "همه حوزه‌ها" ? words : words.filter { $0.domain == selectedDomain }
+        return selectedDomain == Self.allDomains ? words : words.filter { $0.domain == selectedDomain }
     }
 
     private var reviewedCount: Int { store.reviewedCount(in: activeWords) }
@@ -50,9 +54,9 @@ struct TodayPrototypeView: View {
     }
 
     private var learningMode: String {
-        if energy <= 3 { return localization.localized("حالت بازیابی") }
-        if energy >= 8 { return localization.localized("حالت چالش") }
-        return localization.localized("حالت رشد")
+        if energy <= 3 { return localization.localized("today.mode.recovery") }
+        if energy >= 8 { return localization.localized("today.mode.challenge") }
+        return localization.localized("today.mode.growth")
     }
 
     var body: some View {
@@ -69,13 +73,13 @@ struct TodayPrototypeView: View {
             .frame(maxWidth: .infinity)
         }
         .background(PrototypeBackground())
-        .navigationTitle("امروز")
+        .navigationTitle(localization.localized("today.title"))
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button(action: {}) {
                     Image(systemName: "bell.badge")
                 }
-                .accessibilityLabel("اعلان‌ها")
+                .accessibilityLabel(localization.localized("today.notifications"))
             }
         }
         .onAppear {
@@ -125,10 +129,10 @@ struct TodayPrototypeView: View {
         VStack(alignment: .leading, spacing: 18) {
             HStack(alignment: .top) {
                 VStack(alignment: .leading, spacing: 5) {
-                    Text("Guten Morgen 👋")
+                    Text(localization.localized("today.greeting"))
                         .font(.title2.weight(.bold))
                         .environment(\.layoutDirection, .leftToRight)
-                    Text("امروز یک قدم کوچک اما پیوسته برداریم.")
+                    Text(localization.localized("today.encouragement"))
                         .foregroundStyle(.white.opacity(0.88))
                 }
                 Spacer()
@@ -137,9 +141,9 @@ struct TodayPrototypeView: View {
             }
 
             HStack(spacing: 10) {
-                MetricPill(value: "\(dueCount)", label: "مرور", symbol: "arrow.clockwise", color: PrototypeTheme.accent)
-                MetricPill(value: "\(unreviewedCount)", label: "جدید", symbol: "sparkles", color: PrototypeTheme.pink)
-                MetricPill(value: store.averageStrength(in: activeWords).formatted(.percent.precision(.fractionLength(0))), label: "حافظه", symbol: "brain", color: PrototypeTheme.mint)
+                MetricPill(value: "\(dueCount)", label: "today.metric.review", symbol: "arrow.clockwise", color: PrototypeTheme.accent)
+                MetricPill(value: "\(unreviewedCount)", label: "today.metric.new", symbol: "sparkles", color: PrototypeTheme.pink)
+                MetricPill(value: store.averageStrength(in: activeWords).formatted(.percent.precision(.fractionLength(0))), label: "today.metric.memory", symbol: "brain", color: PrototypeTheme.mint)
             }
             .foregroundStyle(.primary)
         }
@@ -152,7 +156,7 @@ struct TodayPrototypeView: View {
     private var checkIn: some View {
         PrototypeCard {
             VStack(alignment: .leading, spacing: 18) {
-                SectionHeader(title: "امروز چه‌قدر انرژی داری؟", subtitle: "برنامه بر اساس حال امروزت تنظیم می‌شود")
+                SectionHeader(title: "today.energyQuestion", subtitle: "today.energySubtitle")
                 HStack {
                     Image(systemName: "battery.25percent").foregroundStyle(.secondary)
                     Slider(value: $energy, in: 1...10, step: 1)
@@ -161,11 +165,10 @@ struct TodayPrototypeView: View {
                         .font(.headline.monospacedDigit())
                         .frame(width: 28)
                 }
-                Picker("زمان آزاد", selection: $selectedTime) {
-                    Text("۵ دقیقه").tag(5)
-                    Text("۱۰ دقیقه").tag(10)
-                    Text("۲۰ دقیقه").tag(20)
-                    Text("۳۰ دقیقه").tag(30)
+                Picker(localization.localized("today.availableTime"), selection: $selectedTime) {
+                    ForEach(Self.availableMinuteOptions, id: \.self) { minutes in
+                        Text(localization.minutesLong(minutes)).tag(minutes)
+                    }
                 }
                 .pickerStyle(.segmented)
                 Picker(localization.localized("daily.motivation"), selection: $motivation) {
@@ -180,8 +183,8 @@ struct TodayPrototypeView: View {
                     Text(localization.localized("daily.mode.challenge")).tag(LearningSessionMode.challenge.rawValue)
                 }
                 .pickerStyle(.segmented)
-                Picker("حوزهٔ امروز", selection: $selectedDomain) {
-                    Text("همه حوزه‌ها").tag("همه حوزه‌ها")
+                Picker(localization.localized("today.domainPicker"), selection: $selectedDomain) {
+                    Text(localization.localized(Self.allDomains)).tag(Self.allDomains)
                     ForEach(customDomains, id: \.self) { Text($0).tag($0) }
                 }
                 .onAppear { customDomains = PrototypeDomainCatalog.customDomains }
@@ -191,12 +194,12 @@ struct TodayPrototypeView: View {
 
     private var todayPlan: some View {
         VStack(alignment: .leading, spacing: 12) {
-            SectionHeader(title: "مرور پیشنهادی", subtitle: "کارت‌های موعددار · \(localization.minutes(selectedTime))")
+            SectionHeader(title: "today.suggestedReview", subtitle: localization.formatted("today.dueCardsSubtitle", localization.minutes(selectedTime)))
             PrototypeCard {
                 planRow(
                     symbol: "rectangle.stack.fill",
                     color: PrototypeTheme.accent,
-                    title: "مرور کارت‌ها",
+                    title: "today.reviewCards",
                     detail: localization.reviewSummary(due: dueCount, new: newCardLimit),
                     time: localization.minutes(selectedTime)
                 )
@@ -205,7 +208,7 @@ struct TodayPrototypeView: View {
             NavigationLink {
                 ReviewPrototypeView(newCardLimit: newCardLimit, mode: .recognition)
             } label: {
-                Label("شروع مرور کارت‌ها", systemImage: "play.fill")
+                Label(localization.localized("today.startReview"), systemImage: "play.fill")
                     .font(.headline)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 14)

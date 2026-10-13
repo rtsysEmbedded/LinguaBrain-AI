@@ -11,12 +11,9 @@ enum PrototypeAppLanguage: String, CaseIterable, Identifiable, Sendable {
     var locale: Locale { Locale(identifier: rawValue) }
     var layoutDirection: LayoutDirection { self == .persian ? .rightToLeft : .leftToRight }
 
+    /// The language's own name (endonym), read from the localization catalog.
     var nativeName: String {
-        switch self {
-        case .english: "English"
-        case .german: "Deutsch"
-        case .persian: "فارسی"
-        }
+        PrototypeLocalization.localized("language.nativeName.\(rawValue)", language: self)
     }
 }
 
@@ -33,6 +30,8 @@ enum PrototypeTextKey: String, CaseIterable, Sendable {
 @Observable
 final class PrototypeLocalization {
     private enum Key { static let language = "prototype.interfaceLanguage" }
+    /// Interface language used before the learner selects one.
+    private static let defaultLanguage = PrototypeAppLanguage.english
     private let defaults: UserDefaults
 
     var language: PrototypeAppLanguage {
@@ -41,8 +40,7 @@ final class PrototypeLocalization {
 
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
-        language = defaults.string(forKey: Key.language)
-            .flatMap(PrototypeAppLanguage.init(rawValue:)) ?? .english
+        language = Self.storedLanguage(in: defaults)
     }
 
     func text(_ key: PrototypeTextKey) -> String {
@@ -62,12 +60,19 @@ final class PrototypeLocalization {
         return bundle.localizedString(forKey: key, value: key, table: nil)
     }
 
+    /// Resolves a catalog entry and substitutes `%1$@`, `%2$@`, … or, when the
+    /// entry has no positional markers, each `%@` in order.
+    func formatted(_ key: String, _ arguments: String...) -> String {
+        Self.substitute(localized(key), arguments)
+    }
+
     func minutes(_ count: Int) -> String {
-        switch language {
-        case .english: "\(count) min"
-        case .german: "\(count) Min."
-        case .persian: "\(count) دقیقه"
-        }
+        formatted("time.minutesShort", "\(count)")
+    }
+
+    /// "20 minutes" with digits in the interface language's numbering system.
+    func minutesLong(_ count: Int) -> String {
+        formatted("time.minutesLong", count.formatted(.number.locale(language.locale)))
     }
 
     func duration(_ seconds: Int) -> String {
@@ -82,11 +87,7 @@ final class PrototypeLocalization {
     }
 
     func reviewSummary(due: Int, new: Int) -> String {
-        switch language {
-        case .english: "\(due) reviews + \(new) new cards"
-        case .german: "\(due) Wiederholungen + \(new) neue Karten"
-        case .persian: "\(due) مرور + \(new) کارت جدید"
-        }
+        formatted("today.reviewSummary", "\(due)", "\(new)")
     }
 
     func coachMessage(reviewed: Int, weak: Int) -> String {
@@ -95,7 +96,67 @@ final class PrototypeLocalization {
     }
 
     static func text(_ key: PrototypeTextKey, language: PrototypeAppLanguage) -> String {
-        jsonTranslations[language]?[key.rawValue] ?? jsonTranslations[.english]?[key.rawValue] ?? key.rawValue
+        localized(key.rawValue, language: language)
+    }
+
+    static func localized(_ key: String, language: PrototypeAppLanguage) -> String {
+        jsonTranslations[language]?[key] ?? jsonTranslations[.english]?[key] ?? key
+    }
+
+    /// Catalog lookup for code outside the SwiftUI environment, such as models
+    /// and error descriptions. Views use the injected instance so that a
+    /// language change re-renders them.
+    static func current(_ key: String, _ arguments: String...) -> String {
+        substitute(localized(key, language: currentLanguage), arguments)
+    }
+
+    /// The persisted interface language, for formatting outside the SwiftUI environment.
+    static var currentLanguage: PrototypeAppLanguage {
+        storedLanguage(in: .standard)
+    }
+
+    /// Replaces `%@` (in order) and `%n$@` (by position) with `arguments`.
+    /// Matching works on Unicode scalars, so a placeholder followed by a
+    /// combining character such as ZWNJ is still recognised; substituted
+    /// text is never scanned again.
+    static func substitute(_ template: String, _ arguments: [String]) -> String {
+        guard !arguments.isEmpty else { return template }
+        let asciiDigits: ClosedRange<Unicode.Scalar> = "0"..."9"
+        let scalars = Array(template.unicodeScalars)
+        var output = String.UnicodeScalarView()
+        var nextSequential = 0
+        var index = 0
+        while index < scalars.count {
+            guard scalars[index] == "%" else {
+                output.append(scalars[index])
+                index += 1
+                continue
+            }
+            var cursor = index + 1
+            var position = 0
+            while cursor < scalars.count, asciiDigits.contains(scalars[cursor]) {
+                position = position * 10 + Int(scalars[cursor].value - asciiDigits.lowerBound.value)
+                cursor += 1
+            }
+            if cursor > index + 1, cursor + 1 < scalars.count, scalars[cursor] == "$", scalars[cursor + 1] == "@",
+               position >= 1, position <= arguments.count {
+                output.append(contentsOf: arguments[position - 1].unicodeScalars)
+                index = cursor + 2
+            } else if cursor == index + 1, cursor < scalars.count, scalars[cursor] == "@",
+                      nextSequential < arguments.count {
+                output.append(contentsOf: arguments[nextSequential].unicodeScalars)
+                nextSequential += 1
+                index = cursor + 1
+            } else {
+                output.append(scalars[index])
+                index += 1
+            }
+        }
+        return String(output)
+    }
+
+    private static func storedLanguage(in defaults: UserDefaults) -> PrototypeAppLanguage {
+        defaults.string(forKey: Key.language).flatMap(PrototypeAppLanguage.init(rawValue:)) ?? defaultLanguage
     }
 
     /// All editable interface copy lives in Resources/Localization/*.json.

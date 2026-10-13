@@ -68,7 +68,7 @@ struct SentenceLearningHistoryView: View {
                 labeledValue("practice.history.rules", item.sentence.ruleReferences.map(\.code).joined(separator: ", "))
             }
             if let reason = item.selectionReason {
-                labeledValue("practice.history.reason", localization.localized("practice.history.reason.(reason.rawValue)"))
+                labeledValue("practice.history.reason", localization.localized("practice.history.reason.\(reason.rawValue)"))
             }
             labeledValue("practice.history.mastery", masteryText(item.mastery))
             if let next = item.nextExerciseDescription { labeledValue("practice.history.next", next) }

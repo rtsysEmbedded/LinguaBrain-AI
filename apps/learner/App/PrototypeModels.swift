@@ -326,14 +326,6 @@ struct PrototypeFSRSSchedule: Equatable {
     let scheduledDays: Double
     let elapsedDays: Double
     let isShortTerm: Bool
-
-    var intervalLabel: String {
-        let seconds = max(0, dueAt.timeIntervalSince(state.lastReview))
-        if seconds < 60 { return "کمتر از ۱ دقیقه" }
-        if seconds < 3_600 { return "\(Int((seconds / 60).rounded())) دقیقه" }
-        if seconds < 86_400 { return "\(Int((seconds / 3_600).rounded())) ساعت" }
-        return "\(Int((seconds / 86_400).rounded())) روز"
-    }
 }
 
 /// Deterministic FSRS-6 scheduler using the canonical 21 default parameters.
@@ -538,11 +530,7 @@ enum PrototypeSection: String, CaseIterable, Identifiable, Hashable {
 
     func title(for language: PrototypeAppLanguage) -> String {
         if self == .utilities {
-            return switch language {
-            case .persian: "ابزارها"
-            case .german: "Werkzeuge"
-            case .english: "Utilities"
-        }
+            return PrototypeLocalization.localized("utilities.title", language: language)
         }
         let key: PrototypeTextKey = switch self {
         case .today: .today
@@ -765,15 +753,6 @@ enum PrototypeReviewGrade: String, CaseIterable, Identifiable, Hashable {
         }
     }
 
-    var title: String {
-        switch self {
-        case .again: "دوباره"
-        case .hard: "سخت"
-        case .good: "خوب"
-        case .easy: "آسان"
-        }
-    }
-
     var symbol: String {
         switch self {
         case .again: "arrow.counterclockwise"
@@ -815,14 +794,6 @@ enum PrototypeReviewMode: String, Sendable {
     case recognition
     case reverseTranslation
     case mixedGame
-
-    var title: String {
-        switch self {
-        case .recognition: "مرور آلمانی به فارسی"
-        case .reverseTranslation: "ترجمهٔ معکوس"
-        case .mixedGame: "بازی ترکیبی"
-        }
-    }
 }
 
 private struct PrototypeRelatedWordScore {
@@ -901,7 +872,7 @@ final class PrototypeStore {
                 try restoreCards()
                 restoreMission()
                 restorePersistedReviews()
-                lastPersistenceError = "Local storage was reset after a migration error. A backup of the previous store was kept."
+                lastPersistenceError = PrototypeLocalization.current("store.error.storeReset")
             } catch let recoveryError {
                 fatalError("Unable to initialize the review store: \(error.localizedDescription); recovery failed: \(recoveryError.localizedDescription)")
             }
@@ -964,7 +935,7 @@ final class PrototypeStore {
                 modelContext.insert(PrototypeLearningMissionRecord(id: mission.id, title: mission.title, domain: mission.domain, targetLevel: mission.targetLevel, weight: mission.weight))
             }
             try modelContext.save(); activeMission = mission
-        } catch { lastPersistenceError = "Mission save failed: \(error.localizedDescription)" }
+        } catch { lastPersistenceError = PrototypeLocalization.current("store.error.missionSave", error.localizedDescription) }
     }
 
     /// Returns today's persisted check-in. A new day deliberately has no
@@ -1022,7 +993,7 @@ final class PrototypeStore {
             lastPersistenceError = nil
         } catch {
             modelContext.rollback()
-            lastPersistenceError = "ذخیرهٔ وضعیت روزانه انجام نشد: \(error.localizedDescription)"
+            lastPersistenceError = PrototypeLocalization.current("store.error.dailyStateSave", error.localizedDescription)
         }
     }
 
@@ -1277,7 +1248,7 @@ final class PrototypeStore {
             return schedule
         } catch {
             modelContext.rollback()
-            lastPersistenceError = "ذخیره پاسخ انجام نشد: \(error.localizedDescription)"
+            lastPersistenceError = PrototypeLocalization.current("store.error.answerSave", error.localizedDescription)
             return nil
         }
     }
@@ -1296,7 +1267,7 @@ final class PrototypeStore {
             return true
         } catch {
             modelContext.rollback()
-            lastPersistenceError = "بازنشانی اطلاعات انجام نشد: \(error.localizedDescription)"
+            lastPersistenceError = PrototypeLocalization.current("store.error.reset", error.localizedDescription)
             return false
         }
     }
@@ -1467,7 +1438,7 @@ final class PrototypeStore {
             return PrototypeImportResult(deckName: deckName, addedCount: added, updatedCount: updated, skippedCount: skipped)
         } catch {
             modelContext.rollback()
-            lastPersistenceError = "ورود کارت‌ها انجام نشد: \(error.localizedDescription)"
+            lastPersistenceError = PrototypeLocalization.current("store.error.import", error.localizedDescription)
             return nil
         }
     }
@@ -1503,7 +1474,7 @@ final class PrototypeStore {
             }
             var generatedLemmaKeys = Set(cards.map { generatedLemmaKey($0.word) })
             guard words.allSatisfy({ generatedLemmaKeys.insert(generatedLemmaKey($0)).inserted }) else {
-                lastPersistenceError = "این واژه در همین حوزه از قبل وجود دارد."
+                lastPersistenceError = PrototypeLocalization.current("store.error.duplicateWord")
                 return false
             }
             let decks = try modelContext.fetch(FetchDescriptor<PrototypeDeckRecord>())
@@ -1535,7 +1506,7 @@ final class PrototypeStore {
             return true
         } catch {
             modelContext.rollback()
-            lastPersistenceError = "ذخیرهٔ کارت انجام نشد: \(error.localizedDescription)"
+            lastPersistenceError = PrototypeLocalization.current("store.error.cardSave", error.localizedDescription)
             return false
         }
     }
@@ -1546,13 +1517,13 @@ final class PrototypeStore {
             let allCards = try modelContext.fetch(FetchDescriptor<PrototypeCardRecord>())
             let cardsToDelete = allCards.filter { $0.sourcePackage == fileName }
             guard !cardsToDelete.isEmpty else {
-                lastPersistenceError = "بستهٔ واردشده پیدا نشد."
+                lastPersistenceError = PrototypeLocalization.current("store.error.packageNotFound")
                 return false
             }
             return try deleteCards(cardsToDelete, allCards: allCards)
         } catch {
             modelContext.rollback()
-            lastPersistenceError = "حذف بسته انجام نشد: \(error.localizedDescription)"
+            lastPersistenceError = PrototypeLocalization.current("store.error.packageDelete", error.localizedDescription)
             return false
         }
     }
@@ -1566,13 +1537,13 @@ final class PrototypeStore {
             let allCards = try modelContext.fetch(FetchDescriptor<PrototypeCardRecord>())
             let cardsToDelete = allCards.filter { ids.contains($0.id) }
             guard cardsToDelete.count == ids.count else {
-                lastPersistenceError = "برخی از کارت‌های انتخاب‌شده دیگر وجود ندارند. فهرست را تازه کنید."
+                lastPersistenceError = PrototypeLocalization.current("store.error.staleSelection")
                 return false
             }
             return try deleteCards(cardsToDelete, allCards: allCards)
         } catch {
             modelContext.rollback()
-            lastPersistenceError = "حذف کارت انجام نشد: \(error.localizedDescription)"
+            lastPersistenceError = PrototypeLocalization.current("store.error.cardDelete", error.localizedDescription)
             return false
         }
     }
@@ -1790,7 +1761,7 @@ final class PrototypeStore {
             if migratedLegacyKeys { try modelContext.save() }
             lastPersistenceError = nil
         } catch {
-            lastPersistenceError = "بازیابی اطلاعات مرور انجام نشد: \(error.localizedDescription)"
+            lastPersistenceError = PrototypeLocalization.current("store.error.reviewRestore", error.localizedDescription)
         }
     }
 

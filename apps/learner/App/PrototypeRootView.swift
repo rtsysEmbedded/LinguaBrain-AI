@@ -80,7 +80,7 @@ struct PrototypeRootView: View {
                     .tag(section)
                     .padding(.vertical, 4)
             }
-            .navigationTitle("LinguaBrain")
+            .navigationTitle(localization.localized("app.name"))
             .safeAreaInset(edge: .bottom) {
                 HStack(spacing: 10) {
                     Circle()
@@ -91,8 +91,8 @@ struct PrototypeRootView: View {
                                 .foregroundStyle(.white)
                         }
                     VStack(alignment: .leading, spacing: 1) {
-                        Text("Saeid").font(.subheadline.weight(.semibold))
-                        Text("Deutsch · B1").font(.caption).foregroundStyle(.secondary)
+                        Text(localization.localized("root.profile.placeholderName")).font(.subheadline.weight(.semibold))
+                        Text(localization.localized("root.profile.placeholderLevel")).font(.caption).foregroundStyle(.secondary)
                     }
                     Spacer()
                 }
@@ -141,6 +141,7 @@ struct PrototypeRootView: View {
 
 private struct PracticeCutoverStatusView: View {
     @Bindable var coordinator: PracticeCutoverCoordinator
+    @Environment(PrototypeLocalization.self) private var localization
 
     var body: some View {
         VStack(spacing: 16) {
@@ -158,18 +159,18 @@ private struct PracticeCutoverStatusView: View {
             }
             if case let .recoverableFailure(failure) = coordinator.state {
                 VStack(spacing: 10) {
-                    Text(failure.recoveryGuidance)
+                    Text(localization.localized(failure.recoveryGuidanceKey))
                         .font(.callout)
                         .multilineTextAlignment(.center)
-                    Button("Retry") {
+                    Button(localization.localized("common.retry")) {
                         Task { await coordinator.retry() }
                     }
                     if coordinator.backupReceipt != nil, !coordinator.legacySourceExists {
-                        Button("Restore retained backup") {
+                        Button(localization.localized("cutover.restoreBackup")) {
                             try? coordinator.restoreBackup()
                         }
                     } else if coordinator.backupReceipt != nil {
-                        Text("The retained legacy source is intact; restore is not needed.")
+                        Text(localization.localized("cutover.sourceIntact"))
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
@@ -179,28 +180,24 @@ private struct PracticeCutoverStatusView: View {
         .padding(32)
     }
 
-    private var title: String {
+    private var stateKey: String {
         switch coordinator.state {
-        case .notStarted: "Preparing practice storage"
-        case .backingUp: "Backing up learning history"
-        case .readingLegacy: "Reading legacy learning history"
-        case .migrating: "Migrating learning history"
-        case .validating: "Validating migrated learning history"
-        case .active: "Practice storage ready"
-        case .recoverableFailure: "Practice storage needs recovery"
+        case .notStarted: "notStarted"
+        case .backingUp: "backingUp"
+        case .readingLegacy: "readingLegacy"
+        case .migrating: "migrating"
+        case .validating: "validating"
+        case .active: "active"
+        case .recoverableFailure: "recoverableFailure"
         }
     }
 
+    private var title: String {
+        localization.localized("cutover.title.\(stateKey)")
+    }
+
     private var detail: String {
-        switch coordinator.state {
-        case .notStarted: "The existing learning store remains unchanged until preparation completes."
-        case .backingUp: "A recoverable copy is being created before migration starts."
-        case .readingLegacy: "The existing store is opened read-only."
-        case .migrating: "The migration can resume safely if the app is interrupted."
-        case .validating: "Counts, identities, references, and representative content are being checked."
-        case .active: ""
-        case .recoverableFailure: "No new practice data has been activated."
-        }
+        coordinator.state == .active ? "" : localization.localized("cutover.detail.\(stateKey)")
     }
 }
 

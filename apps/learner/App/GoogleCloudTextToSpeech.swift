@@ -30,11 +30,11 @@ enum GoogleCloudTTSError: LocalizedError, Equatable {
 
     var errorDescription: String? {
         switch self {
-        case .missingAPIKey: "Google Cloud TTS API key is not configured."
-        case .emptyText: "Audio text cannot be empty."
-        case .quotaExceeded: "The configured monthly audio quota has been reached."
-        case .invalidResponse: "Google Cloud TTS returned an invalid audio response."
-        case .requestFailed(let status): "Google Cloud TTS request failed (HTTP \(status))."
+        case .missingAPIKey: PrototypeLocalization.current("tts.error.missingAPIKey")
+        case .emptyText: PrototypeLocalization.current("tts.error.emptyText")
+        case .quotaExceeded: PrototypeLocalization.current("tts.error.quotaExceeded")
+        case .invalidResponse: PrototypeLocalization.current("tts.error.invalidResponse")
+        case .requestFailed(let status): PrototypeLocalization.current("tts.error.requestFailed", "\(status)")
         }
     }
 }

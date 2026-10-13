@@ -525,7 +525,7 @@ struct ReviewPrototypeView: View {
         }
         .buttonStyle(.bordered)
         .tint(rating.color)
-        .accessibilityLabel(localization.localized("review.nextReviewAccessibility").replacingOccurrences(of: "%@", with: rating.title).replacingOccurrences(of: "%2$@", with: interval))
+        .accessibilityLabel(localization.formatted("review.nextReviewAccessibility", localization.localized(rating.localizationKey), interval))
     }
 
     private func startSession() {

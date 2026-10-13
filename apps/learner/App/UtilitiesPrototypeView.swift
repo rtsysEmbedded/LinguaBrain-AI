@@ -96,9 +96,9 @@ final class LiveTranscriptionController {
 
     var inputDeviceName: String {
         #if os(macOS)
-        return AVCaptureDevice.default(for: .audio)?.localizedName ?? "System Default"
+        return AVCaptureDevice.default(for: .audio)?.localizedName ?? PrototypeLocalization.current("utilities.deviceDefault")
         #else
-        return "Device Microphone"
+        return PrototypeLocalization.current("utilities.deviceMicrophone")
         #endif
     }
 
@@ -125,7 +125,7 @@ final class LiveTranscriptionController {
             } else if let aiSettings {
                 await startCloudRealtime(languageTag: languageTag, settings: aiSettings, mode: cloudMode)
             } else {
-                errorMessage = "Cloud provider settings are unavailable."
+                errorMessage = PrototypeLocalization.current("utilities.error.cloudSettingsUnavailable")
                 isStarting = false
             }
         }
@@ -196,19 +196,19 @@ final class LiveTranscriptionController {
     private func startModernOnDevice(languageTag: String) async {
         errorMessage = nil
         guard await AVCaptureDevice.requestAccess(for: .audio) else {
-            errorMessage = "Microphone permission was denied."
+            errorMessage = PrototypeLocalization.current("utilities.error.microphoneDenied")
             isStarting = false
             return
         }
         let requestedLocale = Locale(identifier: languageTag)
         guard SpeechTranscriber.isAvailable,
               let locale = await SpeechTranscriber.supportedLocale(equivalentTo: requestedLocale) else {
-            errorMessage = "The selected language is not supported by Apple's on-device transcription model."
+            errorMessage = PrototypeLocalization.current("utilities.error.languageUnsupported")
             isStarting = false
             return
         }
         guard let device = AVCaptureDevice.default(for: .audio) else {
-            errorMessage = "No microphone is available."
+            errorMessage = PrototypeLocalization.current("utilities.error.noMicrophone")
             isStarting = false
             return
         }
@@ -219,7 +219,7 @@ final class LiveTranscriptionController {
             let status = await AssetInventory.status(forModules: modules)
             if status != .installed {
                 guard let request = try await AssetInventory.assetInstallationRequest(supporting: modules) else {
-                    errorMessage = "The speech model for this language is not installed."
+                    errorMessage = PrototypeLocalization.current("utilities.error.speechModelMissing")
                     isStarting = false
                     return
                 }
@@ -306,22 +306,22 @@ final class LiveTranscriptionController {
     ) async {
         errorMessage = nil
         guard settings.audioMode == .cloud else {
-            errorMessage = "Enable the cloud audio provider in Settings first."
+            errorMessage = PrototypeLocalization.current("utilities.error.enableCloudAudio")
             isStarting = false
             return
         }
         guard settings.audioEndpoint.localizedCaseInsensitiveContains(ProviderCatalog.bundled.hostMarkers.openAI) else {
-            errorMessage = "OpenAI Realtime transcription requires the api.openai.com endpoint."
+            errorMessage = PrototypeLocalization.current("utilities.error.realtimeEndpoint", ProviderCatalog.bundled.hostMarkers.openAI)
             isStarting = false
             return
         }
         guard let apiKey = try? settings.apiKey(for: "audio"), !apiKey.isEmpty else {
-            errorMessage = "Save an OpenAI API key for the Audio provider in Settings."
+            errorMessage = PrototypeLocalization.current("utilities.error.audioKeyMissing")
             isStarting = false
             return
         }
         guard await AVCaptureDevice.requestAccess(for: .audio) else {
-            errorMessage = "Microphone permission was denied or no microphone is available."
+            errorMessage = PrototypeLocalization.current("utilities.error.microphoneUnavailable")
             isStarting = false
             return
         }
@@ -333,14 +333,14 @@ final class LiveTranscriptionController {
             let delegate = CloudWebSocketDelegate { [weak self] code in
                 Task { @MainActor in
                     guard self?.cloudSocket != nil else { return }
-                    self?.errorMessage = "Realtime socket closed (\(code.rawValue)). Check the OpenAI API key, network, and selected transcription model."
+                    self?.errorMessage = PrototypeLocalization.current("utilities.error.socketClosed", "\(code.rawValue)")
                     self?.isRecording = false
                     self?.isStarting = false
                 }
             } onFailure: { [weak self] error in
                 Task { @MainActor in
                     guard self?.cloudSocket != nil else { return }
-                    self?.errorMessage = "Realtime transport failed: \(error.localizedDescription)"
+                    self?.errorMessage = PrototypeLocalization.current("utilities.error.transportFailed", error.localizedDescription)
                     self?.isRecording = false
                     self?.isStarting = false
                 }
@@ -489,14 +489,14 @@ final class LiveTranscriptionController {
                         } else if type == "error",
                                   let details = object["error"] as? [String: Any],
                                   let message = details["message"] as? String {
-                            self?.errorMessage = "OpenAI: \(message)"
+                            self?.errorMessage = PrototypeLocalization.current("utilities.error.provider", message)
                         }
                     }
                 }
             } catch {
                 guard !Task.isCancelled else { return }
                 await MainActor.run {
-                    self?.errorMessage = "Realtime connection closed: \(error.localizedDescription)"
+                    self?.errorMessage = PrototypeLocalization.current("utilities.error.connectionClosed", error.localizedDescription)
                     self?.isRecording = false
                     self?.isStarting = false
                 }
@@ -557,11 +557,15 @@ private enum TranscriptionError: LocalizedError {
 
     var errorDescription: String? {
         switch self {
-        case .captureInputUnavailable: "The selected microphone cannot be attached to the capture session."
-        case .captureOutputUnavailable: "The microphone capture output could not be created."
-        case .audioFormatUnavailable: "No compatible audio format is available for live transcription."
-        case .connectionTimedOut: "The OpenAI Realtime connection did not open within 10 seconds. Check the endpoint, API key, network, and account access."
-        case .noInputDevice: "macOS does not currently have a valid default microphone. Select an input device in System Settings and try again."
+        case .captureInputUnavailable: PrototypeLocalization.current("utilities.error.captureInputUnavailable")
+        case .captureOutputUnavailable: PrototypeLocalization.current("utilities.error.captureOutputUnavailable")
+        case .audioFormatUnavailable: PrototypeLocalization.current("utilities.error.audioFormatUnavailable")
+        case .connectionTimedOut:
+            PrototypeLocalization.current(
+                "utilities.error.connectionTimedOut",
+                "\(ProviderCatalog.bundled.realtimeTranscription.connectionTimeoutSeconds)"
+            )
+        case .noInputDevice: PrototypeLocalization.current("utilities.error.noInputDevice")
         }
     }
 }
