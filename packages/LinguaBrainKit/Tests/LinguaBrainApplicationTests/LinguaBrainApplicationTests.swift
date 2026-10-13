@@ -30,6 +30,38 @@ final class LinguaBrainApplicationTests: XCTestCase {
         XCTAssertTrue(plan.explanation.contains("Low-energy"))
     }
 
+    func testAdaptivePlannerAppliesDailyStateAndFallsBackWhenStale() {
+        let now = Date(timeIntervalSince1970: 1_000_000)
+        let candidates = (0..<20).map { index in
+            AdaptiveLearningCandidate(
+                objective: LearningObjective(id: "item-\(index)", senseKey: "item-\(index)", skill: .recognition),
+                mastery: 0.2
+            )
+        }
+        let light = AdaptiveLearningPlanner.makePlan(
+            candidates: candidates,
+            dailyState: DailyLearningState(energy: 3, availableMinutes: 20, motivation: 1, mode: .lightReview, capturedAt: now),
+            now: now
+        )
+        let challenge = AdaptiveLearningPlanner.makePlan(
+            candidates: candidates,
+            dailyState: DailyLearningState(energy: 9, availableMinutes: 20, motivation: 5, mode: .challenge, capturedAt: now),
+            now: now
+        )
+        XCTAssertLessThan(light.candidates.count, challenge.candidates.count)
+        XCTAssertEqual(challenge.mode, .challenge)
+        XCTAssertFalse(challenge.usedDefaultDailyState)
+
+        let stale = AdaptiveLearningPlanner.makePlan(
+            candidates: candidates,
+            dailyState: DailyLearningState(energy: 10, availableMinutes: 60, motivation: 5, mode: .challenge, capturedAt: now.addingTimeInterval(-19 * 60 * 60)),
+            now: now
+        )
+        XCTAssertTrue(stale.usedDefaultDailyState)
+        XCTAssertEqual(stale.energy, 6)
+        XCTAssertEqual(stale.availableMinutes, 20)
+    }
+
     // Helper: build a deterministically generated proposal with a real language pair.
     private func makeProposal(
         sourceLanguage: String = "de",

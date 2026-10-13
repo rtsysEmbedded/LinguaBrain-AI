@@ -1,7 +1,9 @@
 import SwiftUI
+import LinguaBrainDomain
 
 struct ProgressPrototypeView: View {
     @Environment(PrototypeStore.self) private var store
+    @Environment(PrototypeLocalization.self) private var localization
     @Environment(PrototypeLanguageSettings.self) private var languageSettings
     @State private var isResetConfirmationPresented = false
     @State private var persistenceError: String?
@@ -17,6 +19,10 @@ struct ProgressPrototypeView: View {
     private var totalReviews: Int { store.totalReviews(in: activeWords) }
     private var recognitionMastery: Double { averageMastery(mode: .recognition) }
     private var recallMastery: Double { averageMastery(mode: .reverseTranslation) }
+    private var listeningMastery: Double { averageSkillMastery(.listening) }
+    private var writingMastery: Double { averageSkillMastery(.writing) }
+    private var productionMastery: Double { averageSkillMastery(.production) }
+    private var grammarMastery: Double { averageSkillMastery(.grammar) }
     private var week: [Int] { [0, 0, 0, 0, 0, 0, min(totalReviews, 50)] }
 
     var body: some View {
@@ -116,9 +122,10 @@ struct ProgressPrototypeView: View {
                 SectionHeader(title: "نقشه مهارت‌ها", subtitle: "تسلط واقعی، نه فقط تعداد واژه‌ها")
                 SkillProgressRow(label: "تشخیص واژه", value: recognitionMastery, color: PrototypeTheme.mint)
                 SkillProgressRow(label: "یادآوری فعال", value: recallMastery, color: PrototypeTheme.accent)
-                SkillProgressRow(label: "شنیداری", value: 0, color: PrototypeTheme.pink)
-                SkillProgressRow(label: "نوشتن", value: 0, color: PrototypeTheme.blue)
-                SkillProgressRow(label: "استفاده در جمله", value: 0, color: .orange)
+                SkillProgressRow(label: "شنیداری", value: listeningMastery, color: PrototypeTheme.pink)
+                SkillProgressRow(label: "نوشتن", value: writingMastery, color: PrototypeTheme.blue)
+                SkillProgressRow(label: "استفاده در جمله", value: productionMastery, color: .orange)
+                SkillProgressRow(label: "گرامر", value: grammarMastery, color: .purple)
             }
         }
     }
@@ -131,7 +138,7 @@ struct ProgressPrototypeView: View {
                     .foregroundStyle(.yellow)
                 VStack(alignment: .leading, spacing: 5) {
                     Text("بینش این هفته").font(.headline)
-                    Text(reviewedCount == 0 ? "هنوز هیچ داده‌ای ثبت نشده است. پس از مرور، این بخش باید تغییر کند." : "داده‌های فعلی از \(totalReviews) پاسخ روی \(reviewedCount) واژه ساخته شده‌اند؛ شنیداری و نوشتن هنوز داده ندارند.")
+                    Text(insightDescription)
                         .foregroundStyle(.secondary)
                 }
             }
@@ -146,7 +153,7 @@ struct ProgressPrototypeView: View {
                     .foregroundStyle(PrototypeTheme.accent)
                 VStack(alignment: .leading, spacing: 4) {
                     Text("حالت آزمایش عملکرد").font(.headline)
-                    Text("همهٔ واژه‌ها را به وضعیت اولیه و بدون مرور برگردان.")
+                    Text(resetDescription)
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                 }
@@ -171,6 +178,31 @@ struct ProgressPrototypeView: View {
         let reviewed = activeWords.filter { store.reviewCount(for: $0, mode: mode) > 0 }
         guard !reviewed.isEmpty else { return 0 }
         return reviewed.reduce(0) { $0 + store.mastery(for: $1, mode: mode) } / Double(reviewed.count)
+    }
+
+    private func averageSkillMastery(_ skill: LearningSkill) -> Double {
+        let attempted = activeWords.filter { store.skillAttemptCount(for: $0, skill: skill) > 0 }
+        guard !attempted.isEmpty else { return 0 }
+        return attempted.reduce(0) { $0 + store.mastery(for: $1, skill: skill) } / Double(attempted.count)
+    }
+
+    private var insightDescription: String {
+        switch (localization.language, reviewedCount == 0) {
+        case (.english, true): "No data has been recorded yet. This section will update after you review cards."
+        case (.german, true): "Es wurden noch keine Daten erfasst. Dieser Bereich wird nach dem Wiederholen aktualisiert."
+        case (.persian, true): "هنوز هیچ داده‌ای ثبت نشده است. پس از مرور، این بخش تغییر می‌کند."
+        case (.english, false): "Current data comes from \(totalReviews) answers across \(reviewedCount) words; listening and writing have no data yet."
+        case (.german, false): "Die aktuellen Daten stammen aus \(totalReviews) Antworten zu \(reviewedCount) Wörtern; für Hören und Schreiben gibt es noch keine Daten."
+        case (.persian, false): "داده‌های فعلی از \(totalReviews) پاسخ روی \(reviewedCount) واژه ساخته شده‌اند؛ شنیداری و نوشتن هنوز داده ندارند."
+        }
+    }
+
+    private var resetDescription: String {
+        switch localization.language {
+        case .english: "Return every word to its initial, unreviewed state."
+        case .german: "Alle Wörter in ihren ursprünglichen, nicht wiederholten Zustand zurücksetzen."
+        case .persian: "همهٔ واژه‌ها را به وضعیت اولیه و بدون مرور برگردان."
+        }
     }
 
     private var persistenceErrorBinding: Binding<Bool> {

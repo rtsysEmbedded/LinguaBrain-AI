@@ -98,18 +98,22 @@ public final class AppOwnedExportWorkspace: ExportWorkspacePort {
     }
 
     public func cleanup() {
-        queue.async(flags: .barrier) {
-            guard !self.isCleanedUp else { return }
-            self.isCleanedUp = true
-            
-            if let workspace = self._workspaceDirectory {
-                try? self.fileManager.removeItem(at: workspace)
-            }
+        let workspace: URL? = queue.sync(flags: .barrier) {
+            guard !isCleanedUp else { return nil }
+            isCleanedUp = true
+            let workspace = _workspaceDirectory
+            _workspaceDirectory = nil
+            return workspace
         }
+        if let workspace { try? fileManager.removeItem(at: workspace) }
     }
 
     deinit {
-        cleanup()
+        // Never enqueue work that captures `self` from deinit. Swift detects
+        // that as a dangling resurrection and terminates the process.
+        if !isCleanedUp, let workspace = _workspaceDirectory {
+            try? fileManager.removeItem(at: workspace)
+        }
     }
 }
 

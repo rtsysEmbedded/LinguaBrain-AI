@@ -14,6 +14,11 @@ final class ReviewAnswerEvaluationTests: XCTestCase {
         XCTAssertFalse(ReviewAnswerEvaluator.reverseRecall(answer: "gehen", acceptedForms: ["arbeiten"]).correct)
     }
 
+    func testProductionAcceptsExpectedWordInsideSentence() {
+        XCTAssertTrue(ReviewAnswerEvaluator.production(answer: "Ich muss ARBEITEN.", acceptedForms: ["arbeiten"]).correct)
+        XCTAssertFalse(ReviewAnswerEvaluator.production(answer: "Ich lerne heute.", acceptedForms: ["arbeiten"]).correct)
+    }
+
     func testMissionPreservesUserDefinedDomainAndClampsWeight() {
         let mission = LearningMission(id: "m1", title: "Embedded German", domain: "Embedded Linux", targetLevel: "B2", weight: 2)
         XCTAssertEqual(mission.domain, "Embedded Linux")

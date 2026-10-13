@@ -6,8 +6,6 @@ import Security
 struct SettingsPrototypeView: View {
     @Environment(PrototypeLocalization.self) private var localization
     @Environment(PrototypeLanguageSettings.self) private var languageSettings
-    @State private var customDomains = PrototypeDomainCatalog.customDomains
-    @State private var newDomain = ""
 
     var body: some View {
         ZStack {
@@ -26,12 +24,12 @@ struct SettingsPrototypeView: View {
                                 detail: "\(languageName(languageSettings.sourceLanguageTag)) → \(languageName(languageSettings.targetLanguageTag)) · B1",
                                 symbol: "character.book.closed.fill", color: .blue, destination: .languages
                             ),
+                            .init(title: customDomainsTitle, detail: customDomainsSubtitle, symbol: "square.grid.2x2", color: .purple, destination: .domains),
                             .init(title: localization.text(.goalsAndDailyPlan), detail: localization.localized("کار در آلمان · ۲۰ دقیقه"), symbol: "target", color: PrototypeTheme.pink, destination: .learning),
                             .init(title: localization.text(.reviewAndPractice), detail: localization.localized("مرور تطبیقی · حالت متعادل"), symbol: "rectangle.stack.fill", color: .orange, destination: .review),
                             .init(title: localization.text(.audioAndPronunciation), detail: localization.localized("صدای آلمانی · سرعت عادی"), symbol: "waveform", color: PrototypeTheme.mint, destination: .audio)
                         ]
                     )
-                    customDomainsCard
                     settingsGroup(
                         title: localization.localized("هوش مصنوعی و آفلاین"),
                         subtitle: localization.localized("مدل‌ها، دانلودها و هزینه"),
@@ -59,40 +57,19 @@ struct SettingsPrototypeView: View {
         .navigationTitle(localization.text(.settingsTitle))
     }
 
-    private var customDomainsCard: some View {
-        PrototypeCard {
-            VStack(alignment: .leading, spacing: 12) {
-                Label(localization.localized("domain.customTitle"), systemImage: "square.grid.2x2")
-                    .font(.headline)
-                Text(localization.localized("domain.customSubtitle"))
-                    .font(.caption).foregroundStyle(.secondary)
-                HStack {
-                    TextField(localization.localized("domain.placeholder"), text: $newDomain)
-                        .textFieldStyle(.roundedBorder)
-                    Button(localization.localized("common.add")) {
-                        if PrototypeDomainCatalog.add(newDomain) != nil {
-                            customDomains = PrototypeDomainCatalog.customDomains
-                            newDomain = ""
-                        }
-                    }
-                    .buttonStyle(.borderedProminent)
-                }
-                if customDomains.isEmpty {
-                    Text(localization.localized("domain.empty")).font(.caption).foregroundStyle(.secondary)
-                } else {
-                    ForEach(customDomains, id: \.self) { domain in
-                        HStack {
-                            Text(domain)
-                            Spacer()
-                            Button(role: .destructive) {
-                                PrototypeDomainCatalog.remove(domain)
-                                customDomains = PrototypeDomainCatalog.customDomains
-                            } label: { Image(systemName: "trash") }
-                            .buttonStyle(.borderless)
-                        }
-                    }
-                }
-            }
+    private var customDomainsTitle: String {
+        switch localization.language {
+        case .english: "Custom categories"
+        case .german: "Eigene Kategorien"
+        case .persian: "دسته‌های سفارشی"
+        }
+    }
+
+    private var customDomainsSubtitle: String {
+        switch localization.language {
+        case .english: "Create and manage your learning topics"
+        case .german: "Eigene Lernthemen erstellen und verwalten"
+        case .persian: "ساخت و مدیریت موضوع‌های یادگیری"
         }
     }
 
@@ -217,11 +194,17 @@ private struct SettingsItem: Identifiable {
 }
 
 private enum SettingsSection {
-    case languages, learning, review, audio, ai, offline, privacy, accessibility, about
+    case languages, domains, learning, review, audio, ai, offline, privacy, accessibility, about
 
     func title(for localization: PrototypeLocalization) -> String {
         switch self {
         case .languages: localization.text(.languagesAndLevel)
+        case .domains:
+            switch localization.language {
+            case .english: "Custom categories"
+            case .german: "Eigene Kategorien"
+            case .persian: "دسته‌های سفارشی"
+            }
         case .learning: localization.text(.goalsAndDailyPlan)
         case .review: localization.text(.reviewAndPractice)
         case .audio: localization.text(.audioAndPronunciation)
@@ -279,6 +262,8 @@ private struct SettingsDetailPrototypeView: View {
                             .foregroundStyle(.orange)
                     }
                 }
+            case .domains:
+                CustomDomainsSettingsContent()
             case .learning:
                 Section(localization.localized("برنامهٔ روزانه")) {
                     Picker(localization.localized("هدف روزانه"), selection: $dailyGoal) {
@@ -395,6 +380,58 @@ private struct SettingsDetailPrototypeView: View {
         case let .failed(message):
             Label("همگام‌سازی ناموفق بود: \(message)", systemImage: "exclamationmark.icloud.fill")
                 .foregroundStyle(.red)
+        }
+    }
+}
+
+private struct CustomDomainsSettingsContent: View {
+    @Environment(PrototypeLocalization.self) private var localization
+    @State private var domains = PrototypeDomainCatalog.customDomains
+    @State private var newDomain = ""
+
+    var body: some View {
+        Section(copy.title) {
+            Text(copy.subtitle)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            HStack {
+                TextField(copy.placeholder, text: $newDomain)
+                Button(copy.add) {
+                    if PrototypeDomainCatalog.add(newDomain) != nil {
+                        domains = PrototypeDomainCatalog.customDomains
+                        newDomain = ""
+                    }
+                }
+                .buttonStyle(.borderedProminent)
+                .disabled(newDomain.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+            }
+            if domains.isEmpty {
+                Text(copy.empty)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            } else {
+                ForEach(domains, id: \.self) { domain in
+                    HStack {
+                        Text(domain)
+                        Spacer()
+                        Button(role: .destructive) {
+                            PrototypeDomainCatalog.remove(domain)
+                            domains = PrototypeDomainCatalog.customDomains
+                        } label: {
+                            Label(copy.delete, systemImage: "trash")
+                        }
+                    }
+                }
+            }
+        }
+        .onAppear { domains = PrototypeDomainCatalog.customDomains }
+    }
+
+    private var copy: (title: String, subtitle: String, placeholder: String, add: String, empty: String, delete: String) {
+        switch localization.language {
+        case .english: ("Custom categories", "Create topics that constrain AI card generation.", "Category name", "Add", "No custom categories yet.", "Delete")
+        case .german: ("Eigene Kategorien", "Erstellen Sie Themen, die die KI-Kartenerstellung eingrenzen.", "Kategoriename", "Hinzufügen", "Noch keine eigenen Kategorien.", "Löschen")
+        case .persian: ("دسته‌های سفارشی", "موضوع‌هایی بسازید که تولید کارت با هوش مصنوعی را محدود می‌کنند.", "نام دسته", "افزودن", "هنوز دستهٔ سفارشی ندارید.", "حذف")
         }
     }
 }
@@ -1039,6 +1076,12 @@ enum ProviderError: LocalizedError {
 }
 
 struct ConfiguredProviderCard: Codable, Sendable {
+    enum TopicRelevance: String, Codable, Sendable {
+        case direct
+        case contextual
+        case unrelated
+    }
+
     struct Example: Codable, Sendable {
         let target: String
         let source: String
@@ -1056,8 +1099,17 @@ struct ConfiguredProviderCard: Codable, Sendable {
     let level: String
     let partOfSpeech: String
     let article: String
+    let topicRelevance: TopicRelevance
     let example: Example
     let senses: [Sense]
+
+    func hasValidSourceLanguage(_ languageTag: String) -> Bool {
+        guard languageTag == "fa" else { return true }
+        let sourceFields = [sourceMeaning, example.source] + senses.flatMap { [$0.meaning, $0.usage, $0.example.source] }
+        return sourceFields.allSatisfy { value in
+            value.unicodeScalars.contains { (0x0600...0x06FF).contains($0.value) }
+        }
+    }
 
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
@@ -1066,6 +1118,7 @@ struct ConfiguredProviderCard: Codable, Sendable {
         level = try container.decode(String.self, forKey: .level)
         partOfSpeech = try container.decode(String.self, forKey: .partOfSpeech)
         article = try container.decode(String.self, forKey: .article)
+        topicRelevance = try container.decode(TopicRelevance.self, forKey: .topicRelevance)
         example = try container.decode(Example.self, forKey: .example)
         senses = try container.decodeIfPresent([Sense].self, forKey: .senses) ?? []
     }
@@ -1085,23 +1138,88 @@ struct ConfiguredProviderCard: Codable, Sendable {
         )
     }
 
-    func prototypeWords(domain: String, sourceLanguageTag: String, targetLanguageTag: String) -> [PrototypeWord] {
+    func prototypeWords(domain: String, sourceLanguageTag: String, targetLanguageTag: String, representativeSenseIndexes: [Int]? = nil) -> [PrototypeWord] {
         guard !senses.isEmpty else { return [prototypeWord(domain: domain, sourceLanguageTag: sourceLanguageTag, targetLanguageTag: targetLanguageTag)] }
-        return senses.map { sense in
-            PrototypeWord(
+        let allowedIndexes = representativeSenseIndexes.map(Set.init)
+        var seenMeanings = Set<String>()
+        let cards = senses.enumerated().compactMap { index, sense -> PrototypeWord? in
+            if let allowedIndexes, !allowedIndexes.contains(index) { return nil }
+            let meaning = sense.meaning.trimmingCharacters(in: .whitespacesAndNewlines)
+            let normalizedMeaning = meaning.folding(options: [.caseInsensitive, .diacriticInsensitive], locale: .current)
+            guard !meaning.isEmpty, seenMeanings.insert(normalizedMeaning).inserted else { return nil }
+            let persistedSense = PrototypeSense(
+                meaning: meaning,
+                usage: sense.usage.trimmingCharacters(in: .whitespacesAndNewlines),
+                example: PrototypeExample(target: sense.example.target, source: sense.example.source),
+                collocations: sense.collocations.filter { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+            )
+            return PrototypeWord(
                 german: targetText,
-                persian: sense.meaning,
+                persian: meaning,
                 article: article.isEmpty ? nil : article,
                 level: level,
                 partOfSpeech: partOfSpeech,
                 example: sense.example.target,
                 exampleTranslation: sense.example.source,
+                examples: [PrototypeExample(target: sense.example.target, source: sense.example.source)],
+                senses: [persistedSense],
                 domain: domain,
                 sourceLanguageTag: sourceLanguageTag,
                 targetLanguageTag: targetLanguageTag
             )
         }
+        return cards.isEmpty ? [consolidatedPrototypeWord(domain: domain, sourceLanguageTag: sourceLanguageTag, targetLanguageTag: targetLanguageTag)] : cards
     }
+
+    /// A submitted word is one learning item. Preserve all independently
+    /// returned meanings and examples on that item instead of silently keeping
+    /// only the provider's first sense.
+    func consolidatedPrototypeWord(domain: String, sourceLanguageTag: String, targetLanguageTag: String) -> PrototypeWord {
+        var seenMeanings = Set<String>()
+        let meanings = ([sourceMeaning] + senses.map(\.meaning)).filter { meaning in
+            let normalized = meaning.trimmingCharacters(in: .whitespacesAndNewlines)
+                .folding(options: [.caseInsensitive, .diacriticInsensitive], locale: .current)
+            return !normalized.isEmpty && seenMeanings.insert(normalized).inserted
+        }
+        var seenExamples = Set<String>()
+        let examples = ([example] + senses.map(\.example)).filter { example in
+            let normalized = "\(example.target)\u{001F}\(example.source)"
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+                .folding(options: [.caseInsensitive, .diacriticInsensitive], locale: .current)
+            return !normalized.isEmpty && seenExamples.insert(normalized).inserted
+        }
+        let primaryExample = examples.first ?? example
+        let persistedSenses = senses.compactMap { sense -> PrototypeSense? in
+            let meaning = sense.meaning.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !meaning.isEmpty else { return nil }
+            return PrototypeSense(
+                meaning: meaning,
+                usage: sense.usage.trimmingCharacters(in: .whitespacesAndNewlines),
+                example: PrototypeExample(target: sense.example.target, source: sense.example.source),
+                collocations: sense.collocations.filter { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+            )
+        }
+        return PrototypeWord(
+            german: targetText,
+            persian: meanings.joined(separator: "\n• "),
+            article: article.isEmpty ? nil : article,
+            level: level,
+            partOfSpeech: partOfSpeech,
+            example: primaryExample.target,
+            exampleTranslation: primaryExample.source,
+            examples: examples.map { PrototypeExample(target: $0.target, source: $0.source) },
+            senses: persistedSenses,
+            domain: domain,
+            sourceLanguageTag: sourceLanguageTag,
+            targetLanguageTag: targetLanguageTag
+        )
+    }
+}
+
+struct NormalizedVocabularyItem: Codable, Sendable {
+    let lemma: String
+    let actualLevel: String
+    let confidence: Double
 }
 
 struct ConfiguredProviderClient: Sendable {
@@ -1188,7 +1306,83 @@ struct ConfiguredProviderClient: Sendable {
         }
     }
 
-    func generateCard(word: String, domain: String, model: String, apiKey: String, sourceLanguageTag: String = "fa", targetLanguageTag: String = "de") async throws -> ConfiguredProviderCard {
+    func translateText(_ text: String, model: String, apiKey: String, sourceLanguageTag: String, targetLanguageTag: String) async throws -> String {
+        let body: [String: Any] = ["model": model, "messages": [["role": "system", "content": "Translate faithfully from \(sourceLanguageTag) to \(targetLanguageTag). Preserve paragraphs and return only the translation."], ["role": "user", "content": text]], "temperature": 0.1]
+        var request = URLRequest(url: URL(string: "\(baseURL)/chat/completions")!)
+        request.httpMethod = "POST"; request.timeoutInterval = 45
+        if !apiKey.isEmpty { request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization") }
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = try JSONSerialization.data(withJSONObject: body)
+        let (data, response) = try await URLSession.shared.data(for: request)
+        guard let http = response as? HTTPURLResponse, (200..<300).contains(http.statusCode),
+              let root = try JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let choices = root["choices"] as? [[String: Any]], let message = choices.first?["message"] as? [String: Any],
+              let content = message["content"] as? String else { throw ProviderError.invalidResponse }
+        return content.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    func extractImportantWords(from text: String, topic: String, languageTag: String, minimumLevel: String, model: String, apiKey: String) async throws -> [String] {
+        let candidateProperties: [String: Any] = ["surfaceForm": ["type": "string"], "lemma": ["type": "string"], "partOfSpeech": ["type": "string", "enum": ["noun", "verb", "adjective", "adverb", "fixedExpression"]], "estimatedLevel": ["type": "string", "enum": ["A1", "A2", "B1", "B2", "C1", "C2"]], "topicRelevance": ["type": "string", "enum": ["direct", "contextual"]], "confidence": ["type": "number", "minimum": 0, "maximum": 1], "reason": ["type": "string"]]
+        let schema: [String: Any] = ["type": "object", "properties": ["candidates": ["type": "array", "minItems": 1, "maxItems": 8, "items": ["type": "object", "properties": candidateProperties, "required": ["surfaceForm", "lemma", "partOfSpeech", "estimatedLevel", "topicRelevance", "confidence", "reason"], "additionalProperties": false]]], "required": ["candidates"], "additionalProperties": false]
+        let instruction = "Select 3 to 8 genuinely important vocabulary items from this \(languageTag) passage for a learner studying '\(topic)' at CEFR \(minimumLevel) or higher. For every candidate return the exact surface form found in the passage and its canonical dictionary lemma. For German, verbs must be infinitives, nouns must use dictionary capitalization without an article in lemma, adjectives must be uninflected, and separable verbs must use their complete infinitive. Choose only content words or fixed expressions central to the passage/topic whose standard lexical CEFR level is \(minimumLevel) or above. Exclude articles, pronouns, conjunctions, prepositions, modal and auxiliary verbs, names, numbers, generic function words, and anything normally taught below \(minimumLevel). Confidence measures certainty in both lemma and CEFR classification. Return only JSON."
+        let body: [String: Any] = ["model": model, "messages": [["role": "system", "content": instruction], ["role": "user", "content": text]], "response_format": ["type": "json_schema", "json_schema": ["name": "important_vocabulary", "strict": true, "schema": schema]], "temperature": 0.1, "max_tokens": 300]
+        var request = URLRequest(url: URL(string: "\(baseURL)/chat/completions")!)
+        request.httpMethod = "POST"; request.timeoutInterval = 45
+        if !apiKey.isEmpty { request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization") }
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = try JSONSerialization.data(withJSONObject: body)
+        let (data, response) = try await URLSession.shared.data(for: request)
+        guard let http = response as? HTTPURLResponse, (200..<300).contains(http.statusCode),
+              let root = try JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let choices = root["choices"] as? [[String: Any]], let message = choices.first?["message"] as? [String: Any],
+              let content = message["content"] as? String,
+              let payload = try JSONSerialization.jsonObject(with: Data(content.utf8)) as? [String: Any],
+              let candidates = payload["candidates"] as? [[String: Any]] else { throw ProviderError.invalidResponse }
+        let levels = ["A1", "A2", "B1", "B2", "C1", "C2"]
+        let minimumIndex = levels.firstIndex(of: minimumLevel) ?? 0
+        let words = candidates.compactMap { candidate -> String? in
+            guard let lemma = candidate["lemma"] as? String, let estimatedLevel = candidate["estimatedLevel"] as? String,
+                  let confidence = candidate["confidence"] as? Double, confidence >= 0.8,
+                  let levelIndex = levels.firstIndex(of: estimatedLevel), levelIndex >= minimumIndex else { return nil }
+            return lemma
+        }
+        var seen = Set<String>()
+        return words.map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty && seen.insert($0.folding(options: [.caseInsensitive, .diacriticInsensitive], locale: .current)).inserted }
+    }
+
+    func normalizeVocabularyItem(_ surfaceForm: String, passage: String, languageTag: String, model: String, apiKey: String) async throws -> NormalizedVocabularyItem {
+        let schema: [String: Any] = ["type": "object", "properties": ["lemma": ["type": "string"], "actualLevel": ["type": "string", "enum": ["A1", "A2", "B1", "B2", "C1", "C2"]], "confidence": ["type": "number", "minimum": 0, "maximum": 1]], "required": ["lemma", "actualLevel", "confidence"], "additionalProperties": false]
+        let instruction = "Normalize the supplied \(languageTag) vocabulary item using its passage context. Return only its canonical dictionary headword and actual lexical CEFR level. For German: verbs must be infinitives, separable and reflexive verbs must retain their complete dictionary form, nouns must use dictionary capitalization without adding an article, and adjectives must be uninflected. Never echo an inflected surface form as lemma unless it is already the canonical dictionary form. Return only JSON."
+        let userPayload = try JSONSerialization.data(withJSONObject: ["surfaceForm": surfaceForm, "passage": passage])
+        let body: [String: Any] = ["model": model, "messages": [["role": "system", "content": instruction], ["role": "user", "content": String(decoding: userPayload, as: UTF8.self)]], "response_format": ["type": "json_schema", "json_schema": ["name": "normalized_vocabulary", "strict": true, "schema": schema]], "temperature": 0, "max_tokens": 120]
+        var request = URLRequest(url: URL(string: "\(baseURL)/chat/completions")!)
+        request.httpMethod = "POST"; request.timeoutInterval = 45
+        if !apiKey.isEmpty { request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization") }
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type"); request.httpBody = try JSONSerialization.data(withJSONObject: body)
+        let (data, response) = try await URLSession.shared.data(for: request)
+        guard let http = response as? HTTPURLResponse, (200..<300).contains(http.statusCode), let root = try JSONSerialization.jsonObject(with: data) as? [String: Any], let choices = root["choices"] as? [[String: Any]], let message = choices.first?["message"] as? [String: Any], let content = message["content"] as? String else { throw ProviderError.invalidResponse }
+        return try JSONDecoder().decode(NormalizedVocabularyItem.self, from: Data(content.utf8))
+    }
+
+    func representativeSenseIndexes(for card: ConfiguredProviderCard, model: String, apiKey: String) async throws -> [Int] {
+        guard card.senses.count > 1 else { return card.senses.isEmpty ? [] : [0] }
+        let schema: [String: Any] = ["type": "object", "properties": ["representativeIndexes": ["type": "array", "minItems": 1, "items": ["type": "integer"]]], "required": ["representativeIndexes"], "additionalProperties": false]
+        let senses = card.senses.enumerated().map { ["index": $0.offset, "meaning": $0.element.meaning, "usage": $0.element.usage, "example": $0.element.example.target] as [String: Any] }
+        let instruction = "Act as a strict lexicographic deduplicator. Return one zero-based representative index for each genuinely independent dictionary meaning. Merge paraphrases, near-synonyms, register or usage differences, collocations, grammatical variants, and different examples into the same meaning. Most ordinary words should produce one representative. Multiple representatives are allowed only when a learner must recall materially different definitions. Return only JSON."
+        let payload = try JSONSerialization.data(withJSONObject: ["headword": card.targetText, "partOfSpeech": card.partOfSpeech, "senses": senses])
+        let body: [String: Any] = ["model": model, "messages": [["role": "system", "content": instruction], ["role": "user", "content": String(decoding: payload, as: UTF8.self)]], "response_format": ["type": "json_schema", "json_schema": ["name": "sense_deduplication", "strict": true, "schema": schema]], "temperature": 0, "max_tokens": 150]
+        var request = URLRequest(url: URL(string: "\(baseURL)/chat/completions")!)
+        request.httpMethod = "POST"; request.timeoutInterval = 45
+        if !apiKey.isEmpty { request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization") }
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type"); request.httpBody = try JSONSerialization.data(withJSONObject: body)
+        let (data, response) = try await URLSession.shared.data(for: request)
+        guard let http = response as? HTTPURLResponse, (200..<300).contains(http.statusCode), let root = try JSONSerialization.jsonObject(with: data) as? [String: Any], let choices = root["choices"] as? [[String: Any]], let message = choices.first?["message"] as? [String: Any], let content = message["content"] as? String, let decoded = try JSONSerialization.jsonObject(with: Data(content.utf8)) as? [String: Any], let indexes = decoded["representativeIndexes"] as? [Int] else { throw ProviderError.invalidResponse }
+        return Array(Set(indexes.filter { card.senses.indices.contains($0) })).sorted()
+    }
+
+    func generateCard(word: String, domain: String, model: String, apiKey: String, sourceLanguageTag: String = "fa", targetLanguageTag: String = "de", context: String? = nil, level: String? = nil) async throws -> ConfiguredProviderCard {
+        let categoryScope = categoryScope(for: domain) + "; meanings and usage must be in source language \(sourceLanguageTag) (Persian script when fa), while target examples remain in \(targetLanguageTag)"
+        let contextInstruction = "IMPORTANT LANGUAGE CONTRACT: targetText and example.target are \(targetLanguageTag); sourceMeaning, every senses.meaning, senses.usage, and example.source are \(sourceLanguageTag). Report the headword's actual CEFR level; never raise or relabel it to match the learner's requested minimum. " + ((context.map { "Use this learner-supplied passage as the primary context (do not copy it verbatim): \($0.prefix(4000))" } ?? "No passage was supplied; use authentic examples for the category.")) + (level.map { " The learner requested minimum CEFR \($0), but accuracy of the word's actual level is mandatory." } ?? "")
         let schema: [String: Any] = [
             "type": "object",
             "properties": [
@@ -1197,6 +1391,7 @@ struct ConfiguredProviderClient: Sendable {
                 "level": ["type": "string"],
                 "partOfSpeech": ["type": "string"],
                 "article": ["type": "string"],
+                "topicRelevance": ["type": "string", "enum": ["direct", "contextual", "unrelated"]],
                 "example": [
                     "type": "object",
                     "properties": ["target": ["type": "string"], "source": ["type": "string"]],
@@ -1219,21 +1414,21 @@ struct ConfiguredProviderClient: Sendable {
                     ]
                 ]
             ],
-            "required": ["targetText", "sourceMeaning", "level", "partOfSpeech", "article", "example", "senses"],
+            "required": ["targetText", "sourceMeaning", "level", "partOfSpeech", "article", "topicRelevance", "example", "senses"],
             "additionalProperties": false
         ]
         let body: [String: Any] = [
             "model": model,
             "messages": [
-                ["role": "system", "content": "You create accurate language-learning cards. The learning language is \(targetLanguageTag); the learner's support language is \(sourceLanguageTag). Return a shared lexical parent plus up to three important independent senses. Each sense must have its own natural example, usage/register, and collocations. Use an empty article for non-nouns."],
-                ["role": "user", "content": "Create a complete card for the \(targetLanguageTag) word or phrase '\(word)' using the domain '\(domain)'. Include all common meanings that are useful at the learner level, but do not invent obscure meanings. Return targetText and examples in \(targetLanguageTag), and meanings/translations in \(sourceLanguageTag). Return only the requested JSON fields."]
+                ["role": "system", "content": "You are an expert lexicographer and curriculum-aware language teacher creating accurate learning cards. The learning language is \(targetLanguageTag); the learner's support language is \(sourceLanguageTag). The selected topic is the organizing principle of the card, not a pass/fail filter. Establish the supplied headword's real spelling, grammar, and dictionary meanings, then choose the meaning and usage most useful inside the supplied topic scope. Preserve targetText as the supplied headword apart from normal capitalization or a required article. Never replace it with another word and never invent a meaning or collocation. General verbs, adjectives, and everyday nouns belong when they naturally occur in topic-specific instructions, questions, rules, reports, warnings, or conversations. Make the primary meaning, example, usage note, and collocations concretely reflect the topic wherever linguistically natural. Do not split paraphrases, register variants, grammar variants, synonyms, usage notes, collocations, or different examples into separate senses. An ordinary noun normally has one card: only return multiple senses for unmistakably independent dictionary homonyms. Return only genuinely independent dictionary meanings. Use an empty article for non-nouns. All meanings and example.source values must be in \(sourceLanguageTag); targetText and example.target values must be in \(targetLanguageTag)."],
+                ["role": "user", "content": "Create a complete card for the \(targetLanguageTag) headword '\(word)' in the learner category '\(domain)'. Topic scope: \(categoryScope). \(contextInstruction) Treat all of these as relevant parts of the category and use the closest natural context for this word. The first meaning and primary example must prioritize the selected topic when a genuine use exists. Set topicRelevance to direct for specialist terminology, contextual for an ordinary word naturally used in this topic, and unrelated only when no honest topical use exists; this label is informational and must never prevent returning a card. Choose a precise sourceMeaning and a natural, realistic example. Return up to three genuinely independent meanings, with the topic-relevant meaning first. Other common independent meanings may follow when useful, but do not create multiple cards for mere paraphrases. If the word is uncommon or ambiguous, keep the requested headword and return the best supported dictionary analysis instead of guessing another word. Fill every required JSON field and return only the requested JSON object."]
             ],
             "response_format": [
                 "type": "json_schema",
                 "json_schema": ["name": "linguabrain_card", "strict": true, "schema": schema]
             ],
-            "temperature": 0.2,
-            "max_tokens": 700
+            "temperature": 0.1,
+            "max_tokens": 1_200
         ]
         var request = URLRequest(url: URL(string: "\(baseURL)/chat/completions")!)
         request.httpMethod = "POST"
@@ -1253,6 +1448,26 @@ struct ConfiguredProviderClient: Sendable {
         guard let content = envelope.choices.first?.message.content,
               let contentData = content.data(using: .utf8) else { throw ProviderError.invalidResponse }
         return try JSONDecoder().decode(ConfiguredProviderCard.self, from: contentData)
+    }
+
+    private func categoryScope(for domain: String) -> String {
+        let normalized = domain.folding(options: [.caseInsensitive, .diacriticInsensitive], locale: .current)
+        if normalized.contains("fuhrerschein") || normalized.contains("führerschein") || normalized.contains("driv") || normalized.contains("verkehr") || normalized.contains("road") || normalized.contains("رانند") || normalized.contains("گواهینامه") {
+            return "driving and road traffic; driving-licence theory and practical tests; roads, lanes, intersections and right of way; traffic laws, signs and signals; speed, distance and parking; vehicles and their operation; drivers, cyclists and pedestrians; hazards, weather, accidents and first aid; offences, fines, alcohol or drugs, police checks, insurance, registration and licensing administration"
+        }
+        if normalized == "software" || normalized.contains("برنامه") {
+            return "software development, applications, interfaces, data, debugging, security, deployment, technical documentation and workplace communication"
+        }
+        if normalized == "medical" || normalized.contains("پزش") || normalized.contains("gesund") {
+            return "healthcare, symptoms, anatomy, diagnosis, treatment, medication, appointments, hospitals, emergencies and communication with patients"
+        }
+        if normalized == "work" || normalized.contains("کار") || normalized.contains("beruf") {
+            return "workplaces, professions, tasks, meetings, employment, applications, contracts, schedules, collaboration and professional communication"
+        }
+        if normalized == "general" {
+            return "common everyday situations, practical communication, home, travel, services, relationships, news and public life"
+        }
+        return "the topic '\(domain)' and its terminology, actors, objects, places, actions, rules, processes, risks, documents, common questions and authentic real-world conversations"
     }
 
     func translate(text: String, targetLanguageTag: String, model: String, apiKey: String) async throws -> String {

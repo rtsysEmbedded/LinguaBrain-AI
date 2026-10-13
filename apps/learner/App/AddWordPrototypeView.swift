@@ -44,8 +44,11 @@ struct AddWordPrototypeView: View {
     @State private var batchWords = ""
     @State private var contextText = ""
     @State private var contextTranslation: String?
+    @State private var contextCandidateText = ""
     @State private var isTranslatingContext = false
+    @FocusState private var contextFieldFocused: Bool
     @State private var batchTopic = "general"
+    @State private var availableDomains = PrototypeDomainCatalog.customDomains
     @State private var batchLevel = "B1"
     @State private var batchOutputName = "linguabrain-cards"
     // Batch input is normally the language being learned (for example German),
@@ -103,10 +106,18 @@ struct AddWordPrototypeView: View {
             .frame(maxWidth: 760)
             .frame(maxWidth: .infinity)
         }
+        .scrollDismissesKeyboard(.interactively)
+        .toolbar {
+            ToolbarItemGroup(placement: .keyboard) {
+                Spacer()
+                Button(localization.language == .persian ? "بستن" : "Done") { contextFieldFocused = false }
+            }
+        }
         .alert(localization.localized("domain.newTitle"), isPresented: $showingDomainEditor) {
             TextField(localization.localized("domain.placeholder"), text: $customDomainName)
             Button(localization.localized("common.save")) {
                 if let saved = PrototypeDomainCatalog.add(customDomainName) {
+                    availableDomains = PrototypeDomainCatalog.customDomains
                     if domainEditorAppliesToBatch { batchTopic = saved }
                     else { domain = saved }
                 }
@@ -121,6 +132,7 @@ struct AddWordPrototypeView: View {
         .background(PrototypeBackground())
         .navigationTitle(localization.localized("card.addTitle"))
         .onAppear {
+            availableDomains = PrototypeDomainCatalog.customDomains
             guard !didInitializeBatchLanguages else { return }
             batchInputLanguage = languageSettings.targetLanguageTag
             batchTranslationLanguage = languageSettings.sourceLanguageTag
@@ -128,6 +140,7 @@ struct AddWordPrototypeView: View {
         }
         .onChange(of: word) { _, _ in resetGeneratedPreview() }
         .onChange(of: domain) { _, _ in resetGeneratedPreview() }
+        .onChange(of: addSection) { _, _ in availableDomains = PrototypeDomainCatalog.customDomains }
         .fileImporter(
             isPresented: $isImporterPresented,
             allowedContentTypes: [.ankiDeckPackage],
@@ -377,6 +390,9 @@ struct AddWordPrototypeView: View {
                     }
                     .buttonStyle(.bordered)
                 }
+                Picker(contextCopy(.level), selection: $batchLevel) {
+                    ForEach(["A1", "A2", "B1", "B2", "C1"], id: \.self) { Text($0).tag($0) }
+                }.pickerStyle(.menu)
                 HStack {
                     Picker(batchCopy(.inputLanguage), selection: $batchInputLanguage) {
                         Text(localization.localized("language.german")).tag("de")
@@ -443,6 +459,7 @@ struct AddWordPrototypeView: View {
                     .font(.headline)
                 Text(contextCopy(.subtitle)).font(.subheadline).foregroundStyle(.secondary)
                 TextEditor(text: $contextText)
+                    .focused($contextFieldFocused)
                     .frame(minHeight: 180)
                     .padding(6)
                     .overlay(RoundedRectangle(cornerRadius: 8).stroke(.secondary.opacity(0.35)))
@@ -460,7 +477,7 @@ struct AddWordPrototypeView: View {
                     Text(localization.localized("domain.work")).tag("work")
                     Text(localization.localized("domain.software")).tag("software")
                     Text(localization.localized("domain.medical")).tag("medical")
-                    ForEach(PrototypeDomainCatalog.customDomains, id: \.self) { Text($0).tag($0) }
+                    ForEach(availableDomains, id: \.self) { Text($0).tag($0) }
                 }.pickerStyle(.menu)
                 Picker(contextCopy(.level), selection: $batchLevel) {
                     ForEach(["A1", "A2", "B1", "B2", "C1"], id: \.self) { Text($0).tag($0) }
@@ -480,20 +497,34 @@ struct AddWordPrototypeView: View {
                 Toggle(batchCopy(.includeAudio), isOn: $batchIncludeAudio)
                 Toggle(batchCopy(.includeImage), isOn: $batchIncludeImage)
                 Button { buildFromContext() } label: {
-                    Label(contextCopy(.build), systemImage: "wand.and.stars").frame(maxWidth: .infinity)
+                    Label(contextCopy(.select), systemImage: "wand.and.stars").frame(maxWidth: .infinity)
                 }.buttonStyle(.borderedProminent)
                     .disabled(isBuildingBatch || contextText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || batchInputLanguage == batchTranslationLanguage)
+                if !contextCandidateText.isEmpty {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text(contextCopy(.candidates)).font(.headline)
+                        Text(contextCopy(.candidatesHint)).font(.caption).foregroundStyle(.secondary)
+                        TextEditor(text: $contextCandidateText)
+                            .frame(minHeight: 84)
+                            .padding(6)
+                            .overlay(RoundedRectangle(cornerRadius: 8).stroke(.secondary.opacity(0.35)))
+                        Button { buildSelectedContextCards() } label: {
+                            Label(contextCopy(.build), systemImage: "rectangle.stack.badge.plus").frame(maxWidth: .infinity)
+                        }.buttonStyle(.borderedProminent)
+                            .disabled(isBuildingBatch || contextCandidateWords.isEmpty)
+                    }
+                }
                 if let batchStatus { Text(batchStatus).font(.caption).foregroundStyle(PrototypeTheme.mint) }
             }
         }
     }
 
-    private enum ContextCopy { case title, subtitle, topic, level, inputLanguage, translationLanguage, build, translate, translation }
+    private enum ContextCopy { case title, subtitle, topic, level, inputLanguage, translationLanguage, select, candidates, candidatesHint, build, translate, translation }
     private func contextCopy(_ key: ContextCopy) -> String {
         switch (localization.language, key) {
-        case (.english, .title): "Build cards from a passage"; case (.english, .subtitle): "Paste a text. Important content words—not every word—become contextual cards."; case (.english, .topic): "Topic"; case (.english, .level): "Word level"; case (.english, .inputLanguage): "Text language"; case (.english, .translationLanguage): "Translation language"; case (.english, .build): "Extract words and add cards"; case (.english, .translate): "Translate passage"; case (.english, .translation): "Translation"
-        case (.german, .title): "Karten aus einem Text erstellen"; case (.german, .subtitle): "Text einfügen. Nur wichtige Inhaltswörter werden als Kontextkarten erstellt."; case (.german, .topic): "Thema"; case (.german, .level): "Wortniveau"; case (.german, .inputLanguage): "Textsprache"; case (.german, .translationLanguage): "Übersetzungssprache"; case (.german, .build): "Wörter extrahieren und Karten hinzufügen"; case (.german, .translate): "Text übersetzen"; case (.german, .translation): "Übersetzung"
-        case (.persian, .title): "ساخت کارت از متن"; case (.persian, .subtitle): "یک متن وارد کنید؛ فقط واژه‌های محتوایی و مهم، نه همهٔ کلمات، به کارت تبدیل می‌شوند."; case (.persian, .topic): "موضوع"; case (.persian, .level): "سطح واژه"; case (.persian, .inputLanguage): "زبان متن"; case (.persian, .translationLanguage): "زبان ترجمه"; case (.persian, .build): "استخراج واژه و افزودن کارت"; case (.persian, .translate): "ترجمهٔ متن"; case (.persian, .translation): "ترجمه"
+        case (.english, .title): "Build cards from a passage"; case (.english, .subtitle): "Paste a text. AI selects important content words in context."; case (.english, .topic): "Topic"; case (.english, .level): "Word level"; case (.english, .inputLanguage): "Text language"; case (.english, .translationLanguage): "Translation language"; case (.english, .select): "Select important words"; case (.english, .candidates): "Suggested words"; case (.english, .candidatesHint): "Edit, remove, or add words before creating cards."; case (.english, .build): "Create cards from selected words"; case (.english, .translate): "Translate passage"; case (.english, .translation): "Translation"
+        case (.german, .title): "Karten aus einem Text erstellen"; case (.german, .subtitle): "Text einfügen. Die KI wählt wichtige Inhaltswörter im Kontext aus."; case (.german, .topic): "Thema"; case (.german, .level): "Wortniveau"; case (.german, .inputLanguage): "Textsprache"; case (.german, .translationLanguage): "Übersetzungssprache"; case (.german, .select): "Wichtige Wörter auswählen"; case (.german, .candidates): "Vorgeschlagene Wörter"; case (.german, .candidatesHint): "Wörter vor dem Erstellen bearbeiten, entfernen oder ergänzen."; case (.german, .build): "Karten aus ausgewählten Wörtern erstellen"; case (.german, .translate): "Text übersetzen"; case (.german, .translation): "Übersetzung"
+        case (.persian, .title): "ساخت کارت از متن"; case (.persian, .subtitle): "یک متن وارد کنید؛ هوش مصنوعی واژه‌های محتوایی و مهم را با توجه به زمینه انتخاب می‌کند."; case (.persian, .topic): "موضوع"; case (.persian, .level): "حداقل سطح واژه"; case (.persian, .inputLanguage): "زبان متن"; case (.persian, .translationLanguage): "زبان ترجمه"; case (.persian, .select): "انتخاب واژه‌های مهم"; case (.persian, .candidates): "واژه‌های پیشنهادی"; case (.persian, .candidatesHint): "پیش از ساخت کارت، واژه‌ها را حذف، ویرایش یا اضافه کنید."; case (.persian, .build): "ساخت کارت از واژه‌های انتخاب‌شده"; case (.persian, .translate): "ترجمهٔ متن"; case (.persian, .translation): "ترجمه"
         }
     }
 
@@ -509,13 +540,38 @@ struct AddWordPrototypeView: View {
     }
 
     private func buildFromContext() {
-        let stopWords: Set<String> = ["the","and","that","this","with","from","have","were","eine","einer","einem","und","der","die","das","den","dem","ist","sind","nicht","für","mit","auf","von","zu","ein","eine"]
-        let tokens = contextText.split { !$0.isLetter }.map(String.init)
-            .filter { $0.count >= 4 && !stopWords.contains($0.lowercased()) }
+        isBuildingBatch = true
+        batchStatus = localization.language == .persian ? "در حال انتخاب واژه‌های مهم متن…" : "Selecting important words from the text…"
+        Task {
+            do {
+                guard aiSettings.textMode != .off else { throw ProviderError.providerDisabled }
+                if aiSettings.textMode == .cloud {
+                    guard aiSettings.cloudConsent else { throw ProviderError.consentRequired }
+                    guard aiSettings.hasAPIKey else { throw ProviderError.missingAPIKey }
+                }
+                let gateway = AIProviderGateway(endpoint: aiSettings.endpoint, protocolName: aiSettings.protocolName, apiKey: try aiSettings.apiKey())
+                let words = try await gateway.extractImportantWords(from: contextText, topic: batchTopic, languageTag: batchInputLanguage, minimumLevel: batchLevel, model: aiSettings.modelID)
+                contextCandidateText = words.joined(separator: ", ")
+                isBuildingBatch = false
+            } catch {
+                packageError = error.localizedDescription
+                isBuildingBatch = false
+            }
+        }
+    }
+
+    private var contextCandidateWords: [String] {
         var seen = Set<String>()
-        let words = tokens.filter { seen.insert($0.lowercased()).inserted }.prefix(15)
+        return contextCandidateText.components(separatedBy: CharacterSet(charactersIn: ",،\n\r;"))
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty && seen.insert($0.folding(options: [.caseInsensitive, .diacriticInsensitive], locale: .current)).inserted }
+            .prefix(12).map { $0 }
+    }
+
+    private func buildSelectedContextCards() {
+        let words = contextCandidateWords
         batchWords = words.joined(separator: ",")
-        buildBatchAPKG(wordsOverride: Array(words))
+        buildBatchAPKG(wordsOverride: words, exportsPackage: false)
     }
 
     private var parsedBatchWords: [String] {
@@ -572,7 +628,7 @@ struct AddWordPrototypeView: View {
         }
     }
 
-    private func buildBatchAPKG(wordsOverride: [String]? = nil) {
+    private func buildBatchAPKG(wordsOverride: [String]? = nil, exportsPackage: Bool = true) {
         let words = wordsOverride ?? parsedBatchWords
         guard !words.isEmpty else { return }
         _ = PrototypeDomainCatalog.add(batchTopic)
@@ -602,20 +658,38 @@ struct AddWordPrototypeView: View {
                 for (index, input) in words.enumerated() {
                     batchStatus = batchStatusCopy(.building(index + 1, words.count, input))
                     do {
-                        let draft = try await textGateway.generateCard(
-                            word: input,
-                            domain: batchTopic,
-                            model: aiSettings.modelID,
-                            sourceLanguageTag: batchTranslationLanguage,
-                            targetLanguageTag: batchInputLanguage,
-                            context: addSection == .contextText ? contextText : nil,
-                            level: addSection == .contextText ? batchLevel : nil
-                        )
-                        let cards = draft.prototypeWords(
+                        let generationInput: String
+                        if addSection == .contextText {
+                            let normalized = try await textGateway.normalizeVocabularyItem(input, passage: contextText, languageTag: batchInputLanguage, model: aiSettings.modelID)
+                            guard normalized.confidence >= 0.8 else { throw BatchGenerationError.normalizationUncertain }
+                            guard meetsMinimumLevel(normalized.actualLevel, minimum: batchLevel) else {
+                                throw BatchGenerationError.belowMinimum(actual: normalized.actualLevel, minimum: batchLevel)
+                            }
+                            generationInput = normalized.lemma
+                        } else {
+                            generationInput = input
+                        }
+                        var draft = try await generateBatchDraft(using: textGateway, word: generationInput)
+                        if !draft.hasValidSourceLanguage(batchTranslationLanguage) {
+                            draft = try await textGateway.generateCard(
+                                word: generationInput,
+                                domain: batchTopic,
+                                model: aiSettings.modelID,
+                                sourceLanguageTag: batchTranslationLanguage,
+                                targetLanguageTag: batchInputLanguage,
+                                context: "The previous response used the wrong language in meaning or usage fields. Rewrite every meaning, usage, and source example strictly in \(batchTranslationLanguage). Original passage: \(contextText)",
+                                level: batchLevel
+                            )
+                        }
+                        guard draft.hasValidSourceLanguage(batchTranslationLanguage) else { throw BatchGenerationError.wrongSourceLanguage }
+                        guard addSection != .contextText || meetsMinimumLevel(draft.level, minimum: batchLevel) else {
+                            throw BatchGenerationError.belowMinimum(actual: draft.level, minimum: batchLevel)
+                        }
+                        let cards = [draft.consolidatedPrototypeWord(
                             domain: batchTopic,
                             sourceLanguageTag: batchTranslationLanguage,
                             targetLanguageTag: batchInputLanguage
-                        )
+                        )]
                         let audio: Data?
                         if let audioGateway {
                             audio = try? await audioGateway.synthesizeSpeech(
@@ -647,7 +721,7 @@ struct AddWordPrototypeView: View {
                             failures.append("\(input): \(store.lastPersistenceError ?? "کارت ذخیره نشد.")")
                         }
                     } catch {
-                        failures.append("\(input): \(error.localizedDescription)")
+                        failures.append("\(input): \(batchFailureMessage(error))")
                     }
                 }
                 guard !savedWords.isEmpty else {
@@ -657,16 +731,83 @@ struct AddWordPrototypeView: View {
                         userInfo: [NSLocalizedDescriptionKey: noCardsMessage(failures)]
                     )
                 }
-                batchExportDocument = try await PrototypeAPKGExporter.makeDocument(from: savedWords, store: store)
-                batchStatus = failures.isEmpty
-                    ? batchStatusCopy(.readyToSave(savedWords.count))
-                    : batchStatusCopy(.partialSuccess(savedWords.count, failures.count, failures.joined(separator: " · ")))
-                isBatchExporterPresented = true
+                if exportsPackage {
+                    batchExportDocument = try await PrototypeAPKGExporter.makeDocument(from: savedWords, store: store)
+                    batchStatus = failures.isEmpty
+                        ? batchStatusCopy(.readyToSave(savedWords.count))
+                        : batchStatusCopy(.partialSuccess(savedWords.count, failures.count, failures.joined(separator: " · ")))
+                    isBatchExporterPresented = true
+                } else {
+                    batchStatus = contextCardsAddedCopy(savedWords.count, failures: failures.count)
+                    // A completed contextual import starts a fresh passage while
+                    // retaining the status message as confirmation for the user.
+                    contextText = ""
+                    contextTranslation = nil
+                    contextCandidateText = ""
+                }
             } catch {
                 packageError = error.localizedDescription
             }
             isBuildingBatch = false
         }
+    }
+
+    private func generateBatchDraft(using gateway: AIProviderGateway, word: String) async throws -> ConfiguredProviderCard {
+        let suppliedContext = addSection == .contextText ? contextText : nil
+        do {
+            return try await gateway.generateCard(word: word, domain: batchTopic, model: aiSettings.modelID, sourceLanguageTag: batchTranslationLanguage, targetLanguageTag: batchInputLanguage, context: suppliedContext, level: batchLevel)
+        } catch ProviderError.invalidResponse {
+            let retryContext = "Return a complete response matching the required JSON schema exactly. The dictionary headword is '\(word)'. " + (suppliedContext ?? "")
+            return try await gateway.generateCard(word: word, domain: batchTopic, model: aiSettings.modelID, sourceLanguageTag: batchTranslationLanguage, targetLanguageTag: batchInputLanguage, context: retryContext, level: batchLevel)
+        }
+    }
+
+    private func meetsMinimumLevel(_ actual: String, minimum: String) -> Bool {
+        let levels = ["A1", "A2", "B1", "B2", "C1", "C2"]
+        guard let actualIndex = levels.firstIndex(of: actual.uppercased()),
+              let minimumIndex = levels.firstIndex(of: minimum.uppercased()) else { return false }
+        return actualIndex >= minimumIndex
+    }
+
+    private enum BatchGenerationError: Error {
+        case belowMinimum(actual: String, minimum: String)
+        case wrongSourceLanguage
+        case normalizationUncertain
+    }
+
+    private func batchFailureMessage(_ error: Error) -> String {
+        if let batchError = error as? BatchGenerationError {
+            switch batchError {
+            case .belowMinimum(let actual, let minimum):
+                return localization.localized("context.error.belowMinimum")
+                    .replacingOccurrences(of: "%1$@", with: actual)
+                    .replacingOccurrences(of: "%2$@", with: minimum)
+            case .wrongSourceLanguage:
+                return localization.localized("context.error.wrongLanguage")
+            case .normalizationUncertain:
+                return localization.localized("context.error.normalizationUncertain")
+            }
+        }
+        if let providerError = error as? ProviderError {
+            let key: String
+            switch providerError {
+            case .invalidResponse: key = "provider.error.invalidResponse"
+            case .missingAPIKey: key = "provider.error.missingKey"
+            case .consentRequired: key = "provider.error.consent"
+            case .providerDisabled: key = "provider.error.disabled"
+            case .unsupportedProtocol: key = "provider.error.protocol"
+            case .service, .keychain: return providerError.localizedDescription
+            }
+            return localization.localized(key)
+        }
+        return error.localizedDescription
+    }
+
+    private func contextCardsAddedCopy(_ count: Int, failures: Int) -> String {
+        let key = failures == 0 ? "context.cardsAdded" : "context.cardsAddedPartial"
+        return localization.localized(key)
+            .replacingOccurrences(of: "%1$d", with: "\(count)")
+            .replacingOccurrences(of: "%2$d", with: "\(failures)")
     }
 
     private var addCustomDomainLabel: String {
@@ -765,6 +906,7 @@ struct AddWordPrototypeView: View {
                             Label("\(importResult.addedCount) جدید · \(importResult.updatedCount) اصلاح‌شده · \(importResult.skippedCount) تکراری", systemImage: "checkmark.circle.fill")
                                 .font(.caption.weight(.semibold))
                                 .foregroundStyle(PrototypeTheme.mint)
+                            importCompletionActions
                         } else {
                             Text("فایل آماده است؛ برای ثبت کارت‌ها دکمهٔ ورود را بزن.")
                                 .font(.caption.weight(.semibold))
@@ -803,6 +945,24 @@ struct AddWordPrototypeView: View {
                 }
             }
         }
+    }
+
+    private var importReturnCopy: String {
+        switch localization.language {
+        case .english: "Back to add options"
+        case .german: "Zurück zu den Hinzufügeoptionen"
+        case .persian: "بازگشت به گزینه‌های افزودن"
+        }
+    }
+
+    @ViewBuilder
+    private var importCompletionActions: some View {
+        Button(importReturnCopy) {
+            packagePreview = nil
+            importResult = nil
+            addSection = .singleCard
+        }
+        .buttonStyle(.bordered)
     }
 
     private func inspectSelectedPackage(_ result: Result<[URL], Error>) {
@@ -944,11 +1104,11 @@ struct AddWordPrototypeView: View {
                 }
                 Button {
                     guard generatedCard != nil else { return }
-                    let cards = generatedCard?.prototypeWords(
+                    let cards = generatedCard.map { card in [card.consolidatedPrototypeWord(
                         domain: domain,
                         sourceLanguageTag: languageSettings.sourceLanguageTag,
                         targetLanguageTag: languageSettings.targetLanguageTag
-                    ) ?? [preview]
+                    )] } ?? [preview]
                     let saved = store.addGeneratedCards(cards, sharedPronunciationAudio: generatedAudio)
                     if saved {
                         generatedCardSaved = true

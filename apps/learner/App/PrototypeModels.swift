@@ -206,7 +206,7 @@ final class PrototypeSkillMasteryRecord {
     var lastUpdated: Date?
 
     init(cardID: UUID, skillRawValue: String, score: Double = 0, attempts: Int = 0, correct: Int = 0, lastUpdated: Date? = nil) {
-        self.id = "(cardID.uuidString)::(skillRawValue)"
+        self.id = "\(cardID.uuidString)::\(skillRawValue)"
         self.cardID = cardID
         self.skillRawValue = skillRawValue
         self.score = score
@@ -224,14 +224,29 @@ final class PrototypeLearningEventRecord {
     var correct: Bool
     var occurredAt: Date
     var responseTimeMilliseconds: Int?
+    var answer: String?
+    // A default is required for SwiftData's lightweight migration when this
+    // field is added to an existing review-event store. Without it, opening a
+    // database created by an earlier build fails before the app can recover.
+    var expectedAnswersJSON: String = "[]"
 
-    init(cardID: UUID, skillRawValue: String, correct: Bool, occurredAt: Date, responseTimeMilliseconds: Int? = nil) {
+    init(
+        cardID: UUID,
+        skillRawValue: String,
+        correct: Bool,
+        occurredAt: Date,
+        responseTimeMilliseconds: Int? = nil,
+        answer: String? = nil,
+        expectedAnswers: [String] = []
+    ) {
         self.id = UUID()
         self.cardID = cardID
         self.skillRawValue = skillRawValue
         self.correct = correct
         self.occurredAt = occurredAt
         self.responseTimeMilliseconds = responseTimeMilliseconds
+        self.answer = answer
+        self.expectedAnswersJSON = (try? String(data: JSONEncoder().encode(expectedAnswers), encoding: .utf8)) ?? "[]"
     }
 }
 
@@ -248,6 +263,48 @@ final class PrototypeLearningMissionRecord {
     init(id: String = "active", title: String, domain: String? = nil, targetLevel: String? = nil, weight: Double = 1, isActive: Bool = true, updatedAt: Date = .now) {
         self.id = id; self.title = title; self.domain = domain; self.targetLevel = targetLevel
         self.weight = min(max(weight, 0), 1); self.isActive = isActive; self.updatedAt = updatedAt
+    }
+}
+
+/// The learner's check-in for one calendar day.  This is intentionally a
+/// device-local record in the prototype; a future account/sync layer can add
+/// a user identifier without changing the daily planning contract.
+@Model
+final class PrototypeDailyLearningStateRecord {
+    @Attribute(.unique) var dateKey: String
+    var energy: Double
+    var availableMinutes: Int
+    var motivation: Int
+    var modeRawValue: String
+    var updatedAt: Date
+
+    init(
+        dateKey: String,
+        energy: Double,
+        availableMinutes: Int,
+        motivation: Int = 3,
+        modeRawValue: String = "balanced",
+        updatedAt: Date = .now
+    ) {
+        self.dateKey = dateKey
+        self.energy = min(max(energy, 1), 10)
+        self.availableMinutes = max(1, availableMinutes)
+        self.motivation = min(max(motivation, 1), 5)
+        self.modeRawValue = ["lightReview", "balanced", "challenge"].contains(modeRawValue) ? modeRawValue : "balanced"
+        self.updatedAt = updatedAt
+    }
+}
+
+struct PrototypeDailyLearningState: Equatable, Sendable {
+    let dateKey: String
+    let energy: Double
+    let availableMinutes: Int
+    let motivation: Int
+    let modeRawValue: String
+    let capturedAt: Date
+
+    var isStale: Bool {
+        Date.now.timeIntervalSince(capturedAt) > 18 * 60 * 60
     }
 }
 
@@ -784,8 +841,10 @@ final class PrototypeStore {
     private(set) var importedPackages: [PrototypeImportedPackage] = []
     private(set) var activeMission: LearningMission?
 
-    private let modelContainer: ModelContainer
-    private let modelContext: ModelContext
+    // Vars allow the recovery path below to replace a failed persistent
+    // container with a temporary local container without terminating launch.
+    private var modelContainer: ModelContainer
+    private var modelContext: ModelContext
     private let scheduler = PrototypeFSRS6Scheduler()
 
     private(set) var words: [PrototypeWord] = []
@@ -795,9 +854,9 @@ final class PrototypeStore {
             PrototypeFSRS6Scheduler.passesReferenceVectors(),
             "FSRS-6 reference vectors do not match the pinned implementation."
         )
+        let configuration = Self.modelConfiguration(inMemory: inMemory)
         do {
-            let configuration = ModelConfiguration(isStoredInMemoryOnly: inMemory)
-            modelContainer = try ModelContainer(
+            let container = try ModelContainer(
                 for: PrototypeDeckRecord.self,
                 PrototypeMediaAssetRecord.self,
                 PrototypeCardRecord.self,
@@ -805,16 +864,95 @@ final class PrototypeStore {
                 PrototypeSkillMasteryRecord.self,
                 PrototypeLearningEventRecord.self,
                 PrototypeLearningMissionRecord.self,
+                PrototypeDailyLearningStateRecord.self,
                 configurations: configuration
             )
-            modelContext = ModelContext(modelContainer)
+            modelContainer = container
+            modelContext = ModelContext(container)
             try seedCardsIfNeeded()
             try ensureMultilingualSampleCards()
             try restoreCards()
+            try repairSkillMasteryIDs()
             restoreMission()
             restorePersistedReviews()
         } catch {
-            fatalError("Unable to initialize the review store: \(error.localizedDescription)")
+            // A beta OS or an older prototype build can leave a store that
+            // cannot be migrated. Keep the app usable instead of crashing at
+            // launch: preserve the old files for diagnosis/recovery and open
+            // a separate local recovery store populated with the bundled
+            // starter deck. The recovery store remains persistent across runs.
+            Self.archiveFailedStore(at: configuration.url)
+            do {
+                let recoveryContainer = try ModelContainer(
+                    for: PrototypeDeckRecord.self,
+                    PrototypeMediaAssetRecord.self,
+                    PrototypeCardRecord.self,
+                    PrototypeReviewRecord.self,
+                    PrototypeSkillMasteryRecord.self,
+                    PrototypeLearningEventRecord.self,
+                    PrototypeLearningMissionRecord.self,
+                    PrototypeDailyLearningStateRecord.self,
+                    configurations: Self.recoveryModelConfiguration(for: configuration.url)
+                )
+                modelContainer = recoveryContainer
+                modelContext = ModelContext(recoveryContainer)
+                try seedCardsIfNeeded()
+                try ensureMultilingualSampleCards()
+                try restoreCards()
+                restoreMission()
+                restorePersistedReviews()
+                lastPersistenceError = "Local storage was reset after a migration error. A backup of the previous store was kept."
+            } catch let recoveryError {
+                fatalError("Unable to initialize the review store: \(error.localizedDescription); recovery failed: \(recoveryError.localizedDescription)")
+            }
+        }
+    }
+
+    private static func modelConfiguration(inMemory: Bool) -> ModelConfiguration {
+        // The prototype is intentionally device-local. Explicitly disable
+        // CloudKit and app-group resolution so a free Apple developer account
+        // (and simulator) never makes SwiftData attempt to open a container
+        // for which the app has no entitlement. Passing nil as the name keeps
+        // the original default.store URL used by earlier builds.
+        ModelConfiguration(
+            nil,
+            isStoredInMemoryOnly: inMemory,
+            groupContainer: .none,
+            cloudKitDatabase: .none
+        )
+    }
+
+    /// The exact legacy URL used by the prototype. The migration bridge calls
+    /// this same configuration instead of searching Application Support for a
+    /// file with a guessed name.
+    static var persistentStoreURL: URL { modelConfiguration(inMemory: false).url }
+
+    private static func recoveryModelConfiguration(for failedURL: URL) -> ModelConfiguration {
+        let recoveryURL = failedURL.deletingLastPathComponent()
+            .appendingPathComponent("LinguaBrain-recovery.store")
+        return ModelConfiguration(
+            "LinguaBrain-recovery",
+            schema: nil,
+            url: recoveryURL,
+            allowsSave: true,
+            cloudKitDatabase: .none
+        )
+    }
+
+    private static func archiveFailedStore(at url: URL) {
+        let fileManager = FileManager.default
+        let stamp = ISO8601DateFormatter().string(from: .now).replacingOccurrences(of: ":", with: "-")
+        let backupURL = url.deletingLastPathComponent()
+            .appendingPathComponent("LinguaBrain-store-backup-\(stamp).store")
+        for suffix in ["", "-wal", "-shm"] {
+            let source = URL(fileURLWithPath: url.path + suffix)
+            guard fileManager.fileExists(atPath: source.path) else { continue }
+            let destination = URL(fileURLWithPath: backupURL.path + suffix)
+            do {
+                try fileManager.copyItem(at: source, to: destination)
+            } catch {
+                // Best effort only; the recovery store must still open.
+            }
         }
     }
 
@@ -827,6 +965,70 @@ final class PrototypeStore {
             }
             try modelContext.save(); activeMission = mission
         } catch { lastPersistenceError = "Mission save failed: \(error.localizedDescription)" }
+    }
+
+    /// Returns today's persisted check-in. A new day deliberately has no
+    /// state so the UI can use its fresh defaults and ask for a new check-in.
+    func dailyLearningState(for date: Date = .now) -> PrototypeDailyLearningState? {
+        let key = Self.dailyKey(for: date)
+        var descriptor = FetchDescriptor<PrototypeDailyLearningStateRecord>(
+            predicate: #Predicate { $0.dateKey == key }
+        )
+        descriptor.fetchLimit = 1
+        guard let record = try? modelContext.fetch(descriptor).first else { return nil }
+        return PrototypeDailyLearningState(
+            dateKey: record.dateKey,
+            energy: min(max(record.energy, 1), 10),
+            availableMinutes: max(1, record.availableMinutes),
+            motivation: min(max(record.motivation, 1), 5),
+            modeRawValue: record.modeRawValue,
+            capturedAt: record.updatedAt
+        )
+    }
+
+    /// Upserts today's check-in and keeps the planner input deterministic.
+    func saveDailyLearningState(
+        energy: Double,
+        availableMinutes: Int,
+        motivation: Int = 3,
+        modeRawValue: String = "balanced",
+        for date: Date = .now
+    ) {
+        let key = Self.dailyKey(for: date)
+        do {
+            var descriptor = FetchDescriptor<PrototypeDailyLearningStateRecord>(
+                predicate: #Predicate { $0.dateKey == key }
+            )
+            descriptor.fetchLimit = 1
+            if let record = try modelContext.fetch(descriptor).first {
+                record.energy = min(max(energy, 1), 10)
+                record.availableMinutes = max(1, availableMinutes)
+                record.motivation = min(max(motivation, 1), 5)
+                record.modeRawValue = ["lightReview", "balanced", "challenge"].contains(modeRawValue) ? modeRawValue : "balanced"
+                record.updatedAt = date
+            } else {
+                modelContext.insert(
+                    PrototypeDailyLearningStateRecord(
+                        dateKey: key,
+                        energy: energy,
+                        availableMinutes: availableMinutes,
+                        motivation: motivation,
+                        modeRawValue: modeRawValue,
+                        updatedAt: date
+                    )
+                )
+            }
+            try modelContext.save()
+            lastPersistenceError = nil
+        } catch {
+            modelContext.rollback()
+            lastPersistenceError = "ذخیرهٔ وضعیت روزانه انجام نشد: \(error.localizedDescription)"
+        }
+    }
+
+    private static func dailyKey(for date: Date) -> String {
+        let components = Calendar.current.dateComponents([.year, .month, .day], from: date)
+        return String(format: "%04d-%02d-%02d", components.year ?? 0, components.month ?? 0, components.day ?? 0)
     }
 
     private func restoreMission() {
@@ -964,10 +1166,23 @@ final class PrototypeStore {
     }
 
     func mastery(for word: PrototypeWord, mode: PrototypeReviewMode = .recognition) -> Double {
-        let skill = mode == .reverseTranslation ? "recall" : "recognition"
-        let id = "\(word.id.uuidString)::\(skill)"
+        mastery(for: word, skill: mode == .reverseTranslation ? .recall : .recognition)
+    }
+
+    func mastery(for word: PrototypeWord, skill: LearningSkill) -> Double {
+        let id = "\(word.id.uuidString)::\(skill.rawValue)"
         return (try? modelContext.fetch(FetchDescriptor<PrototypeSkillMasteryRecord>()))?
             .first(where: { $0.id == id })?.score ?? 0
+    }
+
+    func skillAttemptCount(for word: PrototypeWord, skill: LearningSkill) -> Int {
+        let id = "\(word.id.uuidString)::\(skill.rawValue)"
+        return (try? modelContext.fetch(FetchDescriptor<PrototypeSkillMasteryRecord>()))?
+            .first(where: { $0.id == id })?.attempts ?? 0
+    }
+
+    func skillMastery(for word: PrototypeWord) -> [LearningSkill: Double] {
+        Dictionary(uniqueKeysWithValues: LearningSkill.allCases.map { ($0, mastery(for: word, skill: $0)) })
     }
 
     func lastGrade(for word: PrototypeWord, mode: PrototypeReviewMode = .recognition) -> PrototypeReviewGrade? {
@@ -1007,6 +1222,10 @@ final class PrototypeStore {
         _ grade: PrototypeReviewGrade,
         for word: PrototypeWord,
         mode: PrototypeReviewMode = .recognition,
+        skill: LearningSkill? = nil,
+        responseTimeMilliseconds: Int? = nil,
+        answer: String? = nil,
+        expectedAnswers: [String] = [],
         at date: Date = .now
     ) -> PrototypeFSRSSchedule? {
         let key = reviewKey(for: word, mode: mode)
@@ -1025,11 +1244,11 @@ final class PrototypeStore {
             algorithmVersion: PrototypeFSRS6Scheduler.version
         )
             modelContext.insert(record)
-            let skill = mode == .reverseTranslation ? "recall" : "recognition"
-            let masteryID = "\(word.id.uuidString)::\(skill)"
+            let skillRawValue = skill?.rawValue ?? (mode == .reverseTranslation ? LearningSkill.recall.rawValue : LearningSkill.recognition.rawValue)
+            let masteryID = "\(word.id.uuidString)::\(skillRawValue)"
             let mastery = (try? modelContext.fetch(FetchDescriptor<PrototypeSkillMasteryRecord>()))?
                 .first(where: { $0.id == masteryID }) ?? {
-                    let value = PrototypeSkillMasteryRecord(cardID: word.id, skillRawValue: skill)
+                    let value = PrototypeSkillMasteryRecord(cardID: word.id, skillRawValue: skillRawValue)
                     modelContext.insert(value)
                     return value
                 }()
@@ -1037,7 +1256,17 @@ final class PrototypeStore {
             if grade != .again { mastery.correct += 1 }
             mastery.score = Double(mastery.correct) / Double(max(mastery.attempts, 1))
             mastery.lastUpdated = date
-            modelContext.insert(PrototypeLearningEventRecord(cardID: word.id, skillRawValue: skill, correct: grade != .again, occurredAt: date))
+            modelContext.insert(
+                PrototypeLearningEventRecord(
+                    cardID: word.id,
+                    skillRawValue: skillRawValue,
+                    correct: grade != .again,
+                    occurredAt: date,
+                    responseTimeMilliseconds: responseTimeMilliseconds,
+                    answer: answer,
+                    expectedAnswers: expectedAnswers
+                )
+            )
 
         do {
             try modelContext.save()
@@ -1458,6 +1687,24 @@ final class PrototypeStore {
             PrototypeImportedPackage(fileName: fileName, cardCount: records.count)
         }
         .sorted { $0.fileName.localizedCaseInsensitiveCompare($1.fileName) == .orderedAscending }
+    }
+
+    /// Repairs the placeholder key written by early prototype builds. Those
+    /// builds used a literal string instead of interpolating the card UUID,
+    /// which caused recognition and recall evidence to share one record. The
+    /// skill value remains trustworthy, so it is sufficient to rebuild the
+    /// canonical composite key once at startup.
+    private func repairSkillMasteryIDs() throws {
+        let records = try modelContext.fetch(FetchDescriptor<PrototypeSkillMasteryRecord>())
+        var changed = false
+        for record in records {
+            let canonicalID = "\(record.cardID.uuidString)::\(record.skillRawValue)"
+            if record.id != canonicalID {
+                record.id = canonicalID
+                changed = true
+            }
+        }
+        if changed { try modelContext.save() }
     }
 
     /// Older builds removed imported cards without removing every record keyed

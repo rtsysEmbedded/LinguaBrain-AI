@@ -63,16 +63,25 @@ public class AnkiPackageWriter {
         manifest: ExportManifest,
         mediaDir: URL
     ) async throws {
-        for (index, entry) in manifest.mediaEntries.enumerated() {
-            let mediaFile = mediaDir.appendingPathComponent("\(index).media")
+        var ankiMediaMap: [String: String] = [:]
+        for entry in manifest.mediaEntries {
+            let mediaFile = mediaDir.appendingPathComponent("\(entry.ankiIndex).media")
             
             guard FileManager.default.fileExists(atPath: mediaFile.path) else {
                 continue
             }
 
             let data = try Data(contentsOf: mediaFile)
-            archive.append(name: "\(index).media", data: data)
+            let archiveName = String(entry.ankiIndex)
+            archive.append(name: archiveName, data: data)
+            let sourceName = URL(fileURLWithPath: entry.sourceAssetID).lastPathComponent
+            ankiMediaMap[archiveName] = sourceName.isEmpty ? "media-\(entry.ankiIndex)" : sourceName
         }
+
+        // Standard Anki packages store numeric ZIP entries and map each number
+        // back to the filename referenced by note HTML in a root `media` file.
+        let mediaMapData = try JSONEncoder().encode(ankiMediaMap)
+        archive.append(name: "media", data: mediaMapData)
     }
 
     private func atomicWrite(to destination: URL, from temporary: URL) throws {
@@ -105,6 +114,7 @@ private struct ZIPArchiveBuilder {
         self.data.appendLE(UInt16(0))
         self.data.appendLE(UInt16(0))
         self.data.appendLE(UInt16(0))
+        self.data.appendLE(UInt16(0))
         self.data.appendLE(crc)
         self.data.appendLE(UInt32(data.count))
         self.data.appendLE(UInt32(data.count))
@@ -122,6 +132,7 @@ private struct ZIPArchiveBuilder {
             result.appendLE(UInt32(0x02014b50))
             result.appendLE(UInt16(20))
             result.appendLE(UInt16(20))
+            result.appendLE(UInt16(0))
             result.appendLE(UInt16(0))
             result.appendLE(UInt16(0))
             result.appendLE(UInt16(0))

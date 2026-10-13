@@ -18,9 +18,12 @@ struct LibraryPrototypeView: View {
     @Environment(PrototypeLocalization.self) private var localization
     @Environment(PrototypeLanguageSettings.self) private var languageSettings
     @State private var searchText = ""
-    @State private var filter = "همه"
+    @State private var filter = "all"
     @State private var customDomains = PrototypeDomainCatalog.customDomains
     @State private var packagePendingDeletion: PrototypeImportedPackage?
+    @State private var selectedCardIDs: Set<UUID> = []
+    @State private var isSelectingCards = false
+    @State private var isConfirmingCardDeletion = false
     @State private var deletionError: String?
     @State private var exportGroup: PrototypeCardProvenance?
     @State private var isExporting = false
@@ -58,10 +61,53 @@ struct LibraryPrototypeView: View {
     }
 
     private var filteredWords: [PrototypeWord] {
-        activeWords.filter { word in
-            let matchesSearch = searchText.isEmpty || word.german.localizedCaseInsensitiveContains(searchText) || word.persian.contains(searchText)
-            let matchesFilter = filter == "همه" || (filter == "ضعیف" && store.reviewCount(for: word) > 0 && store.strength(for: word) < 0.5) || filter == word.level || filter == word.domain
+        let needle = normalizedSearchText
+        var seenIDs = Set<UUID>()
+        return activeWords.filter { word in
+            // SwiftUI's ForEach requires stable, unique identity. De-duplicate
+            // defensively before applying a live search to imported data.
+            guard seenIDs.insert(word.id).inserted else { return false }
+            let matchesSearch = needle.isEmpty || normalizedSearchText(for: word.german).contains(needle) || normalizedSearchText(for: word.persian).contains(needle)
+            let matchesFilter = filter == "all" || (filter == "weak" && store.reviewCount(for: word) > 0 && store.strength(for: word) < 0.5) || filter == word.level || filter == word.domain
             return matchesSearch && matchesFilter
+        }
+    }
+
+    private var normalizedSearchText: String { normalizedSearchText(for: searchText) }
+
+    private func normalizedSearchText(for value: String) -> String {
+        value
+            .folding(options: [.caseInsensitive, .diacriticInsensitive, .widthInsensitive], locale: .current)
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private enum SelectionCopy { case selectCards, cancel, selectAll, export, delete }
+
+    private func selectionCopy(_ key: SelectionCopy) -> String {
+        switch (localization.language, key) {
+        case (.english, .selectCards): "Select cards"
+        case (.english, .cancel): "Cancel selection"
+        case (.english, .selectAll): "Select all"
+        case (.english, .export): "Export selected"
+        case (.english, .delete): "Delete selected"
+        case (.german, .selectCards): "Karten auswählen"
+        case (.german, .cancel): "Auswahl aufheben"
+        case (.german, .selectAll): "Alle auswählen"
+        case (.german, .export): "Auswahl exportieren"
+        case (.german, .delete): "Auswahl löschen"
+        case (.persian, .selectCards): "انتخاب کارت‌ها"
+        case (.persian, .cancel): "لغو انتخاب"
+        case (.persian, .selectAll): "انتخاب همه"
+        case (.persian, .export): "خروجی انتخاب‌شده‌ها"
+        case (.persian, .delete): "حذف انتخاب‌شده‌ها"
+        }
+    }
+
+    private func selectionCountCopy(_ count: Int) -> String {
+        switch localization.language {
+        case .english: "\(count) cards selected"
+        case .german: "\(count) Karten ausgewählt"
+        case .persian: "\(count) کارت انتخاب شده"
         }
     }
 
@@ -78,8 +124,6 @@ struct LibraryPrototypeView: View {
                 if !store.importedPackages.isEmpty {
                     importedPackagesSection
                 }
-
-                exportSection
 
                 NavigationLink {
                     CardGalleryPrototypeView()
@@ -107,22 +151,93 @@ struct LibraryPrototypeView: View {
                 }
                 .buttonStyle(.plain)
 
-                Picker("فیلتر", selection: $filter) {
-                    ForEach(["همه", "ضعیف", "A1", "B1", "B2"], id: \.self) { Text($0) }
+                #if os(iOS)
+                // On the current iOS 27 beta, attaching `searchable` to this
+                // TabView-hosted, dynamically filtered navigation hierarchy can
+                // terminate the app while the search controller updates. Keep
+                // the same filtering behaviour with a regular field until that
+                // beta issue is resolved.
+                TextField("جست‌وجوی فارسی یا آلمانی", text: $searchText)
+                    .textFieldStyle(.roundedBorder)
+                    .textInputAutocapitalization(.never)
+                    .autocorrectionDisabled()
+                    .accessibilityIdentifier("library-search-field")
+                #endif
+
+                Picker(filterLabel(.title), selection: $filter) {
+                    Text(filterLabel(.all)).tag("all")
+                    Text(filterLabel(.weak)).tag("weak")
+                    ForEach(["A1", "B1", "B2"], id: \.self) { Text($0).tag($0) }
                     ForEach(customDomains, id: \.self) { Text($0).tag($0) }
                 }
                 .pickerStyle(.menu)
+
+                ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 10) {
+                    Button {
+                        isSelectingCards.toggle()
+                        if !isSelectingCards { selectedCardIDs.removeAll() }
+                    } label: {
+                        Label(selectionCopy(isSelectingCards ? .cancel : .selectCards), systemImage: isSelectingCards ? "xmark.circle" : "checkmark.circle")
+                    }
+                    .buttonStyle(.bordered)
+
+                    if isSelectingCards {
+                        Text(selectionCountCopy(selectedCardIDs.count))
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        Button {
+                            selectAllFilteredCards()
+                        } label: {
+                            Label(selectionCopy(.selectAll), systemImage: "checkmark.circle.badge.checkmark")
+                        }
+                        .buttonStyle(.bordered)
+                        .disabled(filteredWords.isEmpty)
+                        Button {
+                            exportSelectedCards()
+                        } label: {
+                            Label(selectionCopy(.export), systemImage: "square.and.arrow.up")
+                        }
+                        .buttonStyle(.bordered)
+                        .disabled(selectedCardIDs.isEmpty)
+                        Spacer()
+                        Button(role: .destructive) {
+                            isConfirmingCardDeletion = true
+                        } label: {
+                            Label(selectionCopy(.delete), systemImage: "trash")
+                        }
+                        .buttonStyle(.bordered)
+                        .disabled(selectedCardIDs.isEmpty)
+                    }
+                }
+                .fixedSize(horizontal: true, vertical: false)
+                }
 
                 LazyVStack(spacing: 12) {
                     // Keep the prototype library responsive for large imports;
                     // review sessions still use the full persisted collection.
                     ForEach(Array(filteredWords.prefix(250))) { word in
-                        NavigationLink {
-                            WordDetailPrototypeView(word: word)
-                        } label: {
-                            wordRow(word)
+                        if isSelectingCards {
+                            Button {
+                                toggleSelection(for: word)
+                            } label: {
+                                HStack(spacing: 10) {
+                                    Image(systemName: selectedCardIDs.contains(word.id) ? "checkmark.circle.fill" : "circle")
+                                        .font(.title3)
+                                        .foregroundStyle(selectedCardIDs.contains(word.id) ? PrototypeTheme.accent : .secondary)
+                                    wordRow(word)
+                                }
+                            }
+                            .buttonStyle(.plain)
+                            .accessibilityLabel("انتخاب \(word.german)")
+                        } else {
+                            NavigationLink {
+                                WordDetailPrototypeView(word: word)
+                            } label: {
+                                wordRow(word)
+                            }
+                            .buttonStyle(.plain)
                         }
-                        .buttonStyle(.plain)
                     }
                 }
                 if filteredWords.count > 250 {
@@ -139,7 +254,9 @@ struct LibraryPrototypeView: View {
         .onAppear { customDomains = PrototypeDomainCatalog.customDomains }
         .background(PrototypeBackground())
         .navigationTitle("کتابخانه")
+        #if os(macOS)
         .searchable(text: $searchText, prompt: "جست‌وجوی فارسی یا آلمانی")
+        #endif
         .confirmationDialog(
             "حذف فایل Anki؟",
             isPresented: deletionConfirmationBinding,
@@ -154,6 +271,18 @@ struct LibraryPrototypeView: View {
             }
         } message: { package in
             Text("کارت‌های واردشده از این فایل و تاریخچهٔ مرور وابسته به آن‌ها از دیتابیس LinguaBrain حذف می‌شوند. این کار فایل اصلی روی دستگاه را پاک نمی‌کند.")
+        }
+        .confirmationDialog(
+            deleteTitle,
+            isPresented: $isConfirmingCardDeletion,
+            titleVisibility: .visible
+        ) {
+            Button(deleteAction, role: .destructive) {
+                deleteSelectedCards()
+            }
+            Button(cancelAction, role: .cancel) { }
+        } message: {
+            Text(deleteMessage)
         }
         .alert("حذف انجام نشد", isPresented: deletionErrorBinding) {
             Button("باشه", role: .cancel) { deletionError = nil }
@@ -212,6 +341,26 @@ struct LibraryPrototypeView: View {
                     isExporting = true
                 }
             )
+        }
+    }
+
+    private var deleteTitle: String {
+        switch localization.language { case .english: "Delete \(selectedCardIDs.count) cards?"; case .german: "\(selectedCardIDs.count) Karten löschen?"; case .persian: "حذف \(selectedCardIDs.count) کارت؟" }
+    }
+    private var deleteAction: String {
+        switch localization.language { case .english: "Delete cards and related data"; case .german: "Karten und zugehörige Daten löschen"; case .persian: "حذف کارت‌ها و همهٔ داده‌های وابسته" }
+    }
+    private var cancelAction: String { localization.language == .english ? "Cancel" : localization.language == .german ? "Abbrechen" : "انصراف" }
+    private var deleteMessage: String {
+        switch localization.language { case .english: "Cards, saved audio and images, review history, learning state, and related events will be permanently deleted."; case .german: "Karten, Medien, Lernverlauf und zugehörige Ereignisse werden dauerhaft gelöscht."; case .persian: "کارت‌ها، صدای تلفظ و تصویر ذخیره‌شده، تاریخچهٔ مرور و داده‌های وابسته حذف می‌شوند. این کار قابل بازگردانی نیست." }
+    }
+
+    private enum FilterCopy { case title, all, weak }
+    private func filterLabel(_ key: FilterCopy) -> String {
+        switch (localization.language, key) {
+        case (.english, .title): "Filter"; case (.english, .all): "All"; case (.english, .weak): "Weak"
+        case (.german, .title): "Filter"; case (.german, .all): "Alle"; case (.german, .weak): "Schwach"
+        case (.persian, .title): "فیلتر"; case (.persian, .all): "همه"; case (.persian, .weak): "ضعیف"
         }
     }
 
@@ -317,6 +466,39 @@ struct LibraryPrototypeView: View {
         packagePendingDeletion = nil
     }
 
+    private func toggleSelection(for word: PrototypeWord) {
+        if selectedCardIDs.contains(word.id) {
+            selectedCardIDs.remove(word.id)
+        } else {
+            selectedCardIDs.insert(word.id)
+        }
+    }
+
+    private func deleteSelectedCards() {
+        let ids = selectedCardIDs
+        guard !ids.isEmpty else { return }
+        guard store.deleteCards(ids: ids) else {
+            deletionError = store.lastPersistenceError
+            return
+        }
+        selectedCardIDs.removeAll()
+        isSelectingCards = false
+    }
+
+    /// Select every result currently narrowed by search/filter, including
+    /// results beyond the 250-card rendering cap.
+    private func selectAllFilteredCards() {
+        selectedCardIDs.formUnion(filteredWords.map(\.id))
+    }
+
+    private func exportSelectedCards() {
+        let cards = activeWords.filter { selectedCardIDs.contains($0.id) }
+        guard !cards.isEmpty else { return }
+        exportCandidates = cards
+        selectedExportIDs = Set(cards.map(\.id))
+        isSelectingExportCards = true
+    }
+
     private func wordRow(_ word: PrototypeWord) -> some View {
         PrototypeCard {
             HStack(spacing: 14) {
@@ -393,7 +575,7 @@ struct AnkiAPKGDocument: FileDocument {
     }
 }
 
-private enum PrototypeAPKGExporter {
+enum PrototypeAPKGExporter {
     @MainActor
     static func makeDocument(from words: [PrototypeWord], store: PrototypeStore) async throws -> AnkiAPKGDocument {
         guard !words.isEmpty else { throw AnkiExportError.noApprovedCards }
@@ -404,40 +586,129 @@ private enum PrototypeAPKGExporter {
         let databaseURL = directory.appendingPathComponent("collection.anki21")
         let mediaDirectory = directory.appendingPathComponent("media", isDirectory: true)
         try FileManager.default.createDirectory(at: mediaDirectory, withIntermediateDirectories: true)
-        let model = AnkiCollectionMapper.mapBundleToModel(name: "HermesCard", fieldNames: ["Front", "Back", "Direction", "Provider", "GeneratedAt"])
+        let model = AnkiCollectionMapper.mapBundleToModel(
+            name: "HermesCard",
+            fieldNames: [
+                "Front", "Back", "Example", "ExampleTranslation", "Level", "PartOfSpeech", "Domain",
+                "SourceLanguageTag", "TargetLanguageTag", "Direction", "Provider", "GeneratedAt", "Audio", "Image"
+            ]
+        )
         let deck = AnkiCollectionMapper.mapBundleToDeck(sourceGroup: "hermes", languagePair: (words[0].sourceLanguageTag, words[0].targetLanguageTag))
         var builder = try AnkiCollectionBuilder(dbURL: databaseURL)
         try builder.insertModel(model)
         try builder.insertDeck(deck)
         var bundles: [GeneratedCardBundle] = []
+        var allMediaAssets: [MediaAsset] = []
         for word in words {
             let sense = LexicalSense(sourceLanguage: word.sourceLanguageTag, targetLanguage: word.targetLanguageTag, lemma: word.german, senseKey: word.id.uuidString, partOfSpeech: word.partOfSpeech, meaning: word.persian, translation: word.persian, level: word.level, direction: .recognition)
             let identity = CardIdentity(sourceLanguage: word.sourceLanguageTag, targetLanguage: word.targetLanguageTag, lemma: word.german, senseKey: sense.senseKey, partOfSpeech: word.partOfSpeech, direction: .recognition)
             var mediaAssets: [MediaAsset] = []
+            var audioFilename: String?
+            var imageFilename: String?
             if let audio = store.pronunciationAudio(for: word) {
-                let url = mediaDirectory.appendingPathComponent("\(mediaAssets.count).media")
+                let filename = "audio-\(word.id.uuidString).\(audioFileExtension(for: audio))"
+                audioFilename = filename
+                let url = mediaDirectory.appendingPathComponent(filename)
                 try audio.write(to: url, options: .atomic)
-                mediaAssets.append(MediaAsset(kind: .audio, locale: word.targetLanguageTag, checksum: "", fileSize: audio.count, provider: "local", model: "prototype", cacheReference: url.path))
+                let asset = MediaAsset(kind: .audio, locale: word.targetLanguageTag, checksum: "", fileSize: audio.count, provider: "local", model: "prototype", cacheReference: url.path)
+                mediaAssets.append(asset)
+                allMediaAssets.append(asset)
             }
             if let image = store.illustrationImage(for: word) {
-                let url = mediaDirectory.appendingPathComponent("\(mediaAssets.count).media")
+                let filename = "image-\(word.id.uuidString).\(imageFileExtension(for: image))"
+                imageFilename = filename
+                let url = mediaDirectory.appendingPathComponent(filename)
                 try image.write(to: url, options: .atomic)
-                mediaAssets.append(MediaAsset(kind: .image, locale: word.targetLanguageTag, checksum: "", fileSize: image.count, provider: "local", model: "prototype", cacheReference: url.path))
+                let asset = MediaAsset(kind: .image, locale: word.targetLanguageTag, checksum: "", fileSize: image.count, provider: "local", model: "prototype", cacheReference: url.path)
+                mediaAssets.append(asset)
+                allMediaAssets.append(asset)
             }
             let bundle = GeneratedCardBundle(identity: identity, senses: [sense], directions: [.recognition], mediaAssets: mediaAssets, approvalState: .approved, provenance: Provenance(provider: "hermes", model: "prototype"))
             bundles.append(bundle)
-            let note = AnkiCollectionMapper.mapBundleToNote(bundle, modelID: model.modelID, deckID: deck.deckID)
+            let mappedNote = AnkiCollectionMapper.mapBundleToNote(bundle, modelID: model.modelID, deckID: deck.deckID)
+            let note = AnkiNoteRecord(
+                noteID: mappedNote.noteID,
+                modelID: mappedNote.modelID,
+                deckID: mappedNote.deckID,
+                fieldStrings: [
+                    word.german,
+                    word.persian,
+                    word.example,
+                    word.exampleTranslation,
+                    word.level,
+                    word.partOfSpeech,
+                    word.domain,
+                    word.sourceLanguageTag,
+                    word.targetLanguageTag,
+                    "recognition",
+                    "hermes",
+                    mappedNote.creationTime.description,
+                    audioFilename.map { "[sound:\($0)]" } ?? "",
+                    imageFilename.map { "<img src=\"\($0)\">" } ?? ""
+                ],
+                tags: mappedNote.tags,
+                sortIDX: mappedNote.sortIDX,
+                creationTime: mappedNote.creationTime,
+                modificationTime: mappedNote.modificationTime
+            )
             try builder.insertNote(note)
             try builder.insertCard(AnkiCollectionMapper.mapBundleToCard(bundle: bundle, noteID: note.noteID, deckID: deck.deckID))
             for tag in AnkiCollectionMapper.mapBundleToTags(bundle: bundle) { try builder.insertTag(tag) }
         }
         try builder.finalizeCollection()
         builder.close()
-        let manifest = ExportManifest(sourceGroups: ["hermes"], cardIdentities: bundles.map { $0.identity.compositeKey })
+        let mediaEntries = try await AnkiMediaPackager().packageMedia(
+            from: allMediaAssets,
+            to: mediaDirectory,
+            config: AnkiExportConfiguration()
+        )
+        let manifest = ExportManifest(
+            sourceGroups: ["hermes"],
+            cardIdentities: bundles.map { $0.identity.compositeKey },
+            mediaEntries: mediaEntries
+        )
         let destination = directory.appendingPathComponent("prototype.apkg")
         _ = try await AnkiPackageWriter().createAPKG(collectionURL: databaseURL, mediaDirectory: mediaDirectory, manifest: manifest, destination: destination)
         let data = try Data(contentsOf: destination)
         return AnkiAPKGDocument(sourceGroups: ["hermes"], cardCount: words.count, data: data)
+    }
+
+    private static func audioFileExtension(for data: Data) -> String {
+        let bytes = [UInt8](data.prefix(12))
+        if bytes.count >= 12,
+           bytes[0...3].elementsEqual([0x52, 0x49, 0x46, 0x46]),
+           bytes[8...11].elementsEqual([0x57, 0x41, 0x56, 0x45]) {
+            return "wav"
+        }
+        if bytes.count >= 4, bytes[0...3].elementsEqual([0x4F, 0x67, 0x67, 0x53]) {
+            return "ogg"
+        }
+        if bytes.count >= 8, bytes[4...7].elementsEqual([0x66, 0x74, 0x79, 0x70]) {
+            return "m4a"
+        }
+        return "mp3"
+    }
+
+    private static func imageFileExtension(for data: Data) -> String {
+        let bytes = [UInt8](data.prefix(12))
+        if bytes.count >= 8,
+           bytes[0...7].elementsEqual([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]) {
+            return "png"
+        }
+        if bytes.count >= 3, bytes[0...2].elementsEqual([0xFF, 0xD8, 0xFF]) {
+            return "jpg"
+        }
+        if bytes.count >= 6,
+           bytes[0...5].elementsEqual([0x47, 0x49, 0x46, 0x38, 0x37, 0x61]) ||
+           bytes[0...5].elementsEqual([0x47, 0x49, 0x46, 0x38, 0x39, 0x61]) {
+            return "gif"
+        }
+        if bytes.count >= 12,
+           bytes[0...3].elementsEqual([0x52, 0x49, 0x46, 0x46]),
+           bytes[8...11].elementsEqual([0x57, 0x45, 0x42, 0x50]) {
+            return "webp"
+        }
+        return "png"
     }
 }
 
@@ -845,6 +1116,30 @@ struct WordDetailPrototypeView: View {
                         Text("مثال").font(.headline)
                         LanguageText(text: word.example, languageTag: word.targetLanguageTag, font: .title3)
                         LanguageText(text: word.exampleTranslation, languageTag: word.sourceLanguageTag, color: .secondary)
+                    }
+                }
+
+                if !word.senses.isEmpty {
+                    PrototypeCard {
+                        VStack(alignment: .leading, spacing: 14) {
+                            Text("Independent meanings and usage").font(.headline)
+                            ForEach(Array(word.senses.enumerated()), id: \.offset) { index, sense in
+                                VStack(alignment: .leading, spacing: 5) {
+                                    LanguageText(text: "\(index + 1). \(sense.meaning)", languageTag: word.sourceLanguageTag, font: .headline)
+                                    if !sense.usage.isEmpty {
+                                        Text(sense.usage).font(.caption).foregroundStyle(.secondary)
+                                    }
+                                    LanguageText(text: sense.example.target, languageTag: word.targetLanguageTag, font: .body)
+                                    LanguageText(text: sense.example.source, languageTag: word.sourceLanguageTag, font: .subheadline, color: .secondary)
+                                    if !sense.collocations.isEmpty {
+                                        Text(sense.collocations.joined(separator: " · "))
+                                            .font(.caption)
+                                            .foregroundStyle(PrototypeTheme.accent)
+                                    }
+                                }
+                                if index < word.senses.count - 1 { Divider() }
+                            }
+                        }
                     }
                 }
 

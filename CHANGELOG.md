@@ -20,8 +20,69 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+- Feature 004 T020: added the versioned grammar-practice contract and deterministic curated grammar exercise factory with explicit rule roles, bounded hints, traceable references, and rejection of ambiguous or multi-issue prompts.
+
+### Planned — 2026-09-04
+
+- Added Feature 004 adaptive-skill-practice specification, implementation plan, 36 dependency-ordered tasks and a Persian developer handoff. Planning covers independent objective scheduling, assistance-aware evidence, writing correction and sentence reuse, grammar explanations, semantic listening and audio-based pronunciation assessment. T001–T012 are now verified; T013 remains an explicit gate.
+- Changed Today’s «مرور پیشنهادی» to one simple Anki due-card review action. The four skill exercises remain an explicit, separate «تمرین مهارت‌ها» route and are not mixed into suggested review.
+- Changed normal card review itself to the Anki flow: think on the front, reveal the answer, then choose Again/Hard/Good/Easy. Typed-answer checking and automatic grading no longer appear in normal recognition or reverse review.
+- Fixed compact Anki review layout: long answers scroll safely and use smaller semantic text, while the target-language example and its translation remain visible beneath the answer.
+- Fixed the practice-store migration validation gate so repeated reviews of one card/direction are treated as one review unit with multiple history rows, instead of incorrectly failing activation.
+- Restored the existing Anki review writer after migration rehearsal. The card-review UI still uses SwiftData, so blocking that writer before an atomic GRDB review-route migration caused ratings to fail with a storage error.
+
+### Feature 004 cutover — 2026-09-04
+
+- Accepted ADR-017 after product-owner approval and completed T001 traceability for the four-skill learning-core scope without opening later UI or skill stories.
+- Completed T005 with the production GRDB 7.11.1 adapter, ordered migrations, relational integrity, atomic transactions, and explicit app dependency injection. File-backed and in-memory repositories remain test fakes.
+- Implemented the T006 app-only SwiftData compatibility bridge evidence: deterministic exact-store identification, pre-read backup of the store and present `-wal`/`-shm`/`-journal` sidecars, source-scoped idempotent staging, checkpoint/digest/count/foreign-key/content validation, recoverable states, verified restore, and post-activation blocking of the legacy practice writer. The application review/mastery/FSRS owner is recorded in the T006 completion evidence below; `PracticeSessionService.swift` remains the separate session-intent owner.
+- Migration copies only recognition/reverse evidence. Writing, grammar, listening, and speaking are seeded as unknown with no inherited attempts, mastery, or schedules. SwiftData models and retained backups remain untouched; no dual-write or live learner-store migration was performed.
+- T002 contract audit added explicit state effects, fixed-clock numeric scoring examples, bounded confidence/score semantics, sentence/revision invariants, and a documented retention/recovery policy. The audit corrected the earlier T006 completion claim; the application boundary it identified is now implemented and evidenced in the 2026-09-05 T006 section.
+
+### Feature 004 Domain — 2026-09-05
+
+- Completed T003 with a portable Domain model for deterministic ReviewUnit identity, immutable Sentence revisions, first-attempt and evaluator evidence, all practice outcomes including partial, assistance/skip events, legal session transitions, and unknown-versus-observed mastery. Added fixed-ID/fixed-date tests; persistence, review-service, mastery, and FSRS behavior remain open under later tasks.
+
+### Feature 004 Review Boundary — 2026-09-05
+
+- Completed T006 with the application-owned `PracticeReviewService`, immutable learning-event evidence, atomic attempt/mastery/FSRS projection commits, idempotent replay, rollback safety, independent four-skill projections, and the pinned `FSRS-6.0/default-21` scheduler adapter. Partial remains partial; reveal/copy, skip, unavailable, cancellation, malformed, and low-confidence results never create independent recall credit.
+- Added fixed-clock application tests for outcome/assistance mappings, retry and duplicate delivery, scheduler-at-most-once, transaction failure, GRDB reopen, and legacy recognition/reverse preservation. No live learner store was changed; T007/T008 remain open.
+
+### Feature 004 Ports and Policy — 2026-09-05
+
+- Completed T004 with provider-independent exercise, attempt, help-event, evaluation, media, and review/mastery handoff ports plus the deterministic `practice-evidence-v1` policy. Added validation for partial, skipped, unavailable, low-confidence, malformed, and cancelled results; reveal/copy suppression; fixed-clock outcome/assistance tests. Session orchestration remains open under T007.
+
+### Feature 004 Session Orchestration — 2026-09-05
+
+- Completed T007 with application-only session orchestration for prepare/resume, hint/reveal/copied-answer, skip, submit, retry, continue, and finish. Assistance is durably stored before submit; original responses are saved before evaluator work; all proposals pass through `PracticeReviewService`; unavailable/cancelled results remain ungraded; duplicate and stale deliveries are idempotent; retry is bounded and preserves earlier attempts. Added 13 deterministic session tests, including GRDB restart/resume and transaction-failure evidence. No live learner store was changed; T008 remains open.
+
+### Feature 004 Cross-Layer Verification — 2026-09-06
+
+- Completed T008 with reusable fixed-clock/fixed-ID fakes, scripted evaluator cancellation and late-result release, scripted media, deterministic scheduler/repository failure injection, and four cross-layer fake tests. Existing Domain/Application/Persistence/session tests and the comprehensive app-level `LegacyPracticeMigrationTests.swift` replacement cover assistance-aware evidence, rollback, restart, migration interruption/recovery, legacy recognition/reverse preservation, and unknown new skills. Generation/APKG regression suites remain green; T009 remains open. No live learner data was touched.
+
+### Feature 004 Shared Practice Boundary — 2026-09-06
+
+- Completed T009 with explicit app dependency composition and an `@MainActor @Observable` `PracticeSessionModel` that maps the application session to finite loading, empty, answering, evaluating, feedback, revealed, unavailable, finished, and recoverable-failure states.
+- Added intent-only session actions, cancellation and generation-based stale-result suppression, answer/feedback retention across redraw and resume, deterministic app-level model tests, and Today-route compatibility wiring. The existing recognition/reverse review and `SkillPracticeView` remain available until T011 verifies every visible surface; provider/story work remains open. No live learner data was touched.
+
+### Feature 004 Shared Practice Scaffold — 2026-09-06
+
+- Completed T010 with responsive `PracticeScaffold` and `PracticeFeedbackView` components covering all session states, prompt/answer/reveal injection, assistance-aware messaging, original-response preservation, typed feedback and rule references, accessibility semantics, Dynamic Type, narrow-layout actions, and fa/en/de localization.
+- Added iPhone 17 Simulator model/scaffold smoke coverage and verified iOS/macOS Debug builds. T011 remains open for rendered-surface accessibility/localization QA; mode-specific screens, AI providers, and the legacy `SkillPracticeView` remain unchanged and available. No live learner data was touched.
+
+### Feature 004 Rendered Surface QA — 2026-09-06
+
+- Completed T011 with answer-language direction independent from Persian/German/English interface direction, localized accessibility labels/values/hints, explicit focus ordering, hidden-answer suppression before reveal, and renderer smoke for all shared states at narrow and iPad-width proposals with Accessibility 5 text size.
+- Validated 61 `practice.shared.*` keys in fa/en/de and documented repeatable manual VoiceOver/keyboard QA for iPhone 17 Simulator, iPad, and narrow Mac windows. Runtime VoiceOver, physical-device, and live-store evidence are not claimed. T012 remains the next safe task; no mode-specific story or AI provider was started.
+
+### Feature 004 Writing Evaluation Contract — 2026-09-06
+
+- Completed T012 with the provider-neutral `writing-evaluation-v1` rubric and 13 synthetic fixtures covering correct, partial, incorrect, unavailable, grammatical/vocabulary/meaning/style distinctions, valid inflection/separable forms, uncertainty, malformed output, unsupported language, low confidence, cancellation, and provider failure.
+- Added six offline AI-target tests that validate accepted/rejected/normalized fixtures, bounded text/feedback/rules/spans, language and numeric constraints, original-response preservation, no unnecessary corrections, human review for meaning-changing corrections, and the prohibition on canonical/mastery/scheduling mutation. `swift test` passes with 169 tests; iOS Simulator and macOS Debug builds pass. T013 remains open for the validated decoder/provider adapter; no provider call or live learner data was used.
+
 ### Changed
 
+- Reworked vocabulary-card generation so the selected category supplies an explicit pedagogical scope (including driving, roads, traffic law, offences, safety, vehicles, and licensing for driving categories). Removed UI-layer relevance/script/headword rejection gates that could discard otherwise decodable provider output, while retaining the structured JSON contract and learner review step.
 - Added user-defined learning domains with persistent Settings management, Library filtering, and daily-plan scoping.
 - Fixed legacy APKG media import for numeric ZIP media entries, `[sound:...]` references, and HTML image references; imported audio and images are now stored with cards and shown in card details.
 
@@ -32,6 +93,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Added the 2026-08-25 codebase reality audit. It records the actual boundaries of the current prototype: Feature 003 isolation, production persistence, objective-level mastery, and adaptive selection remain the next implementation sequence; signed Apple-account and App Store work stays deferred.
 
 ### Added
+
+- Feature 004 T005 persistence slice: exact GRDB.swift 7.11.1 dependency, ordered practice schema migration, `DatabasePool` adapter, relational constraints/indexes, atomic transaction batching, restart/rollback/idempotency/integrity tests, and domain-only repository mapping.
+- Feature 004 T006 migration bridge: read-only SwiftData snapshot, explicit recognition/reverse mapping, retained GRDB legacy staging tables, source-scoped idempotency, checkpoint/digest verification, four unknown-skill seeds, app-level iOS interruption/restart/malformed/mismatch/backup/restore tests, and controlled writer activation.
+- Feature 004 implementation remains outside this completion for T011 and later: their independent rendered-surface/story acceptance criteria are still open. T001–T010 are verified as the scope, contract audit, Domain model, ports/policy, persistence, migration bridge, review/mastery/FSRS boundary, session orchestration, deterministic cross-layer test gate, shared app presentation boundary, and reusable scaffold/feedback UI.
 
 - Recorded T037 physical model evidence: `gpt-4o-transcribe` produces delayed text while other Realtime transcription candidates remain unverified. Corrected `gpt-live-transcribe` to use `languages` plus `delay: low`, reduced PCM batches to 100 ms, shortened server-VAD silence to 400 ms, kept official live/committed model candidates testable even when `/models` omits their aliases, and separated future bidirectional `gpt-realtime` Voice Agent work into T038.
 
@@ -167,3 +232,25 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Added a top-level Utilities area with live on-device speech-to-text, partial transcript rendering, provider selection, microphone/Speech permission handling, and an explicit OpenAI Cloud follow-up boundary.
 - Added copy buttons for transcript and translation output plus AI translation to Persian, German, and English using the configured text provider.
 - Documented the Personal Development Team limitation: CloudKit entitlements are preserved but detached from current targets so device builds continue to work until a paid Apple Developer Team provisions the container.
+- Feature 004: completed verified T013/T014 writing evaluation decoder/provider and application service with provenance validation, bounded feedback, failure-safe ungraded results, and save-before-evaluate response preservation. T015+ remain open pending sentence-library wiring and story QA.
+- Feature 004: completed T016/T017 with scoped sentence-learning acceptance, immutable revisions, deterministic adaptive planning, capability/repetition filtering, and fixed-seed tests.
+- Feature 004: completed T018 with the localized, injected sentence-learning history surface and explicit unknown-mastery presentation.
+- Feature 004: completed T019 with synthetic package and iPhone 17 Simulator coverage for writing acceptance, restart/reuse, decline, revision replay, capability gating, and independent skill selection.
+
+### 2026-09-07 — Feature 004 ownership boundary audit
+
+- Added the provider-independent `PracticeDataOwnershipService` contract for
+  learner-owned practice export, explicit private-data deletion, and consent
+  gating.
+- Added deterministic synthetic tests; no live learner data was accessed.
+- Kept T033–T036 open because production ownership integration and final
+  cross-device QA remain outstanding.
+### 2026-09-08 — Feature 004 writing and pronunciation gates
+
+- Verified and closed T015 with three iPhone 17 Simulator writing-surface tests.
+- Closed T028 as a documented negative capability result; pronunciation scoring remains disabled and T030–T032 remain open.
+### 2026-09-08 — Feature 004 grammar and listening
+
+- Completed T021–T026 and T023 with canonical grammar evaluation, grammar UI tests, exact-revision listening context, localized replay controls, and an Apple system sentence-playback adapter.
+- Added a temporary-by-default Apple recorder implementation and focused configuration tests; T029 remains open pending permission/interruption/device evidence.
+- Verified the same audio changes with a successful macOS Debug build, localization JSON/key parity, and a clean diff check. Kept T027/T029 and dependent integration/final-delivery tasks open where real-audio, physical-device, or approved-provider evidence is still absent.

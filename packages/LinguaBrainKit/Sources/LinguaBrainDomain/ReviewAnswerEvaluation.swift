@@ -25,6 +25,18 @@ public enum ReviewAnswerEvaluator {
         evaluate(answer: answer, expected: acceptedForms, caseSensitive: false)
     }
 
+    /// Production tasks accept a natural sentence as long as it contains one
+    /// of the expected lexical forms. Matching still ignores case, accents,
+    /// punctuation, and repeated whitespace, but does not accept an unrelated
+    /// sentence that merely has the same length.
+    public static func production(answer: String, acceptedForms: [String]) -> ReviewAnswerEvaluation {
+        let normalized = normalize(answer, caseSensitive: false)
+        let candidates = acceptedForms.map { normalize($0, caseSensitive: false) }.filter { !$0.isEmpty }
+        let padded = " \(normalized) "
+        let containsExpected = !normalized.isEmpty && candidates.contains { padded.contains(" \($0) ") }
+        return ReviewAnswerEvaluation(correct: containsExpected, normalizedAnswer: normalized, expectedAnswers: candidates)
+    }
+
     private static func evaluate(answer: String, expected: [String], caseSensitive: Bool) -> ReviewAnswerEvaluation {
         let normalized = normalize(answer, caseSensitive: caseSensitive)
         let candidates = expected.map { normalize($0, caseSensitive: caseSensitive) }.filter { !$0.isEmpty }

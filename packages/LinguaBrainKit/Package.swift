@@ -18,6 +18,9 @@ let package = Package(
         .library(name: "LinguaBrainAnkiExport", targets: ["LinguaBrainAnkiExport"]),
         .library(name: "LinguaBrainTestSupport", targets: ["LinguaBrainTestSupport"]),
     ],
+    dependencies: [
+        .package(url: "https://github.com/groue/GRDB.swift.git", exact: "7.11.1")
+    ],
     targets: [
         .target(
             name: "LinguaBrainDomain",
@@ -37,7 +40,7 @@ let package = Package(
         ),
         .target(
             name: "LinguaBrainPersistence",
-            dependencies: ["LinguaBrainDomain", "LinguaBrainApplication"]
+            dependencies: ["LinguaBrainDomain", "LinguaBrainApplication", .product(name: "GRDB", package: "GRDB.swift")]
         ),
         .target(
             name: "LinguaBrainAnkiExport",

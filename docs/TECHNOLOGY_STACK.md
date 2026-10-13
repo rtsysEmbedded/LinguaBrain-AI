@@ -145,6 +145,12 @@ A technology update is not complete until all applicable answers are “yes”:
 
 SpeechAnalyzer, AVFoundation audio routing, SwiftUI Observation, CloudKit entitlements, and macOS microphone behavior are platform-sensitive. Treat every major Xcode or OS update as a compatibility change, not a routine dependency bump.
 
+### Feature 004 persistence dependency
+
+- GRDB.swift `7.11.1`, exact SwiftPM requirement in `packages/LinguaBrainKit/Package.swift` and resolved revision `b83108d10f42680d78f23fe4d4d80fc88dab3212` in `packages/LinguaBrainKit/Package.resolved`.
+- Source: https://github.com/groue/GRDB.swift.git, tag `v7.11.1`; license: MIT, as declared by the upstream repository's `LICENSE` and podspec.
+- Selected because ADR-003 requires GRDB 7's `DatabasePool`, ordered `DatabaseMigrator`, explicit SQLite constraints, and file-backed/in-memory testing. The adapter is not wired into the current SwiftData prototype composition; no dual-write was introduced.
+
 ### OpenAI Realtime
 
 The app uses a transcription-only Realtime WebSocket session. Keep the WebSocket session schema, audio format, event names, authentication method, and supported transcription model list aligned with the current official API reference. Never assume that a model returned by a general `/models` endpoint is valid for the selected Realtime session.

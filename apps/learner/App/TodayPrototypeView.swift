@@ -3,13 +3,26 @@ import LinguaBrainDomain
 import LinguaBrainApplication
 
 struct TodayPrototypeView: View {
+    /// Optional until the story-specific exercise retrieval composition is
+    /// supplied. The route itself is shared now; legacy content remains the
+    /// compatibility body until T011 verifies every visible surface.
+    let practiceComposition: PracticeComposition?
+
     @Environment(PrototypeStore.self) private var store
     @Environment(PrototypeLocalization.self) private var localization
     @Environment(PrototypeLanguageSettings.self) private var languageSettings
     @State private var energy = 6.0
     @State private var selectedTime = 20
+    @State private var motivation = 3
+    @State private var selectedMode = LearningSessionMode.balanced.rawValue
     @State private var selectedDomain = "همه حوزه‌ها"
     @State private var customDomains = PrototypeDomainCatalog.customDomains
+    @State private var didLoadDailyState = false
+    @State private var dailyStateCapturedAt: Date?
+
+    init(practiceComposition: PracticeComposition? = nil) {
+        self.practiceComposition = practiceComposition
+    }
 
     private var activeWords: [PrototypeWord] {
         let words = store.words(
@@ -24,41 +37,16 @@ struct TodayPrototypeView: View {
     private var dueCount: Int { store.dueCount(in: activeWords) }
     private var weakCount: Int { store.weakCount(in: activeWords) }
 
-    private var missionForToday: LearningMission {
-        if let mission = store.activeMission { return mission }
-        return LearningMission(
-            id: "today-domain",
-            title: selectedDomain == "همه حوزه‌ها" ? "General learning" : selectedDomain,
-            domain: selectedDomain == "همه حوزه‌ها" ? nil : selectedDomain,
-            targetLevel: nil,
-            weight: selectedDomain == "همه حوزه‌ها" ? 0.25 : 1.0
-        )
-    }
-
     private var newCardLimit: Int {
         let energyFactor = 0.45 + (energy / 12)
         let timeCapacity = Double(selectedTime) / 1.8
-        return min(unreviewedCount, max(0, min(20, Int((timeCapacity * energyFactor).rounded()))))
-    }
-
-    private var adaptivePlan: AdaptiveLearningPlan {
-        let candidates = activeWords.map { word in
-            AdaptiveLearningCandidate(
-                objective: LearningObjective(id: "\(word.id.uuidString)::recognition", senseKey: word.reviewIdentityKey, skill: .recognition),
-                dueAt: store.dueDate(for: word),
-                mastery: store.mastery(for: word),
-                missionWeight: missionForToday.domain == nil ? (word.domain == "عمومی" ? 0 : 0.25) : (word.domain == missionForToday.domain ? missionForToday.weight : 0)
-            )
+        let motivationFactor = 0.82 + (Double(motivation - 1) * 0.10)
+        let modeFactor: Double = switch selectedMode {
+        case LearningSessionMode.lightReview.rawValue: 0.70
+        case LearningSessionMode.challenge.rawValue: 1.25
+        default: 1.0
         }
-        return AdaptiveLearningPlanner.makePlan(candidates: candidates, availableMinutes: selectedTime, energy: Int(energy), now: .now)
-    }
-
-    private var recommendedReviewMode: PrototypeReviewMode {
-        let reviewed = activeWords.filter { store.reviewCount(for: $0, mode: .recognition) > 0 || store.reviewCount(for: $0, mode: .reverseTranslation) > 0 }
-        guard !reviewed.isEmpty else { return .recognition }
-        let recognition = reviewed.reduce(0) { $0 + store.mastery(for: $1, mode: .recognition) } / Double(reviewed.count)
-        let recall = reviewed.reduce(0) { $0 + store.mastery(for: $1, mode: .reverseTranslation) } / Double(reviewed.count)
-        return recall < recognition ? .reverseTranslation : .recognition
+        return min(unreviewedCount, max(0, min(20, Int((timeCapacity * energyFactor * motivationFactor * modeFactor).rounded()))))
     }
 
     private var learningMode: String {
@@ -73,6 +61,7 @@ struct TodayPrototypeView: View {
                 hero
                 checkIn
                 todayPlan
+                skillPractice
                 weakArea
             }
             .padding()
@@ -89,6 +78,47 @@ struct TodayPrototypeView: View {
                 .accessibilityLabel("اعلان‌ها")
             }
         }
+        .onAppear {
+            customDomains = PrototypeDomainCatalog.customDomains
+            loadDailyStateIfNeeded()
+        }
+        .onChange(of: energy) { _, _ in
+            persistDailyState()
+        }
+        .onChange(of: selectedTime) { _, _ in
+            persistDailyState()
+        }
+        .onChange(of: motivation) { _, _ in
+            persistDailyState()
+        }
+        .onChange(of: selectedMode) { _, _ in
+            persistDailyState()
+        }
+    }
+
+    private func loadDailyStateIfNeeded() {
+        guard !didLoadDailyState else { return }
+        if let state = store.dailyLearningState() {
+            if !state.isStale {
+                energy = state.energy
+                selectedTime = state.availableMinutes
+                motivation = state.motivation
+                selectedMode = state.modeRawValue
+                dailyStateCapturedAt = state.capturedAt
+            }
+        }
+        didLoadDailyState = true
+    }
+
+    private func persistDailyState() {
+        guard didLoadDailyState else { return }
+        store.saveDailyLearningState(
+            energy: energy,
+            availableMinutes: selectedTime,
+            motivation: motivation,
+            modeRawValue: selectedMode
+        )
+        dailyStateCapturedAt = .now
     }
 
     private var hero: some View {
@@ -138,6 +168,18 @@ struct TodayPrototypeView: View {
                     Text("۳۰ دقیقه").tag(30)
                 }
                 .pickerStyle(.segmented)
+                Picker(localization.localized("daily.motivation"), selection: $motivation) {
+                    Text(localization.localized("daily.motivation.low")).tag(1)
+                    Text(localization.localized("daily.motivation.normal")).tag(3)
+                    Text(localization.localized("daily.motivation.high")).tag(5)
+                }
+                .pickerStyle(.segmented)
+                Picker(localization.localized("daily.mode"), selection: $selectedMode) {
+                    Text(localization.localized("daily.mode.light")).tag(LearningSessionMode.lightReview.rawValue)
+                    Text(localization.localized("daily.mode.balanced")).tag(LearningSessionMode.balanced.rawValue)
+                    Text(localization.localized("daily.mode.challenge")).tag(LearningSessionMode.challenge.rawValue)
+                }
+                .pickerStyle(.segmented)
                 Picker("حوزهٔ امروز", selection: $selectedDomain) {
                     Text("همه حوزه‌ها").tag("همه حوزه‌ها")
                     ForEach(customDomains, id: \.self) { Text($0).tag($0) }
@@ -149,49 +191,26 @@ struct TodayPrototypeView: View {
 
     private var todayPlan: some View {
         VStack(alignment: .leading, spacing: 12) {
-            SectionHeader(title: "برنامه پیشنهادی", subtitle: "\(localization.minutes(selectedTime)) · \(learningMode)")
+            SectionHeader(title: "مرور پیشنهادی", subtitle: "کارت‌های موعددار · \(localization.minutes(selectedTime))")
             PrototypeCard {
-                VStack(spacing: 0) {
-                    planRow(symbol: "rectangle.stack.fill", color: PrototypeTheme.accent, title: "مرور هوشمند", detail: localization.reviewSummary(due: adaptivePlan.candidates.count, new: newCardLimit), time: localization.minutes(selectedTime))
-                    Divider().padding(.vertical, 12)
-                    planRow(symbol: "text.book.closed.fill", color: PrototypeTheme.blue, title: "متن کوتاه", detail: "محیط کار · سطح B1", time: localization.minutes(7))
-                    Divider().padding(.vertical, 12)
-                planRow(symbol: "character.bubble.fill", color: PrototypeTheme.pink, title: localization.localized("reverseTranslation"), detail: localization.localized("reversePracticeDetail"), time: localization.minutes(5))
-                }
+                planRow(
+                    symbol: "rectangle.stack.fill",
+                    color: PrototypeTheme.accent,
+                    title: "مرور کارت‌ها",
+                    detail: localization.reviewSummary(due: dueCount, new: newCardLimit),
+                    time: localization.minutes(selectedTime)
+                )
             }
 
             NavigationLink {
-                ReviewPrototypeView(newCardLimit: newCardLimit, mode: recommendedReviewMode)
+                ReviewPrototypeView(newCardLimit: newCardLimit, mode: .recognition)
             } label: {
-                Label(recommendedReviewMode == .reverseTranslation ? "شروع مرور پیشنهادی: ترجمه معکوس" : "شروع جلسه امروز", systemImage: "play.fill")
+                Label("شروع مرور کارت‌ها", systemImage: "play.fill")
                     .font(.headline)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 14)
             }
             .buttonStyle(.borderedProminent)
-            .controlSize(.large)
-
-            NavigationLink {
-                ReviewPrototypeView(newCardLimit: newCardLimit, mode: .reverseTranslation)
-            } label: {
-                Label(localization.localized("reversePractice"), systemImage: "character.bubble.fill")
-                    .font(.headline)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 11)
-            }
-            .buttonStyle(.bordered)
-            .controlSize(.large)
-
-            NavigationLink {
-                ReviewPrototypeView(newCardLimit: newCardLimit, mode: .mixedGame)
-            } label: {
-                Label(localization.localized("mixedPractice.title"), systemImage: "gamecontroller.fill")
-                    .font(.headline)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 11)
-            }
-            .buttonStyle(.bordered)
-            .tint(PrototypeTheme.pink)
             .controlSize(.large)
         }
     }
@@ -224,6 +243,45 @@ struct TodayPrototypeView: View {
                     Text(localization.coachMessage(reviewed: reviewedCount, weak: weakCount))
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
+                }
+            }
+        }
+    }
+
+    private var skillPractice: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            SectionHeader(
+                title: "skillPractice.title",
+                subtitle: "skillPractice.subtitle"
+            )
+            PrototypeCard {
+                VStack(spacing: 10) {
+                    ForEach(PrototypeSkillPracticeMode.allCases) { practiceMode in
+                        NavigationLink {
+                            PracticeSessionBoundaryView(
+                                composition: practiceComposition,
+                                exercise: nil
+                            ) {
+                                SkillPracticeView(practiceMode: practiceMode, cardLimit: max(1, min(newCardLimit == 0 ? 5 : newCardLimit, 10)))
+                            }
+                        } label: {
+                            HStack(spacing: 12) {
+                                Image(systemName: practiceMode.symbol)
+                                    .foregroundStyle(PrototypeTheme.accent)
+                                    .frame(width: 32)
+                                Text(localization.localized(practiceMode.titleKey))
+                                Spacer()
+                                Image(systemName: "chevron.right")
+                                    .font(.caption.weight(.bold))
+                                    .foregroundStyle(.secondary)
+                            }
+                            .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                        if practiceMode != PrototypeSkillPracticeMode.allCases.last {
+                            Divider()
+                        }
+                    }
                 }
             }
         }

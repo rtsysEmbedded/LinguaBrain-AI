@@ -3,6 +3,8 @@ import SQLite3
 import CryptoKit
 import LinguaBrainDomain
 
+private let sqliteTransientDestructor = unsafeBitCast(-1, to: sqlite3_destructor_type.self)
+
 public class AnkiCollectionBuilder {
     private let dbURL: URL
     private var db: OpaquePointer?
@@ -129,7 +131,10 @@ public class AnkiCollectionBuilder {
     }
 
     public func insertNote(_ note: AnkiNoteRecord) throws {
-        let fieldsJSON = note.fieldStrings.map { escapeJSON($0) }.joined(separator: "\",\"")
+        let fieldsData = try JSONEncoder().encode(note.fieldStrings)
+        guard let fieldsJSON = String(data: fieldsData, encoding: .utf8) else {
+            throw AnkiExportError.sqliteError(code: 32, message: "Failed to encode note fields")
+        }
 
         let sql = """
         INSERT INTO notes (id, mid, guid, fields, tags, cst, usn)
@@ -144,9 +149,9 @@ public class AnkiCollectionBuilder {
 
         sqlite3_bind_int64(statement, 1, note.noteID)
         sqlite3_bind_int64(statement, 2, note.modelID)
-        sqlite3_bind_text(statement, 3, note.guid(), -1, nil)
-        sqlite3_bind_text(statement, 4, "[\(fieldsJSON)]", -1, nil)
-        sqlite3_bind_text(statement, 5, note.tags.joined(separator: ","), -1, nil)
+        sqlite3_bind_text(statement, 3, note.guid(), -1, sqliteTransientDestructor)
+        sqlite3_bind_text(statement, 4, fieldsJSON, -1, sqliteTransientDestructor)
+        sqlite3_bind_text(statement, 5, note.tags.joined(separator: ","), -1, sqliteTransientDestructor)
         sqlite3_bind_int64(statement, 6, note.sortIDX)
 
         if sqlite3_step(statement) != SQLITE_DONE {
@@ -174,13 +179,14 @@ public class AnkiCollectionBuilder {
         sqlite3_bind_int64(statement, 2, card.noteID)
         sqlite3_bind_int64(statement, 3, card.deckID)
         sqlite3_bind_int64(statement, 4, card.cardID)
-        sqlite3_bind_int(statement, 5, Int32(card.due))
-        sqlite3_bind_int(statement, 6, Int32(card.ordinal))
-        sqlite3_bind_int(statement, 7, card.type)
-        sqlite3_bind_int(statement, 8, card.queue)
-        sqlite3_bind_int(statement, 9, card.reps)
-        sqlite3_bind_int(statement, 10, card.lapses)
-        sqlite3_bind_int(statement, 11, card.ease)
+        sqlite3_bind_int(statement, 5, 0)
+        sqlite3_bind_int64(statement, 6, card.due)
+        sqlite3_bind_int(statement, 7, card.ordinal)
+        sqlite3_bind_int(statement, 8, card.type)
+        sqlite3_bind_int(statement, 9, card.queue)
+        sqlite3_bind_int(statement, 10, card.reps)
+        sqlite3_bind_int(statement, 11, card.lapses)
+        sqlite3_bind_int(statement, 12, card.ease)
 
         if sqlite3_step(statement) != SQLITE_DONE {
             let errorMessage = String(cString: sqlite3_errmsg(db))
@@ -208,10 +214,10 @@ public class AnkiCollectionBuilder {
         let templatesJSON = String(data: templatesData, encoding: .utf8) ?? "{}"
 
         sqlite3_bind_int64(statement, 1, model.modelID)
-        sqlite3_bind_text(statement, 2, model.name, -1, nil)
-        sqlite3_bind_text(statement, 3, fieldsJSON, -1, nil)
-        sqlite3_bind_text(statement, 4, templatesJSON, -1, nil)
-        sqlite3_bind_text(statement, 5, model.css, -1, nil)
+        sqlite3_bind_text(statement, 2, model.name, -1, sqliteTransientDestructor)
+        sqlite3_bind_text(statement, 3, fieldsJSON, -1, sqliteTransientDestructor)
+        sqlite3_bind_text(statement, 4, templatesJSON, -1, sqliteTransientDestructor)
+        sqlite3_bind_text(statement, 5, model.css, -1, sqliteTransientDestructor)
         sqlite3_bind_int(statement, 6, Int32(model.formatVersion))
         sqlite3_bind_int(statement, 7, Int32(model.sortFieldType))
 
@@ -237,7 +243,7 @@ public class AnkiCollectionBuilder {
         }
 
         sqlite3_bind_int64(statement, 1, deck.deckID)
-        sqlite3_bind_text(statement, 2, deck.name, -1, nil)
+        sqlite3_bind_text(statement, 2, deck.name, -1, sqliteTransientDestructor)
 
         if sqlite3_step(statement) != SQLITE_DONE {
             let errorMessage = String(cString: sqlite3_errmsg(db))
@@ -257,7 +263,7 @@ public class AnkiCollectionBuilder {
             throw AnkiExportError.sqliteError(code: 40, message: errorMessage)
         }
 
-        sqlite3_bind_text(statement, 1, tag.tag, -1, nil)
+        sqlite3_bind_text(statement, 1, tag.tag, -1, sqliteTransientDestructor)
 
         if sqlite3_step(statement) != SQLITE_DONE {
             let errorMessage = String(cString: sqlite3_errmsg(db))

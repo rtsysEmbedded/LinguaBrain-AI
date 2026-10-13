@@ -303,13 +303,57 @@ public func mapProposalSenses(
     )
 }
 
-public struct Sentence: Equatable, Sendable {
-    public var text: String
-    public var translation: String
+public enum SentenceValidationStatus: String, Codable, Sendable { case unvalidated, validated, rejected }
 
-    public init(text: String, translation: String) {
-        self.text = text
-        self.translation = translation
+public struct LexicalReference: Codable, Hashable, Sendable, Equatable {
+    public let senseKey: String
+    public let surface: String?
+    public init(senseKey: String, surface: String? = nil) { self.senseKey = senseKey; self.surface = surface }
+}
+
+private enum StableSentenceIdentity {
+    static func uuid(text: String, translation: String) -> UUID {
+        let bytes = Array("\(text)\u{1f}\(translation)".utf8)
+        func hash(_ seed: UInt64) -> UInt64 { bytes.reduce(seed) { ($0 ^ UInt64($1)) &* 0x100000001b3 } }
+        var raw = withUnsafeBytes(of: hash(0xcbf29ce484222325).bigEndian, Array.init) + withUnsafeBytes(of: hash(0x84222325cbf29ce4).bigEndian, Array.init)
+        raw[6] = (raw[6] & 0x0f) | 0x50; raw[8] = (raw[8] & 0x3f) | 0x80
+        return UUID(uuid: (raw[0], raw[1], raw[2], raw[3], raw[4], raw[5], raw[6], raw[7], raw[8], raw[9], raw[10], raw[11], raw[12], raw[13], raw[14], raw[15]))
+    }
+}
+
+/// A content revision is immutable evidence. Corrections and variants are
+/// separate fields so accepting feedback can never overwrite the learner text.
+public struct Sentence: Codable, Equatable, Sendable {
+    public let id: UUID
+    public let revision: Int
+    public let text: String
+    public let translation: String
+    public let originalLearnerResponse: String?
+    public let minimalCorrection: String?
+    public let naturalVariant: String?
+    public let validation: SentenceValidationStatus
+    public let provenance: Provenance?
+    public let ruleReferences: [RuleReference]
+    public let lexicalReferences: [LexicalReference]
+
+    public init(
+        id: UUID? = nil, revision: Int = 1, text: String, translation: String,
+        originalLearnerResponse: String? = nil, minimalCorrection: String? = nil,
+        naturalVariant: String? = nil, validation: SentenceValidationStatus = .unvalidated,
+        provenance: Provenance? = nil, ruleReferences: [RuleReference] = [],
+        lexicalReferences: [LexicalReference] = []
+    ) {
+        self.id = id ?? StableSentenceIdentity.uuid(text: text, translation: translation); self.revision = max(1, revision); self.text = text; self.translation = translation
+        self.originalLearnerResponse = originalLearnerResponse; self.minimalCorrection = minimalCorrection
+        self.naturalVariant = naturalVariant; self.validation = validation; self.provenance = provenance
+        self.ruleReferences = ruleReferences; self.lexicalReferences = lexicalReferences
+    }
+
+    private enum CodingKeys: String, CodingKey { case id, revision, text, translation, originalLearnerResponse, minimalCorrection, naturalVariant, validation, provenance, ruleReferences, lexicalReferences }
+    public init(from decoder: Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        let text = try values.decode(String.self, forKey: .text); let translation = try values.decode(String.self, forKey: .translation)
+        self.init(id: try values.decodeIfPresent(UUID.self, forKey: .id), revision: try values.decodeIfPresent(Int.self, forKey: .revision) ?? 1, text: text, translation: translation, originalLearnerResponse: try values.decodeIfPresent(String.self, forKey: .originalLearnerResponse), minimalCorrection: try values.decodeIfPresent(String.self, forKey: .minimalCorrection), naturalVariant: try values.decodeIfPresent(String.self, forKey: .naturalVariant), validation: try values.decodeIfPresent(SentenceValidationStatus.self, forKey: .validation) ?? .unvalidated, provenance: try values.decodeIfPresent(Provenance.self, forKey: .provenance), ruleReferences: try values.decodeIfPresent([RuleReference].self, forKey: .ruleReferences) ?? [], lexicalReferences: try values.decodeIfPresent([LexicalReference].self, forKey: .lexicalReferences) ?? [])
     }
 }
 

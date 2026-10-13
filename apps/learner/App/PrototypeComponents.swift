@@ -97,6 +97,8 @@ struct LanguageText: View {
             .foregroundStyle(color)
             .environment(\.layoutDirection, direction)
             .multilineTextAlignment(.center)
+            .lineLimit(nil)
+            .fixedSize(horizontal: false, vertical: true)
     }
 }
 

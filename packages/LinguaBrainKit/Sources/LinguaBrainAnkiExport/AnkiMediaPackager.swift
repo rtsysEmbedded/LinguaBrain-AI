@@ -60,7 +60,7 @@ public class AnkiMediaPackager {
                     ankiIndex: index,
                     sha256: asset.checksum,
                     byteSize: asset.fileSize ?? 0,
-                    mimeType: mimeType(for: asset.kind),
+                    mimeType: mimeType(for: asset),
                     availability: .available,
                     ownershipProof: "verified-\(asset.checksum)"
                 )
@@ -87,7 +87,7 @@ public class AnkiMediaPackager {
                 ankiIndex: index,
                 sha256: checksum,
                 byteSize: byteSize,
-                mimeType: mimeType(for: asset.kind),
+                mimeType: mimeType(for: asset),
                 availability: .available,
                 ownershipProof: "verified-\(checksum)"
             )
@@ -104,8 +104,21 @@ public class AnkiMediaPackager {
         try await resolver.copyMedia(from: source, to: destination)
     }
 
-    private func mimeType(for kind: MediaKind) -> String {
-        switch kind {
+    private func mimeType(for asset: MediaAsset) -> String {
+        let fileExtension = asset.cacheReference
+            .map { URL(fileURLWithPath: $0).pathExtension.lowercased() } ?? ""
+        switch fileExtension {
+        case "wav": return "audio/wav"
+        case "ogg", "oga": return "audio/ogg"
+        case "m4a", "mp4": return "audio/mp4"
+        case "mp3": return "audio/mpeg"
+        case "png": return "image/png"
+        case "gif": return "image/gif"
+        case "webp": return "image/webp"
+        case "jpg", "jpeg": return "image/jpeg"
+        default: break
+        }
+        switch asset.kind {
         case .audio:
             return "audio/mpeg"
         case .image:

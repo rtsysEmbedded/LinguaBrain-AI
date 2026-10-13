@@ -104,6 +104,85 @@ final class OfflineIntegrityTests: XCTestCase {
         
         XCTAssertTrue(FileManager.default.fileExists(atPath: collectionURL.path))
     }
+
+    func testPackageWriterUsesStandardAnkiMediaEntries() async throws {
+        let collectionURL = tempDirectory.appendingPathComponent("collection.anki21")
+        try createTestSQLiteDatabase(at: collectionURL)
+        let mediaDirectory = tempDirectory.appendingPathComponent("media", isDirectory: true)
+        try FileManager.default.createDirectory(at: mediaDirectory, withIntermediateDirectories: true)
+        let audio = Data([0x49, 0x44, 0x33, 0x04])
+        try audio.write(to: mediaDirectory.appendingPathComponent("0.media"))
+        let manifest = ExportManifest(
+            mediaEntries: [
+                MediaManifestEntry(
+                    sourceAssetID: "/cache/pronunciation.mp3",
+                    ankiIndex: 0,
+                    sha256: "checksum",
+                    byteSize: audio.count,
+                    mimeType: "audio/mpeg"
+                )
+            ]
+        )
+        let destination = tempDirectory.appendingPathComponent("standard-media.apkg")
+
+        _ = try await AnkiPackageWriter().createAPKG(
+            collectionURL: collectionURL,
+            mediaDirectory: mediaDirectory,
+            manifest: manifest,
+            destination: destination
+        )
+
+        let package = try Data(contentsOf: destination)
+        XCTAssertNotNil(package.range(of: Data("collection.anki21".utf8)))
+        XCTAssertNotNil(package.range(of: Data("pronunciation.mp3".utf8)))
+        XCTAssertNotNil(package.range(of: Data("media".utf8)))
+        XCTAssertNil(package.range(of: Data("0.media".utf8)), "ZIP entry names must be numeric in an Anki package")
+
+        let unzip = Process()
+        unzip.executableURL = URL(fileURLWithPath: "/usr/bin/unzip")
+        unzip.arguments = ["-t", destination.path]
+        unzip.standardOutput = Pipe()
+        unzip.standardError = Pipe()
+        try unzip.run()
+        unzip.waitUntilExit()
+        XCTAssertEqual(unzip.terminationStatus, 0, "Generated APKG must be a structurally valid ZIP archive")
+    }
+
+    func testExportWorkspaceDeinitializesWithoutRetainingItself() throws {
+        weak var releasedWorkspace: AppOwnedExportWorkspace?
+        autoreleasepool {
+            let workspace = AppOwnedExportWorkspace()
+            releasedWorkspace = workspace
+            XCTAssertNotNil(workspace.workspaceDirectory)
+        }
+        XCTAssertNil(releasedWorkspace)
+    }
+
+    func testCollectionBuilderPersistsUnicodeTextAndMediaReferences() throws {
+        let databaseURL = tempDirectory.appendingPathComponent("text-and-media.sqlite")
+        let builder = try AnkiCollectionBuilder(dbURL: databaseURL)
+        let note = AnkiNoteRecord(
+            noteID: 101,
+            modelID: 201,
+            deckID: 301,
+            fieldStrings: ["Kastanienbaum", "درخت شاه‌بلوط", "[sound:tree.wav]", "<img src=\"tree.png\">"],
+            tags: ["nature"]
+        )
+        try builder.insertNote(note)
+        builder.close()
+
+        var database: OpaquePointer?
+        XCTAssertEqual(sqlite3_open_v2(databaseURL.path, &database, SQLITE_OPEN_READONLY, nil), SQLITE_OK)
+        defer { sqlite3_close(database) }
+        var statement: OpaquePointer?
+        XCTAssertEqual(sqlite3_prepare_v2(database, "SELECT fields, tags FROM notes WHERE id = 101", -1, &statement, nil), SQLITE_OK)
+        defer { sqlite3_finalize(statement) }
+        XCTAssertEqual(sqlite3_step(statement), SQLITE_ROW)
+        let fields = String(cString: sqlite3_column_text(statement, 0))
+        let tags = String(cString: sqlite3_column_text(statement, 1))
+        XCTAssertEqual(try JSONDecoder().decode([String].self, from: Data(fields.utf8)), note.fieldStrings)
+        XCTAssertEqual(tags, "nature")
+    }
     
     private func createTestBundle() -> GeneratedCardBundle {
         GeneratedCardBundle(

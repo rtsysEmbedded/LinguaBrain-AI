@@ -279,6 +279,12 @@ The MVP cannot enter pilot until:
 
 Roadmap candidates require evidence from the MVP and separate specifications.
 
+Feature 004 is the accepted learning-core foundation for independent writing,
+grammar, listening, and speaking objectives. Its controlled persistence cutover
+preserves only legacy recognition/reverse evidence; the four new objectives
+start unknown and do not move the separate guided-writing, speaking-evaluation,
+or pronunciation capability gates.
+
 ## Risks and mitigations
 
 | Risk | Mitigation |

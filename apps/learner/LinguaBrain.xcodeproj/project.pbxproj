@@ -59,7 +59,36 @@
 		DEADBEEF0000000000000014 /* LinguaBrainTestSupport in Frameworks */ = {isa = PBXBuildFile; productRef = DEADBEEF0000000000000006 /* LinguaBrainTestSupport */; };
 		DEADBEEF0000000000000022 /* CardGenerationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEADBEEF0000000000000021 /* CardGenerationView.swift */; };
 		DEADBEEF0000000000000023 /* CardGenerationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEADBEEF0000000000000021 /* CardGenerationView.swift */; };
+		DEADBEEF0000000000000040 /* LegacyPracticeMigration.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEADBEEF0000000000000042 /* LegacyPracticeMigration.swift */; };
+		DEADBEEF0000000000000041 /* LegacyPracticeMigrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEADBEEF0000000000000043 /* LegacyPracticeMigrationTests.swift */; };
+		DEADBEEF0000000000000044 /* LegacyPracticeMigration.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEADBEEF0000000000000042 /* LegacyPracticeMigration.swift */; };
 		DEADBEEF0000000000000032 /* GenerationPrototypeIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEADBEEF0000000000000031 /* GenerationPrototypeIntegrationTests.swift */; };
+		DEADBEEF0000000000000051 /* PracticeComposition.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEADBEEF0000000000000053 /* PracticeComposition.swift */; };
+		DEADBEEF0000000000000052 /* PracticeSessionModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEADBEEF0000000000000054 /* PracticeSessionModel.swift */; };
+		DEADBEEF0000000000000055 /* PracticeComposition.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEADBEEF0000000000000053 /* PracticeComposition.swift */; };
+		DEADBEEF0000000000000056 /* PracticeSessionModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEADBEEF0000000000000054 /* PracticeSessionModel.swift */; };
+		DEADBEEF0000000000000057 /* PracticeSessionModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEADBEEF0000000000000058 /* PracticeSessionModelTests.swift */; };
+		DEADBEEF000000000000005A /* PracticeScaffold.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEADBEEF000000000000005B /* PracticeScaffold.swift */; };
+		DEADBEEF000000000000005C /* PracticeFeedbackView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEADBEEF000000000000005D /* PracticeFeedbackView.swift */; };
+		DEADBEEF000000000000005E /* PracticeScaffold.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEADBEEF000000000000005B /* PracticeScaffold.swift */; };
+		DEADBEEF000000000000005F /* PracticeFeedbackView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEADBEEF000000000000005D /* PracticeFeedbackView.swift */; };
+		DEADBEEF0000000000000060 /* WritingPracticeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEADBEEF0000000000000062 /* WritingPracticeView.swift */; };
+		DEADBEEF0000000000000061 /* WritingPracticeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEADBEEF0000000000000062 /* WritingPracticeView.swift */; };
+		DEADBEEF0000000000000064 /* WritingPracticeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEADBEEF0000000000000065 /* WritingPracticeTests.swift */; };
+		DEADBEEF0000000000000066 /* SentenceLearningHistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEADBEEF0000000000000067 /* SentenceLearningHistoryView.swift */; };
+		DEADBEEF0000000000000068 /* SentenceLearningHistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEADBEEF0000000000000067 /* SentenceLearningHistoryView.swift */; };
+		DEADBEEF0000000000000070 /* SentenceReuseIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEADBEEF0000000000000071 /* SentenceReuseIntegrationTests.swift */; };
+		DEADBEEF0000000000000072 /* GrammarPracticeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEADBEEF0000000000000074 /* GrammarPracticeView.swift */; };
+		DEADBEEF0000000000000073 /* GrammarPracticeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEADBEEF0000000000000074 /* GrammarPracticeView.swift */; };
+		DEADBEEF0000000000000076 /* ListeningPracticeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEADBEEF0000000000000078 /* ListeningPracticeView.swift */; };
+		DEADBEEF0000000000000077 /* ListeningPracticeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEADBEEF0000000000000078 /* ListeningPracticeView.swift */; };
+		DEADBEEF0000000000000079 /* ListeningPracticeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEADBEEF000000000000007A /* ListeningPracticeTests.swift */; };
+		DEADBEEF0000000000000080 /* GrammarPracticeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEADBEEF0000000000000081 /* GrammarPracticeTests.swift */; };
+		DEADBEEF0000000000000082 /* AppleSentencePlayback.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEADBEEF0000000000000084 /* AppleSentencePlayback.swift */; };
+		DEADBEEF0000000000000083 /* AppleSentencePlayback.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEADBEEF0000000000000084 /* AppleSentencePlayback.swift */; };
+		DEADBEEF0000000000000086 /* ApplePracticeRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEADBEEF0000000000000088 /* ApplePracticeRecorder.swift */; };
+		DEADBEEF0000000000000087 /* ApplePracticeRecorder.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEADBEEF0000000000000088 /* ApplePracticeRecorder.swift */; };
+		DEADBEEF0000000000000089 /* PracticeRecorderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEADBEEF000000000000008A /* PracticeRecorderTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -103,6 +132,24 @@
 		220000000000000000000006 /* modern-apkg-fixtures.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "Fixtures/modern-apkg-fixtures.json"; sourceTree = "<group>"; };
 		DEADBEEF0000000000000021 /* CardGenerationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardGenerationView.swift; sourceTree = "<group>"; };
 		DEADBEEF0000000000000031 /* GenerationPrototypeIntegrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GenerationPrototypeIntegrationTests.swift; sourceTree = "<group>"; };
+		DEADBEEF0000000000000042 /* LegacyPracticeMigration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LegacyPracticeMigration.swift; sourceTree = "<group>"; };
+		DEADBEEF0000000000000043 /* LegacyPracticeMigrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LegacyPracticeMigrationTests.swift; sourceTree = "<group>"; };
+		DEADBEEF0000000000000053 /* PracticeComposition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PracticeComposition.swift; sourceTree = "<group>"; };
+		DEADBEEF0000000000000054 /* PracticeSessionModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PracticeSessionModel.swift; sourceTree = "<group>"; };
+		DEADBEEF0000000000000058 /* PracticeSessionModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PracticeSessionModelTests.swift; sourceTree = "<group>"; };
+		DEADBEEF000000000000005B /* PracticeScaffold.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PracticeScaffold.swift; sourceTree = "<group>"; };
+		DEADBEEF000000000000005D /* PracticeFeedbackView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PracticeFeedbackView.swift; sourceTree = "<group>"; };
+		DEADBEEF0000000000000062 /* WritingPracticeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WritingPracticeView.swift; sourceTree = "<group>"; };
+		DEADBEEF0000000000000065 /* WritingPracticeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WritingPracticeTests.swift; sourceTree = "<group>"; };
+		DEADBEEF0000000000000067 /* SentenceLearningHistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SentenceLearningHistoryView.swift; sourceTree = "<group>"; };
+		DEADBEEF0000000000000071 /* SentenceReuseIntegrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SentenceReuseIntegrationTests.swift; sourceTree = "<group>"; };
+		DEADBEEF0000000000000074 /* GrammarPracticeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GrammarPracticeView.swift; sourceTree = "<group>"; };
+		DEADBEEF0000000000000078 /* ListeningPracticeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListeningPracticeView.swift; sourceTree = "<group>"; };
+		DEADBEEF000000000000007A /* ListeningPracticeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListeningPracticeTests.swift; sourceTree = "<group>"; };
+		DEADBEEF0000000000000081 /* GrammarPracticeTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GrammarPracticeTests.swift; sourceTree = "<group>"; };
+		DEADBEEF0000000000000084 /* AppleSentencePlayback.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleSentencePlayback.swift; sourceTree = "<group>"; };
+		DEADBEEF0000000000000088 /* ApplePracticeRecorder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApplePracticeRecorder.swift; sourceTree = "<group>"; };
+		DEADBEEF000000000000008A /* PracticeRecorderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PracticeRecorderTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -153,6 +200,7 @@
 		400000000000000000000002 /* App */ = {
 			isa = PBXGroup;
 			children = (
+				DEADBEEF0000000000000050 /* Practice */,
 				200000000000000000000001 /* LinguaBrainPrototypeApp.swift */,
 				20000000000000000000000F /* AppLocalization.swift */,
 				200000000000000000000014 /* GoogleCloudTextToSpeech.swift */,
@@ -171,6 +219,50 @@
 				DEADBEEF0000000000000021 /* CardGenerationView.swift */,
 			);
 			path = App;
+			sourceTree = "<group>";
+		};
+		DEADBEEF0000000000000050 /* Practice */ = {
+			isa = PBXGroup;
+			children = (
+				DEADBEEF0000000000000059 /* Shared */,
+				DEADBEEF0000000000000063 /* Writing */,
+				DEADBEEF0000000000000069 /* History */,
+				DEADBEEF0000000000000075 /* Grammar */,
+				DEADBEEF000000000000007B /* Listening */,
+				DEADBEEF0000000000000085 /* Audio */,
+				DEADBEEF0000000000000053 /* PracticeComposition.swift */,
+				DEADBEEF0000000000000042 /* LegacyPracticeMigration.swift */,
+			);
+			path = Practice;
+			sourceTree = "<group>";
+		};
+		DEADBEEF0000000000000063 /* Writing */ = {
+			isa = PBXGroup;
+			children = (
+				DEADBEEF0000000000000062 /* WritingPracticeView.swift */,
+			);
+			path = Writing;
+			sourceTree = "<group>";
+		};
+		DEADBEEF0000000000000069 /* History */ = {
+			isa = PBXGroup;
+			children = (
+				DEADBEEF0000000000000067 /* SentenceLearningHistoryView.swift */,
+			);
+			path = History;
+			sourceTree = "<group>";
+		};
+		DEADBEEF0000000000000075 /* Grammar */ = { isa = PBXGroup; children = ( DEADBEEF0000000000000074 /* GrammarPracticeView.swift */, ); path = Grammar; sourceTree = "<group>"; };
+		DEADBEEF000000000000007B /* Listening */ = { isa = PBXGroup; children = ( DEADBEEF0000000000000078 /* ListeningPracticeView.swift */, ); path = Listening; sourceTree = "<group>"; };
+		DEADBEEF0000000000000085 /* Audio */ = { isa = PBXGroup; children = ( DEADBEEF0000000000000084 /* AppleSentencePlayback.swift */, DEADBEEF0000000000000088 /* ApplePracticeRecorder.swift */, ); path = Audio; sourceTree = "<group>"; };
+		DEADBEEF0000000000000059 /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+				DEADBEEF0000000000000054 /* PracticeSessionModel.swift */,
+				DEADBEEF000000000000005B /* PracticeScaffold.swift */,
+				DEADBEEF000000000000005D /* PracticeFeedbackView.swift */,
+			);
+			path = Shared;
 			sourceTree = "<group>";
 		};
 		400000000000000000000003 /* Resources */ = {
@@ -202,6 +294,13 @@
 				220000000000000000000006 /* modern-apkg-fixtures.json */,
 				420000000000000000000002 /* Fixtures */,
 				DEADBEEF0000000000000031 /* GenerationPrototypeIntegrationTests.swift */,
+				DEADBEEF0000000000000043 /* LegacyPracticeMigrationTests.swift */,
+				DEADBEEF0000000000000058 /* PracticeSessionModelTests.swift */,
+				DEADBEEF0000000000000065 /* WritingPracticeTests.swift */,
+				DEADBEEF0000000000000071 /* SentenceReuseIntegrationTests.swift */,
+				DEADBEEF000000000000007A /* ListeningPracticeTests.swift */,
+				DEADBEEF0000000000000081 /* GrammarPracticeTests.swift */,
+				DEADBEEF000000000000008A /* PracticeRecorderTests.swift */,
 			);
 			path = Tests;
 			sourceTree = "<group>";
@@ -250,6 +349,11 @@
 			productName = LinguaBrainTestSupport;
 			package = DEADBEEF00000000000000A1 /* XCLocalSwiftPackageReference "LinguaBrainKit" */;
 		};
+		DEADBEEF0000000000000007 /* LinguaBrainAnkiExport */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = LinguaBrainAnkiExport;
+			package = DEADBEEF00000000000000A1 /* XCLocalSwiftPackageReference "LinguaBrainKit" */;
+		};
 /* End XCSwiftPackageProductDependency section */
 
 /* Begin PBXNativeTarget section */
@@ -272,6 +376,7 @@
 				DEADBEEF0000000000000004 /* LinguaBrainAI */,
 				DEADBEEF0000000000000005 /* LinguaBrainPersistence */,
 				DEADBEEF0000000000000006 /* LinguaBrainTestSupport */,
+				DEADBEEF0000000000000007 /* LinguaBrainAnkiExport */,
 			);
 			productName = LinguaBrain;
 			productReference = 20000000000000000000000D /* LinguaBrain.app */;
@@ -296,6 +401,7 @@
 				DEADBEEF0000000000000004 /* LinguaBrainAI */,
 				DEADBEEF0000000000000005 /* LinguaBrainPersistence */,
 				DEADBEEF0000000000000006 /* LinguaBrainTestSupport */,
+				DEADBEEF0000000000000007 /* LinguaBrainAnkiExport */,
 			);
 			productName = "LinguaBrain Mac";
 			productReference = 20000000000000000000000E /* LinguaBrain Mac.app */;
@@ -424,6 +530,17 @@
 				100000000000000000000015 /* CloudCardBackup.swift in Sources */,
 				100000000000000000000016 /* UtilitiesPrototypeView.swift in Sources */,
 				DEADBEEF0000000000000022 /* CardGenerationView.swift in Sources */,
+				DEADBEEF0000000000000044 /* LegacyPracticeMigration.swift in Sources */,
+				DEADBEEF0000000000000051 /* PracticeComposition.swift in Sources */,
+				DEADBEEF0000000000000052 /* PracticeSessionModel.swift in Sources */,
+				DEADBEEF000000000000005A /* PracticeScaffold.swift in Sources */,
+				DEADBEEF000000000000005C /* PracticeFeedbackView.swift in Sources */,
+				DEADBEEF0000000000000060 /* WritingPracticeView.swift in Sources */,
+				DEADBEEF0000000000000066 /* SentenceLearningHistoryView.swift in Sources */,
+				DEADBEEF0000000000000072 /* GrammarPracticeView.swift in Sources */,
+				DEADBEEF0000000000000076 /* ListeningPracticeView.swift in Sources */,
+				DEADBEEF0000000000000082 /* AppleSentencePlayback.swift in Sources */,
+				DEADBEEF0000000000000086 /* ApplePracticeRecorder.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -447,6 +564,17 @@
 				110000000000000000000015 /* CloudCardBackup.swift in Sources */,
 				110000000000000000000016 /* UtilitiesPrototypeView.swift in Sources */,
 				DEADBEEF0000000000000023 /* CardGenerationView.swift in Sources */,
+				DEADBEEF0000000000000040 /* LegacyPracticeMigration.swift in Sources */,
+				DEADBEEF0000000000000055 /* PracticeComposition.swift in Sources */,
+				DEADBEEF0000000000000056 /* PracticeSessionModel.swift in Sources */,
+				DEADBEEF000000000000005E /* PracticeScaffold.swift in Sources */,
+				DEADBEEF000000000000005F /* PracticeFeedbackView.swift in Sources */,
+				DEADBEEF0000000000000061 /* WritingPracticeView.swift in Sources */,
+				DEADBEEF0000000000000068 /* SentenceLearningHistoryView.swift in Sources */,
+				DEADBEEF0000000000000073 /* GrammarPracticeView.swift in Sources */,
+				DEADBEEF0000000000000077 /* ListeningPracticeView.swift in Sources */,
+				DEADBEEF0000000000000083 /* AppleSentencePlayback.swift in Sources */,
+				DEADBEEF0000000000000087 /* ApplePracticeRecorder.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -457,6 +585,13 @@
 				120000000000000000000001 /* AnkiCoreRegressionTests.swift in Sources */,
 				120000000000000000000002 /* APKGFixtureFactory.swift in Sources */,
 				DEADBEEF0000000000000032 /* GenerationPrototypeIntegrationTests.swift in Sources */,
+				DEADBEEF0000000000000041 /* LegacyPracticeMigrationTests.swift in Sources */,
+				DEADBEEF0000000000000057 /* PracticeSessionModelTests.swift in Sources */,
+				DEADBEEF0000000000000064 /* WritingPracticeTests.swift in Sources */,
+				DEADBEEF0000000000000070 /* SentenceReuseIntegrationTests.swift in Sources */,
+				DEADBEEF0000000000000079 /* ListeningPracticeTests.swift in Sources */,
+				DEADBEEF0000000000000080 /* GrammarPracticeTests.swift in Sources */,
+				DEADBEEF0000000000000089 /* PracticeRecorderTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -165,11 +165,35 @@ struct AIProviderGateway: Sendable {
         self.session = session
     }
 
-    func generateCard(word: String, domain: String, model: String, sourceLanguageTag: String, targetLanguageTag: String) async throws -> ConfiguredProviderCard {
+    func generateCard(word: String, domain: String, model: String, sourceLanguageTag: String, targetLanguageTag: String, context: String? = nil, level: String? = nil) async throws -> ConfiguredProviderCard {
         guard protocolName == "openai-compatible" else { throw ProviderError.unsupportedProtocol }
         return try await ConfiguredProviderClient(baseURL: endpoint, protocolName: protocolName)
             .generateCard(word: word, domain: domain, model: model, apiKey: apiKey,
-                          sourceLanguageTag: sourceLanguageTag, targetLanguageTag: targetLanguageTag)
+                          sourceLanguageTag: sourceLanguageTag, targetLanguageTag: targetLanguageTag, context: context, level: level)
+    }
+
+    func translateText(_ text: String, model: String, sourceLanguageTag: String, targetLanguageTag: String) async throws -> String {
+        guard protocolName == "openai-compatible" else { throw ProviderError.unsupportedProtocol }
+        return try await ConfiguredProviderClient(baseURL: endpoint, protocolName: protocolName)
+            .translateText(text, model: model, apiKey: apiKey, sourceLanguageTag: sourceLanguageTag, targetLanguageTag: targetLanguageTag)
+    }
+
+    func extractImportantWords(from text: String, topic: String, languageTag: String, minimumLevel: String, model: String) async throws -> [String] {
+        guard protocolName == "openai-compatible" else { throw ProviderError.unsupportedProtocol }
+        return try await ConfiguredProviderClient(baseURL: endpoint, protocolName: protocolName)
+            .extractImportantWords(from: text, topic: topic, languageTag: languageTag, minimumLevel: minimumLevel, model: model, apiKey: apiKey)
+    }
+
+    func normalizeVocabularyItem(_ surfaceForm: String, passage: String, languageTag: String, model: String) async throws -> NormalizedVocabularyItem {
+        guard protocolName == "openai-compatible" else { throw ProviderError.unsupportedProtocol }
+        return try await ConfiguredProviderClient(baseURL: endpoint, protocolName: protocolName)
+            .normalizeVocabularyItem(surfaceForm, passage: passage, languageTag: languageTag, model: model, apiKey: apiKey)
+    }
+
+    func representativeSenseIndexes(for card: ConfiguredProviderCard, model: String) async throws -> [Int] {
+        guard protocolName == "openai-compatible" else { throw ProviderError.unsupportedProtocol }
+        return try await ConfiguredProviderClient(baseURL: endpoint, protocolName: protocolName)
+            .representativeSenseIndexes(for: card, model: model, apiKey: apiKey)
     }
 
     func synthesizeSpeech(text: String, model: String, voice: String) async throws -> Data {

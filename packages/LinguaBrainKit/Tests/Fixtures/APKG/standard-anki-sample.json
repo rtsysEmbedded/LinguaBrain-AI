@@ -1,0 +1,79 @@
+{
+  "cards": [
+    {
+      "identity": {
+        "sourceLanguage": "en",
+        "targetLanguage": "es",
+        "lemma": "house",
+        "senseKey": "house-n-residential",
+        "partOfSpeech": "noun",
+        "direction": "recognition"
+      },
+      "senses": [
+        {
+          "sourceLanguage": "en",
+          "targetLanguage": "es",
+          "lemma": "house",
+          "senseKey": "house-n-residential",
+          "partOfSpeech": "noun",
+          "meaning": "residential building",
+          "translation": "casa",
+          "examples": [
+            {
+              "text": "The house has a garden.",
+              "translation": "La casa tiene un jardín."
+            }
+          ]
+        }
+      ],
+      "mediaAssets": [],
+      "approvalState": "approved",
+      "provenance": {
+        "provider": "hermes",
+        "model": "claude-3-opus",
+        "generatedAt": "2026-08-24T10:00:00Z"
+      }
+    },
+    {
+      "identity": {
+        "sourceLanguage": "en",
+        "targetLanguage": "de",
+        "lemma": "water",
+        "senseKey": "water-n-fluid",
+        "partOfSpeech": "noun",
+        "direction": "recall"
+      },
+      "senses": [
+        {
+          "sourceLanguage": "en",
+          "targetLanguage": "de",
+          "lemma": "water",
+          "senseKey": "water-n-fluid",
+          "partOfSpeech": "noun",
+          "meaning": "liquid essential for life",
+          "translation": "Wasser",
+          "examples": [
+            {
+              "text": "Drink water every day.",
+              "translation": "Trinke jeden Tag Wasser."
+            }
+          ]
+        }
+      ],
+      "mediaAssets": [],
+      "approvalState": "approved",
+      "provenance": {
+        "provider": "hermes",
+        "model": "claude-3-opus",
+        "generatedAt": "2026-08-24T11:00:00Z"
+      }
+    }
+  ],
+  "sourceGroup": "hermes_generated",
+  "schemaVersion": "anki21",
+  "compatibility": {
+    "scheduling": "fresh_anki",
+    "preservedFields": ["queue", "reps", "ease"],
+    "lostFields": []
+  }
+}
