@@ -40,7 +40,11 @@ public actor PracticeSessionService {
     public func prepare(exercise: ExerciseInstance) async throws -> PracticeSessionSnapshot {
         if let record = records[exercise.id] { return snapshot(record) }
         try await ensureReviewUnit(exercise.reviewUnit)
-        let saved = ordered(try await repository.attempts(for: exercise.reviewUnit))
+        // A review unit is practised repeatedly over time; each exercise is
+        // one occurrence. Session state therefore comes only from this
+        // exercise's attempts, while mastery and schedules keep using the
+        // unit's full evidence through the review service.
+        let saved = ordered(try await repository.attempts(for: exercise.reviewUnit).filter { $0.exerciseID == exercise.id })
         let record = Record(
             exercise: exercise,
             state: state(for: saved),

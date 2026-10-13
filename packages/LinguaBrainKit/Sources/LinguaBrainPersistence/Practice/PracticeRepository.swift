@@ -83,3 +83,21 @@ public actor FileBackedPracticeRepository: PracticeRepository {
         try data.write(to: url, options: .atomic)
     }
 }
+
+extension InMemoryPracticeRepository: PracticeProgressReading {
+    public func unitProgress(skill: PracticeSkill, learnerID: String) async throws -> [PracticeUnitProgress] {
+        units.values
+            .filter { $0.0.skill == skill && $0.0.learnerID == learnerID }
+            .sorted { $0.0.stableKey < $1.0.stableKey }
+            .map { PracticeUnitProgress(unit: $0.0, projection: $0.1) }
+    }
+}
+
+extension FileBackedPracticeRepository: PracticeProgressReading {
+    public func unitProgress(skill: PracticeSkill, learnerID: String) async throws -> [PracticeUnitProgress] {
+        store.units.values
+            .filter { $0.unit.skill == skill && $0.unit.learnerID == learnerID }
+            .sorted { $0.unit.stableKey < $1.unit.stableKey }
+            .map { PracticeUnitProgress(unit: $0.unit, projection: $0.projection) }
+    }
+}

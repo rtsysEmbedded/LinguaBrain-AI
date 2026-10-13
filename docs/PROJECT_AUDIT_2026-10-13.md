@@ -115,5 +115,5 @@ This section is updated by the commits that address the findings.
 | 1. Safe code fixes | Open — not selected for this round. |
 | 2. Hardcoding removal | Provider configuration and prompts moved to `Resources/Configuration` (C3). Interface copy moved to `fa/en/de.json` with stable keys and a localized `InfoPlist.xcstrings` (C1, C2, C4). Seed cards and content rules moved to `seed-cards.json` and `content-rules.json`. Remaining by design: SwiftData schema defaults, protocol and file-format identifiers. Remaining open: package-level defaults in `ProviderConfiguration` and `LinguaBrainAI` request parameters. |
 | 3. Documentation | In progress. |
-| 4. Feature 004 integration | Design pending approval. |
+| 4. Feature 004 integration | Decisions 1–4 recorded in the [T033 design](../specs/004-adaptive-skill-practice/T033-integration-design.md). Phase A1 (package layer) implemented with tests; a session-scope defect that blocked repeat practice of a unit was fixed. Phase A2 (app wiring) not started; T033 stays open. |
 | B5 | Removed from the working tree and ignored; history unchanged. |

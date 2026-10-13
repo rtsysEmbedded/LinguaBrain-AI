@@ -1,6 +1,6 @@
 # T033 Integration Design — Skill Practice Routes
 
-**Status:** Proposal, awaiting Product Owner decisions (Section 6). No implementation has started.
+**Status:** Phase A1 (package layer) implemented and tested; Phase A2 (app wiring) not started. Decisions 1–4 are recorded in Section 6; decision 5 is open.
 **Date:** 2026-10-13
 **Task:** [T033](tasks.md) — integrate app routes and languages.
 **Related:** [spec.md](spec.md), [plan.md](plan.md), [2026-10-13 project audit](../../docs/PROJECT_AUDIT_2026-10-13.md) finding A2.
@@ -55,8 +55,8 @@ The catalog is a single injected value that answers "next exercise for skill S i
 | Skill | Source | Port |
 | --- | --- | --- |
 | Writing | The learner's own cards in the active pair: target word, part of speech, and level, as US2 requires. | `CardBackedWritingRetrieval: WritingExerciseRetrieval` |
-| Grammar | A curated, human-reviewed template bank in `Resources/Configuration/grammar-templates.<target>.json`, validated by `GrammarExerciseFactory`. The 5 rule codes move from Swift into the same file. | `CuratedGrammarRetrieval: PracticeExerciseRetrieval` |
-| Listening | Accepted learner sentences (US6) first, then card example sentences, as exact `Sentence` revisions. | `SentenceListeningRetrieval: PracticeExerciseRetrieval` |
+| Grammar | A curated, human-reviewed template bank in `Resources/Configuration/grammar-templates.<target>.json`, validated by `GrammarExerciseFactory`. The 5 rule codes move from Swift into the same file. | `CuratedGrammarRetrieval` (Phase C) |
+| Listening | Reviewed example sentences of the learner's cards, as exact `Sentence` revisions (Section 7.3). Accepted learner sentences (US6) are a later extension. | `CardSentenceListeningRetrieval` |
 | Speaking | None while T030–T032 are gated. | — |
 
 ### 3.2 `PracticeCapabilityGate`
@@ -106,10 +106,50 @@ Each phase ends with package tests (Linux harness where possible), deterministic
 - The app targets cannot be built in the Linux environment; every phase needs a local Xcode 27 build.
 - Keeping `SkillPracticeView` as an active route keeps writing skill evidence into SwiftData that Progress (Phase A) no longer reads.
 
-## 6. Decisions required
+## 6. Decisions
 
-1. **Writing source:** the learner's own cards (recommended; matches US2) or a separate curated list.
-2. **Grammar templates:** an initial German draft for review, or content supplied by the Product Owner.
-3. **AI evaluation:** enable through the configured Text provider with consent (recommended for Phase B), or keep all modes ungraded for now.
-4. **Listening audio:** on-device Apple speech synthesis bound to sentence revision (offline, no licensing issue), or wait for licensed recordings (T027).
-5. **Legacy `SkillPracticeView`:** remove it from the skill-practice route once Phase A ships (recommended; avoids split evidence), or keep it as a fallback while a mode is unavailable.
+| # | Question | Decision (2026-10-13) |
+| --- | --- | --- |
+| 1 | Writing source | **The learner's own cards** in the active language pair (matches US2). |
+| 2 | Grammar templates | **Drafted by the assistant, reviewed by the Product Owner.** Drafts are stored with a pending-review marker and are never accepted as `curated` until a human reviews them. |
+| 3 | AI evaluation | **Enabled through the configured Text provider, with cloud consent.** Without a provider or consent, attempts are saved and shown as ungraded. |
+| 4 | Listening audio | **On-device Apple speech synthesis**, with the audio asset key bound to sentence revision, locale, and voice. |
+| 5 | Legacy `SkillPracticeView` | **Open.** Recommendation: remove it from the skill-practice route in Phase A2 so that skill evidence is written only to GRDB. |
+
+## 7. Implementation record
+
+### 7.1 Phase A1 — package layer
+
+New types in `LinguaBrainApplication/Practice/`:
+
+| File | Types | Purpose |
+| --- | --- | --- |
+| `PracticeCatalog.swift` | `PracticeCardCandidate`, `PracticeCardSource`, `CardBackedWritingRetrieval`, `CardSentenceListeningRetrieval`, `ListeningExerciseDescriptor`, `PracticeOccurrence` | Card-based writing and listening exercises, ordered by `AdaptivePracticePlanner` with persisted projections. |
+| `PracticeCapabilityGate.swift` | `PracticeCapabilityGate`, `PracticeCapabilityFacts`, `PracticeAvailability`, `PracticeAvailabilityReason`, `PracticeGrading` | Pure per-skill availability decision; every unavailable mode has an explicit reason. |
+| `PracticeEvaluatorRouter.swift` | `PracticeEvaluatorRouter` | Dispatches evaluation by skill; an unrouted skill gets an explicit `providerUnavailable` result instead of another skill's evaluator. |
+| `PracticeProgress.swift` | `PracticeProgressReading`, `PracticeUnitProgress`, `PracticeSkillProgress`, `PracticeProgressCalculator` | Read-only progress from persisted projections; no evidence is `nil`, not 0 %. |
+
+`GRDBPracticeRepository`, `InMemoryPracticeRepository`, and `FileBackedPracticeRepository` conform to `PracticeProgressReading`. Tests: `PracticeIntegrationCatalogTests` (10 tests). The full package suite passes on the Linux Swift 6.4.1 harness (204 tests, 0 failures); an Xcode 27 run is still required.
+
+### 7.2 Session scope correction
+
+`PracticeSessionService.prepare` previously restored session state from **all** attempts of a review unit. A unit that had been completed once therefore reopened in its finished state and could not be practised again. Session state is now restored only from attempts whose `exerciseID` matches the prepared exercise; each exercise is one occurrence of the unit. `PracticeOccurrence.exerciseID(for:attempts:)` resumes an occurrence whose last attempt is still `pending` and otherwise derives a new deterministic ID from the unit's stable key and the number of earlier occurrences. Mastery projections and attempt history are unaffected and remain per unit.
+
+### 7.3 Listening material: open question
+
+The listening contract requires a reviewed translation. The package accepts only candidates marked `.reviewed` (`PracticeCardCandidate.ExampleReview`); the app adapter (Phase A2) decides that mark.
+
+The app store does not record per-card review. `PrototypeStore.provenance(of:)` distinguishes only:
+
+| Provenance | Rule | Contents |
+| --- | --- | --- |
+| `imported` | The card record has a `sourcePackage`. | Cards from imported Anki packages. |
+| `generated` | No `sourcePackage`. | Built-in seed cards; single cards saved with «تأیید و افزودن» after a preview; and cards from the batch and passage flows in `AddWordPrototypeView`, which are saved without a per-card preview. |
+
+Mapping `generated` to `.reviewed` would therefore admit unreviewed AI output from the batch flow. The options are:
+
+1. Persist a review marker on cards (seed and preview-approved cards are reviewed; batch and imported cards are not). This is a SwiftData schema addition with a default value.
+2. Treat only seed cards as reviewed until a marker exists.
+3. Accept `generated` as reviewed and document the exception.
+
+Option 1 meets the contract; it is a decision for the Product Owner before Phase A2.
