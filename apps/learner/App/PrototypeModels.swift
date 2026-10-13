@@ -702,7 +702,7 @@ enum PrototypeA1MediaPlanner {
             isEligible: true,
             audioCacheKey: includeAudio ? "audio.v1.\(safeIdentity)" : nil,
             imageCacheKey: includeImage ? "image.v1.\(safeIdentity)" : nil,
-            imagePrompt: includeImage ? "A clear, literal educational illustration of \(word.german), suitable for an A1 language-learning card, no text" : nil
+            imagePrompt: includeImage ? PromptTemplate.render(AIPromptCatalog.bundled.templates.a1ImageIllustration, ["word": word.german]) : nil
         )
     }
 }

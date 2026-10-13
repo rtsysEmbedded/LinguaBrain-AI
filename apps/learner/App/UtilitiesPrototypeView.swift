@@ -310,7 +310,7 @@ final class LiveTranscriptionController {
             isStarting = false
             return
         }
-        guard settings.audioEndpoint.localizedCaseInsensitiveContains("api.openai.com") else {
+        guard settings.audioEndpoint.localizedCaseInsensitiveContains(ProviderCatalog.bundled.hostMarkers.openAI) else {
             errorMessage = "OpenAI Realtime transcription requires the api.openai.com endpoint."
             isStarting = false
             return
@@ -327,7 +327,8 @@ final class LiveTranscriptionController {
         }
 
         do {
-            var request = URLRequest(url: URL(string: "wss://api.openai.com/v1/realtime?intent=transcription")!)
+            let realtime = ProviderCatalog.bundled.realtimeTranscription
+            var request = URLRequest(url: URL(string: ProviderCatalog.bundled.endpoints.realtimeTranscription)!)
             request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
             let delegate = CloudWebSocketDelegate { [weak self] code in
                 Task { @MainActor in
@@ -352,7 +353,7 @@ final class LiveTranscriptionController {
             cloudSocketDelegate = delegate
             startCloudReceiveLoop(socket)
 
-            let connectionDeadline = ContinuousClock.now.advanced(by: .seconds(10))
+            let connectionDeadline = ContinuousClock.now.advanced(by: .seconds(realtime.connectionTimeoutSeconds))
             while !delegate.isOpen {
                 guard ContinuousClock.now < connectionDeadline else {
                     throw TranscriptionError.connectionTimedOut
@@ -360,16 +361,17 @@ final class LiveTranscriptionController {
                 try await Task.sleep(for: .milliseconds(50))
             }
 
-            let supportedModels = [
-                "gpt-live-transcribe", "gpt-transcribe", "gpt-realtime-whisper",
-                "whisper-1", "gpt-4o-mini-transcribe", "gpt-4o-transcribe", "gpt-4o-transcribe-diarize"
-            ]
             let requestedModel = mode == .liveStream
                 ? settings.audioStreamModelID
                 : settings.audioTranscriptModelID
-            let fallbackModel = mode == .liveStream ? "gpt-live-transcribe" : "gpt-transcribe"
-            let transcriptionModel = supportedModels.contains(requestedModel) ? requestedModel : fallbackModel
-            let transcriptionConfiguration = Self.transcriptionConfiguration(
+            let fallbackModel = mode == .liveStream
+                ? ProviderCatalog.bundled.models.stream
+                : ProviderCatalog.bundled.models.transcript
+            let transcriptionModel = realtime.supportedModels.contains(requestedModel) ? requestedModel : fallbackModel
+            // Per-model language hints live in provider-catalog.json: the live
+            // model rejects the singular `language` field, while legacy
+            // GPT-4o/Whisper models accept only the singular ISO 639-1 hint.
+            let transcriptionConfiguration = realtime.configuration(
                 model: transcriptionModel,
                 languageTag: languageTag
             )
@@ -387,7 +389,7 @@ final class LiveTranscriptionController {
                             // live transcription mode, which emits deltas
                             // without it and is finalized by an explicit commit.
                             "turn_detection": NSNull(),
-                            "noise_reduction": ["type": "near_field"]
+                            "noise_reduction": ["type": realtime.noiseReduction]
                         ]
                     ]
                 ]
@@ -506,31 +508,6 @@ final class LiveTranscriptionController {
         guard let data = try? JSONSerialization.data(withJSONObject: object),
               let string = String(data: data, encoding: .utf8) else { return "{}" }
         return string
-    }
-
-    private static func transcriptionConfiguration(model: String, languageTag: String) -> [String: Any] {
-        switch model {
-        case "gpt-live-transcribe":
-            // The live model rejects the legacy singular `language` field.
-            // Low delay is OpenAI's recommended starting point for captions.
-            return [
-                "model": model,
-                "languages": [languageTag],
-                "delay": "low"
-            ]
-        case "gpt-realtime-whisper":
-            // Keep this comparison profile minimal until physical-device
-            // evidence confirms which optional hints the account accepts.
-            return ["model": model]
-        case "gpt-transcribe":
-            // This model begins transcription after a turn is committed. With
-            // server VAD selected above, visible text is expected after silence.
-            return ["model": model]
-        default:
-            // Legacy GPT-4o/Whisper transcription models accept the singular
-            // ISO-639-1 language hint used by the older Realtime contract.
-            return ["model": model, "language": languageTag]
-        }
     }
 
     private static func sendCloudMessage(_ json: String, via socket: URLSessionWebSocketTask, attempts: Int = 10) async throws {

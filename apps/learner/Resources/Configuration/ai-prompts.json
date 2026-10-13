@@ -1,0 +1,71 @@
+{
+  "schemaVersion": 1,
+  "templates": {
+    "translateText": "Translate faithfully from {sourceLanguageTag} to {targetLanguageTag}. Preserve paragraphs and return only the translation.",
+    "extractImportantWords": "Select 3 to 8 genuinely important vocabulary items from this {languageTag} passage for a learner studying '{topic}' at CEFR {minimumLevel} or higher. For every candidate return the exact surface form found in the passage and its canonical dictionary lemma. For German, verbs must be infinitives, nouns must use dictionary capitalization without an article in lemma, adjectives must be uninflected, and separable verbs must use their complete infinitive. Choose only content words or fixed expressions central to the passage/topic whose standard lexical CEFR level is {minimumLevel} or above. Exclude articles, pronouns, conjunctions, prepositions, modal and auxiliary verbs, names, numbers, generic function words, and anything normally taught below {minimumLevel}. Confidence measures certainty in both lemma and CEFR classification. Return only JSON.",
+    "normalizeVocabularyItem": "Normalize the supplied {languageTag} vocabulary item using its passage context. Return only its canonical dictionary headword and actual lexical CEFR level. For German: verbs must be infinitives, separable and reflexive verbs must retain their complete dictionary form, nouns must use dictionary capitalization without adding an article, and adjectives must be uninflected. Never echo an inflected surface form as lemma unless it is already the canonical dictionary form. Return only JSON.",
+    "representativeSenses": "Act as a strict lexicographic deduplicator. Return one zero-based representative index for each genuinely independent dictionary meaning. Merge paraphrases, near-synonyms, register or usage differences, collocations, grammatical variants, and different examples into the same meaning. Most ordinary words should produce one representative. Multiple representatives are allowed only when a learner must recall materially different definitions. Return only JSON.",
+    "generateCardCategoryScope": "{categoryScope}; meanings and usage must be in source language {sourceLanguageTag} (Persian script when fa), while target examples remain in {targetLanguageTag}",
+    "generateCardLanguageContract": "IMPORTANT LANGUAGE CONTRACT: targetText and example.target are {targetLanguageTag}; sourceMeaning, every senses.meaning, senses.usage, and example.source are {sourceLanguageTag}. Report the headword's actual CEFR level; never raise or relabel it to match the learner's requested minimum. ",
+    "generateCardPassageContext": "Use this learner-supplied passage as the primary context (do not copy it verbatim): {passage}",
+    "generateCardNoPassageContext": "No passage was supplied; use authentic examples for the category.",
+    "generateCardMinimumLevel": " The learner requested minimum CEFR {level}, but accuracy of the word's actual level is mandatory.",
+    "generateCardSystem": "You are an expert lexicographer and curriculum-aware language teacher creating accurate learning cards. The learning language is {targetLanguageTag}; the learner's support language is {sourceLanguageTag}. The selected topic is the organizing principle of the card, not a pass/fail filter. Establish the supplied headword's real spelling, grammar, and dictionary meanings, then choose the meaning and usage most useful inside the supplied topic scope. Preserve targetText as the supplied headword apart from normal capitalization or a required article. Never replace it with another word and never invent a meaning or collocation. General verbs, adjectives, and everyday nouns belong when they naturally occur in topic-specific instructions, questions, rules, reports, warnings, or conversations. Make the primary meaning, example, usage note, and collocations concretely reflect the topic wherever linguistically natural. Do not split paraphrases, register variants, grammar variants, synonyms, usage notes, collocations, or different examples into separate senses. An ordinary noun normally has one card: only return multiple senses for unmistakably independent dictionary homonyms. Return only genuinely independent dictionary meanings. Use an empty article for non-nouns. All meanings and example.source values must be in {sourceLanguageTag}; targetText and example.target values must be in {targetLanguageTag}.",
+    "generateCardUser": "Create a complete card for the {targetLanguageTag} headword '{word}' in the learner category '{domain}'. Topic scope: {categoryScope}. {contextInstruction} Treat all of these as relevant parts of the category and use the closest natural context for this word. The first meaning and primary example must prioritize the selected topic when a genuine use exists. Set topicRelevance to direct for specialist terminology, contextual for an ordinary word naturally used in this topic, and unrelated only when no honest topical use exists; this label is informational and must never prevent returning a card. Choose a precise sourceMeaning and a natural, realistic example. Return up to three genuinely independent meanings, with the topic-relevant meaning first. Other common independent meanings may follow when useful, but do not create multiple cards for mere paraphrases. If the word is uncommon or ambiguous, keep the requested headword and return the best supported dictionary analysis instead of guessing another word. Fill every required JSON field and return only the requested JSON object.",
+    "translate": "Translate the user's text into language code {targetLanguageTag}. Preserve meaning, names, numbers, and paragraph breaks. Return only the translation.",
+    "streamTranslate": "Translate into language code {targetLanguageTag}. Return only the translation.",
+    "a1ImageIllustration": "A clear, literal educational illustration of {word}, suitable for an A1 language-learning card, no text"
+  },
+  "categoryScopes": [
+    {
+      "equals": [],
+      "contains": [
+        "fuhrerschein",
+        "führerschein",
+        "driv",
+        "verkehr",
+        "road",
+        "رانند",
+        "گواهینامه"
+      ],
+      "scope": "driving and road traffic; driving-licence theory and practical tests; roads, lanes, intersections and right of way; traffic laws, signs and signals; speed, distance and parking; vehicles and their operation; drivers, cyclists and pedestrians; hazards, weather, accidents and first aid; offences, fines, alcohol or drugs, police checks, insurance, registration and licensing administration"
+    },
+    {
+      "equals": [
+        "software"
+      ],
+      "contains": [
+        "برنامه"
+      ],
+      "scope": "software development, applications, interfaces, data, debugging, security, deployment, technical documentation and workplace communication"
+    },
+    {
+      "equals": [
+        "medical"
+      ],
+      "contains": [
+        "پزش",
+        "gesund"
+      ],
+      "scope": "healthcare, symptoms, anatomy, diagnosis, treatment, medication, appointments, hospitals, emergencies and communication with patients"
+    },
+    {
+      "equals": [
+        "work"
+      ],
+      "contains": [
+        "کار",
+        "beruf"
+      ],
+      "scope": "workplaces, professions, tasks, meetings, employment, applications, contracts, schedules, collaboration and professional communication"
+    },
+    {
+      "equals": [
+        "general"
+      ],
+      "contains": [],
+      "scope": "common everyday situations, practical communication, home, travel, services, relationships, news and public life"
+    }
+  ],
+  "defaultCategoryScope": "the topic '{domain}' and its terminology, actors, objects, places, actions, rules, processes, risks, documents, common questions and authentic real-world conversations"
+}

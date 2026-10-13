@@ -1,0 +1,142 @@
+{
+  "schemaVersion": 1,
+  "defaultMode": "cloud",
+  "defaultProtocol": "openai-compatible",
+  "endpoints": {
+    "text": "https://api.openai.com/v1",
+    "image": "https://api.openai.com/v1",
+    "realtimeTranscription": "wss://api.openai.com/v1/realtime?intent=transcription"
+  },
+  "models": {
+    "text": "gpt-4o-mini",
+    "image": "gpt-image-1-mini",
+    "speech": "gpt-4o-mini-tts",
+    "transcript": "gpt-transcribe",
+    "stream": "gpt-live-transcribe"
+  },
+  "defaultModelOptions": {
+    "speech": [
+      "gpt-4o-mini-tts",
+      "tts-1",
+      "tts-1-hd"
+    ],
+    "transcript": [
+      "gpt-transcribe",
+      "gpt-4o-transcribe",
+      "gpt-4o-mini-transcribe",
+      "whisper-1"
+    ],
+    "stream": [
+      "gpt-live-transcribe",
+      "gpt-realtime-whisper"
+    ]
+  },
+  "preferredModelOrder": {
+    "speech": [
+      "gpt-4o-mini-tts",
+      "tts-1",
+      "tts-1-hd"
+    ],
+    "transcript": [
+      "gpt-transcribe",
+      "gpt-4o-transcribe",
+      "gpt-4o-mini-transcribe",
+      "gpt-4o-transcribe-diarize",
+      "whisper-1"
+    ],
+    "stream": [
+      "gpt-live-transcribe",
+      "gpt-realtime-whisper"
+    ]
+  },
+  "openAICompatibleAudio": {
+    "voice": "alloy",
+    "responseFormat": "mp3"
+  },
+  "googleNativeAudio": {
+    "voice": "de-DE-Standard-A",
+    "speechModel": "standard",
+    "ssmlGender": "NEUTRAL",
+    "audioEncoding": "MP3",
+    "speakingRate": 1.0
+  },
+  "hostMarkers": {
+    "openAI": "api.openai.com",
+    "googleTextToSpeech": "texttospeech.googleapis.com",
+    "legacyGoogleVoice": "Standard-",
+    "replacedTextEndpoints": [
+      "openrouter.ai"
+    ]
+  },
+  "requests": {
+    "translateText": {
+      "timeoutSeconds": 45,
+      "temperature": 0.1
+    },
+    "extractImportantWords": {
+      "timeoutSeconds": 45,
+      "temperature": 0.1,
+      "maxTokens": 300
+    },
+    "normalizeVocabularyItem": {
+      "timeoutSeconds": 45,
+      "temperature": 0,
+      "maxTokens": 120
+    },
+    "representativeSenses": {
+      "timeoutSeconds": 45,
+      "temperature": 0,
+      "maxTokens": 150
+    },
+    "generateCard": {
+      "timeoutSeconds": 45,
+      "temperature": 0.1,
+      "maxTokens": 1200
+    },
+    "translate": {
+      "timeoutSeconds": 45,
+      "temperature": 0.1,
+      "maxTokens": 2000
+    },
+    "streamTranslate": {
+      "timeoutSeconds": 60,
+      "temperature": 0.1,
+      "maxTokens": 2000
+    }
+  },
+  "vocabularyExtraction": {
+    "minimumConfidence": 0.8
+  },
+  "cardGeneration": {
+    "maximumPassageCharacters": 4000
+  },
+  "imageGeneration": {
+    "size": "1024x1024",
+    "count": 1,
+    "responseFormat": "b64_json"
+  },
+  "realtimeTranscription": {
+    "connectionTimeoutSeconds": 10,
+    "noiseReduction": "near_field",
+    "supportedModels": [
+      "gpt-live-transcribe",
+      "gpt-transcribe",
+      "gpt-realtime-whisper",
+      "whisper-1",
+      "gpt-4o-mini-transcribe",
+      "gpt-4o-transcribe",
+      "gpt-4o-transcribe-diarize"
+    ],
+    "profiles": {
+      "gpt-live-transcribe": {
+        "languageField": "languages",
+        "delay": "low"
+      },
+      "gpt-realtime-whisper": {},
+      "gpt-transcribe": {}
+    },
+    "defaultProfile": {
+      "languageField": "language"
+    }
+  }
+}
