@@ -36,13 +36,26 @@ public struct GrammarEvaluationProposal: Sendable, Equatable {
     }
 }
 
-/// Resolves the rule by the review unit's objective key in
-/// `GrammarExerciseFactory.rules`. Used when no catalog resolver is injected.
-public struct FactoryGrammarContextResolver: GrammarEvaluationContextResolving {
-    public init() {}
-    public func context(for exercise: ExerciseInstance) async throws -> GrammarEvaluationContext? {
-        GrammarExerciseFactory.rules[exercise.reviewUnit.objectiveKey].map { GrammarEvaluationContext(rule: $0) }
+/// Resolves the rule and the reviewed reference from curated grammar
+/// content by the review unit's objective key. Draft content never resolves.
+public struct CatalogGrammarContextResolver: GrammarEvaluationContextResolving {
+    private let catalog: GrammarContentCatalog
+
+    public init(catalog: GrammarContentCatalog) {
+        self.catalog = catalog
     }
+
+    public func context(for exercise: ExerciseInstance) async throws -> GrammarEvaluationContext? {
+        guard let entry = catalog.curatedEntry(objectiveKey: exercise.reviewUnit.objectiveKey),
+              let rule = catalog.ruleIndex[entry.ruleCode] else { return nil }
+        return GrammarEvaluationContext(rule: rule, referenceAnswer: entry.referenceAnswer, referenceExplanation: entry.referenceExplanation)
+    }
+}
+
+/// Resolves nothing; evaluation by exercise then reports malformed input.
+public struct NoGrammarContextResolver: GrammarEvaluationContextResolving {
+    public init() {}
+    public func context(for exercise: ExerciseInstance) async throws -> GrammarEvaluationContext? { nil }
 }
 
 public struct GrammarEvaluationProvider: PracticeEvaluator, Sendable {
@@ -52,7 +65,7 @@ public struct GrammarEvaluationProvider: PracticeEvaluator, Sendable {
     private let transport: any GrammarEvaluationTransport
     private let contextResolver: any GrammarEvaluationContextResolving
 
-    public init(transport: any GrammarEvaluationTransport, contextResolver: any GrammarEvaluationContextResolving = FactoryGrammarContextResolver()) {
+    public init(transport: any GrammarEvaluationTransport, contextResolver: any GrammarEvaluationContextResolving = NoGrammarContextResolver()) {
         self.transport = transport
         self.contextResolver = contextResolver
     }

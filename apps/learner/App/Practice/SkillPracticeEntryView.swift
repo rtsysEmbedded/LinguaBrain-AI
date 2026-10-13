@@ -101,8 +101,7 @@ struct SkillPracticeEntryView: View {
             cards: cards,
             aiSettings: aiSettings,
             sourceLanguage: languageSettings.sourceLanguageTag,
-            targetLanguage: languageSettings.targetLanguageTag,
-            hasReviewedGrammarContent: false
+            targetLanguage: languageSettings.targetLanguageTag
         )
         let grading: PracticeGrading
         switch probe.availability(for: skill) {
@@ -139,7 +138,15 @@ struct SkillPracticeEntryView: View {
                 content = .listening(descriptor, grading, composition.makeSessionModel(), playback)
                 _ = try? await playback.sentenceAudio(for: descriptor.sentence)
             case .grammar:
-                content = .unavailable(.noReviewedGrammarContent)
+                let retrieval = CuratedGrammarRetrieval(
+                    catalog: probe.grammar, repository: repository, clock: composition.clock,
+                    sourceLanguage: probe.sourceLanguage, targetLanguage: probe.targetLanguage
+                )
+                guard let descriptor = try await retrieval.nextGrammarExercise(learnerID: PracticeLearner.localID, seed: occurrence) else {
+                    content = .unavailable(.noReviewedGrammarContent)
+                    return
+                }
+                content = .grammar(descriptor, grading, composition.makeSessionModel())
             case .speaking:
                 content = .unavailable(.pronunciationNotValidated)
             }

@@ -231,4 +231,52 @@ final class PracticeIntegrationCatalogTests: XCTestCase {
         XCTAssertEqual(PracticeCapabilityGate.availability(for: .writing, facts: unreviewed), .available(.ungradedNoProvider))
     }
 
+
+    private func grammarCatalog(reviewed: Bool) -> GrammarContentCatalog {
+        let rule = GrammarRule(code: "de.preposition.case", category: "preposition", targetLanguage: "de", grammaticalRole: "preposition_case")
+        let entry = GrammarTemplateEntry(
+            id: "mit-1", reviewStatus: reviewed ? .reviewed : .pendingReview, draftedBy: "assistant",
+            reviewedBy: reviewed ? "teacher" : nil, reviewedAt: reviewed ? "2026-10-13" : nil,
+            sourceLanguage: "fa", targetLanguage: "de", cefrLevel: "A2", mode: .explainError, ruleCode: rule.code,
+            grammaticalRole: rule.grammaticalRole, prompt: "Ich fahre mit der Bus.", referenceAnswer: "Ich fahre mit dem Bus.",
+            referenceExplanation: "mit + Dativ", hints: ["mit"], errorSpan: "der Bus"
+        )
+        return GrammarContentCatalog(rules: [rule], templates: [entry])
+    }
+
+    func testGrammarDraftsAreNeverOffered() async throws {
+        let draft = grammarCatalog(reviewed: false)
+        XCTAssertFalse(draft.hasReviewedContent(learnerID: "local", sourceLanguage: "fa", targetLanguage: "de"))
+        let retrieval = CuratedGrammarRetrieval(catalog: draft, repository: InMemoryPracticeRepository(), clock: CatalogClock(date: now), sourceLanguage: "fa", targetLanguage: "de")
+        let exercise = try await retrieval.nextGrammarExercise(learnerID: "local", seed: 0)
+        XCTAssertNil(exercise)
+        XCTAssertNil(draft.curatedEntry(objectiveKey: "grammar.mit-1"))
+    }
+
+    func testReviewedGrammarStartsAFreshOccurrenceAfterCompletion() async throws {
+        let catalog = grammarCatalog(reviewed: true)
+        XCTAssertTrue(catalog.hasReviewedContent(learnerID: "local", sourceLanguage: "fa", targetLanguage: "de"))
+        XCTAssertFalse(catalog.hasReviewedContent(learnerID: "local", sourceLanguage: "en", targetLanguage: "de"))
+        XCTAssertEqual(catalog.objectiveKeys(learnerID: "local", sourceLanguage: "fa", targetLanguage: "de"), ["grammar.mit-1"])
+        let repository = InMemoryPracticeRepository()
+        let clock = CatalogClock(date: now)
+        let retrieval = CuratedGrammarRetrieval(catalog: catalog, repository: repository, clock: clock, sourceLanguage: "fa", targetLanguage: "de")
+        let firstCandidate = try await retrieval.nextGrammarExercise(learnerID: "local", seed: 0)
+        let first = try XCTUnwrap(firstCandidate)
+        XCTAssertEqual(first.exercise.reviewUnit.objectiveKey, "grammar.mit-1")
+        XCTAssertEqual(first.cleanSource, "curated")
+        let session = PracticeSessionService(repository: repository, evaluator: CorrectEvaluator(), clock: clock)
+        _ = try await session.prepare(exercise: first.exercise)
+        _ = try await session.submit(exercise: first.exercise, response: "mit verlangt den Dativ")
+        let secondCandidate = try await retrieval.nextGrammarExercise(learnerID: "local", seed: 0)
+        let second = try XCTUnwrap(secondCandidate)
+        XCTAssertEqual(second.exercise.reviewUnit, first.exercise.reviewUnit)
+        XCTAssertNotEqual(second.exercise.id, first.exercise.id)
+    }
+
+    func testReviewedEntryNeedsAReviewerAndDate() {
+        let entry = GrammarTemplateEntry(id: "x", reviewStatus: .reviewed, sourceLanguage: "fa", targetLanguage: "de", cefrLevel: "A1", mode: .explainUsage, ruleCode: "r", grammaticalRole: "g", prompt: "p", referenceAnswer: "a", referenceExplanation: "e")
+        XCTAssertFalse(entry.isCurated)
+        XCTAssertEqual(entry.template(learnerID: "local").cleanSource, "draft")
+    }
 }

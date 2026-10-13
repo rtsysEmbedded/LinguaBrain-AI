@@ -8,6 +8,7 @@ The learner app reads provider settings and AI prompt text from the JSON files i
 | `ai-prompts.json` | `AIPromptCatalog.bundled` | Prompt templates sent to text and image providers, and topic scopes for card generation. |
 | `content-rules.json` | `LearningContentRules.bundled` | Default language pair and domain, stored deck names, generic domain names, part-of-speech markers, topic-classification terms, CEFR level lists, the weak-card threshold, skill-practice session limits, and the daily-plan coefficients. |
 | `seed-cards.json` | `SeedCardCatalog.bundled` | Built-in vocabulary seeded into an empty installation and the multilingual sample cards. |
+| `grammar-content.json` | `GrammarContentCatalog.bundled` | Grammar rules and grammar exercises. Only exercises a person reviewed are offered. |
 
 All files are bundled into the iOS and macOS app targets. The loader is `apps/learner/App/AppConfiguration.swift`.
 
@@ -125,6 +126,24 @@ The card-generation user message is assembled as:
 | `multilingualSampleDefaults` | `idPrefix`, `level`, `partOfSpeech`, and `domain` shared by all sample cards. |
 | `multilingualSamples` | One card per entry with `number`, language tags, and source/target text and examples. The card ID is `idPrefix` followed by `number` as 12 zero-padded digits, so `number` must never be reused or changed. |
 
+## `grammar-content.json`
+
+| Field | Meaning |
+| --- | --- |
+| `rules` | The grammar rules exercises may use: `code`, `category`, `targetLanguage`, and `grammaticalRole`. An exercise that names another rule, another language, or another role is rejected. |
+| `templates[].id` | Stable identifier. The review unit key is `grammar.<id>`, so an `id` must never change or be reused after release. |
+| `templates[].reviewStatus` | `pendingReview` or `reviewed`. |
+| `templates[].draftedBy`, `reviewedBy`, `reviewedAt` | Who wrote the exercise, who reviewed it, and the review date (ISO 8601). |
+| `templates[].sourceLanguage`, `targetLanguage`, `cefrLevel` | Explanation language, learning language, and level. |
+| `templates[].mode` | `explainError` (the prompt contains exactly one error) or `explainUsage` (the prompt is correct and the learner explains the rule). |
+| `templates[].prompt`, `referenceAnswer`, `referenceExplanation` | The sentence shown, the corrected or confirmed sentence, and the reviewed explanation the learner's answer is compared with. |
+| `templates[].demonstration`, `clozeScaffold`, `hints`, `errorSpan` | Optional extra example, optional gap sentence, up to 3 distinct hints, and the erroneous part of the prompt. |
+| `templates[].issueCount`, `isAmbiguous` | Must be `1` and `false`; anything else is rejected. |
+
+### Review workflow
+
+The bundled exercises were drafted by the assistant (`draftedBy: assistant`) and are `pendingReview`, so the app shows grammar practice as unavailable. To publish an exercise, a reviewer checks the German sentences, the reference answer, and the Persian explanation, then sets `reviewStatus` to `reviewed` and fills `reviewedBy` and `reviewedAt`. An entry marked `reviewed` without a reviewer and date is still treated as a draft. `AppConfigurationTests.testBundledGrammarContentIsValidAndPendingReview` checks that every draft would pass the exercise checks once reviewed.
+
 ## Values that remain in code
 
 These values are part of code contracts rather than settings and stay in Swift:
@@ -138,3 +157,4 @@ These values are part of code contracts rather than settings and stay in Swift:
 - Format-specific import mappings, such as the field names of known Anki deck layouts.
 - Input scales that are part of stored data: daily energy 1–10 and motivation 1–5 (clamped by `PrototypeStore.saveDailyLearningState` and `DailyLearningState`).
 - FSRS-6 algorithm constants and numeric tolerances, which are defined by the scheduler specification rather than by product settings.
+- Versioned evaluation-contract constants in `LinguaBrainKit`: schema, rubric, validator, and evaluator versions, the writing rule IDs, the listening slots, and confidence thresholds. Changing them changes the contract and needs a new version, not a configuration edit.

@@ -21,7 +21,7 @@ final class GrammarPracticeTests: XCTestCase {
             referenceExplanation: "Weil leitet einen Nebensatz ein.",
             demonstration: "Er bleibt, weil er krank ist."
         )
-        let descriptor = try GrammarExerciseFactory.make(input)
+        let descriptor = try GrammarExerciseFactory.make(input, rules: GrammarContentCatalog.bundled.ruleIndex)
         let fake = GrammarSurfaceSessionFake(snapshot: PracticeSessionSnapshot(exercise: descriptor.exercise, state: .answering))
         let model = PracticeSessionModel(composition: PracticeComposition(session: fake))
         await model.prepare(exercise: descriptor.exercise)

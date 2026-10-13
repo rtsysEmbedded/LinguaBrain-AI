@@ -1,5 +1,6 @@
 import Foundation
 import XCTest
+import LinguaBrainApplication
 @testable import LinguaBrain
 
 final class AppConfigurationTests: XCTestCase {
@@ -95,6 +96,26 @@ final class AppConfigurationTests: XCTestCase {
         let retry = PromptTemplate.render(templates.generateCardSourceLanguageRetry, ["sourceLanguageTag": "fa", "passage": "{x}"])
         XCTAssertTrue(retry.contains("strictly in fa."))
         XCTAssertTrue(retry.hasSuffix("Original passage: {x}"))
+    }
+
+    /// Grammar drafts are never offered before a person reviews them, and
+    /// each draft would pass the factory checks once reviewed.
+    func testBundledGrammarContentIsValidAndPendingReview() throws {
+        let catalog = GrammarContentCatalog.bundled
+        XCTAssertEqual(catalog.schemaVersion, 1)
+        XCTAssertEqual(Set(catalog.templates.map(\.id)).count, catalog.templates.count)
+        for entry in catalog.templates where !entry.isCurated {
+            let reviewed = GrammarTemplateEntry(
+                id: entry.id, reviewStatus: .reviewed, draftedBy: entry.draftedBy, reviewedBy: "test", reviewedAt: "2026-10-13",
+                sourceLanguage: entry.sourceLanguage, targetLanguage: entry.targetLanguage, cefrLevel: entry.cefrLevel, mode: entry.mode,
+                ruleCode: entry.ruleCode, grammaticalRole: entry.grammaticalRole, prompt: entry.prompt, referenceAnswer: entry.referenceAnswer,
+                referenceExplanation: entry.referenceExplanation, demonstration: entry.demonstration, clozeScaffold: entry.clozeScaffold,
+                hints: entry.hints, errorSpan: entry.errorSpan, issueCount: entry.issueCount, isAmbiguous: entry.isAmbiguous
+            )
+            XCTAssertNoThrow(try GrammarExerciseFactory.make(reviewed.template(learnerID: "local"), rules: catalog.ruleIndex), entry.id)
+        }
+        let curated = catalog.templates.filter(\.isCurated)
+        XCTAssertTrue(curated.allSatisfy { $0.reviewedBy != nil && $0.reviewedAt != nil })
     }
 
     func testTemplateRenderingIsSinglePass() {

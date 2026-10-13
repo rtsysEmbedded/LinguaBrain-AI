@@ -330,8 +330,7 @@ struct TodayPrototypeView: View {
             cards: PrototypeStorePracticeCards(store: store),
             aiSettings: aiSettings,
             sourceLanguage: languageSettings.sourceLanguageTag,
-            targetLanguage: languageSettings.targetLanguageTag,
-            hasReviewedGrammarContent: false
+            targetLanguage: languageSettings.targetLanguageTag
         )
         let available = Set(PracticeSkill.allCases.filter { probe.availability(for: $0).isAvailable })
         let summaries = (try? await probe.progress()) ?? []

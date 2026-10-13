@@ -417,3 +417,10 @@ enum PromptTemplate {
         return result
     }
 }
+
+/// Grammar rules and exercises. Source: `Resources/Configuration/grammar-content.json`.
+/// Only entries marked `reviewed` with a reviewer and date are offered.
+extension GrammarContentCatalog {
+    static let bundled = AppConfigurationResource.load(GrammarContentCatalog.self, named: "grammar-content")
+}
+

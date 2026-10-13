@@ -64,7 +64,7 @@ struct PrototypeRootView: View {
                         repository: repository,
                         settings: aiSettings,
                         store: store,
-                        grammarContext: FactoryGrammarContextResolver()
+                        grammarContext: CatalogGrammarContextResolver(catalog: .bundled)
                     )
                 }
             }

@@ -121,7 +121,7 @@ final class ChatPracticeEvaluationTests: XCTestCase {
     }
 
     func testGrammarTransportPinsTheRuleAndSendsTheReviewedReference() async throws {
-        let rule = try XCTUnwrap(GrammarExerciseFactory.rules["de.conjunction.weil"])
+        let rule = GrammarRule(code: "de.conjunction.weil", category: "conjunction", targetLanguage: "de", grammaticalRole: "subordinate_conjunction")
         let transport = RecordingTransport(content: #"{"outcome":"partial","score":0.6,"confidence":0.9,"explanationFeedback":"e","applicationFeedback":"a","ruleCode":"de.conjunction.weil"}"#)
         let provider = GrammarEvaluationProvider(
             transport: ChatGrammarEvaluationTransport(configuration: configuration, credentialLoader: KeyLoader(), options: PracticeChatOptions(instructions: "G", temperature: 0), transport: transport),
@@ -150,7 +150,7 @@ final class ChatPracticeEvaluationTests: XCTestCase {
         try await repository.saveSentence(sentence)
         let unit = ReviewUnit(learnerID: "local", skill: .listening, objectiveKey: CardSentenceListeningRetrieval.objectiveKey(sentenceID: sentence.id), sentenceID: sentence.id, sentenceRevision: sentence.revision)
         let exercise = ExerciseInstance(reviewUnit: unit, prompt: sentence.text, sourceLanguage: "fa", targetLanguage: "de")
-        let transport = RecordingTransport(content: #"{"outcome":"correct","score":1,"confidence":0.95,"feedback":["ok"]}"#)
+        let transport = RecordingTransport(content: #"{"meaningStatus":"preserved","slots":[{"slot":"agent","status":"preserved"},{"slot":"action","status":"preserved"}],"score":1,"confidence":0.95,"feedback":["ok"]}"#)
         let provider = ListeningEvaluationProvider(
             transport: ChatListeningEvaluationTransport(configuration: configuration, credentialLoader: KeyLoader(), options: PracticeChatOptions(instructions: "L"), transport: transport),
             contextResolver: RepositoryListeningContextResolver(repository: repository, audioChecksum: { "checksum-\($0.revision)" })
@@ -164,5 +164,33 @@ final class ChatPracticeEvaluationTests: XCTestCase {
         let user = try XCTUnwrap(JSONSerialization.jsonObject(with: Data(try XCTUnwrap(messages.last?["content"]).utf8)) as? [String: String])
         XCTAssertEqual(user["sentence"], sentence.text)
         XCTAssertEqual(user["reviewedTranslation"], sentence.translation)
+    }
+
+    func testListeningOutcomeFollowsTheContractSlotRules() {
+        XCTAssertEqual(ChatListeningEvaluationTransport.outcome(for: [.agent: .preserved, .action: .preserved, .negation: .preserved]), .correct)
+        XCTAssertEqual(ChatListeningEvaluationTransport.outcome(for: [.agent: .preserved, .modality: .missing]), .partial)
+        XCTAssertEqual(ChatListeningEvaluationTransport.outcome(for: [.action: .preserved, .patient: .changed]), .partial)
+        XCTAssertEqual(ChatListeningEvaluationTransport.outcome(for: [.negation: .changed, .agent: .preserved]), .incorrect)
+        XCTAssertEqual(ChatListeningEvaluationTransport.outcome(for: [.tense: .changed]), .incorrect)
+    }
+
+    func testListeningReversedNegationIsIncorrectEvenIfTheModelSaysOtherwise() async throws {
+        let repository = InMemoryPracticeRepository()
+        let sentence = CardSentenceListeningRetrieval.sentence(for: card)
+        try await repository.saveSentence(sentence)
+        let unit = ReviewUnit(learnerID: "local", skill: .listening, objectiveKey: CardSentenceListeningRetrieval.objectiveKey(sentenceID: sentence.id), sentenceID: sentence.id, sentenceRevision: sentence.revision)
+        let exercise = ExerciseInstance(reviewUnit: unit, prompt: sentence.text, sourceLanguage: "fa", targetLanguage: "de")
+        let resolver = RepositoryListeningContextResolver(repository: repository, audioChecksum: { _ in "c" })
+        let negated = RecordingTransport(content: #"{"meaningStatus":"changed","slots":[{"slot":"negation","status":"changed"},{"slot":"action","status":"preserved"}],"score":0.9,"confidence":0.9,"feedback":["x"]}"#)
+        let result = try await ListeningEvaluationProvider(transport: ChatListeningEvaluationTransport(configuration: configuration, credentialLoader: KeyLoader(), options: PracticeChatOptions(instructions: "L"), transport: negated), contextResolver: resolver)
+            .evaluate(Attempt(exerciseID: exercise.id, reviewUnitID: unit.id, response: "به خانه نمی‌روم", submittedAt: Date()), exercise: exercise)
+        XCTAssertEqual(result.outcome, .incorrect)
+        XCTAssertEqual(result.rules.map(\.code), ["listening.slot.negation"])
+
+        let uncertain = RecordingTransport(content: #"{"meaningStatus":"uncertain","slots":[],"score":0.5,"confidence":0.4,"feedback":[]}"#)
+        let unavailable = try await ListeningEvaluationProvider(transport: ChatListeningEvaluationTransport(configuration: configuration, credentialLoader: KeyLoader(), options: PracticeChatOptions(instructions: "L"), transport: uncertain), contextResolver: resolver)
+            .evaluate(Attempt(exerciseID: exercise.id, reviewUnitID: unit.id, response: "؟", submittedAt: Date()), exercise: exercise)
+        XCTAssertEqual(unavailable.outcome, .unavailable)
+        XCTAssertEqual(unavailable.unavailableReason, .lowConfidence)
     }
 }

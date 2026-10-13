@@ -49,8 +49,7 @@ final class SkillPracticeRoutingTests: XCTestCase {
             cards: PrototypeStorePracticeCards(store: store),
             aiSettings: PrototypeAISettings(),
             sourceLanguage: pair.source,
-            targetLanguage: pair.target,
-            hasReviewedGrammarContent: false
+            targetLanguage: pair.target
         )
         XCTAssertEqual(probe.availability(for: .writing), .available(.ungradedNoProvider))
         XCTAssertEqual(probe.availability(for: .grammar), .unavailable(.noReviewedGrammarContent))
@@ -65,8 +64,7 @@ final class SkillPracticeRoutingTests: XCTestCase {
             cards: PrototypeStorePracticeCards(store: store),
             aiSettings: PrototypeAISettings(),
             sourceLanguage: LearningContentRules.bundled.defaults.sourceLanguageTag,
-            targetLanguage: LearningContentRules.bundled.defaults.targetLanguageTag,
-            hasReviewedGrammarContent: false
+            targetLanguage: LearningContentRules.bundled.defaults.targetLanguageTag
         )
         let progress = try await probe.progress()
         XCTAssertEqual(progress.count, PracticeSkill.allCases.count)
@@ -91,7 +89,7 @@ final class SkillPracticeRoutingTests: XCTestCase {
         let evaluator = SettingsBackedPracticeEvaluator(
             skill: .writing,
             repository: InMemoryPracticeRepository(),
-            grammarContext: FactoryGrammarContextResolver(),
+            grammarContext: CatalogGrammarContextResolver(catalog: .bundled),
             environment: { nil }
         )
         let result = try await evaluator.evaluate(attempt, exercise: exercise)
@@ -105,7 +103,7 @@ final class SkillPracticeRoutingTests: XCTestCase {
             repository: InMemoryPracticeRepository(),
             settings: PrototypeAISettings(),
             store: PrototypeStore(inMemory: true),
-            grammarContext: FactoryGrammarContextResolver()
+            grammarContext: CatalogGrammarContextResolver(catalog: .bundled)
         )
         XCTAssertEqual(composition.gradedSkills, [.writing, .grammar, .listening])
     }

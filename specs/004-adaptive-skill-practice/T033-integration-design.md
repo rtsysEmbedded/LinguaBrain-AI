@@ -185,3 +185,16 @@ Grammar stays unavailable (`noReviewedGrammarContent`) until reviewed templates 
 
 Not verified: a live call to a provider. The schema uses `type` arrays with `null` and `enum`, which OpenAI structured outputs accept in strict mode; other OpenAI-compatible servers may not support `json_schema` and will then return an error that is shown as ungraded.
 
+### 7.6 Phase C — grammar content and listening audio
+
+| Area | Implementation |
+| --- | --- |
+| Grammar rules | The five rule definitions moved from `GrammarExerciseFactory.rules` (Swift) to `apps/learner/Resources/Configuration/grammar-content.json`; `GrammarExerciseFactory.make(_:rules:)` takes the rule bank. |
+| Grammar exercises | 10 German exercises with Persian explanations, two per rule (`explainError`, `explainUsage`), drafted by the assistant and stored as `pendingReview` (decision 2). `GrammarTemplateEntry.isCurated` requires `reviewed` plus a reviewer and date; drafts become `cleanSource: draft` and are rejected by the factory, so grammar remains unavailable until a person reviews entries. |
+| Retrieval and evaluation | `CuratedGrammarRetrieval` (planner-ordered, one new exercise ID per occurrence) and `CatalogGrammarContextResolver` (rule and reviewed reference for evaluation; drafts never resolve). Progress uses the curated objective keys of the active pair. |
+| Listening audio | Decision 4: on-device Apple speech. `AppleSentencePlayback` speaks the exact sentence revision at the learner's playback rate; the slow-replay factor is in `content-rules.json`; the audio checksum binds sentence ID, revision, text, locale, and voice and is recomputed by the evaluator. |
+| Listening evaluation | The listening transport returns the seven contract slots (agent, patient, action, negation, number, tense, modality) with `preserved`, `missing`, or `changed`; the outcome is derived from them (a changed agent, action, negation, number, or tense is incorrect), and an uncertain meaning is unavailable (`lowConfidence`). |
+| Tests | Package: `GrammarEvaluationTests` (curated-only resolution), `PracticeIntegrationCatalogTests` (drafts never offered, fresh occurrence after completion, reviewer required), `ChatPracticeEvaluationTests` (slot rules, reversed negation, uncertain meaning). App: `AppConfigurationTests.testBundledGrammarContentIsValidAndPendingReview`. The bundled drafts were also checked with the package factory on Linux. |
+
+Open for T033 closure: review of the grammar drafts, an Xcode 27 build of both targets, and device QA (T027, T035).
+

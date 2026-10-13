@@ -151,8 +151,7 @@ struct ProgressPrototypeView: View {
             cards: PrototypeStorePracticeCards(store: store),
             aiSettings: aiSettings,
             sourceLanguage: languageSettings.sourceLanguageTag,
-            targetLanguage: languageSettings.targetLanguageTag,
-            hasReviewedGrammarContent: false
+            targetLanguage: languageSettings.targetLanguageTag
         )
         let summaries = (try? await probe.progress()) ?? []
         practiceProgress = Dictionary(uniqueKeysWithValues: summaries.map { ($0.skill, $0) })

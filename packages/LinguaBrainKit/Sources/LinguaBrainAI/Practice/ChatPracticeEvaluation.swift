@@ -267,13 +267,33 @@ public struct ChatGrammarEvaluationTransport: GrammarEvaluationTransport {
 
 // MARK: - Listening
 
+/// Semantic slots of `listening-evidence-v1`, scored independently.
+public enum ListeningSemanticSlot: String, CaseIterable, Sendable {
+    case agent, patient, action, negation, number, tense, modality
+
+    /// Slots whose change makes the answer incorrect (contract: reversing
+    /// negation, replacing the agent or action, changing number or time).
+    public var isCritical: Bool {
+        switch self {
+        case .agent, .action, .negation, .number, .tense: true
+        case .patient, .modality: false
+        }
+    }
+}
+
+public enum ListeningSlotStatus: String, CaseIterable, Sendable {
+    case preserved, missing, changed
+}
+
 /// Listening evaluation through an OpenAI-compatible endpoint: the learner's
 /// response is compared with the exact sentence revision and its reviewed
-/// translation.
+/// translation, slot by slot. The outcome is derived from the slot results
+/// as the contract defines, not taken from the model.
 public struct ChatListeningEvaluationTransport: ListeningEvaluationTransport {
     public static let schemaName = "listening_evaluation"
     public static let evaluatorVersion = "listening-evaluator-v1"
-    public static let contractVersion = "listening-practice-v1"
+    public static let contractVersion = "listening-evidence-v1"
+    public static let slotRulePrefix = "listening.slot."
     private let client: PracticeChatClient
 
     public init(configuration: ProviderConfiguration, credentialLoader: any CredentialLoader, options: PracticeChatOptions, transport: any WritingEvaluationTransport = URLSessionWritingEvaluationTransport()) {
@@ -286,32 +306,63 @@ public struct ChatListeningEvaluationTransport: ListeningEvaluationTransport {
         let learnerResponse: String
     }
 
+    private struct SlotResult: Decodable {
+        let slot: String
+        let status: String
+    }
+
     private struct Response: Decodable {
-        let outcome: String
+        let meaningStatus: String
+        let slots: [SlotResult]
         let score: Double
         let confidence: Double
         let feedback: [String]
     }
 
+    /// Contract outcome for a set of slot results.
+    public static func outcome(for slots: [ListeningSemanticSlot: ListeningSlotStatus]) -> AttemptOutcome {
+        if slots.contains(where: { $0.key.isCritical && $0.value == .changed }) { return .incorrect }
+        if slots.contains(where: { $0.value != .preserved }) { return .partial }
+        return .correct
+    }
+
     public func evaluate(_ request: ListeningEvaluationRequest) async throws -> EvaluationResult {
         let content = try PracticeChatClient.encode(UserContent(sentence: request.sentence.text, reviewedTranslation: request.sentence.translation, learnerResponse: request.response))
+        let slot = PracticeChatClient.object([
+            "slot": ["type": "string", "enum": ListeningSemanticSlot.allCases.map(\.rawValue)],
+            "status": ["type": "string", "enum": ListeningSlotStatus.allCases.map(\.rawValue)]
+        ])
         let schema = PracticeChatClient.object([
-            "outcome": ["type": "string", "enum": ["correct", "partial", "incorrect"]],
+            "meaningStatus": ["type": "string", "enum": ["preserved", "partiallyPreserved", "changed", "uncertain"]],
+            "slots": ["type": "array", "maxItems": ListeningSemanticSlot.allCases.count, "items": slot],
             "score": ["type": "number"],
             "confidence": ["type": "number"],
             "feedback": ["type": "array", "maxItems": 3, "items": ["type": "string"]]
         ])
         let data = try await client.send(userContent: content, schemaName: Self.schemaName, schema: schema)
         guard let response = try? JSONDecoder().decode(Response.self, from: data),
-              let outcome = AttemptOutcome(rawValue: response.outcome) else { throw PracticeEvaluationError.malformedOutput }
+              let meaning = PracticeMeaningStatus(rawValue: response.meaningStatus) else { throw PracticeEvaluationError.malformedOutput }
+        var slots: [ListeningSemanticSlot: ListeningSlotStatus] = [:]
+        for entry in response.slots {
+            guard let slot = ListeningSemanticSlot(rawValue: entry.slot), let status = ListeningSlotStatus(rawValue: entry.status),
+                  slots.updateValue(status, forKey: slot) == nil else { throw PracticeEvaluationError.malformedOutput }
+        }
+        let provenance = Provenance(provider: client.configuration.providerName, model: client.configuration.modelID, promptVersion: Self.contractVersion, schemaVersion: Self.contractVersion, validatorVersion: Self.evaluatorVersion)
+        guard meaning != .uncertain else {
+            return .unavailable(reason: .lowConfidence, evaluatorVersion: Self.evaluatorVersion, provenance: provenance, sentenceRevision: request.sentence.revision)
+        }
+        let outcome = Self.outcome(for: slots)
+        let affected = slots.filter { $0.value != .preserved }.sorted { $0.key.rawValue < $1.key.rawValue }
         return EvaluationResult(
             outcome: outcome,
             score: response.score,
             confidence: response.confidence,
             feedback: response.feedback.prefix(3).map { TypedFeedback(message: $0, isError: outcome != .correct, confidence: response.confidence) },
+            rules: affected.map { RuleReference(code: Self.slotRulePrefix + $0.key.rawValue, span: $0.value.rawValue) },
             evaluatorVersion: Self.evaluatorVersion,
-            provenance: Provenance(provider: client.configuration.providerName, model: client.configuration.modelID, promptVersion: Self.contractVersion, schemaVersion: Self.contractVersion, validatorVersion: Self.evaluatorVersion),
-            sentenceRevision: request.sentence.revision
+            provenance: provenance,
+            sentenceRevision: request.sentence.revision,
+            meaningStatus: meaning
         )
     }
 }

@@ -189,6 +189,7 @@
 - [ ] T027 [US4] آزمون شنیداری در `packages/LinguaBrainKit/Tests/LinguaBrainAITests/ListeningEvaluationTests.swift` و `apps/learner/Tests/ListeningPracticeTests.swift`.
   - وابستگی: T026. مالک: QA شنیداری.
   - پذیرش: paraphrase، نفی معکوس، عامل اشتباه، درک جزئی، sentence/audio mismatch، hide/reveal، لغو، دو بار پخش، unavailable و بازیابی پس از restart تست شوند؛ هم‌خوانی صوت و متن با sample واقعی بررسی شود.
+  - وضعیت (۲۰۲۶-۱۰-۱۳): تصمیم Product Owner این است که صدای جمله با گفتار روی دستگاه (Apple) ساخته شود؛ بنابراین صوت از متن همان نسخهٔ جمله تولید می‌شود و checksum آن به شناسه، نسخه، متن، locale و صدا وابسته است. آزمون‌های package برای نفی معکوس، معنای نامطمئن، قواعد slot و اتصال به نسخهٔ ذخیره‌شدهٔ جمله اضافه شدند. QA روی دستگاه (دو بار پخش، لغو، بازیابی پس از restart و شنیدن واقعی صدا) هنوز انجام نشده و این تسک باز است.
 
 ## فاز ۸ — US5: تکرار جمله و ارزیابی واقعی تلفظ
 

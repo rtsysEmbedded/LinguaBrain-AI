@@ -50,7 +50,11 @@ struct PracticeCapabilityProbe {
     let aiSettings: PrototypeAISettings
     let sourceLanguage: String
     let targetLanguage: String
-    let hasReviewedGrammarContent: Bool
+    var grammar: GrammarContentCatalog = .bundled
+
+    var hasReviewedGrammarContent: Bool {
+        grammar.hasReviewedContent(learnerID: PracticeLearner.localID, sourceLanguage: sourceLanguage, targetLanguage: targetLanguage)
+    }
 
     var pairCards: [PracticeCardCandidate] {
         cards.cards(sourceLanguage: sourceLanguage, targetLanguage: targetLanguage)
@@ -85,7 +89,8 @@ struct PracticeCapabilityProbe {
         let keys = Dictionary(uniqueKeysWithValues: skills.compactMap { skill -> (PracticeSkill, Set<String>)? in
             switch skill {
             case .writing, .listening: (skill, PracticeCatalogKeys.objectiveKeys(skill: skill, cards: pairCards))
-            case .grammar, .speaking: nil
+            case .grammar: (skill, grammar.objectiveKeys(learnerID: PracticeLearner.localID, sourceLanguage: sourceLanguage, targetLanguage: targetLanguage))
+            case .speaking: nil
             }
         })
         return try await PracticeProgressCalculator.summaries(

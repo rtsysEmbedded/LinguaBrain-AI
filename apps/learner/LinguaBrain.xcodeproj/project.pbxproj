@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		CB0000000000000000000017 /* grammar-content.json in Resources */ = {isa = PBXBuildFile; fileRef = CB0000000000000000000015 /* grammar-content.json */; };
+		CB0000000000000000000016 /* grammar-content.json in Resources */ = {isa = PBXBuildFile; fileRef = CB0000000000000000000015 /* grammar-content.json */; };
 		CB0000000000000000000014 /* PracticeEvaluation.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB0000000000000000000012 /* PracticeEvaluation.swift */; };
 		CB0000000000000000000013 /* PracticeEvaluation.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB0000000000000000000012 /* PracticeEvaluation.swift */; };
 		CB0000000000000000000011 /* SkillPracticeRoutingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB0000000000000000000010 /* SkillPracticeRoutingTests.swift */; };
@@ -127,6 +129,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		CB0000000000000000000015 /* grammar-content.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "grammar-content.json"; sourceTree = "<group>"; };
 		CB0000000000000000000012 /* PracticeEvaluation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PracticeEvaluation.swift; sourceTree = "<group>"; };
 		CB0000000000000000000010 /* SkillPracticeRoutingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SkillPracticeRoutingTests.swift; sourceTree = "<group>"; };
 		CB000000000000000000000D /* SkillPracticeEntryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SkillPracticeEntryView.swift; sourceTree = "<group>"; };
@@ -322,7 +325,7 @@
 			path = Resources;
 			sourceTree = "<group>";
 		};
-		CF0000000000000000000004 /* Configuration */ = { isa = PBXGroup; children = ( CF0000000000000000000002 /* provider-catalog.json */, CF0000000000000000000003 /* ai-prompts.json */, CF0000000000000000000007 /* seed-cards.json */, CF0000000000000000000008 /* content-rules.json */ ); path = Configuration; sourceTree = "<group>"; };
+		CF0000000000000000000004 /* Configuration */ = { isa = PBXGroup; children = ( CB0000000000000000000015 /* grammar-content.json */, CF0000000000000000000002 /* provider-catalog.json */, CF0000000000000000000003 /* ai-prompts.json */, CF0000000000000000000007 /* seed-cards.json */, CF0000000000000000000008 /* content-rules.json */ ); path = Configuration; sourceTree = "<group>"; };
 		400000000000000000000005 /* Localization */ = { isa = PBXGroup; children = ( 200000000000000000000011 /* en.json */, 200000000000000000000012 /* de.json */, 200000000000000000000013 /* fa.json */ ); path = Localization; sourceTree = "<group>"; };
 		400000000000000000000004 /* Products */ = {
 			isa = PBXGroup;
@@ -530,6 +533,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				CB0000000000000000000016 /* grammar-content.json in Resources */,
 				10000000000000000000000C /* Assets.xcassets in Resources */,
 				10000000000000000000000E /* Localizable.xcstrings in Resources */,
 				CF0000000000000000000018 /* InfoPlist.xcstrings in Resources */,
@@ -547,6 +551,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				CB0000000000000000000017 /* grammar-content.json in Resources */,
 				11000000000000000000000C /* Assets.xcassets in Resources */,
 				11000000000000000000000E /* Localizable.xcstrings in Resources */,
 				CF0000000000000000000019 /* InfoPlist.xcstrings in Resources */,
