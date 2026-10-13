@@ -924,7 +924,7 @@ struct UtilitiesPrototypeView: View {
                         .font(.caption)
                         .foregroundStyle(.orange)
                 }
-                HStack {
+                PrototypeActionRow {
                     Button {
                         if transcription.isRecording {
                             transcription.stop()
@@ -937,19 +937,27 @@ struct UtilitiesPrototypeView: View {
                         }
                     } label: {
                         Label(localization.localized(transcription.isRecording ? "utilities.stop" : "utilities.start"), systemImage: transcription.isRecording ? "stop.fill" : "mic.fill")
+                            .prototypeActionLabel()
                     }
                     .buttonStyle(.borderedProminent)
                     .tint(transcription.isRecording ? .red : PrototypeTheme.accent)
-                    Button(localization.localized("utilities.clear")) { transcription.clear() }
-                        .buttonStyle(.bordered)
-                    Spacer()
+                    Button {
+                        transcription.clear()
+                    } label: {
+                        Label(localization.localized("utilities.clear"), systemImage: "trash")
+                            .prototypeActionLabel()
+                    }
+                    .buttonStyle(.bordered)
                     Button {
                         copyToClipboard(transcription.visibleText)
                     } label: {
                         Label(localization.localized("utilities.copyTranscript"), systemImage: "doc.on.doc")
+                            .prototypeActionLabel()
                     }
+                    .buttonStyle(.bordered)
                     .disabled(transcription.visibleText.isEmpty)
                 }
+                .controlSize(.regular)
             }
         }
     }
@@ -977,11 +985,12 @@ struct UtilitiesPrototypeView: View {
                         .font(.caption)
                         .foregroundStyle(.orange)
                 }
-                HStack {
+                PrototypeActionRow {
                     Button {
                         translateTranscript()
                     } label: {
                         Label(localization.localized(isTranslating ? "utilities.translating" : "utilities.translate"), systemImage: "character.bubble")
+                            .prototypeActionLabel()
                     }
                     .buttonStyle(.borderedProminent)
                     .disabled(isTranslating || transcription.visibleText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
@@ -989,9 +998,12 @@ struct UtilitiesPrototypeView: View {
                         copyToClipboard(translatedText)
                     } label: {
                         Label(localization.localized("utilities.copyTranslation"), systemImage: "doc.on.doc")
+                            .prototypeActionLabel()
                     }
+                    .buttonStyle(.bordered)
                     .disabled(translatedText.isEmpty)
                 }
+                .controlSize(.regular)
                 Text(localization.localized("utilities.translationProviderNote"))
                     .font(.caption)
                     .foregroundStyle(.secondary)

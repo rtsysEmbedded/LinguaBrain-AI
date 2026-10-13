@@ -180,8 +180,8 @@
   "practice.shared.feedback.ungraded": "Noch nicht bewertet",
   "practice.shared.feedback.pendingDetail": "Es wurde noch kein bestätigtes Ergebnis gespeichert.",
   "practice.writing.title": "Schreibübung",
-  "practice.writing.instruction": "Schreibe einen Satz mit dem Zielwort.",
-  "practice.writing.description": "Dein ursprünglicher Satz wird vor der Bewertung bewahrt.",
+  "practice.writing.instruction": "Schreibe einen eigenen, vollständigen Satz in der Sprache, die du lernst. Verwende das Zielwort in der unten gezeigten Bedeutung.",
+  "practice.writing.description": "Es gibt nicht die eine richtige Antwort: Jeder korrekte Satz zählt. Dein Satz wird vor der Bewertung gespeichert.",
   "practice.writing.targetWord": "Zielwort",
   "practice.writing.answerLabel": "Dein Satz",
   "practice.history.title": "Satzlernverlauf",
@@ -758,5 +758,7 @@
   "practice.entry.next": "Nächste Übung",
   "skillPractice.recommendation.title": "Heute empfohlen",
   "skillPractice.recommendation.detail": "Ihre schwächste Fähigkeit laut bewerteten Antworten: %@",
-  "progress.skill.noEvidence": "Noch keine Daten"
+  "progress.skill.noEvidence": "Noch keine Daten",
+  "practice.writing.meaning": "Bedeutung",
+  "practice.writing.answerPlaceholder": "Schreibe hier deinen Satz mit „%@“ …"
 }

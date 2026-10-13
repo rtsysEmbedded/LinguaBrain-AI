@@ -180,8 +180,8 @@
   "practice.shared.feedback.ungraded": "هنوز نمره‌گذاری نشده",
   "practice.shared.feedback.pendingDetail": "نتیجهٔ معتبر هنوز ثبت نشده است.",
   "practice.writing.title": "تمرین نوشتاری",
-  "practice.writing.instruction": "با استفاده از واژهٔ هدف یک جمله بنویس.",
-  "practice.writing.description": "جملهٔ اصلی تو پیش از ارزیابی حفظ می‌شود.",
+  "practice.writing.instruction": "یک جملهٔ کامل و از خودت به زبانی که یاد می‌گیری بنویس و واژهٔ هدف را با همان معنایی که پایین آمده به کار ببر.",
+  "practice.writing.description": "یک پاسخ درستِ واحد وجود ندارد؛ هر جملهٔ درستی قبول است. جملهٔ تو پیش از ارزیابی ذخیره می‌شود.",
   "practice.writing.targetWord": "واژهٔ هدف",
   "practice.writing.answerLabel": "جملهٔ تو",
   "practice.history.title": "سابقهٔ یادگیری جمله‌ها",
@@ -758,5 +758,7 @@
   "practice.entry.next": "تمرین بعدی",
   "skillPractice.recommendation.title": "پیشنهاد امروز",
   "skillPractice.recommendation.detail": "ضعیف‌ترین مهارت شما بر اساس پاسخ‌های ارزیابی‌شده: %@",
-  "progress.skill.noEvidence": "هنوز داده‌ای نیست"
+  "progress.skill.noEvidence": "هنوز داده‌ای نیست",
+  "practice.writing.meaning": "معنی",
+  "practice.writing.answerPlaceholder": "جملهٔ خودت را با «%@» اینجا بنویس…"
 }

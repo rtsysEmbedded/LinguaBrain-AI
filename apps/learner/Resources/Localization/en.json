@@ -180,8 +180,8 @@
   "practice.shared.feedback.ungraded": "Not graded yet",
   "practice.shared.feedback.pendingDetail": "A validated result has not been recorded.",
   "practice.writing.title": "Writing practice",
-  "practice.writing.instruction": "Write a sentence using the target word.",
-  "practice.writing.description": "Your original sentence is preserved before evaluation.",
+  "practice.writing.instruction": "Write a complete sentence of your own in the language you are learning. Use the target word with the meaning shown below.",
+  "practice.writing.description": "There is no single right answer: any correct sentence counts. Your sentence is saved before evaluation.",
   "practice.writing.targetWord": "Target word",
   "practice.writing.answerLabel": "Your sentence",
   "practice.history.title": "Sentence learning history",
@@ -758,5 +758,7 @@
   "practice.entry.next": "Next exercise",
   "skillPractice.recommendation.title": "Suggested today",
   "skillPractice.recommendation.detail": "Your weakest skill based on graded answers: %@",
-  "progress.skill.noEvidence": "No evidence yet"
+  "progress.skill.noEvidence": "No evidence yet",
+  "practice.writing.meaning": "Meaning",
+  "practice.writing.answerPlaceholder": "Write your sentence with “%@” here…"
 }

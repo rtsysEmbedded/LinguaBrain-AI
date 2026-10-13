@@ -47,7 +47,13 @@ struct AddWordPrototypeView: View {
     @State private var contextTranslation: String?
     @State private var contextCandidateText = ""
     @State private var isTranslatingContext = false
-    @FocusState private var contextFieldFocused: Bool
+    /// The text input that owns the keyboard. Every input is bound, so
+    /// "Done" and starting a generation always dismiss the keyboard.
+    @FocusState private var focusedField: InputField?
+
+    private enum InputField: Hashable {
+        case word, batchWords, outputName, context, candidates
+    }
     @State private var batchTopic = LearningContentRules.bundled.addWord.defaultTopic
     @State private var availableDomains = PrototypeDomainCatalog.customDomains
     @State private var batchLevel = LearningContentRules.bundled.levels.cardGenerationDefault
@@ -112,7 +118,7 @@ struct AddWordPrototypeView: View {
         .toolbar {
             ToolbarItemGroup(placement: .keyboard) {
                 Spacer()
-                Button(localization.localized("common.done")) { contextFieldFocused = false }
+                Button(localization.localized("common.done")) { focusedField = nil }
             }
         }
         .alert(localization.localized("domain.newTitle"), isPresented: $showingDomainEditor) {
@@ -181,6 +187,9 @@ struct AddWordPrototypeView: View {
         PrototypeCard {
                     VStack(alignment: .leading, spacing: 16) {
                         TextField(localization.localized("card.wordPlaceholder"), text: $word)
+                            .focused($focusedField, equals: .word)
+                            .submitLabel(.done)
+                            .onSubmit { focusedField = nil }
                             .textFieldStyle(.roundedBorder)
                             .font(.title3)
                             .environment(\.layoutDirection, .leftToRight)
@@ -218,6 +227,7 @@ struct AddWordPrototypeView: View {
     }
 
     private func generateCard() {
+        focusedField = nil
         isGeneratingCard = true
         generatedCard = nil
         generatedCardSaved = false
@@ -327,6 +337,7 @@ struct AddWordPrototypeView: View {
 
                 batchStep(1, batchInputStepTitle)
                 TextEditor(text: $batchWords)
+                    .focused($focusedField, equals: .batchWords)
                     .font(.body)
                     .frame(minHeight: 90)
                     .padding(6)
@@ -388,6 +399,9 @@ struct AddWordPrototypeView: View {
                 batchStep(3, batchExportStepTitle)
                 HStack {
                     TextField(batchCopy(.outputName), text: $batchOutputName)
+                        .focused($focusedField, equals: .outputName)
+                        .submitLabel(.done)
+                        .onSubmit { focusedField = nil }
                         .textFieldStyle(.roundedBorder)
                         .environment(\.layoutDirection, .leftToRight)
                     Text(".apkg")
@@ -432,7 +446,7 @@ struct AddWordPrototypeView: View {
                     .font(.headline)
                 Text(contextCopy(.subtitle)).font(.subheadline).foregroundStyle(.secondary)
                 TextEditor(text: $contextText)
-                    .focused($contextFieldFocused)
+                    .focused($focusedField, equals: .context)
                     .frame(minHeight: 180)
                     .padding(6)
                     .overlay(RoundedRectangle(cornerRadius: 8).stroke(.secondary.opacity(0.35)))
@@ -478,6 +492,7 @@ struct AddWordPrototypeView: View {
                         Text(contextCopy(.candidates)).font(.headline)
                         Text(contextCopy(.candidatesHint)).font(.caption).foregroundStyle(.secondary)
                         TextEditor(text: $contextCandidateText)
+                            .focused($focusedField, equals: .candidates)
                             .frame(minHeight: 84)
                             .padding(6)
                             .overlay(RoundedRectangle(cornerRadius: 8).stroke(.secondary.opacity(0.35)))
@@ -509,6 +524,7 @@ struct AddWordPrototypeView: View {
     }
 
     private func buildFromContext() {
+        focusedField = nil
         isBuildingBatch = true
         batchStatus = localization.localized("addWord.context.selecting")
         Task {
@@ -596,6 +612,7 @@ struct AddWordPrototypeView: View {
         let words = wordsOverride ?? parsedBatchWords
         guard !words.isEmpty else { return }
         _ = PrototypeDomainCatalog.add(batchTopic)
+        focusedField = nil
         isBuildingBatch = true
         batchStatus = nil
         Task {

@@ -142,3 +142,24 @@ struct PrototypeBackground: View {
         .ignoresSafeArea()
     }
 }
+
+/// Action buttons in one row when they fit at their natural size, otherwise
+/// stacked, so long localized titles never wrap inside a button.
+struct PrototypeActionRow<Content: View>: View {
+    @ViewBuilder let content: () -> Content
+
+    var body: some View {
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: 10) { content() }
+            VStack(alignment: .leading, spacing: 10) { content() }
+        }
+    }
+}
+
+extension View {
+    /// One-line action title that shrinks slightly instead of wrapping.
+    func prototypeActionLabel() -> some View {
+        lineLimit(1).minimumScaleFactor(0.85)
+    }
+}
+
