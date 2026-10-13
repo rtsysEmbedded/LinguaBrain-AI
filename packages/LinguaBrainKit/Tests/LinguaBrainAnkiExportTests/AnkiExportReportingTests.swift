@@ -1,10 +1,13 @@
 import XCTest
-import Foundation
 import LinguaBrainDomain
+import LinguaBrainApplication
 import LinguaBrainAnkiExport
+import Synchronization
 
-@MainActor
-final class APKGExportAccessibilityTests: XCTestCase {
+/// Export progress, error, validation, and report tests moved from the
+/// untargeted `apps/learner/UITests/APKGExportAccessibilityTests.swift`
+/// (audit finding B1). They exercise package types, not UI.
+final class AnkiExportReportingTests: XCTestCase {
     func testExportProgressAccessibility() throws {
         let progress = ExportProgress(
             cardsExported: 250,
@@ -16,22 +19,14 @@ final class APKGExportAccessibilityTests: XCTestCase {
         XCTAssertEqual(progress.progressFraction, 0.5)
         XCTAssertFalse(progress.isComplete)
     }
-    
-    func testExportStateAccessibility() throws {
-        XCTAssertEqual(ExportStatus.notStarted.localizedDescription, "notStarted")
-        XCTAssertEqual(ExportStatus.inProgress.localizedDescription, "inProgress")
-        XCTAssertEqual(ExportStatus.completed.localizedDescription, "completed")
-        XCTAssertEqual(ExportStatus.failed.localizedDescription, "failed")
-        XCTAssertEqual(ExportStatus.cancelled.localizedDescription, "cancelled")
-    }
-    
+
     func testErrorStateAccessibility() throws {
         let error = AnkiExportError.noApprovedCards
         
         XCTAssertNotNil(error.localizedDescription)
         XCTAssertFalse(error.localizedDescription.isEmpty)
     }
-    
+
     func testLimitErrorAccessibility() throws {
         let error = AnkiExportError.limitExceeded(
             type: .cardCount,
@@ -43,13 +38,13 @@ final class APKGExportAccessibilityTests: XCTestCase {
         XCTAssertTrue(error.localizedDescription.contains("600"))
         XCTAssertTrue(error.localizedDescription.contains("500"))
     }
-    
+
     func testCancelErrorAccessibility() throws {
         let error = AnkiExportError.cancelled
         
         XCTAssertEqual(error.localizedDescription, "Export was cancelled")
     }
-    
+
     func testProgressReportingForFailure() throws {
         let progress = ExportProgress(
             cardsExported: 100,
@@ -61,14 +56,7 @@ final class APKGExportAccessibilityTests: XCTestCase {
         XCTAssertNotEqual(progress.progressFraction, 1.0)
         XCTAssertEqual(progress.cardsExported, 100)
     }
-    
-    func testTextOnlyFallbackReporting() throws {
-        let fallbackDescription = "Text-only fallback due to missing media files"
-        
-        XCTAssertNotNil(fallbackDescription)
-        XCTAssertTrue(fallbackDescription.contains("fallback"))
-    }
-    
+
     func testValidationFailureAccessibility() throws {
         let report = ValidationReport(
             status: .failed,
@@ -85,14 +73,14 @@ final class APKGExportAccessibilityTests: XCTestCase {
         XCTAssertEqual(report.errors.count, 1)
         XCTAssertEqual(report.errors.first?.message, "Collection file not found")
     }
-    
+
     func testValidationSuccessAccessibility() throws {
         let report = ValidationReport.success
         
         XCTAssertEqual(report.status, .passed)
         XCTAssertTrue(report.errors.isEmpty)
     }
-    
+
     func testWarningAccessibility() throws {
         let warning = ValidationWarning(
             code: "MISSING_MEDIA",
@@ -104,7 +92,7 @@ final class APKGExportAccessibilityTests: XCTestCase {
         XCTAssertTrue(warning.message.contains("Media"))
         XCTAssertNotNil(warning.suggestedFix)
     }
-    
+
     func testIntegrityErrorAccessibility() throws {
         let error = IntegrityError(
             entryType: .media,
@@ -117,7 +105,7 @@ final class APKGExportAccessibilityTests: XCTestCase {
         XCTAssertNotNil(error.message)
         XCTAssertEqual(error.entryType, .media)
     }
-    
+
     func testOfflineInspectionAccessibility() throws {
         let result = OfflineInspectionResult(
             isOfflineValid: true,
@@ -135,7 +123,7 @@ final class APKGExportAccessibilityTests: XCTestCase {
         XCTAssertEqual(result.cardCount, 10)
         XCTAssertEqual(result.mediaCount, 2)
     }
-    
+
     func testOfflineInspectionFailureAccessibility() throws {
         let result = OfflineInspectionResult(
             isOfflineValid: false,
@@ -153,7 +141,7 @@ final class APKGExportAccessibilityTests: XCTestCase {
         XCTAssertEqual(result.validationIssues.count, 1)
         XCTAssertTrue(result.textOnlyFallbackRequired)
     }
-    
+
     func testRoundTripComparisonAccessibility() throws {
         let comparison = RoundTripComparison(
             areEqual: true,
@@ -171,7 +159,7 @@ final class APKGExportAccessibilityTests: XCTestCase {
         XCTAssertTrue(comparison.senseMatches)
         XCTAssertTrue(comparison.areEqual)
     }
-    
+
     func testRoundTripComparisonWithDiscrepancies() throws {
         let comparison = RoundTripComparison(
             areEqual: false,
@@ -196,7 +184,7 @@ final class APKGExportAccessibilityTests: XCTestCase {
         XCTAssertFalse(comparison.textMatches)
         XCTAssertEqual(comparison.discrepancies.count, 1)
     }
-    
+
     func testSchedulingCompatibilityReportAccessibility() throws {
         let report = SchedulingCompatibilityReport(
             status: .freshAnki,
@@ -215,7 +203,7 @@ final class APKGExportAccessibilityTests: XCTestCase {
         XCTAssertEqual(report.status, .freshAnki)
         XCTAssertGreaterThan(report.warnings.count, 0)
     }
-    
+
     func testMediaManifestEntryAccessibility() throws {
         let entry = MediaManifestEntry(
             sourceAssetID: "test-audio.mp3",
@@ -230,7 +218,7 @@ final class APKGExportAccessibilityTests: XCTestCase {
         XCTAssertEqual(entry.ankiIndex, 0)
         XCTAssertEqual(entry.byteSize, 102400)
     }
-    
+
     func testPipelineResultAccessibility() throws {
         let result = PipelineResult<String>(
             result: "processed",
@@ -242,22 +230,23 @@ final class APKGExportAccessibilityTests: XCTestCase {
         XCTAssertEqual(result.processedCount, 10)
         XCTAssertTrue(result.isComplete)
     }
-    
-    func testPipelineProgressTrackingAccessibility() throws {
+
+    func testPipelineProgressTrackingAccessibility() async throws {
         let pipeline = AnkiExportPipeline()
-        
-        var lastProgress: ExportProgress?
+
+        let lastProgress = Mutex<ExportProgress?>(nil)
         let progressHandler: @Sendable (ExportProgress) -> Void = { progress in
-            lastProgress = progress
+            lastProgress.withLock { $0 = progress }
         }
-        
+
         let bundles = (0..<50).map { _ in createTestBundleForExport() }
         _ = try await pipeline.exportWithProgress(bundles: bundles, progressHandler: progressHandler)
-        
-        XCTAssertNotNil(lastProgress)
-        XCTAssertGreaterThan(lastProgress?.cardsExported ?? 0, 0)
+
+        let observed = lastProgress.withLock { $0 }
+        XCTAssertNotNil(observed)
+        XCTAssertGreaterThan(observed?.cardsExported ?? 0, 0)
     }
-    
+
     func testValidatorAccessibility() throws {
         let validator = AnkiRoundTripValidator()
         
@@ -266,7 +255,7 @@ final class APKGExportAccessibilityTests: XCTestCase {
         XCTAssertNotNil(report)
         XCTAssertTrue(report.contains("PASSED"))
     }
-    
+
     private func createTestBundleForExport() -> GeneratedCardBundle {
         GeneratedCardBundle(
             identity: CardIdentity(

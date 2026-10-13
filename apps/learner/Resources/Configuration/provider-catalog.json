@@ -64,9 +64,7 @@
     "openAI": "api.openai.com",
     "googleTextToSpeech": "texttospeech.googleapis.com",
     "legacyGoogleVoice": "Standard-",
-    "replacedTextEndpoints": [
-      "openrouter.ai"
-    ]
+    "replacedTextEndpoints": []
   },
   "requests": {
     "translateText": {

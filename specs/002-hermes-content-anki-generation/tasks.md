@@ -66,7 +66,8 @@ T032 is deferred to a future update to the provider settings UI as the prototype
 ## Phase 7: Polish and cross-cutting verification
 
 - [X] T034 [P] Update `PROJECT_STATUS.md`, `CHANGELOG.md`, and affected architecture documents with feature status and evidence.
-- [X] T035 [P] Add accessibility and RTL/LTR UI coverage for generation preview and export in `apps/learner/UITests/`.
+- [ ] T035 [P] Add accessibility and RTL/LTR UI coverage for generation preview and export in `apps/learner/UITests/`.
+  - Audit 2026-10-13 (B1): reopened. The project has no UI-test target, so `UITests/AccessibilityTests.swift` never compiled; it also had a syntax error and queried identifiers that do not exist in the app. It was removed. UI coverage needs a UI-test target and accessibility identifiers in the app.
 - [X] T036 Run the feature quickstart and relevant XCTest targets on iOS and macOS, recording evidence in this file and `quickstart.md`.
 - [X] T037 Run security review for credentials, logs, temporary media, provider payloads, and exported files in `specs/002-hermes-content-anki-generation/`.
 

@@ -80,8 +80,3 @@ xcuserdata/
 # Generated documentation output
 site/
 build/
-DerivedData/
-.build/
-.swiftpm/
-*.xcodeproj/
--Xcc/

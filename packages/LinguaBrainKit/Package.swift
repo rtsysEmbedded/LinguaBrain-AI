@@ -3,11 +3,10 @@ import PackageDescription
 
 let package = Package(
     name: "LinguaBrainKit",
+    // ADR-009: iOS, iPadOS, and macOS 27 only, matching the app targets.
     platforms: [
-        .iOS(.v17),
-        .macOS(.v14),
-        .tvOS(.v17),
-        .watchOS(.v10)
+        .iOS(.v27),
+        .macOS(.v27)
     ],
     products: [
         .library(name: "LinguaBrainDomain", targets: ["LinguaBrainDomain"]),

@@ -40,4 +40,4 @@ Feed these fixtures into APKG export tests to verify:
 
 ## Round-Trip Evidence
 
-Integration tests in `apps/learner/Tests/AnkiExportIntegrationTests.swift` validate round-trip verification procedures T036.
+`LinguaBrainAnkiExportTests/AnkiExportEvidenceTests.swift` validates the round-trip verification procedures of T036. `MediaFixturePackagingTests.swift` packages `media/test-audio.mp3` (a 0.3 s MPEG audio file) and `media/test-image.jpg` (an 8 × 8 JPEG) and checks their SHA-256, size, and MIME type.

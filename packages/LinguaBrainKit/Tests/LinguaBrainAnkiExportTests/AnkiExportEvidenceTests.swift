@@ -1,62 +1,12 @@
 import XCTest
-import SwiftUI
 import LinguaBrainDomain
+import LinguaBrainApplication
+import LinguaBrainMedia
 import LinguaBrainAnkiExport
-@testable import LinguaBrainApp
 
-@MainActor
-final class AnkiExportIntegrationTests: XCTestCase {
-    func testExportSelectionWithSourceGroup() async throws {
-        XCTAssertTrue(true)
-    }
-
-    func testExportFormatSwitch() async throws {
-        XCTAssertTrue(true)
-    }
-
-    func testExportDocumentCreationForTSV() async throws {
-        let exportDocument = AnkiTSVDocument(text: "test\ttsv\ncontent")
-
-        XCTAssertEqual(exportDocument.text.count, 17)
-    }
-
-    func testExportDocumentCreationForAPKG() async throws {
-        let exportDocument = AnkiAPKGDocument(
-            sourceGroups: ["generated", "imported"],
-            cardCount: 10,
-            mediaCount: 2
-        )
-
-        XCTAssertEqual(exportDocument.cardCount, 10)
-        XCTAssertEqual(exportDocument.mediaCount, 2)
-        XCTAssertEqual(exportDocument.sourceGroups.count, 2)
-    }
-
-    func testAPKGDocumentFileWrapper() throws {
-        let document = AnkiAPKGDocument(
-            sourceGroups: ["generated"],
-            cardCount: 5,
-            mediaCount: 0
-        )
-
-        let wrapper = try document.fileWrapper(configuration: FileWrapper.WriteConfiguration())
-        XCTAssertNotNil(wrapper)
-    }
-
-    func testExportDocumentUTTypes() {
-        XCTAssertEqual(AnkiExportDocument.readableContentTypes.count, 1)
-        XCTAssertEqual(AnkiExportDocument.writableContentTypes.count, 2)
-        XCTAssertTrue(AnkiExportDocument.writableContentTypes.contains(AnkiExportDocument.apkg))
-    }
-
-    func testExportStatusLocalizedDescription() {
-        XCTAssertEqual(ExportStatus.notStarted.localizedDescription, "notStarted")
-        XCTAssertEqual(ExportStatus.inProgress.localizedDescription, "inProgress")
-        XCTAssertEqual(ExportStatus.completed.localizedDescription, "completed")
-        XCTAssertEqual(ExportStatus.failed.localizedDescription, "failed")
-        XCTAssertEqual(ExportStatus.cancelled.localizedDescription, "cancelled")
-    }
-
+/// Export selection and round-trip evidence tests moved from the untargeted
+/// `apps/learner/Tests/AnkiExportIntegrationTests.swift` (audit finding B1).
+final class AnkiExportEvidenceTests: XCTestCase {
     func testSelectionCriteriaDefaultValues() {
         let criteria = ExportSelectionService.SelectionCriteria()
 
@@ -96,11 +46,11 @@ final class AnkiExportIntegrationTests: XCTestCase {
         )
 
         let result = try await ExportSelectionService(
-            persistencePort: MockPersistencePort(bundles: hermesBundles)
+            persistencePort: EvidencePersistencePort(bundles: hermesBundles)
         ).select(criteria: criteria)
 
         XCTAssertEqual(result.selectedBundles.count, 2)
-        XCTAssertEqual(result.sourceGroups, ["generated"])
+        XCTAssertEqual(result.sourceGroups, [.generated])
     }
 
     func testExcludesRejectedAndPending() async throws {
@@ -113,14 +63,12 @@ final class AnkiExportIntegrationTests: XCTestCase {
         let criteria = ExportSelectionService.SelectionCriteria(approvedOnly: true)
 
         let result = try await ExportSelectionService(
-            persistencePort: MockPersistencePort(bundles: bundles)
+            persistencePort: EvidencePersistencePort(bundles: bundles)
         ).select(criteria: criteria)
 
         XCTAssertEqual(result.selectedBundles.count, 1)
         XCTAssertEqual(result.selectedBundles.first?.identity.lemma, "Bank")
     }
-
-    MARK: - Round-Trip Verification Tests (T036)
 
     func testRoundTripEvidenceTextPreservation() async throws {
         let validator = AnkiRoundTripValidator()
@@ -280,29 +228,29 @@ final class AnkiExportIntegrationTests: XCTestCase {
     }
 
     func testRoundTripEvidenceExportManifest() async throws {
-        let manifest = ExportManifest(
-            selectedBundles: [createTestBundle(lemma: "Test", languagePair: ("en", "de"), provenance: testProvenance)],
+        let bundle = createTestBundle(lemma: "Test", languagePair: ("en", "de"), provenance: testProvenance)
+        let manifest = LinguaBrainAnkiExport.ExportManifest(
             sourceGroups: ["generated"],
+            cardIdentities: [bundle.identity.senseKey],
             mediaEntries: [],
             schedulingPolicy: .preserved
         )
         
         let data = try JSONEncoder().encode(manifest)
-        let decoded = try JSONDecoder().decode(ExportManifest.self, from: data)
+        let decoded = try JSONDecoder().decode(LinguaBrainAnkiExport.ExportManifest.self, from: data)
         
-        XCTAssertEqual(manifest.sourceGroups.count, decoded.sourceGroups.count)
+        XCTAssertEqual(manifest.sourceGroups, decoded.sourceGroups)
+        XCTAssertEqual(manifest.cardIdentities, decoded.cardIdentities)
         XCTAssertEqual(manifest.schedulingPolicy, decoded.schedulingPolicy)
     }
 
     func testOfflineValidationBeforeDelivery() async throws {
-        let inspector = OfflineAnkiPackageInspector()
         let verifier = AnkiIntegrityVerifier()
-        
-        let bundles = [createTestBundle(lemma: "Offline", languagePair: ("en", "de"), provenance: testProvenance)]
-        let manifest = ExportManifest(selectedBundles: bundles)
-        
-        let expectedConfig = AnkiExportConfiguration(maxCards: 500, maxMediaBytes: 500 * 1024 * 1024)
-        let result = try await verifier.verifyPostRead(at: URL(fileURLWithPath: "/dev/null"), expectedManifest: manifest)
+        let bundle = createTestBundle(lemma: "Offline", languagePair: ("en", "de"), provenance: testProvenance)
+        let manifest = LinguaBrainAnkiExport.ExportManifest(cardIdentities: [bundle.identity.senseKey])
+        let missing = FileManager.default.temporaryDirectory.appendingPathComponent("\(UUID().uuidString).apkg")
+
+        let result = try await verifier.verifyPostRead(at: missing, expectedManifest: manifest)
         
         XCTAssertFalse(result.isVerified, "Invalid path should fail verification")
     }
@@ -342,7 +290,7 @@ final class AnkiExportIntegrationTests: XCTestCase {
         )
     }
 
-    final class MockPersistencePort: PersistencePort {
+    final class EvidencePersistencePort: PersistencePort {
         private let bundles: [GeneratedCardBundle]
 
         init(bundles: [GeneratedCardBundle]) {

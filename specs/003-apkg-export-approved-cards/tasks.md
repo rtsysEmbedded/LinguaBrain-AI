@@ -42,9 +42,11 @@
 - [x] T020 [US2] Add source-group and provenance tag mapping without exposing rejected or unapproved records in `packages/LinguaBrainKit/Sources/LinguaBrainDomain/ExportProvenance.swift`.
 - [x] T021 [US2] Integrate selection, progress, errors, and file delivery with `apps/learner/App/LibraryPrototypeView.swift`.
 - [x] T022 [US2] Add the user-facing APKG document wrapper in `apps/learner/App/AnkiExportDocument.swift`.
+  - Audit 2026-10-13 (B1): `AnkiExportDocument.swift` was in no target and duplicated the wrapper that T002 merged into `LibraryPrototypeView.swift`; the duplicate was removed. The compiled wrapper is `AnkiAPKGDocument` in `LibraryPrototypeView.swift`.
 - [x] T023 [P] [US2] Add localized export labels, selection summaries, progress states, and failure messages to `apps/learner/Resources/Localizable.xcstrings`.
 - [x] T024 [P] [US2] Add selective export, grouping, exclusion, and media ownership tests in `packages/LinguaBrainKit/Tests/LinguaBrainAnkiExportTests/ExportSelectionTests.swift`.
-- [x] T025 [US2] Add app integration coverage for select → export → share/save in `apps/learner/Tests/AnkiExportIntegrationTests.swift`.
+- [ ] T025 [US2] Add app integration coverage for select → export → share/save in `apps/learner/Tests/AnkiExportIntegrationTests.swift`.
+  - Audit 2026-10-13 (B1): reopened. The file was in no target and never compiled; its select and format-switch tests were `XCTAssertTrue(true)` placeholders. Its package-level tests now run in `LinguaBrainAnkiExportTests/AnkiExportEvidenceTests.swift` and its document tests in `apps/learner/Tests/AnkiExportDocumentTests.swift`. An app-level select → export → share/save test does not exist yet.
 
 ## Phase 5: User Story 3 — Offline access and integrity verification (P2)
 
@@ -55,6 +57,7 @@
 - [x] T028 [US3] Implement bounded-memory streaming and verify the 500-card/500 MB limits in `packages/LinguaBrainKit/Sources/LinguaBrainAnkiExport/AnkiExportPipeline.swift`.
 - [x] T029 [P] [US3] Add tampered collection/media, missing media, offline, and resource-limit tests in `packages/LinguaBrainKit/Tests/LinguaBrainAnkiExportTests/OfflineIntegrityTests.swift`.
 - [x] T030 [P] [US3] Add accessibility and error-state coverage for progress, cancellation, failure, and text-only fallback in `apps/learner/UITests/APKGExportAccessibilityTests.swift`.
+  - Audit 2026-10-13 (B1): the file was in no target and never compiled. Its tests exercise package types, so they moved to `LinguaBrainAnkiExportTests/AnkiExportReportingTests.swift`, where they pass; a placeholder test that only checked a local string was dropped. They cover error and progress values, not rendered accessibility.
 
 ## Phase 6: User Story 4 — Round-trip verification and validation (P2)
 
@@ -66,6 +69,7 @@
 - [x] T034 [P] [US4] Add round-trip tests for text, senses, examples, directions, Unicode/RTL/LTR, media, tags, and provenance in `packages/LinguaBrainKit/Tests/LinguaBrainAnkiExportTests/AnkiRoundTripTests.swift`.
 - [x] T035 [P] [US4] Add a sanitized standard-Anki compatibility fixture and import/read verification procedure under `packages/LinguaBrainKit/Tests/Fixtures/APKG/`.
 - [x] T036 Add app-level round-trip evidence to `apps/learner/Tests/AnkiExportIntegrationTests.swift`.
+  - Audit 2026-10-13 (B1): the file was in no target. The round-trip evidence tests now run in `LinguaBrainAnkiExportTests/AnkiExportEvidenceTests.swift`; two were corrected to the current API (`CardSource` groups, `LinguaBrainAnkiExport.ExportManifest`).
 
 ## Phase 7: Polish and release readiness
 

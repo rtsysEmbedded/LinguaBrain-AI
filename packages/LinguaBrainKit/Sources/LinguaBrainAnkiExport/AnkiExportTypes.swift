@@ -1,5 +1,6 @@
 import Foundation
 import LinguaBrainDomain
+import Synchronization
 
 public struct AnkiExportConfiguration: Sendable, Equatable {
     public var maxCards: Int
@@ -81,29 +82,23 @@ public enum AnkiExportError: Error, Equatable, Sendable, Hashable {
     }
 }
 
-public final class ExportCancellation {
-    private var _isCancelled: Bool = false
-
-    public var isCancelled: Bool {
-        get { 
-            // Atomic read using serial queue
-            return queue.sync { _isCancelled }
-        }
-    }
-
-    private let queue = DispatchQueue(label: "cancellation.queue", attributes: .concurrent)
+/// Cooperative cancellation flag shared between the caller and the export
+/// work. `cancel()` is visible to every later read.
+public final class ExportCancellation: Sendable {
+    private let state = Mutex(false)
 
     public init() {}
 
+    public var isCancelled: Bool {
+        state.withLock { $0 }
+    }
+
     public func cancel() {
-        queue.async(flags: .barrier) {
-            self._isCancelled = true
-        }
+        state.withLock { $0 = true }
     }
 
     public func checkCancellation() throws {
-        let cancelled = queue.sync { _isCancelled }
-        if cancelled {
+        if isCancelled {
             throw AnkiExportError.cancelled
         }
     }

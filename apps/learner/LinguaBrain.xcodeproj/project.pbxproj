@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		CB0000000000000000000002 /* AnkiExportDocumentTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB0000000000000000000001 /* AnkiExportDocumentTests.swift */; };
 		CF000000000000000000001A /* seed-cards.json in Resources */ = {isa = PBXBuildFile; fileRef = CF0000000000000000000007 /* seed-cards.json */; };
 		CF000000000000000000001B /* content-rules.json in Resources */ = {isa = PBXBuildFile; fileRef = CF0000000000000000000008 /* content-rules.json */; };
 		CF000000000000000000001C /* seed-cards.json in Resources */ = {isa = PBXBuildFile; fileRef = CF0000000000000000000007 /* seed-cards.json */; };
@@ -115,6 +116,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		CB0000000000000000000001 /* AnkiExportDocumentTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnkiExportDocumentTests.swift; sourceTree = "<group>"; };
 		CF0000000000000000000007 /* seed-cards.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "seed-cards.json"; sourceTree = "<group>"; };
 		CF0000000000000000000008 /* content-rules.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "content-rules.json"; sourceTree = "<group>"; };
 		CF0000000000000000000006 /* InfoPlist.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = InfoPlist.xcstrings; sourceTree = "<group>"; };
@@ -313,6 +315,7 @@
 		420000000000000000000001 /* Tests */ = {
 			isa = PBXGroup;
 			children = (
+				CB0000000000000000000001 /* AnkiExportDocumentTests.swift */,
 				220000000000000000000001 /* AnkiCoreRegressionTests.swift */,
 				220000000000000000000002 /* APKGFixtureFactory.swift */,
 				220000000000000000000006 /* modern-apkg-fixtures.json */,
@@ -619,6 +622,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				CB0000000000000000000002 /* AnkiExportDocumentTests.swift in Sources */,
 				120000000000000000000001 /* AnkiCoreRegressionTests.swift in Sources */,
 				120000000000000000000002 /* APKGFixtureFactory.swift in Sources */,
 				DEADBEEF0000000000000032 /* GenerationPrototypeIntegrationTests.swift in Sources */,

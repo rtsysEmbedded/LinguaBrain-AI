@@ -1,7 +1,7 @@
 ---
 title: Project Status and Delivery Checklist
 document_id: LB-STATUS
-version: 0.4.25
+version: 0.4.26
 status: Active
 last_updated: 2026-10-13
 ---
@@ -178,6 +178,7 @@ claim final Feature 004 completion or physical-device/provider coverage.
 #### Updates — 2026-10-13
 
 - Feature 004 T033 remains open. Phase A1 (package layer) of the [T033 integration design](specs/004-adaptive-skill-practice/T033-integration-design.md) is implemented: card-based writing and listening retrieval, per-skill capability gate, skill-routed evaluator, and read-only progress from persisted projections, with 10 new tests. A session-scope defect that prevented a completed review unit from being practised again was fixed. The package suite passes on the Linux Swift 6.4.1 harness (204 tests); no Xcode 27 run has been made for these changes. Phase A2 (app wiring) has not started; design decision 5 and the listening-material question (design Section 7.3) are open.
+- Audit item 1 (A1, A3–A6, B1–B4) fixed: valid `.specify/extensions.yml`; stored OpenRouter endpoints are kept; no Darwin type in the Application layer; lock-based export cancellation; real MP3/JPEG fixtures; orphaned tests moved into compiled targets; `.gitignore` no longer hides Xcode project files; package platforms iOS/macOS 27. Reopened Feature 003 T025 and Feature 002 T035, whose only deliverables were placeholder or uncompiled tests. The package suite passes on the Linux harness (236 tests).
 - Audit finding C5: remaining prompts, level lists, thresholds, and daily-plan coefficients moved to `Resources/Configuration`. The learner profile (level, goal, daily goal, audio speed) is recorded as not implemented; Settings and onboarding show placeholders.
 
 ## M0 — Implementation preparation
@@ -366,6 +367,7 @@ Complete these actions with every milestone or architectural change:
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 0.4.26 | 2026-10-13 | Recorded the audit item 1 fixes and reopened Feature 003 T025 and Feature 002 T035 (placeholder or uncompiled test deliverables). |
 | 0.4.25 | 2026-10-13 | Recorded Feature 004 T033 Phase A1 (package layer) and the session-scope fix; recorded audit finding C5 and the learner-profile gap. T033 stays open. |
 | 0.4.24 | 2026-10-13 | Recorded the 2026-10-13 project audit, stopped tracking the unreferenced 95.7 MiB third-party deck, corrected stale remote/package facts, moved Feature 004 progress notes into the snapshot section, and ordered this table by date. |
 | 0.4.23 | 2026-09-06 | Completed Feature 004 T012 with the versioned writing-evaluation rubric, 13 synthetic fixtures, six offline validation tests, malformed/uncertain safety checks, and iOS/macOS Debug build evidence; T013 remains open. |

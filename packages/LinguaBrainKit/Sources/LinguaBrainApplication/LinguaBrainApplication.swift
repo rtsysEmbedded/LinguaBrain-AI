@@ -30,7 +30,9 @@ public enum ProviderError: Error, Equatable, Sendable {
     case providerDisabled
     case unsupportedProtocol
     case healthCheckFailed(reason: String)
-    case keychain(OSStatus)
+    /// Keychain result code. `Int32` is the representation of Darwin's
+    /// `OSStatus`; the Application layer does not depend on Apple SDK types.
+    case keychain(Int32)
 
     public var localizedDescription: String {
         switch self {
