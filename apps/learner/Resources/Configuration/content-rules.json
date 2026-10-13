@@ -316,5 +316,25 @@
     "maximumNewCards": 20,
     "recoveryEnergyAtMost": 3.0,
     "challengeEnergyAtLeast": 8.0
+  },
+  "learnerProfile": {
+    "defaultTargetLevel": "B2",
+    "dailyGoalMinuteOptions": [
+      10,
+      20,
+      30,
+      60
+    ],
+    "defaultDailyGoalMinutes": 20,
+    "playbackRate": {
+      "minimum": 0.5,
+      "maximum": 1.5,
+      "step": 0.1,
+      "defaultValue": 1.0
+    }
+  },
+  "speech": {
+    "reviewPromptRate": 0.45,
+    "slowReplayFactor": 0.72
   }
 }

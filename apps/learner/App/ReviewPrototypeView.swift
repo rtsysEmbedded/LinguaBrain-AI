@@ -16,6 +16,7 @@ struct ReviewPrototypeView: View {
     let mode: PrototypeReviewMode
     @Environment(PrototypeStore.self) private var store
     @Environment(PrototypeLocalization.self) private var localization
+    @Environment(PrototypeLearnerProfile.self) private var learnerProfile
     @Environment(PrototypeLanguageSettings.self) private var languageSettings
     @State private var revealed = false
     @State private var queue: [UUID] = []
@@ -171,7 +172,7 @@ struct ReviewPrototypeView: View {
 
                 if let audio = store.pronunciationAudio(for: word) {
                     Button(localization.localized("media.playAudio"), systemImage: "play.circle.fill") {
-                        audioPlayer = try? AVAudioPlayer(data: audio)
+                        audioPlayer = learnerProfile.makeAudioPlayer(data: audio)
                         audioPlayer?.play()
                     }
                     .buttonStyle(.bordered)
@@ -683,6 +684,9 @@ struct ReviewPrototypeView: View {
 #Preview("Scheduled Review") {
     NavigationStack { ReviewPrototypeView() }
         .environment(PrototypeStore(inMemory: true))
+        .environment(PrototypeLocalization())
+        .environment(PrototypeLanguageSettings())
+        .environment(PrototypeLearnerProfile())
         .environment(\.layoutDirection, .rightToLeft)
         .tint(PrototypeTheme.accent)
 }
@@ -733,6 +737,7 @@ struct SkillPracticeView: View {
 
     @Environment(PrototypeStore.self) private var store
     @Environment(PrototypeLocalization.self) private var localization
+    @Environment(PrototypeLearnerProfile.self) private var learnerProfile
     @Environment(PrototypeLanguageSettings.self) private var languageSettings
     @State private var queue: [UUID] = []
     @State private var currentWordID: UUID?
@@ -1117,14 +1122,14 @@ struct SkillPracticeView: View {
     }
 
     private func playPrompt(for word: PrototypeWord) {
-        if let data = store.pronunciationAudio(for: word), let player = try? AVAudioPlayer(data: data) {
+        if let data = store.pronunciationAudio(for: word), let player = learnerProfile.makeAudioPlayer(data: data) {
             audioPlayer = player
             player.play()
             return
         }
         let utterance = AVSpeechUtterance(string: word.examples.first?.target ?? word.german)
         utterance.voice = AVSpeechSynthesisVoice(language: word.targetLanguageTag)
-        utterance.rate = 0.45
+        utterance.rate = learnerProfile.speechRate(base: Float(LearningContentRules.bundled.speech.reviewPromptRate))
         speechSynthesizer.stopSpeaking(at: .immediate)
         speechSynthesizer.speak(utterance)
     }

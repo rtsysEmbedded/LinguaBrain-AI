@@ -623,10 +623,8 @@
   "settings.pathSummary.title": "Your learning path",
   "settings.pathSummary.subtitle": "Settings that shape today's plan",
   "settings.pathSummary.targetLevel": "Target level",
-  "settings.pathSummary.targetLevelValue": "B2",
   "settings.pathSummary.dailyGoal": "Daily goal",
   "settings.pathSummary.mission": "Mission",
-  "settings.pathSummary.missionValue": "Germany",
   "settings.learning.dailyPlan": "Daily plan",
   "settings.learning.activeMission": "Active mission",
   "settings.learning.dailyReminder": "Daily reminder",
@@ -697,7 +695,6 @@
   "store.error.reviewRestore": "Restoring the review data failed: %@",
   "app.name": "LinguaBrain",
   "root.profile.placeholderName": "Saeid",
-  "root.profile.placeholderLevel": "Deutsch · B1",
   "common.retry": "Retry",
   "cutover.restoreBackup": "Restore retained backup",
   "cutover.sourceIntact": "The retained legacy source is intact; restore is not needed.",
@@ -763,5 +760,6 @@
   "settings.languages.mustDiffer": "Source and learning languages must be different.",
   "provider.audioModel": "Audio model",
   "wordDetail.contentReviewed": "I have checked the meaning and example translation",
-  "wordDetail.contentReviewed.detail": "Only checked examples are used in listening practice."
+  "wordDetail.contentReviewed.detail": "Only checked examples are used in listening practice.",
+  "root.profile.level": "%1$@ · %2$@"
 }

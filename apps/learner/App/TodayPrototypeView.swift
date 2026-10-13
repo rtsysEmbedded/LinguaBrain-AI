@@ -12,7 +12,10 @@ struct TodayPrototypeView: View {
     @Environment(PrototypeLocalization.self) private var localization
     @Environment(PrototypeLanguageSettings.self) private var languageSettings
     @State private var energy = LearningContentRules.bundled.dailyPlan.defaultEnergy
-    @State private var selectedTime = LearningContentRules.bundled.dailyPlan.defaultAvailableMinutes
+    // A new day starts from the learner's daily goal (Settings).
+    @State private var selectedTime = LearningContentRules.bundled.dailyPlan.availableMinutes(
+        forDailyGoal: PrototypeLearnerProfile.storedDailyGoalMinutes()
+    )
     @State private var motivation = LearningContentRules.bundled.dailyPlan.defaultMotivation
     @State private var selectedMode = LearningSessionMode.balanced.rawValue
     @State private var selectedDomain = Self.allDomains

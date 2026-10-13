@@ -623,10 +623,8 @@
   "settings.pathSummary.title": "خلاصهٔ مسیر شما",
   "settings.pathSummary.subtitle": "تنظیماتی که برنامهٔ امروز را شکل می‌دهند",
   "settings.pathSummary.targetLevel": "سطح هدف",
-  "settings.pathSummary.targetLevelValue": "B2",
   "settings.pathSummary.dailyGoal": "هدف روزانه",
   "settings.pathSummary.mission": "مأموریت",
-  "settings.pathSummary.missionValue": "آلمان",
   "settings.learning.dailyPlan": "برنامهٔ روزانه",
   "settings.learning.activeMission": "مأموریت فعال",
   "settings.learning.dailyReminder": "یادآوری روزانه",
@@ -697,7 +695,6 @@
   "store.error.reviewRestore": "بازیابی اطلاعات مرور انجام نشد: %@",
   "app.name": "LinguaBrain",
   "root.profile.placeholderName": "سعید",
-  "root.profile.placeholderLevel": "Deutsch · B1",
   "common.retry": "تلاش دوباره",
   "cutover.restoreBackup": "بازیابی نسخهٔ پشتیبان نگه‌داشته‌شده",
   "cutover.sourceIntact": "منبع قدیمی نگه‌داشته‌شده سالم است؛ نیازی به بازیابی نیست.",
@@ -763,5 +760,6 @@
   "settings.languages.mustDiffer": "زبان توضیحات و زبان یادگیری باید متفاوت باشند.",
   "provider.audioModel": "مدل صوتی",
   "wordDetail.contentReviewed": "معنی و ترجمهٔ مثال را بررسی کرده‌ام",
-  "wordDetail.contentReviewed.detail": "فقط مثال‌های بررسی‌شده در تمرین شنیداری استفاده می‌شوند."
+  "wordDetail.contentReviewed.detail": "فقط مثال‌های بررسی‌شده در تمرین شنیداری استفاده می‌شوند.",
+  "root.profile.level": "%1$@ · %2$@"
 }

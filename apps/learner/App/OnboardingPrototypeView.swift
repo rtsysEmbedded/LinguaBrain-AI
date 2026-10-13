@@ -4,6 +4,10 @@ struct OnboardingPrototypeView: View {
     private static let rules = LearningContentRules.bundled
 
     @Environment(PrototypeLocalization.self) private var localization
+    @Environment(PrototypeLanguageSettings.self) private var languageSettings
+    @Environment(PrototypeLearnerProfile.self) private var learnerProfile
+    @Environment(PrototypeStore.self) private var store
+    @Environment(\.dismiss) private var dismiss
     @State private var level = LearningContentRules.bundled.onboarding.defaultLevel
     @State private var mission = LearningContentRules.bundled.onboarding.defaultMissionKey
 
@@ -30,11 +34,11 @@ struct OnboardingPrototypeView: View {
 
                 PrototypeCard {
                     VStack(spacing: 18) {
-                        LabeledContent(localization.text(.explanationLanguage), value: PrototypeAppLanguage.persian.nativeName)
-                        LabeledContent(localization.text(.learningLanguage), value: PrototypeAppLanguage.german.nativeName)
+                        LabeledContent(localization.text(.explanationLanguage), value: languageName(languageSettings.sourceLanguageTag))
+                        LabeledContent(localization.text(.learningLanguage), value: languageName(languageSettings.targetLanguageTag))
                         Picker(localization.text(.currentLevel), selection: $level) {
                             ForEach(Self.rules.onboarding.levels, id: \.self) { level in
-                                Text(Self.rules.levels.cefr.contains(level) ? level : localization.localized("onboarding.level.\(level)"))
+                                Text(localization.levelName(level))
                             }
                         }
                         Picker(localization.localized("onboarding.goal"), selection: $mission) {
@@ -43,7 +47,7 @@ struct OnboardingPrototypeView: View {
                     }
                 }
 
-                Button(action: {}) {
+                Button(action: createPath) {
                     Text(localization.localized("onboarding.createPath"))
                         .font(.headline)
                         .frame(maxWidth: .infinity)
@@ -58,5 +62,22 @@ struct OnboardingPrototypeView: View {
         }
         .background(PrototypeBackground())
         .navigationTitle(localization.localized("onboarding.title"))
+        .onAppear {
+            level = learnerProfile.currentLevel
+            mission = store.activeMissionKey
+        }
     }
+
+    private func languageName(_ tag: String) -> String {
+        PrototypeAppLanguage(rawValue: tag)?.nativeName ?? tag
+    }
+
+    /// Saves the chosen level and goal as the learner profile.
+    private func createPath() {
+        learnerProfile.currentLevel = level
+        store.setActiveMissionKey(mission)
+        learnerProfile.onboardingCompleted = true
+        dismiss()
+    }
+
 }

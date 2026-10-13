@@ -6,6 +6,8 @@ import Security
 struct SettingsPrototypeView: View {
     @Environment(PrototypeLocalization.self) private var localization
     @Environment(PrototypeLanguageSettings.self) private var languageSettings
+    @Environment(PrototypeLearnerProfile.self) private var learnerProfile
+    @Environment(PrototypeStore.self) private var store
 
     var body: some View {
         ZStack {
@@ -21,7 +23,7 @@ struct SettingsPrototypeView: View {
                         items: [
                             .init(
                                 title: localization.text(.languagesAndLevel),
-                                detail: "\(languageName(languageSettings.sourceLanguageTag)) → \(languageName(languageSettings.targetLanguageTag)) · B1",
+                                detail: "\(languageName(languageSettings.sourceLanguageTag)) → \(languageName(languageSettings.targetLanguageTag)) · \(localization.levelName(learnerProfile.currentLevel))",
                                 symbol: "character.book.closed.fill", color: .blue, destination: .languages
                             ),
                             .init(title: customDomainsTitle, detail: customDomainsSubtitle, symbol: "square.grid.2x2", color: .purple, destination: .domains),
@@ -113,9 +115,9 @@ struct SettingsPrototypeView: View {
         VStack(alignment: .leading, spacing: 10) {
             SectionHeader(title: "settings.pathSummary.title", subtitle: "settings.pathSummary.subtitle")
             HStack(spacing: 10) {
-                MetricPill(value: "settings.pathSummary.targetLevelValue", label: "settings.pathSummary.targetLevel", symbol: "flag.checkered", color: PrototypeTheme.accent)
-                MetricPill(value: localization.minutesLong(20), label: "settings.pathSummary.dailyGoal", symbol: "clock.fill", color: .orange)
-                MetricPill(value: "settings.pathSummary.missionValue", label: "settings.pathSummary.mission", symbol: "briefcase.fill", color: PrototypeTheme.mint)
+                MetricPill(value: store.activeTargetLevel, label: "settings.pathSummary.targetLevel", symbol: "flag.checkered", color: PrototypeTheme.accent)
+                MetricPill(value: localization.minutesLong(learnerProfile.dailyGoalMinutes), label: "settings.pathSummary.dailyGoal", symbol: "clock.fill", color: .orange)
+                MetricPill(value: store.activeMissionKey, label: "settings.pathSummary.mission", symbol: "briefcase.fill", color: PrototypeTheme.mint)
             }
         }
     }
@@ -212,22 +214,22 @@ private enum SettingsSection {
 }
 
 private struct SettingsDetailPrototypeView: View {
-    private static let dailyGoalOptions = [10, 20, 30, 60]
+    private static let rules = LearningContentRules.bundled
 
     let section: SettingsSection
     @Environment(PrototypeLocalization.self) private var localization
     @Environment(PrototypeLanguageSettings.self) private var languageSettings
+    @Environment(PrototypeLearnerProfile.self) private var learnerProfile
     @Environment(PrototypeStore.self) private var store
     @Environment(PrototypeCloudBackupController.self) private var cloudBackup
-    @State private var dailyGoal = 20
     @State private var notifications = true
     @State private var offlineOnly = false
-    @State private var audioSpeed = 1.0
 
     var body: some View {
         Form {
             switch section {
             case .languages:
+                @Bindable var learnerProfile = learnerProfile
                 Section(localization.text(.languageSettings)) {
                     Picker(localization.text(.interfaceLanguage), selection: interfaceLanguageBinding) {
                         ForEach(PrototypeAppLanguage.allCases) { language in
@@ -244,8 +246,16 @@ private struct SettingsDetailPrototypeView: View {
                             Text(language.nativeName).tag(language.rawValue)
                         }
                     }
-                    LabeledContent(localization.text(.currentLevel), value: "B1")
-                    LabeledContent(localization.text(.targetLevel), value: "B2")
+                    Picker(localization.text(.currentLevel), selection: $learnerProfile.currentLevel) {
+                        ForEach(Self.rules.onboarding.levels, id: \.self) { level in
+                            Text(localization.levelName(level)).tag(level)
+                        }
+                    }
+                    Picker(localization.text(.targetLevel), selection: targetLevelBinding) {
+                        ForEach(Self.rules.levels.cefr, id: \.self) { level in
+                            Text(level).tag(level)
+                        }
+                    }
                     if !languageSettings.isValidPair {
                         Label(localization.localized("settings.languages.mustDiffer"), systemImage: "exclamationmark.triangle.fill")
                             .foregroundStyle(.orange)
@@ -254,13 +264,18 @@ private struct SettingsDetailPrototypeView: View {
             case .domains:
                 CustomDomainsSettingsContent()
             case .learning:
+                @Bindable var learnerProfile = learnerProfile
                 Section(localization.localized("settings.learning.dailyPlan")) {
-                    Picker(localization.localized("settings.pathSummary.dailyGoal"), selection: $dailyGoal) {
-                        ForEach(Self.dailyGoalOptions, id: \.self) { minutes in
+                    Picker(localization.localized("settings.pathSummary.dailyGoal"), selection: $learnerProfile.dailyGoalMinutes) {
+                        ForEach(Self.rules.learnerProfile.dailyGoalMinuteOptions, id: \.self) { minutes in
                             Text(localization.minutesLong(minutes)).tag(minutes)
                         }
                     }
-                    LabeledContent(localization.localized("settings.learning.activeMission"), value: localization.localized("onboarding.mission.work"))
+                    Picker(localization.localized("settings.learning.activeMission"), selection: missionBinding) {
+                        ForEach(Self.rules.onboarding.missionKeys, id: \.self) { key in
+                            Text(localization.localized(key)).tag(key)
+                        }
+                    }
                     Toggle(localization.localized("settings.learning.dailyReminder"), isOn: $notifications)
                 }
             case .review:
@@ -270,12 +285,14 @@ private struct SettingsDetailPrototypeView: View {
                     Toggle(localization.localized("settings.review.listening"), isOn: $notifications)
                 }
             case .audio:
+                @Bindable var learnerProfile = learnerProfile
+                let rate = Self.rules.learnerProfile.playbackRate
                 Section(localization.localized("settings.audio.playback")) {
                     LabeledContent(localization.localized("settings.audio.germanVoice"), value: localization.localized("settings.audio.voicePlaceholder"))
-                    Slider(value: $audioSpeed, in: 0.5...1.5, step: 0.1) {
+                    Slider(value: $learnerProfile.playbackRate, in: rate.minimum...rate.maximum, step: rate.step) {
                         Text(localization.localized("settings.audio.playbackSpeed"))
                     }
-                    LabeledContent(localization.localized("settings.audio.speed"), value: audioSpeed.formatted(.number.precision(.fractionLength(1))) + "×")
+                    LabeledContent(localization.localized("settings.audio.speed"), value: learnerProfile.playbackRate.formatted(.number.precision(.fractionLength(1))) + "×")
                 }
             case .ai:
                 ProviderMenuIndex()
@@ -344,6 +361,14 @@ private struct SettingsDetailPrototypeView: View {
 
     private var targetLanguageBinding: Binding<String> {
         Binding(get: { languageSettings.targetLanguageTag }, set: { languageSettings.selectTarget($0) })
+    }
+
+    private var targetLevelBinding: Binding<String> {
+        Binding(get: { store.activeTargetLevel }, set: { store.setActiveTargetLevel($0) })
+    }
+
+    private var missionBinding: Binding<String> {
+        Binding(get: { store.activeMissionKey }, set: { store.setActiveMissionKey($0) })
     }
 
     private var isCloudSyncBusy: Bool {
@@ -1594,6 +1619,12 @@ private struct ProviderStreamEnvelope: Decodable {
     NavigationStack {
         SettingsPrototypeView()
     }
+    .environment(PrototypeStore(inMemory: true))
+    .environment(PrototypeLocalization())
+    .environment(PrototypeLanguageSettings())
+    .environment(PrototypeLearnerProfile())
+    .environment(PrototypeAISettings())
+    .environment(PrototypeCloudBackupController())
     .environment(\.layoutDirection, .rightToLeft)
     .tint(PrototypeTheme.accent)
 }

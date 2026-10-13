@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		CB0000000000000000000009 /* LearnerProfileTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB0000000000000000000008 /* LearnerProfileTests.swift */; };
+		CB0000000000000000000007 /* LearnerProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB0000000000000000000005 /* LearnerProfile.swift */; };
+		CB0000000000000000000006 /* LearnerProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB0000000000000000000005 /* LearnerProfile.swift */; };
 		CB0000000000000000000004 /* CardContentReviewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB0000000000000000000003 /* CardContentReviewTests.swift */; };
 		CB0000000000000000000002 /* AnkiExportDocumentTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB0000000000000000000001 /* AnkiExportDocumentTests.swift */; };
 		CF000000000000000000001A /* seed-cards.json in Resources */ = {isa = PBXBuildFile; fileRef = CF0000000000000000000007 /* seed-cards.json */; };
@@ -117,6 +120,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		CB0000000000000000000008 /* LearnerProfileTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LearnerProfileTests.swift; sourceTree = "<group>"; };
+		CB0000000000000000000005 /* LearnerProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LearnerProfile.swift; sourceTree = "<group>"; };
 		CB0000000000000000000003 /* CardContentReviewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardContentReviewTests.swift; sourceTree = "<group>"; };
 		CB0000000000000000000001 /* AnkiExportDocumentTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnkiExportDocumentTests.swift; sourceTree = "<group>"; };
 		CF0000000000000000000007 /* seed-cards.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "seed-cards.json"; sourceTree = "<group>"; };
@@ -224,6 +229,7 @@
 		400000000000000000000002 /* App */ = {
 			isa = PBXGroup;
 			children = (
+				CB0000000000000000000005 /* LearnerProfile.swift */,
 				DEADBEEF0000000000000050 /* Practice */,
 				200000000000000000000001 /* LinguaBrainPrototypeApp.swift */,
 				20000000000000000000000F /* AppLocalization.swift */,
@@ -317,6 +323,7 @@
 		420000000000000000000001 /* Tests */ = {
 			isa = PBXGroup;
 			children = (
+				CB0000000000000000000008 /* LearnerProfileTests.swift */,
 				CB0000000000000000000003 /* CardContentReviewTests.swift */,
 				CB0000000000000000000001 /* AnkiExportDocumentTests.swift */,
 				220000000000000000000001 /* AnkiCoreRegressionTests.swift */,
@@ -555,6 +562,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				CB0000000000000000000006 /* LearnerProfile.swift in Sources */,
 				100000000000000000000001 /* LinguaBrainPrototypeApp.swift in Sources */,
 				10000000000000000000000D /* AppLocalization.swift in Sources */,
 				CF0000000000000000000011 /* AppConfiguration.swift in Sources */,
@@ -590,6 +598,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				CB0000000000000000000007 /* LearnerProfile.swift in Sources */,
 				110000000000000000000001 /* LinguaBrainPrototypeApp.swift in Sources */,
 				11000000000000000000000D /* AppLocalization.swift in Sources */,
 				CF0000000000000000000012 /* AppConfiguration.swift in Sources */,
@@ -625,6 +634,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				CB0000000000000000000009 /* LearnerProfileTests.swift in Sources */,
 				CB0000000000000000000004 /* CardContentReviewTests.swift in Sources */,
 				CB0000000000000000000002 /* AnkiExportDocumentTests.swift in Sources */,
 				120000000000000000000001 /* AnkiCoreRegressionTests.swift in Sources */,

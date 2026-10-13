@@ -1043,6 +1043,7 @@ private struct CardSpecPrototypeView: View {
 struct WordDetailPrototypeView: View {
     @Environment(PrototypeStore.self) private var store
     @Environment(PrototypeLocalization.self) private var localization
+    @Environment(PrototypeLearnerProfile.self) private var learnerProfile
     let word: PrototypeWord
     @State private var audioPlayer: AVAudioPlayer?
 
@@ -1068,7 +1069,7 @@ struct WordDetailPrototypeView: View {
                             Spacer()
                             if let audio = store.pronunciationAudio(for: word) {
                                 Button {
-                                    audioPlayer = try? AVAudioPlayer(data: audio)
+                                    audioPlayer = learnerProfile.makeAudioPlayer(data: audio)
                                     audioPlayer?.play()
                                 } label: { Image(systemName: "speaker.wave.2.fill") }
                             }

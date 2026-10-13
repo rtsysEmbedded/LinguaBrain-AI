@@ -22,6 +22,7 @@ struct AddWordPrototypeView: View {
     @Environment(PrototypeStore.self) private var store
     @Environment(PrototypeAISettings.self) private var aiSettings
     @Environment(PrototypeLocalization.self) private var localization
+    @Environment(PrototypeLearnerProfile.self) private var learnerProfile
     @Environment(PrototypeLanguageSettings.self) private var languageSettings
     @State private var word = LearningContentRules.bundled.addWord.initialWord
     @State private var domain = LearningContentRules.bundled.addWord.defaultTopic
@@ -1011,7 +1012,7 @@ struct AddWordPrototypeView: View {
                     .disabled(isGeneratingAudio || aiSettings.audioMode == .off)
                     if let generatedAudio {
                         Button(localization.localized("media.playAudio"), systemImage: "play.fill") {
-                            audioPlayer = try? AVAudioPlayer(data: generatedAudio)
+                            audioPlayer = learnerProfile.makeAudioPlayer(data: generatedAudio)
                             audioPlayer?.play()
                         }
                     }

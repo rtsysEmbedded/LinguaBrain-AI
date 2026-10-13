@@ -267,6 +267,12 @@ struct LearningContentRules: Decodable, Sendable {
         /// Energy at or above this value selects the challenge mode label.
         let challengeEnergyAtLeast: Double
 
+        /// Today's time choice derived from the learner's daily goal: the
+        /// largest option that does not exceed the goal.
+        func availableMinutes(forDailyGoal goal: Int) -> Int {
+            availableMinuteOptions.filter { $0 <= goal }.max() ?? availableMinuteOptions.min() ?? defaultAvailableMinutes
+        }
+
         /// New cards suggested for one session, before the unreviewed-card cap.
         func newCardCount(energy: Double, availableMinutes: Int, motivation: Int, modeRawValue: String) -> Int {
             let energyFactor = energyFactorBase + (energy / energyFactorDivisor)
@@ -300,6 +306,29 @@ struct LearningContentRules: Decodable, Sendable {
         let defaultExportFileName: String
     }
 
+    struct LearnerProfile: Decodable, Sendable {
+        struct PlaybackRate: Decodable, Sendable {
+            let minimum: Double
+            let maximum: Double
+            let step: Double
+            let defaultValue: Double
+        }
+
+        /// Target level shown until the learner chooses one.
+        let defaultTargetLevel: String
+        let dailyGoalMinuteOptions: [Int]
+        let defaultDailyGoalMinutes: Int
+        /// Multiplier applied to card audio and speech synthesis.
+        let playbackRate: PlaybackRate
+    }
+
+    struct Speech: Decodable, Sendable {
+        /// `AVSpeechUtterance.rate` for spoken review prompts at playback rate 1.
+        let reviewPromptRate: Double
+        /// Factor applied to the default speech rate for "play slowly".
+        let slowReplayFactor: Double
+    }
+
     struct SkillPractice: Decodable, Sendable {
         /// Session size when the daily new-card limit is 0 (unlimited).
         let cardLimitWithoutNewCardLimit: Int
@@ -321,6 +350,8 @@ struct LearningContentRules: Decodable, Sendable {
     let weakStrengthThreshold: Double
     let skillPractice: SkillPractice
     let dailyPlan: DailyPlan
+    let learnerProfile: LearnerProfile
+    let speech: Speech
 
     static let bundled = AppConfigurationResource.load(LearningContentRules.self, named: "content-rules")
 }

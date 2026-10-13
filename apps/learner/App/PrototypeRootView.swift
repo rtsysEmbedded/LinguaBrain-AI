@@ -12,6 +12,7 @@ struct PrototypeRootView: View {
     @State private var practiceComposition: PracticeComposition?
     @State private var localization: PrototypeLocalization
     @State private var languageSettings: PrototypeLanguageSettings
+    @State private var learnerProfile = PrototypeLearnerProfile()
 
     init(
         store: PrototypeStore = PrototypeStore(),
@@ -47,6 +48,7 @@ struct PrototypeRootView: View {
         .environment(cloudBackup)
         .environment(localization)
         .environment(languageSettings)
+        .environment(learnerProfile)
         .environment(\.locale, localization.language.locale)
         .environment(\.layoutDirection, localization.language.layoutDirection)
         .task { await cloudBackup.syncIfEnabled(store: store) }
@@ -73,6 +75,12 @@ struct PrototypeRootView: View {
     }
 
     #if os(macOS)
+    /// Learning language and current level, for example "Deutsch · B1".
+    private var profileLevelSummary: String {
+        let language = PrototypeAppLanguage(rawValue: languageSettings.targetLanguageTag)?.nativeName ?? languageSettings.targetLanguageTag
+        return localization.formatted("root.profile.level", language, localization.levelName(learnerProfile.currentLevel))
+    }
+
     private var desktopLayout: some View {
         NavigationSplitView {
             List(PrototypeSection.allCases, selection: $selection) { section in
@@ -92,7 +100,7 @@ struct PrototypeRootView: View {
                         }
                     VStack(alignment: .leading, spacing: 1) {
                         Text(localization.localized("root.profile.placeholderName")).font(.subheadline.weight(.semibold))
-                        Text(localization.localized("root.profile.placeholderLevel")).font(.caption).foregroundStyle(.secondary)
+                        Text(profileLevelSummary).font(.caption).foregroundStyle(.secondary)
                     }
                     Spacer()
                 }

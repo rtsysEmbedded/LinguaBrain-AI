@@ -62,6 +62,12 @@ final class PrototypeLocalization {
 
     /// Resolves a catalog entry and substitutes `%1$@`, `%2$@`, … or, when the
     /// entry has no positional markers, each `%@` in order.
+    /// A CEFR level as written, or the localized name of another level value
+    /// such as `beginner` (`onboarding.level.<value>`).
+    func levelName(_ level: String) -> String {
+        LearningContentRules.bundled.levels.cefr.contains(level) ? level : localized("onboarding.level.\(level)")
+    }
+
     func formatted(_ key: String, _ arguments: String...) -> String {
         Self.substitute(localized(key), arguments)
     }

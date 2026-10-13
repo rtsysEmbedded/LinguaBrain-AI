@@ -623,10 +623,8 @@
   "settings.pathSummary.title": "Dein Lernpfad",
   "settings.pathSummary.subtitle": "Einstellungen, die den heutigen Plan bestimmen",
   "settings.pathSummary.targetLevel": "Zielniveau",
-  "settings.pathSummary.targetLevelValue": "B2",
   "settings.pathSummary.dailyGoal": "Tagesziel",
   "settings.pathSummary.mission": "Mission",
-  "settings.pathSummary.missionValue": "Deutschland",
   "settings.learning.dailyPlan": "Tagesplan",
   "settings.learning.activeMission": "Aktive Mission",
   "settings.learning.dailyReminder": "Tägliche Erinnerung",
@@ -697,7 +695,6 @@
   "store.error.reviewRestore": "Die Wiederholungsdaten konnten nicht wiederhergestellt werden: %@",
   "app.name": "LinguaBrain",
   "root.profile.placeholderName": "Saeid",
-  "root.profile.placeholderLevel": "Deutsch · B1",
   "common.retry": "Erneut versuchen",
   "cutover.restoreBackup": "Aufbewahrte Sicherung wiederherstellen",
   "cutover.sourceIntact": "Die aufbewahrte Altquelle ist intakt; eine Wiederherstellung ist nicht nötig.",
@@ -763,5 +760,6 @@
   "settings.languages.mustDiffer": "Erklärungs- und Lernsprache müssen sich unterscheiden.",
   "provider.audioModel": "Audiomodell",
   "wordDetail.contentReviewed": "Bedeutung und Beispielübersetzung geprüft",
-  "wordDetail.contentReviewed.detail": "Nur geprüfte Beispiele werden im Hörtraining verwendet."
+  "wordDetail.contentReviewed.detail": "Nur geprüfte Beispiele werden im Hörtraining verwendet.",
+  "root.profile.level": "%1$@ · %2$@"
 }
