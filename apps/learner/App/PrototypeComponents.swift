@@ -105,7 +105,9 @@ struct LanguageText: View {
 struct SkillProgressRow: View {
     @Environment(PrototypeLocalization.self) private var localization
     let label: String
-    let value: Double
+    /// Mastery from 0 to 1, or `nil` when there is no evidence yet. `nil` is
+    /// shown as "no evidence yet", never as 0 %.
+    let value: Double?
     let color: Color
 
     var body: some View {
@@ -113,12 +115,19 @@ struct SkillProgressRow: View {
             HStack {
                 Text(localization.localized(label)).font(.subheadline.weight(.medium))
                 Spacer()
-                Text(value, format: .percent.precision(.fractionLength(0)))
-                    .font(.caption.monospacedDigit())
-                    .foregroundStyle(.secondary)
+                if let value {
+                    Text(value, format: .percent.precision(.fractionLength(0)))
+                        .font(.caption.monospacedDigit())
+                        .foregroundStyle(.secondary)
+                } else {
+                    Text(localization.localized("progress.skill.noEvidence"))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
             }
-            ProgressView(value: value)
+            ProgressView(value: value ?? 0)
                 .tint(color)
+                .opacity(value == nil ? 0.35 : 1)
         }
     }
 }
@@ -133,3 +142,24 @@ struct PrototypeBackground: View {
         .ignoresSafeArea()
     }
 }
+
+/// Action buttons in one row when they fit at their natural size, otherwise
+/// stacked, so long localized titles never wrap inside a button.
+struct PrototypeActionRow<Content: View>: View {
+    @ViewBuilder let content: () -> Content
+
+    var body: some View {
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: 10) { content() }
+            VStack(alignment: .leading, spacing: 10) { content() }
+        }
+    }
+}
+
+extension View {
+    /// One-line action title that shrinks slightly instead of wrapping.
+    func prototypeActionLabel() -> some View {
+        lineLimit(1).minimumScaleFactor(0.85)
+    }
+}
+

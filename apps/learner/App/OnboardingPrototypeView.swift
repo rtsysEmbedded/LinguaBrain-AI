@@ -1,8 +1,15 @@
 import SwiftUI
 
 struct OnboardingPrototypeView: View {
-    @State private var level = "B1"
-    @State private var mission = "کار در آلمان"
+    private static let rules = LearningContentRules.bundled
+
+    @Environment(PrototypeLocalization.self) private var localization
+    @Environment(PrototypeLanguageSettings.self) private var languageSettings
+    @Environment(PrototypeLearnerProfile.self) private var learnerProfile
+    @Environment(PrototypeStore.self) private var store
+    @Environment(\.dismiss) private var dismiss
+    @State private var level = LearningContentRules.bundled.onboarding.defaultLevel
+    @State private var mission = LearningContentRules.bundled.onboarding.defaultMissionKey
 
     var body: some View {
         ScrollView {
@@ -18,28 +25,30 @@ struct OnboardingPrototypeView: View {
                 .shadow(color: PrototypeTheme.accent.opacity(0.24), radius: 22, y: 10)
 
                 VStack(spacing: 8) {
-                    Text("به LinguaBrain خوش آمدی")
+                    Text(localization.localized("onboarding.welcome"))
                         .font(.largeTitle.bold())
-                    Text("مربی زبان شخصی که هر روز با تو سازگار می‌شود")
+                    Text(localization.localized("onboarding.tagline"))
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
                 }
 
                 PrototypeCard {
                     VStack(spacing: 18) {
-                        LabeledContent("زبان توضیحات", value: "فارسی")
-                        LabeledContent("زبان یادگیری", value: "Deutsch")
-                        Picker("سطح فعلی", selection: $level) {
-                            ForEach(["مبتدی", "A1", "A2", "B1", "B2"], id: \.self) { Text($0) }
+                        LabeledContent(localization.text(.explanationLanguage), value: languageName(languageSettings.sourceLanguageTag))
+                        LabeledContent(localization.text(.learningLanguage), value: languageName(languageSettings.targetLanguageTag))
+                        Picker(localization.text(.currentLevel), selection: $level) {
+                            ForEach(Self.rules.onboarding.levels, id: \.self) { level in
+                                Text(localization.levelName(level))
+                            }
                         }
-                        Picker("هدف", selection: $mission) {
-                            ForEach(["مکالمه روزمره", "کار در آلمان", "آزمون Goethe", "سفر"], id: \.self) { Text($0) }
+                        Picker(localization.localized("onboarding.goal"), selection: $mission) {
+                            ForEach(Self.rules.onboarding.missionKeys, id: \.self) { Text(localization.localized($0)) }
                         }
                     }
                 }
 
-                Button(action: {}) {
-                    Text("ساخت مسیر یادگیری من")
+                Button(action: createPath) {
+                    Text(localization.localized("onboarding.createPath"))
                         .font(.headline)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 12)
@@ -52,6 +61,23 @@ struct OnboardingPrototypeView: View {
             .frame(maxWidth: .infinity)
         }
         .background(PrototypeBackground())
-        .navigationTitle("راه‌اندازی")
+        .navigationTitle(localization.localized("onboarding.title"))
+        .onAppear {
+            level = learnerProfile.currentLevel
+            mission = store.activeMissionKey
+        }
     }
+
+    private func languageName(_ tag: String) -> String {
+        PrototypeAppLanguage(rawValue: tag)?.nativeName ?? tag
+    }
+
+    /// Saves the chosen level and goal as the learner profile.
+    private func createPath() {
+        learnerProfile.currentLevel = level
+        store.setActiveMissionKey(mission)
+        learnerProfile.onboardingCompleted = true
+        dismiss()
+    }
+
 }

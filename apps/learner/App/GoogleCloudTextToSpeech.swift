@@ -30,11 +30,11 @@ enum GoogleCloudTTSError: LocalizedError, Equatable {
 
     var errorDescription: String? {
         switch self {
-        case .missingAPIKey: "Google Cloud TTS API key is not configured."
-        case .emptyText: "Audio text cannot be empty."
-        case .quotaExceeded: "The configured monthly audio quota has been reached."
-        case .invalidResponse: "Google Cloud TTS returned an invalid audio response."
-        case .requestFailed(let status): "Google Cloud TTS request failed (HTTP \(status))."
+        case .missingAPIKey: PrototypeLocalization.current("tts.error.missingAPIKey")
+        case .emptyText: PrototypeLocalization.current("tts.error.emptyText")
+        case .quotaExceeded: PrototypeLocalization.current("tts.error.quotaExceeded")
+        case .invalidResponse: PrototypeLocalization.current("tts.error.invalidResponse")
+        case .requestFailed(let status): PrototypeLocalization.current("tts.error.requestFailed", "\(status)")
         }
     }
 }
@@ -50,7 +50,7 @@ struct GoogleCloudTextToSpeechClient: Sendable {
         self.session = session
     }
 
-    func synthesize(text: String, languageCode: String, voiceName: String? = nil, speakingRate: Double = 1.0) async throws -> Data {
+    func synthesize(text: String, languageCode: String, voiceName: String? = nil, speakingRate: Double = ProviderCatalog.bundled.googleNativeAudio.speakingRate) async throws -> Data {
         guard !apiKey.isEmpty else { throw GoogleCloudTTSError.missingAPIKey }
         guard !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { throw GoogleCloudTTSError.emptyText }
         var components = URLComponents(string: "\(baseURL)/text:synthesize")!
@@ -60,8 +60,8 @@ struct GoogleCloudTextToSpeechClient: Sendable {
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.httpBody = try JSONEncoder().encode(GoogleCloudTTSRequest(
             input: .init(text: text),
-            voice: .init(languageCode: languageCode, name: voiceName, ssmlGender: "NEUTRAL"),
-            audioConfig: .init(audioEncoding: "MP3", speakingRate: speakingRate)
+            voice: .init(languageCode: languageCode, name: voiceName, ssmlGender: ProviderCatalog.bundled.googleNativeAudio.ssmlGender),
+            audioConfig: .init(audioEncoding: ProviderCatalog.bundled.googleNativeAudio.audioEncoding, speakingRate: speakingRate)
         ))
         let (data, response) = try await session.data(for: request)
         guard let http = response as? HTTPURLResponse, (200..<300).contains(http.statusCode) else {
@@ -119,7 +119,8 @@ struct OpenAIMediaClient: Sendable {
         request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.httpBody = try JSONSerialization.data(withJSONObject: [
-            "model": model, "input": text, "voice": voice, "response_format": "mp3"
+            "model": model, "input": text, "voice": voice,
+            "response_format": ProviderCatalog.bundled.openAICompatibleAudio.responseFormat
         ])
         let (data, response) = try await session.data(for: request)
         guard let http = response as? HTTPURLResponse, (200..<300).contains(http.statusCode), !data.isEmpty else {
@@ -133,8 +134,9 @@ struct OpenAIMediaClient: Sendable {
         request.httpMethod = "POST"
         request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        let generation = ProviderCatalog.bundled.imageGeneration
         request.httpBody = try JSONSerialization.data(withJSONObject: [
-            "model": model, "prompt": prompt, "size": "1024x1024", "n": 1, "response_format": "b64_json"
+            "model": model, "prompt": prompt, "size": generation.size, "n": generation.count, "response_format": generation.responseFormat
         ])
         let (data, response) = try await session.data(for: request)
         guard let http = response as? HTTPURLResponse, (200..<300).contains(http.statusCode) else {

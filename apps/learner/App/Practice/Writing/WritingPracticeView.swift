@@ -41,15 +41,29 @@ struct WritingPracticeView: View {
                     Text("\(descriptor.partOfSpeech) · \(descriptor.cefrLevel)")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
-                    Text(descriptor.allowedContext)
-                        .font(.body)
+                    Text(localization.localized("practice.writing.meaning"))
+                        .font(.headline)
+                        .padding(.top, 4)
+                    LanguageText(text: descriptor.allowedContext, languageTag: descriptor.exercise.sourceLanguage)
                         .lineSpacing(4)
                 }
             },
             answerEntry: { binding in
                 TextEditor(text: binding)
+                    .scrollContentBackground(.hidden)
                     .frame(minHeight: 120)
                     .padding(8)
+                    .background(Color.primary.opacity(0.05), in: RoundedRectangle(cornerRadius: 12))
+                    .overlay(alignment: .topLeading) {
+                        if binding.wrappedValue.isEmpty {
+                            Text(localization.formatted("practice.writing.answerPlaceholder", descriptor.targetWord))
+                                .foregroundStyle(.secondary)
+                                .padding(.horizontal, 13)
+                                .padding(.vertical, 16)
+                                .allowsHitTesting(false)
+                                .accessibilityHidden(true)
+                        }
+                    }
                     .overlay(RoundedRectangle(cornerRadius: 12).stroke(.secondary.opacity(0.35)))
                     .accessibilityLabel(localization.localized("practice.writing.answerLabel"))
             },

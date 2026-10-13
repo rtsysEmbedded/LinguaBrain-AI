@@ -24,7 +24,7 @@ struct ListeningPracticeView: View {
             }
                 .accessibilityElement(children: .contain)
         }, answerEntry: { binding in
-            TextEditor(text: binding).frame(minHeight: 130).padding(8).overlay(RoundedRectangle(cornerRadius: 12).stroke(.secondary.opacity(0.35))).accessibilityLabel("Meaning in your own words")
+            TextEditor(text: binding).frame(minHeight: 130).padding(8).overlay(RoundedRectangle(cornerRadius: 12).stroke(.secondary.opacity(0.35))).accessibilityLabel(localization.localized("practice.listening.answerAccessibility"))
         }, revealedContent: {
             VStack(alignment: .leading, spacing: 8) { Text(sentence.text).textSelection(.enabled); Text(sentence.translation).foregroundStyle(.secondary).textSelection(.enabled) }
         })

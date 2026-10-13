@@ -14,6 +14,9 @@ enum ExportFormat: String, CaseIterable {
 }
 
 struct LibraryPrototypeView: View {
+    /// Rows rendered at once; review sessions still use the full collection.
+    private static let displayLimit = 250
+
     @Environment(PrototypeStore.self) private var store
     @Environment(PrototypeLocalization.self) private var localization
     @Environment(PrototypeLanguageSettings.self) private var languageSettings
@@ -68,7 +71,7 @@ struct LibraryPrototypeView: View {
             // defensively before applying a live search to imported data.
             guard seenIDs.insert(word.id).inserted else { return false }
             let matchesSearch = needle.isEmpty || normalizedSearchText(for: word.german).contains(needle) || normalizedSearchText(for: word.persian).contains(needle)
-            let matchesFilter = filter == "all" || (filter == "weak" && store.reviewCount(for: word) > 0 && store.strength(for: word) < 0.5) || filter == word.level || filter == word.domain
+            let matchesFilter = filter == "all" || (filter == "weak" && store.reviewCount(for: word) > 0 && store.strength(for: word) < LearningContentRules.bundled.weakStrengthThreshold) || filter == word.level || filter == word.domain
             return matchesSearch && matchesFilter
         }
     }
@@ -81,43 +84,23 @@ struct LibraryPrototypeView: View {
             .trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
-    private enum SelectionCopy { case selectCards, cancel, selectAll, export, delete }
+    private enum SelectionCopy: String { case selectCards, cancel, selectAll, export, delete }
 
     private func selectionCopy(_ key: SelectionCopy) -> String {
-        switch (localization.language, key) {
-        case (.english, .selectCards): "Select cards"
-        case (.english, .cancel): "Cancel selection"
-        case (.english, .selectAll): "Select all"
-        case (.english, .export): "Export selected"
-        case (.english, .delete): "Delete selected"
-        case (.german, .selectCards): "Karten auswählen"
-        case (.german, .cancel): "Auswahl aufheben"
-        case (.german, .selectAll): "Alle auswählen"
-        case (.german, .export): "Auswahl exportieren"
-        case (.german, .delete): "Auswahl löschen"
-        case (.persian, .selectCards): "انتخاب کارت‌ها"
-        case (.persian, .cancel): "لغو انتخاب"
-        case (.persian, .selectAll): "انتخاب همه"
-        case (.persian, .export): "خروجی انتخاب‌شده‌ها"
-        case (.persian, .delete): "حذف انتخاب‌شده‌ها"
-        }
+        localization.localized("library.selection.\(key.rawValue)")
     }
 
     private func selectionCountCopy(_ count: Int) -> String {
-        switch localization.language {
-        case .english: "\(count) cards selected"
-        case .german: "\(count) Karten ausgewählt"
-        case .persian: "\(count) کارت انتخاب شده"
-        }
+        localization.formatted("library.selection.count", "\(count)")
     }
 
     var body: some View {
         AnyView(ScrollView {
             VStack(alignment: .leading, spacing: 18) {
                 HStack(spacing: 12) {
-                    MetricPill(value: "\(activeWords.count)", label: "واژه", symbol: "textformat.abc", color: PrototypeTheme.accent)
-                    MetricPill(value: "\(store.weakCount(in: activeWords))", label: "ضعیف", symbol: "exclamationmark.triangle.fill", color: .orange)
-                    MetricPill(value: "\(store.reviewedCount(in: activeWords))", label: "مرور شده", symbol: "bolt.fill", color: PrototypeTheme.mint)
+                    MetricPill(value: "\(activeWords.count)", label: "library.metric.words", symbol: "textformat.abc", color: PrototypeTheme.accent)
+                    MetricPill(value: "\(store.weakCount(in: activeWords))", label: "library.metric.weak", symbol: "exclamationmark.triangle.fill", color: .orange)
+                    MetricPill(value: "\(store.reviewedCount(in: activeWords))", label: "library.metric.reviewed", symbol: "bolt.fill", color: PrototypeTheme.mint)
                 }
 
 
@@ -136,9 +119,9 @@ struct LibraryPrototypeView: View {
                                 .frame(width: 48, height: 48)
                                 .background(PrototypeTheme.heroGradient, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
                             VStack(alignment: .leading, spacing: 4) {
-                                Text("گالری کارت‌های MVP")
+                                Text(localization.localized("library.gallery.title"))
                                     .font(.headline)
-                                Text("۱۰ کارت پایه را پیش از نهایی‌کردن گرافیک بررسی کن")
+                                Text(localization.localized("library.gallery.subtitle"))
                                     .font(.subheadline)
                                     .foregroundStyle(.secondary)
                             }
@@ -157,7 +140,7 @@ struct LibraryPrototypeView: View {
                 // terminate the app while the search controller updates. Keep
                 // the same filtering behaviour with a regular field until that
                 // beta issue is resolved.
-                TextField("جست‌وجوی فارسی یا آلمانی", text: $searchText)
+                TextField(localization.localized("library.search.prompt"), text: $searchText)
                     .textFieldStyle(.roundedBorder)
                     .textInputAutocapitalization(.never)
                     .autocorrectionDisabled()
@@ -216,7 +199,7 @@ struct LibraryPrototypeView: View {
                 LazyVStack(spacing: 12) {
                     // Keep the prototype library responsive for large imports;
                     // review sessions still use the full persisted collection.
-                    ForEach(Array(filteredWords.prefix(250))) { word in
+                    ForEach(Array(filteredWords.prefix(Self.displayLimit))) { word in
                         if isSelectingCards {
                             Button {
                                 toggleSelection(for: word)
@@ -229,7 +212,7 @@ struct LibraryPrototypeView: View {
                                 }
                             }
                             .buttonStyle(.plain)
-                            .accessibilityLabel("انتخاب \(word.german)")
+                            .accessibilityLabel(localization.formatted("library.selection.selectWordAccessibility", word.german))
                         } else {
                             NavigationLink {
                                 WordDetailPrototypeView(word: word)
@@ -240,8 +223,12 @@ struct LibraryPrototypeView: View {
                         }
                     }
                 }
-                if filteredWords.count > 250 {
-                    Text("نمایش ۲۵۰ کارت اول از \(filteredWords.count) کارت؛ برای مرور از جلسهٔ امروز استفاده کن.")
+                if filteredWords.count > Self.displayLimit {
+                    Text(localization.formatted(
+                        "library.listLimited",
+                        Self.displayLimit.formatted(.number.locale(localization.language.locale)),
+                        "\(filteredWords.count)"
+                    ))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .frame(maxWidth: .infinity)
@@ -253,24 +240,24 @@ struct LibraryPrototypeView: View {
         })
         .onAppear { customDomains = PrototypeDomainCatalog.customDomains }
         .background(PrototypeBackground())
-        .navigationTitle("کتابخانه")
+        .navigationTitle(localization.localized("library.title"))
         #if os(macOS)
-        .searchable(text: $searchText, prompt: "جست‌وجوی فارسی یا آلمانی")
+        .searchable(text: $searchText, prompt: localization.localized("library.search.prompt"))
         #endif
         .confirmationDialog(
-            "حذف فایل Anki؟",
+            localization.localized("library.package.deleteTitle"),
             isPresented: deletionConfirmationBinding,
             titleVisibility: .visible,
             presenting: packagePendingDeletion
         ) { package in
-            Button("حذف \(package.fileName) و \(package.cardCount) کارت", role: .destructive) {
+            Button(localization.formatted("library.package.deleteAction", package.fileName, "\(package.cardCount)"), role: .destructive) {
                 deletePackage(package)
             }
-            Button("انصراف", role: .cancel) {
+            Button(localization.localized("common.cancel"), role: .cancel) {
                 packagePendingDeletion = nil
             }
         } message: { package in
-            Text("کارت‌های واردشده از این فایل و تاریخچهٔ مرور وابسته به آن‌ها از دیتابیس LinguaBrain حذف می‌شوند. این کار فایل اصلی روی دستگاه را پاک نمی‌کند.")
+            Text(localization.localized("library.package.deleteMessage"))
         }
         .confirmationDialog(
             deleteTitle,
@@ -284,10 +271,10 @@ struct LibraryPrototypeView: View {
         } message: {
             Text(deleteMessage)
         }
-        .alert("حذف انجام نشد", isPresented: deletionErrorBinding) {
-            Button("باشه", role: .cancel) { deletionError = nil }
+        .alert(localization.localized("library.deleteFailed"), isPresented: deletionErrorBinding) {
+            Button(localization.localized("common.ok"), role: .cancel) { deletionError = nil }
         } message: {
-            Text(deletionError ?? "خطای ناشناخته")
+            Text(deletionError ?? localization.localized("common.unknownError"))
         }
         .fileExporter(isPresented: apkgExportBinding, document: exportAPKGDocument, contentType: AnkiExportDocument.apkg, defaultFilename: "linguabrain-export.apkg") { result in
                 switch result {
@@ -345,23 +332,19 @@ struct LibraryPrototypeView: View {
     }
 
     private var deleteTitle: String {
-        switch localization.language { case .english: "Delete \(selectedCardIDs.count) cards?"; case .german: "\(selectedCardIDs.count) Karten löschen?"; case .persian: "حذف \(selectedCardIDs.count) کارت؟" }
+        localization.formatted("library.cards.deleteTitle", "\(selectedCardIDs.count)")
     }
     private var deleteAction: String {
-        switch localization.language { case .english: "Delete cards and related data"; case .german: "Karten und zugehörige Daten löschen"; case .persian: "حذف کارت‌ها و همهٔ داده‌های وابسته" }
+        localization.localized("library.cards.deleteAction")
     }
-    private var cancelAction: String { localization.language == .english ? "Cancel" : localization.language == .german ? "Abbrechen" : "انصراف" }
+    private var cancelAction: String { localization.localized("common.cancel") }
     private var deleteMessage: String {
-        switch localization.language { case .english: "Cards, saved audio and images, review history, learning state, and related events will be permanently deleted."; case .german: "Karten, Medien, Lernverlauf und zugehörige Ereignisse werden dauerhaft gelöscht."; case .persian: "کارت‌ها، صدای تلفظ و تصویر ذخیره‌شده، تاریخچهٔ مرور و داده‌های وابسته حذف می‌شوند. این کار قابل بازگردانی نیست." }
+        localization.localized("library.cards.deleteMessage")
     }
 
-    private enum FilterCopy { case title, all, weak }
+    private enum FilterCopy: String { case title, all, weak }
     private func filterLabel(_ key: FilterCopy) -> String {
-        switch (localization.language, key) {
-        case (.english, .title): "Filter"; case (.english, .all): "All"; case (.english, .weak): "Weak"
-        case (.german, .title): "Filter"; case (.german, .all): "Alle"; case (.german, .weak): "Schwach"
-        case (.persian, .title): "فیلتر"; case (.persian, .all): "همه"; case (.persian, .weak): "ضعیف"
-        }
+        localization.localized("library.filter.\(key.rawValue)")
     }
 
     private var apkgExportBinding: Binding<Bool> {
@@ -384,7 +367,7 @@ struct LibraryPrototypeView: View {
                 Text(localization.localized("export.title")).font(.headline)
                 Text(localization.localized("export.subtitle")).font(.caption).foregroundStyle(.secondary)
 
-                Picker("Export Format", selection: $exportFormat) {
+                Picker(localization.localized("export.formatPicker"), selection: $exportFormat) {
                     Text(localization.localized("export.format.tsv")).tag(ExportFormat.tsv)
                     Text(localization.localized("export.format.apkg")).tag(ExportFormat.apkg)
                 }
@@ -414,7 +397,7 @@ struct LibraryPrototypeView: View {
 
     private var importedPackagesSection: some View {
         VStack(alignment: .leading, spacing: 10) {
-            SectionHeader(title: "فایل‌های Anki واردشده", subtitle: "مدیریت داده‌های اضافه‌شده به LinguaBrain")
+            SectionHeader(title: "library.packages.title", subtitle: "library.packages.subtitle")
             PrototypeCard {
                 VStack(spacing: 0) {
                     ForEach(Array(store.importedPackages.enumerated()), id: \.element.id) { index, package in
@@ -426,7 +409,7 @@ struct LibraryPrototypeView: View {
                                 .background(PrototypeTheme.accent.opacity(0.1), in: RoundedRectangle(cornerRadius: 10))
                             VStack(alignment: .leading, spacing: 3) {
                                 Text(package.fileName).font(.headline)
-                                Text("\(package.cardCount) کارت")
+                                Text(localization.formatted("library.packages.cardCount", "\(package.cardCount)"))
                                     .font(.caption)
                                     .foregroundStyle(.secondary)
                             }
@@ -434,7 +417,7 @@ struct LibraryPrototypeView: View {
                             Button(role: .destructive) {
                                 packagePendingDeletion = package
                             } label: {
-                                Label("حذف", systemImage: "trash")
+                                Label(localization.localized("common.delete"), systemImage: "trash")
                             }
                             .buttonStyle(.bordered)
                         }
@@ -522,7 +505,7 @@ struct LibraryPrototypeView: View {
                     .font(.caption2).foregroundStyle(PrototypeTheme.accent)
                     ProgressView(value: store.strength(for: word))
                         .frame(width: 72)
-                        .tint(store.strength(for: word) < 0.5 ? .orange : PrototypeTheme.mint)
+                        .tint(store.strength(for: word) < LearningContentRules.bundled.weakStrengthThreshold ? .orange : PrototypeTheme.mint)
                 }
                 Image(systemName: "chevron.left").font(.caption).foregroundStyle(.tertiary)
             }
@@ -774,35 +757,8 @@ private enum MVPCardKind: String, CaseIterable, Identifiable {
 
     var id: Self { self }
 
-    var title: String {
-        switch self {
-        case .word: "کارت واژه"
-        case .noun: "کارت اسم"
-        case .verb: "کارت فعل"
-        case .recognition: "مرور تشخیصی"
-        case .reverseTranslation: "ترجمهٔ معکوس"
-        case .cloze: "جای‌خالی"
-        case .listening: "شنیداری"
-        case .feedback: "نتیجه و بازخورد"
-        case .dailyPlan: "برنامهٔ امروز"
-        case .mastery: "وضعیت یادگیری"
-        }
-    }
-
-    var purpose: String {
-        switch self {
-        case .word: "معنی، تلفظ، مثال و زمینه"
-        case .noun: "Artikel، جمع و کاربرد اسمی"
-        case .verb: "صرف‌ها، Perfekt و الگوی کاربرد"
-        case .recognition: "تشخیص معنی آلمانی به فارسی"
-        case .reverseTranslation: "یادآوری فعال فارسی به آلمانی"
-        case .cloze: "انتخاب واژه در بافت جمله"
-        case .listening: "تشخیص واژه یا جمله از صدا"
-        case .feedback: "خطای مشخص و فرصت اصلاح"
-        case .dailyPlan: "ترکیب مرور، واژهٔ جدید و مهارت"
-        case .mastery: "نمایش تسلط مستقل هر مهارت"
-        }
-    }
+    var titleKey: String { "gallery.kind.\(rawValue).title" }
+    var purposeKey: String { "gallery.kind.\(rawValue).purpose" }
 
     var symbol: String {
         switch self {
@@ -837,8 +793,8 @@ struct CardGalleryPrototypeView: View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: 16) {
                 SectionHeader(
-                    title: "حداقل کارت‌های نسخهٔ اول",
-                    subtitle: "این گالری برای بررسی محتوا و تعامل است؛ رنگ و گرافیک هنوز نهایی نیست."
+                    title: "gallery.header.title",
+                    subtitle: "gallery.header.subtitle"
                 )
 
                 ForEach(MVPCardKind.allCases) { kind in
@@ -853,8 +809,8 @@ struct CardGalleryPrototypeView: View {
                                     .frame(width: 44, height: 44)
                                     .background(kind.color.opacity(0.12), in: RoundedRectangle(cornerRadius: 13, style: .continuous))
                                 VStack(alignment: .leading, spacing: 4) {
-                                    Text(localization.localized(kind.title)).font(.headline)
-                                    Text(localization.localized(kind.purpose)).font(.subheadline).foregroundStyle(.secondary)
+                                    Text(localization.localized(kind.titleKey)).font(.headline)
+                                    Text(localization.localized(kind.purposeKey)).font(.subheadline).foregroundStyle(.secondary)
                                 }
                                 Spacer()
                                 Image(systemName: "chevron.left").font(.caption.bold()).foregroundStyle(.tertiary)
@@ -869,7 +825,7 @@ struct CardGalleryPrototypeView: View {
             .frame(maxWidth: .infinity)
         }
         .background(PrototypeBackground())
-        .navigationTitle("گالری کارت‌ها")
+        .navigationTitle(localization.localized("gallery.title"))
     }
 }
 
@@ -883,11 +839,11 @@ private struct CardSpecPrototypeView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
                 HStack(spacing: 10) {
-                    Label(kind.title, systemImage: kind.symbol)
+                    Label(localization.localized(kind.titleKey), systemImage: kind.symbol)
                         .font(.headline)
                         .foregroundStyle(kind.color)
                     Spacer()
-                    Text("نمونهٔ محتوایی")
+                    Text(localization.localized("gallery.contentSample"))
                         .font(.caption.weight(.semibold))
                         .padding(.horizontal, 10)
                         .padding(.vertical, 5)
@@ -898,9 +854,9 @@ private struct CardSpecPrototypeView: View {
 
                 PrototypeCard {
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("هدف این کارت").font(.headline)
-                        Text(localization.localized(kind.purpose)).foregroundStyle(.secondary)
-                        Text("در بازبینی، وضوح سؤال، اطلاعات ضروری، پاسخ مورد انتظار و بازخورد را بررسی می‌کنیم؛ تزئینات بصری بعداً نهایی می‌شوند.")
+                        Text(localization.localized("gallery.cardPurpose")).font(.headline)
+                        Text(localization.localized(kind.purposeKey)).foregroundStyle(.secondary)
+                        Text(localization.localized("gallery.reviewNote"))
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
                     }
@@ -911,7 +867,7 @@ private struct CardSpecPrototypeView: View {
             .frame(maxWidth: .infinity)
         }
         .background(PrototypeBackground())
-        .navigationTitle(kind.title)
+        .navigationTitle(localization.localized(kind.titleKey))
     }
 
     @ViewBuilder
@@ -919,49 +875,65 @@ private struct CardSpecPrototypeView: View {
         switch kind {
         case .word:
             learningCard {
-                cardHeader(level: "B1", type: "Adjektiv")
-                GermanText(text: "zuverlässig", font: .largeTitle.weight(.bold))
-                Text("قابل اعتماد").font(.title3)
+                cardHeader(level: text("gallery.target.level.b1"), type: text("gallery.target.partOfSpeech.adjective"))
+                GermanText(text: text("gallery.target.word"), font: .largeTitle.weight(.bold))
+                Text(text("gallery.sample.word.meaning")).font(.title3)
                 Divider()
-                GermanText(text: "Sie ist eine sehr zuverlässige Kollegin.", font: .headline)
-                Text("او همکار بسیار قابل اعتمادی است.").foregroundStyle(.secondary)
+                GermanText(text: text("gallery.target.wordExample"), font: .headline)
+                Text(text("gallery.sample.word.exampleTranslation")).foregroundStyle(.secondary)
             }
         case .noun:
             learningCard {
-                cardHeader(level: "B1", type: "Nomen")
-                GermanText(text: "die Entscheidung", font: .largeTitle.weight(.bold))
-                Text("تصمیم").font(.title3)
+                cardHeader(level: text("gallery.target.level.b1"), type: text("gallery.target.partOfSpeech.noun"))
+                GermanText(text: text("gallery.target.noun"), font: .largeTitle.weight(.bold))
+                Text(text("gallery.sample.noun.meaning")).font(.title3)
                 Divider()
-                factRow("Artikel", "die")
-                factRow("Plural", "die Entscheidungen")
-                factRow("ترکیب رایج", "eine Entscheidung treffen")
+                factRow(text("gallery.target.label.article"), text("gallery.target.article"))
+                factRow(text("gallery.target.label.plural"), text("gallery.target.plural"))
+                factRow(text("gallery.sample.commonCollocation"), text("gallery.target.collocation"))
             }
         case .verb:
             learningCard {
-                cardHeader(level: "A1", type: "Verb")
-                GermanText(text: "arbeiten", font: .largeTitle.weight(.bold))
-                Text("کار کردن").font(.title3)
+                cardHeader(level: text("gallery.target.level.a1"), type: text("gallery.target.partOfSpeech.verb"))
+                GermanText(text: text("gallery.target.verb"), font: .largeTitle.weight(.bold))
+                Text(text("gallery.sample.verb.meaning")).font(.title3)
                 Divider()
-                factRow("Präsens", "er arbeitet")
-                factRow("Präteritum", "arbeitete")
-                factRow("Perfekt", "hat gearbeitet")
+                factRow(text("gallery.target.label.present"), text("gallery.target.present"))
+                factRow(text("gallery.target.label.preterite"), text("gallery.target.preterite"))
+                factRow(text("gallery.target.label.perfect"), text("gallery.target.perfect"))
             }
         case .recognition:
-            questionCard(prompt: "arbeiten", instruction: "معنی این واژه چیست؟", answers: ["کار کردن", "خرید کردن", "منتظر ماندن"])
+            questionCard(
+                prompt: text("gallery.target.verb"),
+                instruction: text("gallery.sample.recognition.instruction"),
+                answers: [
+                    text("gallery.sample.recognition.answer1"),
+                    text("gallery.sample.recognition.answer2"),
+                    text("gallery.sample.recognition.answer3")
+                ]
+            )
         case .reverseTranslation:
             learningCard {
-                Text("واژهٔ آلمانی را به یاد بیاور").font(.subheadline).foregroundStyle(.secondary)
-                Text("تصمیم گرفتن").font(.largeTitle.weight(.bold))
+                Text(text("gallery.sample.reverse.instruction")).font(.subheadline).foregroundStyle(.secondary)
+                Text(text("gallery.sample.reverse.prompt")).font(.largeTitle.weight(.bold))
                 Divider()
-                Button(isRevealed ? "entscheiden" : "نمایش پاسخ") { isRevealed = true }
+                Button(isRevealed ? text("gallery.target.reverseAnswer") : text("gallery.sample.revealAnswer")) { isRevealed = true }
                     .buttonStyle(.borderedProminent)
                     .frame(maxWidth: .infinity)
             }
         case .cloze:
-            questionCard(prompt: "Ich ___ heute von zu Hause.", instruction: "جای خالی را کامل کن", answers: ["arbeite", "arbeitest", "arbeitet"])
+            questionCard(
+                prompt: text("gallery.target.cloze"),
+                instruction: text("gallery.sample.cloze.instruction"),
+                answers: [
+                    text("gallery.target.cloze.answer1"),
+                    text("gallery.target.cloze.answer2"),
+                    text("gallery.target.cloze.answer3")
+                ]
+            )
         case .listening:
             learningCard {
-                Text("گوش بده و پاسخ مناسب را انتخاب کن").font(.headline)
+                Text(text("gallery.sample.listening.instruction")).font(.headline)
                 Button(action: {}) {
                     Image(systemName: "play.fill")
                         .font(.title)
@@ -970,34 +942,46 @@ private struct CardSpecPrototypeView: View {
                         .background(PrototypeTheme.blue.gradient, in: Circle())
                 }
                 .frame(maxWidth: .infinity)
-                Text("پخش با سرعت عادی · امکان تکرار").font(.caption).foregroundStyle(.secondary).frame(maxWidth: .infinity)
+                Text(text("gallery.sample.listening.hint")).font(.caption).foregroundStyle(.secondary).frame(maxWidth: .infinity)
             }
         case .feedback:
             learningCard {
-                Label("تقریباً درست بود", systemImage: "exclamationmark.circle.fill")
+                Label(text("gallery.sample.feedback.title"), systemImage: "exclamationmark.circle.fill")
                     .font(.title3.weight(.bold))
                     .foregroundStyle(.orange)
-                GermanText(text: "Ich arbeite heute.", font: .title2.weight(.semibold))
-                Text("فعل درست بود؛ فقط صرف فعل باید با فاعل «ich» هماهنگ شود.").foregroundStyle(.secondary)
-                Button("یک‌بار دیگر امتحان کن") { }.buttonStyle(.borderedProminent)
+                GermanText(text: text("gallery.target.feedbackSentence"), font: .title2.weight(.semibold))
+                Text(text("gallery.sample.feedback.explanation")).foregroundStyle(.secondary)
+                Button(text("gallery.sample.feedback.retry")) { }.buttonStyle(.borderedProminent)
             }
         case .dailyPlan:
             learningCard {
-                Text("برنامهٔ امروز · ۲۰ دقیقه").font(.title2.weight(.bold))
-                planRow("مرور نزدیک فراموشی", "۸ دقیقه", "arrow.clockwise", PrototypeTheme.accent)
-                planRow("۵ واژهٔ جدید", "۵ دقیقه", "plus.circle.fill", PrototypeTheme.pink)
-                planRow("شنیداری محیط کار", "۷ دقیقه", "ear.fill", PrototypeTheme.blue)
-                Button("شروع جلسه") { }.buttonStyle(.borderedProminent).frame(maxWidth: .infinity)
+                Text(localization.formatted("gallery.sample.plan.title", minutes(20))).font(.title2.weight(.bold))
+                planRow(text("gallery.sample.plan.review"), minutes(8), "arrow.clockwise", PrototypeTheme.accent)
+                planRow(localization.formatted("gallery.sample.plan.new", number(5)), minutes(5), "plus.circle.fill", PrototypeTheme.pink)
+                planRow(text("gallery.sample.plan.listening"), minutes(7), "ear.fill", PrototypeTheme.blue)
+                Button(text("gallery.sample.plan.start")) { }.buttonStyle(.borderedProminent).frame(maxWidth: .infinity)
             }
         case .mastery:
             learningCard {
-                GermanText(text: "arbeiten", font: .title.weight(.bold))
-                SkillProgressRow(label: "تشخیص", value: 0.92, color: PrototypeTheme.mint)
-                SkillProgressRow(label: "یادآوری", value: 0.68, color: PrototypeTheme.accent)
-                SkillProgressRow(label: "شنیداری", value: 0.54, color: PrototypeTheme.blue)
-                SkillProgressRow(label: "تولید", value: 0.36, color: .orange)
+                GermanText(text: text("gallery.target.verb"), font: .title.weight(.bold))
+                SkillProgressRow(label: "gallery.sample.mastery.recognition", value: 0.92, color: PrototypeTheme.mint)
+                SkillProgressRow(label: "gallery.sample.mastery.recall", value: 0.68, color: PrototypeTheme.accent)
+                SkillProgressRow(label: "progress.skill.listening", value: 0.54, color: PrototypeTheme.blue)
+                SkillProgressRow(label: "gallery.sample.mastery.production", value: 0.36, color: .orange)
             }
         }
+    }
+
+    private func text(_ key: String) -> String {
+        localization.localized(key)
+    }
+
+    private func number(_ value: Int) -> String {
+        value.formatted(.number.locale(localization.language.locale))
+    }
+
+    private func minutes(_ value: Int) -> String {
+        localization.minutesLong(value)
     }
 
     private func learningCard<Content: View>(@ViewBuilder content: () -> Content) -> some View {
@@ -1058,6 +1042,8 @@ private struct CardSpecPrototypeView: View {
 
 struct WordDetailPrototypeView: View {
     @Environment(PrototypeStore.self) private var store
+    @Environment(PrototypeLocalization.self) private var localization
+    @Environment(PrototypeLearnerProfile.self) private var learnerProfile
     let word: PrototypeWord
     @State private var audioPlayer: AVAudioPlayer?
 
@@ -1083,7 +1069,7 @@ struct WordDetailPrototypeView: View {
                             Spacer()
                             if let audio = store.pronunciationAudio(for: word) {
                                 Button {
-                                    audioPlayer = try? AVAudioPlayer(data: audio)
+                                    audioPlayer = learnerProfile.makeAudioPlayer(data: audio)
                                     audioPlayer?.play()
                                 } label: { Image(systemName: "speaker.wave.2.fill") }
                             }
@@ -1113,16 +1099,28 @@ struct WordDetailPrototypeView: View {
 
                 PrototypeCard {
                     VStack(alignment: .leading, spacing: 10) {
-                        Text("مثال").font(.headline)
+                        Text(localization.localized("wordDetail.example")).font(.headline)
                         LanguageText(text: word.example, languageTag: word.targetLanguageTag, font: .title3)
                         LanguageText(text: word.exampleTranslation, languageTag: word.sourceLanguageTag, color: .secondary)
+                        Divider()
+                        Toggle(isOn: Binding(
+                            get: { store.isContentReviewed(word) },
+                            set: { store.setContentReviewed($0, for: word) }
+                        )) {
+                            VStack(alignment: .leading, spacing: 3) {
+                                Text(localization.localized("wordDetail.contentReviewed"))
+                                Text(localization.localized("wordDetail.contentReviewed.detail"))
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
                     }
                 }
 
                 if !word.senses.isEmpty {
                     PrototypeCard {
                         VStack(alignment: .leading, spacing: 14) {
-                            Text("Independent meanings and usage").font(.headline)
+                            Text(localization.localized("wordDetail.independentSenses")).font(.headline)
                             ForEach(Array(word.senses.enumerated()), id: \.offset) { index, sense in
                                 VStack(alignment: .leading, spacing: 5) {
                                     LanguageText(text: "\(index + 1). \(sense.meaning)", languageTag: word.sourceLanguageTag, font: .headline)
@@ -1145,9 +1143,9 @@ struct WordDetailPrototypeView: View {
 
                 PrototypeCard {
                     VStack(alignment: .leading, spacing: 14) {
-                        Text("شبکه واژگان").font(.headline)
+                        Text(localization.localized("wordDetail.wordNetwork")).font(.headline)
                         if relatedWords.isEmpty {
-                            Text("هنوز واژهٔ مرتبطی در کتابخانه پیدا نشد.")
+                            Text(localization.localized("wordDetail.noRelated"))
                                 .font(.subheadline)
                                 .foregroundStyle(.secondary)
                         } else {

@@ -15,10 +15,13 @@ actor AppleSentencePlayback: PracticeSentencePlayback {
     private let synthesizer = AVSpeechSynthesizer()
     private let locale: String
     private let voiceIdentifier: String?
+    /// The learner's playback rate (Settings); 1 is the system default.
+    private let rateMultiplier: Float
 
-    init(locale: String, voiceIdentifier: String? = nil) {
+    init(locale: String, voiceIdentifier: String? = nil, rateMultiplier: Double = 1) {
         self.locale = locale
         self.voiceIdentifier = voiceIdentifier
+        self.rateMultiplier = Float(rateMultiplier)
     }
 
     func sentenceAudio(for sentence: Sentence) async throws -> MediaAsset {
@@ -29,17 +32,22 @@ actor AppleSentencePlayback: PracticeSentencePlayback {
         guard Locale(identifier: locale).language.languageCode != nil else {
             throw AppleSentencePlaybackError.invalidLocale
         }
-        try speak(sentence, rate: AVSpeechUtteranceDefaultSpeechRate)
+        try speak(sentence, rate: scaled(AVSpeechUtteranceDefaultSpeechRate))
         return asset(for: sentence)
     }
 
     func replay(_ sentence: Sentence, slowly: Bool) throws {
-        let rate = slowly ? max(AVSpeechUtteranceMinimumSpeechRate, AVSpeechUtteranceDefaultSpeechRate * 0.72) : AVSpeechUtteranceDefaultSpeechRate
-        try speak(sentence, rate: rate)
+        let slowFactor = Float(LearningContentRules.bundled.speech.slowReplayFactor)
+        let rate = slowly ? AVSpeechUtteranceDefaultSpeechRate * slowFactor : AVSpeechUtteranceDefaultSpeechRate
+        try speak(sentence, rate: scaled(rate))
     }
 
     func stop() {
         synthesizer.stopSpeaking(at: .immediate)
+    }
+
+    private func scaled(_ rate: Float) -> Float {
+        min(max(rate * rateMultiplier, AVSpeechUtteranceMinimumSpeechRate), AVSpeechUtteranceMaximumSpeechRate)
     }
 
     private func speak(_ sentence: Sentence, rate: Float) throws {
@@ -58,15 +66,22 @@ actor AppleSentencePlayback: PracticeSentencePlayback {
         synthesizer.speak(utterance)
     }
 
-    private func asset(for sentence: Sentence) -> MediaAsset {
+    /// Identifies the audio of one sentence revision for a locale and voice.
+    /// The listening evaluator recomputes it to bind feedback to the exact
+    /// audio the learner heard.
+    static func checksum(for sentence: Sentence, locale: String, voiceIdentifier: String?) -> String {
         var checksum: UInt64 = 0xcbf29ce484222325
         for byte in "\(sentence.id.uuidString)|\(sentence.revision)|\(sentence.text)|\(locale)|\(voiceIdentifier ?? "system")".utf8 {
             checksum = (checksum ^ UInt64(byte)) &* 0x100000001b3
         }
-        return MediaAsset(
+        return String(checksum, radix: 16)
+    }
+
+    private func asset(for sentence: Sentence) -> MediaAsset {
+        MediaAsset(
             kind: .audio,
             locale: locale,
-            checksum: String(checksum, radix: 16),
+            checksum: Self.checksum(for: sentence, locale: locale, voiceIdentifier: voiceIdentifier),
             provider: "apple-system",
             model: voiceIdentifier ?? "system-voice",
             cacheReference: nil,

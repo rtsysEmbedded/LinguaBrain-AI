@@ -14,6 +14,8 @@ work_items:
 
 # ADR-013: Initial AI Provider Strategy
 
+> **Implementation note (2026-10-13):** `CHANGELOG.md` records that tasks T021/T022 replaced the OpenRouter-specific boundary with a generic OpenAI-compatible endpoint/protocol/model configuration whose defaults use OpenAI, and states that OpenRouter remains selectable by endpoint URL. No superseding ADR ratifies that change. The current app also overwrites a stored OpenRouter endpoint with the OpenAI endpoint at launch ([audit finding A3](../docs/PROJECT_AUDIT_2026-10-13.md)), so OpenRouter is not selectable in practice. The Product Owner must either amend this decision or restore OpenRouter selection.
+
 ## Context
 
 LinguaBrain needs optional AI card enrichment for German–Persian content while

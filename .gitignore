@@ -49,6 +49,10 @@ htmlcov/
 *.log
 .n8n/
 
+# Third-party Anki decks are local test inputs only: they are large and their
+# redistribution license is unknown. Keep them outside version control.
+/assets/German_Top_4000_vocabulary.apkg
+
 # Private/generated experiment inputs and exports
 /experiments/vocabulary-mvp/*.csv
 /experiments/vocabulary-mvp/*.xlsx
@@ -76,8 +80,3 @@ xcuserdata/
 # Generated documentation output
 site/
 build/
-DerivedData/
-.build/
-.swiftpm/
-*.xcodeproj/
--Xcc/

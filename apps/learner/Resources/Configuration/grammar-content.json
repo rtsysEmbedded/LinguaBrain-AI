@@ -1,0 +1,283 @@
+{
+  "schemaVersion": 1,
+  "rules": [
+    {
+      "code": "de.word_order.verb_final",
+      "category": "word_order",
+      "targetLanguage": "de",
+      "grammaticalRole": "main_verb_position"
+    },
+    {
+      "code": "de.verb.inflection",
+      "category": "inflection",
+      "targetLanguage": "de",
+      "grammaticalRole": "verb_agreement"
+    },
+    {
+      "code": "de.article.case",
+      "category": "article_case",
+      "targetLanguage": "de",
+      "grammaticalRole": "determiner_case"
+    },
+    {
+      "code": "de.conjunction.weil",
+      "category": "conjunction",
+      "targetLanguage": "de",
+      "grammaticalRole": "subordinate_conjunction"
+    },
+    {
+      "code": "de.preposition.case",
+      "category": "preposition",
+      "targetLanguage": "de",
+      "grammaticalRole": "preposition_case"
+    }
+  ],
+  "templates": [
+    {
+      "id": "de-verb-final-dass-001",
+      "reviewStatus": "pendingReview",
+      "draftedBy": "assistant",
+      "reviewedBy": null,
+      "reviewedAt": null,
+      "sourceLanguage": "fa",
+      "targetLanguage": "de",
+      "cefrLevel": "A2",
+      "mode": "explainError",
+      "ruleCode": "de.word_order.verb_final",
+      "grammaticalRole": "main_verb_position",
+      "prompt": "Ich weiß, dass er kommt morgen.",
+      "referenceAnswer": "Ich weiß, dass er morgen kommt.",
+      "referenceExplanation": "dass یک جملهٔ وابسته می‌سازد. در جملهٔ وابستهٔ آلمانی، فعل صرف‌شده (kommt) در آخر جمله می‌آید؛ بنابراین morgen باید پیش از kommt بیاید.",
+      "demonstration": null,
+      "clozeScaffold": null,
+      "hints": [
+        "حرف ربط dass را پیدا کنید.",
+        "جای فعل صرف‌شده در جملهٔ وابسته کجاست؟"
+      ],
+      "errorSpan": "kommt morgen",
+      "issueCount": 1,
+      "isAmbiguous": false
+    },
+    {
+      "id": "de-verb-final-dass-002",
+      "reviewStatus": "pendingReview",
+      "draftedBy": "assistant",
+      "reviewedBy": null,
+      "reviewedAt": null,
+      "sourceLanguage": "fa",
+      "targetLanguage": "de",
+      "cefrLevel": "A2",
+      "mode": "explainUsage",
+      "ruleCode": "de.word_order.verb_final",
+      "grammaticalRole": "main_verb_position",
+      "prompt": "Sie sagt, dass sie heute keine Zeit hat.",
+      "referenceAnswer": "Sie sagt, dass sie heute keine Zeit hat.",
+      "referenceExplanation": "بعد از dass جملهٔ وابسته شروع می‌شود و فعل صرف‌شده (hat) به آخر آن می‌رود. در جملهٔ اصلی (Sie sagt) فعل در جایگاه دوم است.",
+      "demonstration": "Ich glaube, dass du recht hast.",
+      "clozeScaffold": null,
+      "hints": [
+        "فعل صرف‌شدهٔ جملهٔ دوم کدام است؟"
+      ],
+      "errorSpan": null,
+      "issueCount": 1,
+      "isAmbiguous": false
+    },
+    {
+      "id": "de-verb-inflection-er-001",
+      "reviewStatus": "pendingReview",
+      "draftedBy": "assistant",
+      "reviewedBy": null,
+      "reviewedAt": null,
+      "sourceLanguage": "fa",
+      "targetLanguage": "de",
+      "cefrLevel": "A1",
+      "mode": "explainError",
+      "ruleCode": "de.verb.inflection",
+      "grammaticalRole": "verb_agreement",
+      "prompt": "Er kommen aus Deutschland.",
+      "referenceAnswer": "Er kommt aus Deutschland.",
+      "referenceExplanation": "فعل با فاعل مطابقت می‌کند. برای er، sie و es در زمان حال، ریشهٔ فعل پسوند ‎-t می‌گیرد: komm + t = kommt. شکل kommen برای wir، sie (جمع) و Sie است.",
+      "demonstration": null,
+      "clozeScaffold": null,
+      "hints": [
+        "فاعل جمله کیست؟",
+        "صرف فعل kommen برای سوم‌شخص مفرد چیست؟"
+      ],
+      "errorSpan": "kommen",
+      "issueCount": 1,
+      "isAmbiguous": false
+    },
+    {
+      "id": "de-verb-inflection-wir-002",
+      "reviewStatus": "pendingReview",
+      "draftedBy": "assistant",
+      "reviewedBy": null,
+      "reviewedAt": null,
+      "sourceLanguage": "fa",
+      "targetLanguage": "de",
+      "cefrLevel": "A1",
+      "mode": "explainUsage",
+      "ruleCode": "de.verb.inflection",
+      "grammaticalRole": "verb_agreement",
+      "prompt": "Wir wohnen seit zwei Jahren in Berlin.",
+      "referenceAnswer": "Wir wohnen seit zwei Jahren in Berlin.",
+      "referenceExplanation": "فاعل wir اول‌شخص جمع است و فعل در زمان حال با پسوند ‎-en صرف می‌شود: wohn + en = wohnen.",
+      "demonstration": "Ich wohne in Berlin. Du wohnst in Wien.",
+      "clozeScaffold": null,
+      "hints": [
+        "فاعل را با شکل فعل مقایسه کنید."
+      ],
+      "errorSpan": null,
+      "issueCount": 1,
+      "isAmbiguous": false
+    },
+    {
+      "id": "de-article-case-akk-001",
+      "reviewStatus": "pendingReview",
+      "draftedBy": "assistant",
+      "reviewedBy": null,
+      "reviewedAt": null,
+      "sourceLanguage": "fa",
+      "targetLanguage": "de",
+      "cefrLevel": "A2",
+      "mode": "explainError",
+      "ruleCode": "de.article.case",
+      "grammaticalRole": "determiner_case",
+      "prompt": "Ich sehe der Mann im Park.",
+      "referenceAnswer": "Ich sehe den Mann im Park.",
+      "referenceExplanation": "sehen مفعول مستقیم می‌گیرد و مفعول مستقیم در حالت Akkusativ است. حرف تعریف مذکر der در Akkusativ به den تبدیل می‌شود؛ حرف تعریف مؤنث (die) و خنثی (das) در Akkusativ تغییر نمی‌کنند.",
+      "demonstration": null,
+      "clozeScaffold": null,
+      "hints": [
+        "مفعول مستقیم جمله کدام است؟",
+        "Mann مذکر است."
+      ],
+      "errorSpan": "der Mann",
+      "issueCount": 1,
+      "isAmbiguous": false
+    },
+    {
+      "id": "de-article-case-dat-002",
+      "reviewStatus": "pendingReview",
+      "draftedBy": "assistant",
+      "reviewedBy": null,
+      "reviewedAt": null,
+      "sourceLanguage": "fa",
+      "targetLanguage": "de",
+      "cefrLevel": "A2",
+      "mode": "explainUsage",
+      "ruleCode": "de.article.case",
+      "grammaticalRole": "determiner_case",
+      "prompt": "Ich gebe dem Kind einen Ball.",
+      "referenceAnswer": "Ich gebe dem Kind einen Ball.",
+      "referenceExplanation": "geben دو مفعول دارد: کسی که چیزی دریافت می‌کند در Dativ است (dem Kind) و خودِ آن چیز در Akkusativ (einen Ball). das Kind خنثی است و در Dativ به dem Kind تبدیل می‌شود؛ der Ball مذکر است و ein در Akkusativ مذکر به einen تبدیل می‌شود.",
+      "demonstration": null,
+      "clozeScaffold": null,
+      "hints": [
+        "چه کسی چیزی را دریافت می‌کند؟",
+        "چه چیزی داده می‌شود؟"
+      ],
+      "errorSpan": null,
+      "issueCount": 1,
+      "isAmbiguous": false
+    },
+    {
+      "id": "de-weil-001",
+      "reviewStatus": "pendingReview",
+      "draftedBy": "assistant",
+      "reviewedBy": null,
+      "reviewedAt": null,
+      "sourceLanguage": "fa",
+      "targetLanguage": "de",
+      "cefrLevel": "A2",
+      "mode": "explainError",
+      "ruleCode": "de.conjunction.weil",
+      "grammaticalRole": "subordinate_conjunction",
+      "prompt": "Ich bleibe zu Hause, weil ich bin krank.",
+      "referenceAnswer": "Ich bleibe zu Hause, weil ich krank bin.",
+      "referenceExplanation": "weil حرف ربط وابسته‌ساز است. در جمله‌ای که با weil شروع می‌شود، فعل صرف‌شده (bin) به آخر جمله می‌رود.",
+      "demonstration": null,
+      "clozeScaffold": null,
+      "hints": [
+        "بعد از weil جملهٔ وابسته می‌آید.",
+        "فعل صرف‌شده را پیدا کنید."
+      ],
+      "errorSpan": "bin krank",
+      "issueCount": 1,
+      "isAmbiguous": false
+    },
+    {
+      "id": "de-weil-002",
+      "reviewStatus": "pendingReview",
+      "draftedBy": "assistant",
+      "reviewedBy": null,
+      "reviewedAt": null,
+      "sourceLanguage": "fa",
+      "targetLanguage": "de",
+      "cefrLevel": "B1",
+      "mode": "explainUsage",
+      "ruleCode": "de.conjunction.weil",
+      "grammaticalRole": "subordinate_conjunction",
+      "prompt": "Ich lerne Deutsch, weil ich in Wien studieren will.",
+      "referenceAnswer": "Ich lerne Deutsch, weil ich in Wien studieren will.",
+      "referenceExplanation": "در جملهٔ وابسته با weil، فعل صرف‌شده (will) در آخر می‌آید و مصدر (studieren) درست پیش از آن قرار می‌گیرد.",
+      "demonstration": "Er kommt nicht, weil er arbeiten muss.",
+      "clozeScaffold": null,
+      "hints": [
+        "در جملهٔ weil دو فعل هست؛ کدام صرف شده است؟"
+      ],
+      "errorSpan": null,
+      "issueCount": 1,
+      "isAmbiguous": false
+    },
+    {
+      "id": "de-preposition-mit-001",
+      "reviewStatus": "pendingReview",
+      "draftedBy": "assistant",
+      "reviewedBy": null,
+      "reviewedAt": null,
+      "sourceLanguage": "fa",
+      "targetLanguage": "de",
+      "cefrLevel": "A2",
+      "mode": "explainError",
+      "ruleCode": "de.preposition.case",
+      "grammaticalRole": "preposition_case",
+      "prompt": "Ich fahre mit der Bus zur Arbeit.",
+      "referenceAnswer": "Ich fahre mit dem Bus zur Arbeit.",
+      "referenceExplanation": "حرف اضافهٔ mit همیشه Dativ می‌گیرد. der Bus مذکر است و حرف تعریف مذکر در Dativ dem است: mit dem Bus.",
+      "demonstration": null,
+      "clozeScaffold": null,
+      "hints": [
+        "mit با کدام حالت می‌آید؟",
+        "جنس Bus چیست؟"
+      ],
+      "errorSpan": "der Bus",
+      "issueCount": 1,
+      "isAmbiguous": false
+    },
+    {
+      "id": "de-preposition-fuer-002",
+      "reviewStatus": "pendingReview",
+      "draftedBy": "assistant",
+      "reviewedBy": null,
+      "reviewedAt": null,
+      "sourceLanguage": "fa",
+      "targetLanguage": "de",
+      "cefrLevel": "A2",
+      "mode": "explainUsage",
+      "ruleCode": "de.preposition.case",
+      "grammaticalRole": "preposition_case",
+      "prompt": "Das Geschenk ist für meinen Bruder.",
+      "referenceAnswer": "Das Geschenk ist für meinen Bruder.",
+      "referenceExplanation": "حرف اضافهٔ für همیشه Akkusativ می‌گیرد. der Bruder مذکر است و mein در Akkusativ مذکر به meinen تبدیل می‌شود.",
+      "demonstration": "Ich kaufe Blumen für meine Mutter.",
+      "clozeScaffold": null,
+      "hints": [
+        "für با کدام حالت می‌آید؟"
+      ],
+      "errorSpan": null,
+      "issueCount": 1,
+      "isAmbiguous": false
+    }
+  ]
+}

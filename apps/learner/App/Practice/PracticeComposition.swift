@@ -1,7 +1,6 @@
 import Foundation
 import LinguaBrainApplication
 import LinguaBrainDomain
-import SwiftUI
 
 /// The narrow application boundary consumed by the Feature 004 presentation
 /// model.  The app composition supplies the concrete implementation; views
@@ -26,16 +25,26 @@ extension PracticeSessionService: PracticeSessionUseCases {}
 /// for production adapters and deterministic test compositions alike.
 struct PracticeComposition: Sendable {
     let session: any PracticeSessionUseCases
+    /// Repository the exercise catalog and Progress read from. `nil` in
+    /// compositions that only drive a session (for example, view tests).
+    let content: (any PracticeRepository & PracticeProgressReading)?
+    let clock: any PracticeClock
+    /// Skills for which `session` routes answers to a real evaluator.
+    let gradedSkills: Set<PracticeSkill>
 
-    init(session: any PracticeSessionUseCases) {
+    init(session: any PracticeSessionUseCases, clock: any PracticeClock = SystemPracticeClock()) {
         self.session = session
+        self.content = nil
+        self.clock = clock
+        self.gradedSkills = []
     }
 
     init(
-        repository: any PracticeRepository,
+        repository: any PracticeRepository & PracticeProgressReading,
         evaluator: any PracticeEvaluator,
         clock: any PracticeClock,
         scheduler: any PracticeFSRSScheduler,
+        gradedSkills: Set<PracticeSkill> = [],
         maximumAttempts: Int = 4
     ) {
         self.session = PracticeSessionService(
@@ -45,6 +54,9 @@ struct PracticeComposition: Sendable {
             scheduler: scheduler,
             maximumAttempts: maximumAttempts
         )
+        self.content = repository
+        self.clock = clock
+        self.gradedSkills = gradedSkills
     }
 
     @MainActor
@@ -72,75 +84,5 @@ struct UnavailablePracticeEvaluator: PracticeEvaluator, Sendable {
             reviewUnitID: exercise.reviewUnit.id,
             sentenceRevision: exercise.reviewUnit.sentenceRevision
         )
-    }
-}
-
-/// The shared boundary can be placed in a route before a story-specific
-/// exercise factory exists. It only presents the Feature 004 session when a
-/// real exercise was supplied. Otherwise it retains the route's established
-/// practice surface, rather than presenting an empty queue that the learner
-/// has no way to populate.
-struct PracticeSessionBoundaryView<LegacyContent: View>: View {
-    let composition: PracticeComposition?
-    let exercise: ExerciseInstance?
-    private let legacyContent: LegacyContent
-
-    init(
-        composition: PracticeComposition?,
-        exercise: ExerciseInstance?,
-        @ViewBuilder legacyContent: () -> LegacyContent
-    ) {
-        self.composition = composition
-        self.exercise = exercise
-        self.legacyContent = legacyContent()
-    }
-
-    var body: some View {
-        if let composition, let exercise {
-            PracticeSessionStateBoundaryView(
-                model: composition.makeSessionModel(),
-                exercise: exercise
-            )
-        } else {
-            legacyContent
-        }
-    }
-}
-
-private struct PracticeSessionStateBoundaryView: View {
-    @State private var model: PracticeSessionModel
-    @Environment(PrototypeLocalization.self) private var localization
-    let exercise: ExerciseInstance?
-
-    var body: some View {
-        PracticeScaffold(
-            model: model,
-            titleKey: "practice.shared.title",
-            instructionKey: "practice.shared.instruction",
-            descriptionKey: "practice.shared.description",
-            answerLanguageTag: exercise?.targetLanguage,
-            promptContent: {
-                Text(exercise?.prompt ?? "")
-            },
-            answerEntry: { binding in
-                TextField(localization.localized("practice.shared.answerPlaceholder"), text: binding, axis: .vertical)
-                    .lineLimit(3...8)
-                    .textFieldStyle(.roundedBorder)
-            },
-            revealedContent: {
-                if let exercise {
-                    Text(exercise.prompt)
-                } else {
-                    Text("")
-                }
-            }
-        )
-        .task(id: exercise?.id) { await model.load(exercise: exercise) }
-        .onDisappear { model.cancel() }
-    }
-
-    init(model: PracticeSessionModel, exercise: ExerciseInstance?) {
-        _model = State(initialValue: model)
-        self.exercise = exercise
     }
 }

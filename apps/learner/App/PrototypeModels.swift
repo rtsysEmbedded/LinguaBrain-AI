@@ -79,6 +79,10 @@ final class PrototypeCardRecord {
     var exampleTranslation: String
     var examplesJSON: String = "[]"
     var sensesJSON: String = "[]"
+    // SwiftData schema defaults for stores created before these attributes
+    // existed. They belong to the persisted schema, so they stay literal and
+    // must equal the `defaults` in content-rules.json; neither may change
+    // after release (see Resources/Configuration/README.md).
     var domain: String = "عمومی"
     var createdAt: Date
     var sourceIdentifier: String?
@@ -91,12 +95,19 @@ final class PrototypeCardRecord {
     @Attribute(.externalStorage) var illustrationImage: Data?
     var illustrationImageFilename: String?
     var illustrationImageAssetID: UUID?
+    /// Whether a person reviewed the card's meaning and example translation:
+    /// built-in seed content, a card approved in the single-card preview, or
+    /// a card the learner marked as reviewed. Batch-generated and imported
+    /// cards start unreviewed. Only reviewed examples are used as listening
+    /// material (Feature 004 T033). Schema default for older stores.
+    var contentReviewed: Bool = false
 
     init(
         word: PrototypeWord,
         deckID: UUID,
         position: Int,
         createdAt: Date = .now,
+        contentReviewed: Bool = false,
         sourceIdentifier: String? = nil,
         sourcePackage: String? = nil,
         pronunciationAudio: Data? = nil,
@@ -130,6 +141,7 @@ final class PrototypeCardRecord {
         self.illustrationImage = illustrationImage
         self.illustrationImageFilename = illustrationImageFilename
         self.illustrationImageAssetID = illustrationImageAssetID
+        self.contentReviewed = contentReviewed
     }
 
     var word: PrototypeWord {
@@ -326,14 +338,6 @@ struct PrototypeFSRSSchedule: Equatable {
     let scheduledDays: Double
     let elapsedDays: Double
     let isShortTerm: Bool
-
-    var intervalLabel: String {
-        let seconds = max(0, dueAt.timeIntervalSince(state.lastReview))
-        if seconds < 60 { return "کمتر از ۱ دقیقه" }
-        if seconds < 3_600 { return "\(Int((seconds / 60).rounded())) دقیقه" }
-        if seconds < 86_400 { return "\(Int((seconds / 3_600).rounded())) ساعت" }
-        return "\(Int((seconds / 86_400).rounded())) روز"
-    }
 }
 
 /// Deterministic FSRS-6 scheduler using the canonical 21 default parameters.
@@ -538,11 +542,7 @@ enum PrototypeSection: String, CaseIterable, Identifiable, Hashable {
 
     func title(for language: PrototypeAppLanguage) -> String {
         if self == .utilities {
-            return switch language {
-            case .persian: "ابزارها"
-            case .german: "Werkzeuge"
-            case .english: "Utilities"
-        }
+            return PrototypeLocalization.localized("utilities.title", language: language)
         }
         let key: PrototypeTextKey = switch self {
         case .today: .today
@@ -593,9 +593,9 @@ struct PrototypeWord: Identifiable, Hashable, Sendable {
         exampleTranslation: String,
         examples: [PrototypeExample] = [],
         senses: [PrototypeSense] = [],
-        domain: String = "عمومی",
-        sourceLanguageTag: String = "fa",
-        targetLanguageTag: String = "de"
+        domain: String = LearningContentRules.bundled.defaults.domain,
+        sourceLanguageTag: String = LearningContentRules.bundled.defaults.sourceLanguageTag,
+        targetLanguageTag: String = LearningContentRules.bundled.defaults.targetLanguageTag
     ) {
         self.id = id
         self.german = german
@@ -617,20 +617,11 @@ struct PrototypeWord: Identifiable, Hashable, Sendable {
 /// carry a topic field. Explicit APKG topics always win; this fallback only
 /// uses card text and therefore works offline and remains deterministic.
 enum PrototypeDomainClassifier {
-    static let general = "general"
+    static var general: String { LearningContentRules.bundled.classifierFallbackDomain }
 
-    private static let keywords: [(domain: String, terms: [String])] = [
-        ("work", ["arbeit", "beruf", "job", "büro", "firma", "geschäft", "chef", "kolleg", "mitarbeiter", "arbeitgeber", "work", "career", "office", "company", "business", "employee", "employer", "meeting"]),
-        ("software", ["computer", "internet", "software", "datei", "daten", "digital", "programm", "webseite", "telefon", "handy", "data", "technology", "website", "phone"]),
-        ("medical", ["arzt", "ärzt", "medizin", "gesund", "krank", "körper", "schmerz", "apotheke", "health", "doctor", "medical", "sick", "body", "pain", "hospital", "pharmacy"]),
-        ("travel", ["reise", "reisen", "flug", "flughafen", "bahnhof", "zug", "hotel", "urlaub", "bus", "straße", "travel", "flight", "airport", "station", "train", "hotel", "holiday", "road"]),
-        ("food", ["essen", "trinken", "küche", "restaurant", "brot", "fleisch", "gemüse", "obst", "kaffee", "food", "drink", "kitchen", "restaurant", "bread", "meat", "vegetable", "fruit", "coffee"]),
-        ("family", ["familie", "mutter", "vater", "eltern", "kind", "sohn", "tochter", "bruder", "schwester", "family", "mother", "father", "parent", "child", "son", "daughter", "brother", "sister"]),
-        ("education", ["schule", "universität", "lehrer", "student", "lernen", "unterricht", "prüfung", "buch", "school", "university", "teacher", "student", "learn", "lesson", "exam", "book"]),
-        ("home", ["haus", "wohnung", "zimmer", "tür", "fenster", "tisch", "stuhl", "bett", "home", "house", "apartment", "room", "door", "window", "table", "chair", "bed"]),
-        ("nature", ["natur", "tier", "pflanze", "baum", "blume", "wasser", "berg", "wald", "wetter", "nature", "animal", "plant", "tree", "flower", "water", "mountain", "forest", "weather"]),
-        ("time", ["zeit", "tag", "woche", "monat", "jahr", "uhr", "morgen", "gestern", "heute", "time", "day", "week", "month", "year", "clock", "tomorrow", "yesterday", "today"])
-    ]
+    private static var keywords: [LearningContentRules.DomainKeywords] {
+        LearningContentRules.bundled.domainKeywords
+    }
 
     static func classify(german: String, source: String, example: String = "", explicitDomain: String? = nil) -> String {
         if let explicitDomain = normalizedExplicitDomain(explicitDomain) { return explicitDomain }
@@ -647,7 +638,7 @@ enum PrototypeDomainClassifier {
 
     static func isGeneric(_ domain: String) -> Bool {
         let value = domain.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-        return value.isEmpty || ["general", "imported", "عمومی", "allgemein"].contains(value)
+        return value.isEmpty || LearningContentRules.bundled.genericDomainNames.contains(value)
     }
 
     private static func normalizedExplicitDomain(_ value: String?) -> String? {
@@ -702,7 +693,7 @@ enum PrototypeA1MediaPlanner {
             isEligible: true,
             audioCacheKey: includeAudio ? "audio.v1.\(safeIdentity)" : nil,
             imageCacheKey: includeImage ? "image.v1.\(safeIdentity)" : nil,
-            imagePrompt: includeImage ? "A clear, literal educational illustration of \(word.german), suitable for an A1 language-learning card, no text" : nil
+            imagePrompt: includeImage ? PromptTemplate.render(AIPromptCatalog.bundled.templates.a1ImageIllustration, ["word": word.german]) : nil
         )
     }
 }
@@ -718,8 +709,8 @@ struct PrototypeImportedCard: Sendable {
     init(
         sourceIdentifier: String,
         word: PrototypeWord,
-        sourceLanguageTag: String = "fa",
-        targetLanguageTag: String = "de",
+        sourceLanguageTag: String = LearningContentRules.bundled.defaults.sourceLanguageTag,
+        targetLanguageTag: String = LearningContentRules.bundled.defaults.targetLanguageTag,
         pronunciationAudio: Data? = nil,
         illustrationImage: Data? = nil
     ) {
@@ -765,15 +756,6 @@ enum PrototypeReviewGrade: String, CaseIterable, Identifiable, Hashable {
         }
     }
 
-    var title: String {
-        switch self {
-        case .again: "دوباره"
-        case .hard: "سخت"
-        case .good: "خوب"
-        case .easy: "آسان"
-        }
-    }
-
     var symbol: String {
         switch self {
         case .again: "arrow.counterclockwise"
@@ -815,14 +797,6 @@ enum PrototypeReviewMode: String, Sendable {
     case recognition
     case reverseTranslation
     case mixedGame
-
-    var title: String {
-        switch self {
-        case .recognition: "مرور آلمانی به فارسی"
-        case .reverseTranslation: "ترجمهٔ معکوس"
-        case .mixedGame: "بازی ترکیبی"
-        }
-    }
 }
 
 private struct PrototypeRelatedWordScore {
@@ -848,6 +822,9 @@ final class PrototypeStore {
     private let scheduler = PrototypeFSRS6Scheduler()
 
     private(set) var words: [PrototypeWord] = []
+    /// IDs of cards whose content a person reviewed (see
+    /// `PrototypeCardRecord.contentReviewed`).
+    private(set) var reviewedCardIDs: Set<UUID> = []
 
     init(inMemory: Bool = false) {
         assert(
@@ -901,7 +878,7 @@ final class PrototypeStore {
                 try restoreCards()
                 restoreMission()
                 restorePersistedReviews()
-                lastPersistenceError = "Local storage was reset after a migration error. A backup of the previous store was kept."
+                lastPersistenceError = PrototypeLocalization.current("store.error.storeReset")
             } catch let recoveryError {
                 fatalError("Unable to initialize the review store: \(error.localizedDescription); recovery failed: \(recoveryError.localizedDescription)")
             }
@@ -964,7 +941,7 @@ final class PrototypeStore {
                 modelContext.insert(PrototypeLearningMissionRecord(id: mission.id, title: mission.title, domain: mission.domain, targetLevel: mission.targetLevel, weight: mission.weight))
             }
             try modelContext.save(); activeMission = mission
-        } catch { lastPersistenceError = "Mission save failed: \(error.localizedDescription)" }
+        } catch { lastPersistenceError = PrototypeLocalization.current("store.error.missionSave", error.localizedDescription) }
     }
 
     /// Returns today's persisted check-in. A new day deliberately has no
@@ -1022,7 +999,7 @@ final class PrototypeStore {
             lastPersistenceError = nil
         } catch {
             modelContext.rollback()
-            lastPersistenceError = "ذخیرهٔ وضعیت روزانه انجام نشد: \(error.localizedDescription)"
+            lastPersistenceError = PrototypeLocalization.current("store.error.dailyStateSave", error.localizedDescription)
         }
     }
 
@@ -1042,7 +1019,7 @@ final class PrototypeStore {
         words.filter { reviewCount(for: $0) > 0 && isReviewable($0) }.count
     }
     var weakCount: Int {
-        words.filter { reviewCount(for: $0) > 0 && strength(for: $0) < 0.5 }.count
+        words.filter { reviewCount(for: $0) > 0 && strength(for: $0) < LearningContentRules.bundled.weakStrengthThreshold }.count
     }
     var totalReviews: Int { grades.values.reduce(0) { $0 + $1.count } }
     var averageStrength: Double {
@@ -1083,6 +1060,31 @@ final class PrototypeStore {
 
     private func meaningfulTokens(in value: String) -> Set<String> {
         Set(value.lowercased().split { !$0.isLetter }.map(String.init).filter { $0.count >= 4 })
+    }
+
+    func isContentReviewed(_ word: PrototypeWord) -> Bool {
+        reviewedCardIDs.contains(word.id)
+    }
+
+    /// Records the learner's own review of a card's meaning and example.
+    @discardableResult
+    func setContentReviewed(_ reviewed: Bool, for word: PrototypeWord) -> Bool {
+        let wordID = word.id
+        var descriptor = FetchDescriptor<PrototypeCardRecord>(predicate: #Predicate { $0.id == wordID })
+        descriptor.fetchLimit = 1
+        do {
+            guard let record = try modelContext.fetch(descriptor).first else { return false }
+            guard record.contentReviewed != reviewed else { return true }
+            record.contentReviewed = reviewed
+            try modelContext.save()
+            if reviewed { reviewedCardIDs.insert(wordID) } else { reviewedCardIDs.remove(wordID) }
+            lastPersistenceError = nil
+            return true
+        } catch {
+            modelContext.rollback()
+            lastPersistenceError = error.localizedDescription
+            return false
+        }
     }
 
     func provenance(of word: PrototypeWord) -> PrototypeCardProvenance {
@@ -1140,7 +1142,7 @@ final class PrototypeStore {
     }
 
     func weakCount(in words: [PrototypeWord]) -> Int {
-        words.filter { reviewCount(for: $0) > 0 && strength(for: $0) < 0.5 }.count
+        words.filter { reviewCount(for: $0) > 0 && strength(for: $0) < LearningContentRules.bundled.weakStrengthThreshold }.count
     }
 
     func averageStrength(in words: [PrototypeWord]) -> Double {
@@ -1277,7 +1279,7 @@ final class PrototypeStore {
             return schedule
         } catch {
             modelContext.rollback()
-            lastPersistenceError = "ذخیره پاسخ انجام نشد: \(error.localizedDescription)"
+            lastPersistenceError = PrototypeLocalization.current("store.error.answerSave", error.localizedDescription)
             return nil
         }
     }
@@ -1296,7 +1298,7 @@ final class PrototypeStore {
             return true
         } catch {
             modelContext.rollback()
-            lastPersistenceError = "بازنشانی اطلاعات انجام نشد: \(error.localizedDescription)"
+            lastPersistenceError = PrototypeLocalization.current("store.error.reset", error.localizedDescription)
             return false
         }
     }
@@ -1310,10 +1312,10 @@ final class PrototypeStore {
         let decks = try modelContext.fetch(FetchDescriptor<PrototypeDeckRecord>())
         let deckNames = Dictionary(uniqueKeysWithValues: decks.map { ($0.id, $0.name) })
         return records.compactMap { record in
-            guard record.sourcePackage != nil || deckNames[record.deckID] == "کارت‌های هوشمند" else { return nil }
+            guard record.sourcePackage != nil || deckNames[record.deckID] == LearningContentRules.bundled.deckNames.generated else { return nil }
             return PrototypeCloudCard(
                 id: record.id,
-                deckName: deckNames[record.deckID] ?? "Cloud Cards",
+                deckName: deckNames[record.deckID] ?? LearningContentRules.bundled.deckNames.cloudFallback,
                 position: record.position,
                 german: record.german,
                 persian: record.persian,
@@ -1330,7 +1332,8 @@ final class PrototypeStore {
                 sourceLanguageTag: record.sourceLanguageTag,
                 targetLanguageTag: record.targetLanguageTag,
                 pronunciationAudio: pronunciationAudio(for: record.word),
-                pronunciationAudioFilename: record.pronunciationAudioFilename
+                pronunciationAudioFilename: record.pronunciationAudioFilename,
+                contentReviewed: record.contentReviewed
             )
         }
     }
@@ -1369,6 +1372,7 @@ final class PrototypeStore {
                 deckID: deck.id,
                 position: card.position,
                 createdAt: card.createdAt,
+                contentReviewed: card.contentReviewed ?? false,
                 sourceIdentifier: card.sourceIdentifier,
                 sourcePackage: card.sourcePackage,
                 pronunciationAudio: card.pronunciationAudio,
@@ -1467,7 +1471,7 @@ final class PrototypeStore {
             return PrototypeImportResult(deckName: deckName, addedCount: added, updatedCount: updated, skippedCount: skipped)
         } catch {
             modelContext.rollback()
-            lastPersistenceError = "ورود کارت‌ها انجام نشد: \(error.localizedDescription)"
+            lastPersistenceError = PrototypeLocalization.current("store.error.import", error.localizedDescription)
             return nil
         }
     }
@@ -1476,22 +1480,27 @@ final class PrototypeStore {
     func addGeneratedCard(
         _ word: PrototypeWord,
         pronunciationAudio: Data? = nil,
-        illustrationImage: Data? = nil
+        illustrationImage: Data? = nil,
+        contentReviewed: Bool = false
     ) -> Bool {
         addGeneratedCards(
             [word],
             sharedPronunciationAudio: pronunciationAudio,
-            sharedIllustrationImage: illustrationImage
+            sharedIllustrationImage: illustrationImage,
+            contentReviewed: contentReviewed
         )
     }
 
     /// Persists each independent meaning as a card while creating at most one
     /// audio asset and one image asset for the submitted headword.
+    /// `contentReviewed` is true only when the learner approved these exact
+    /// cards in a preview.
     @discardableResult
     func addGeneratedCards(
         _ words: [PrototypeWord],
         sharedPronunciationAudio: Data? = nil,
-        sharedIllustrationImage: Data? = nil
+        sharedIllustrationImage: Data? = nil,
+        contentReviewed: Bool = false
     ) -> Bool {
         guard !words.isEmpty else { return true }
         do {
@@ -1503,12 +1512,12 @@ final class PrototypeStore {
             }
             var generatedLemmaKeys = Set(cards.map { generatedLemmaKey($0.word) })
             guard words.allSatisfy({ generatedLemmaKeys.insert(generatedLemmaKey($0)).inserted }) else {
-                lastPersistenceError = "این واژه در همین حوزه از قبل وجود دارد."
+                lastPersistenceError = PrototypeLocalization.current("store.error.duplicateWord")
                 return false
             }
             let decks = try modelContext.fetch(FetchDescriptor<PrototypeDeckRecord>())
-            let deck = decks.first(where: { $0.name == "کارت‌های هوشمند" }) ?? {
-                let deck = PrototypeDeckRecord(name: "کارت‌های هوشمند")
+            let deck = decks.first(where: { $0.name == LearningContentRules.bundled.deckNames.generated }) ?? {
+                let deck = PrototypeDeckRecord(name: LearningContentRules.bundled.deckNames.generated)
                 modelContext.insert(deck)
                 return deck
             }()
@@ -1525,6 +1534,7 @@ final class PrototypeStore {
                     word: word,
                     deckID: deck.id,
                     position: cards.count + offset,
+                    contentReviewed: contentReviewed,
                     pronunciationAudioAssetID: audioAsset?.id,
                     illustrationImageAssetID: imageAsset?.id
                 ))
@@ -1535,7 +1545,7 @@ final class PrototypeStore {
             return true
         } catch {
             modelContext.rollback()
-            lastPersistenceError = "ذخیرهٔ کارت انجام نشد: \(error.localizedDescription)"
+            lastPersistenceError = PrototypeLocalization.current("store.error.cardSave", error.localizedDescription)
             return false
         }
     }
@@ -1546,13 +1556,13 @@ final class PrototypeStore {
             let allCards = try modelContext.fetch(FetchDescriptor<PrototypeCardRecord>())
             let cardsToDelete = allCards.filter { $0.sourcePackage == fileName }
             guard !cardsToDelete.isEmpty else {
-                lastPersistenceError = "بستهٔ واردشده پیدا نشد."
+                lastPersistenceError = PrototypeLocalization.current("store.error.packageNotFound")
                 return false
             }
             return try deleteCards(cardsToDelete, allCards: allCards)
         } catch {
             modelContext.rollback()
-            lastPersistenceError = "حذف بسته انجام نشد: \(error.localizedDescription)"
+            lastPersistenceError = PrototypeLocalization.current("store.error.packageDelete", error.localizedDescription)
             return false
         }
     }
@@ -1566,13 +1576,13 @@ final class PrototypeStore {
             let allCards = try modelContext.fetch(FetchDescriptor<PrototypeCardRecord>())
             let cardsToDelete = allCards.filter { ids.contains($0.id) }
             guard cardsToDelete.count == ids.count else {
-                lastPersistenceError = "برخی از کارت‌های انتخاب‌شده دیگر وجود ندارند. فهرست را تازه کنید."
+                lastPersistenceError = PrototypeLocalization.current("store.error.staleSelection")
                 return false
             }
             return try deleteCards(cardsToDelete, allCards: allCards)
         } catch {
             modelContext.rollback()
-            lastPersistenceError = "حذف کارت انجام نشد: \(error.localizedDescription)"
+            lastPersistenceError = PrototypeLocalization.current("store.error.cardDelete", error.localizedDescription)
             return false
         }
     }
@@ -1632,11 +1642,11 @@ final class PrototypeStore {
         cardDescriptor.fetchLimit = 1
         guard try modelContext.fetch(cardDescriptor).isEmpty else { return }
 
-        let deck = PrototypeDeckRecord(name: "واژگان پایه آلمانی–فارسی")
+        let deck = PrototypeDeckRecord(name: LearningContentRules.bundled.deckNames.core)
         modelContext.insert(deck)
         for (position, word) in PrototypeData.words.enumerated() {
             modelContext.insert(
-                PrototypeCardRecord(word: word, deckID: deck.id, position: position)
+                PrototypeCardRecord(word: word, deckID: deck.id, position: position, contentReviewed: true)
             )
         }
         try modelContext.save()
@@ -1648,12 +1658,12 @@ final class PrototypeStore {
         let missing = PrototypeData.multilingualSamples.filter { !existingIDs.contains($0.id) }
         guard !missing.isEmpty else { return }
 
-        let deck = PrototypeDeckRecord(name: "Multilingual Test Cards")
+        let deck = PrototypeDeckRecord(name: LearningContentRules.bundled.deckNames.multilingual)
         modelContext.insert(deck)
         let offset = existingRecords.count
         for (index, word) in missing.enumerated() {
             modelContext.insert(
-                PrototypeCardRecord(word: word, deckID: deck.id, position: offset + index)
+                PrototypeCardRecord(word: word, deckID: deck.id, position: offset + index, contentReviewed: true)
             )
         }
         try modelContext.save()
@@ -1678,8 +1688,22 @@ final class PrototypeStore {
         if try removeDanglingLearningReferences(liveCards: records) {
             requiresSave = true
         }
+        // Built-in seed decks were inserted before `contentReviewed` existed;
+        // their content is curated, so mark it reviewed once.
+        let builtInDeckNames: Set<String> = [
+            LearningContentRules.bundled.deckNames.core,
+            LearningContentRules.bundled.deckNames.multilingual
+        ]
+        let builtInDeckIDs = Set(try modelContext.fetch(FetchDescriptor<PrototypeDeckRecord>())
+            .filter { builtInDeckNames.contains($0.name) }
+            .map(\.id))
+        for record in records where !record.contentReviewed && record.sourcePackage == nil && builtInDeckIDs.contains(record.deckID) {
+            record.contentReviewed = true
+            requiresSave = true
+        }
         if requiresSave { try modelContext.save() }
         words = records.map(\.word)
+        reviewedCardIDs = Set(records.filter(\.contentReviewed).map(\.id))
         let grouped = Dictionary(grouping: records.compactMap { record in
             record.sourcePackage.map { ($0, record.id) }
         }, by: \.0)
@@ -1790,7 +1814,7 @@ final class PrototypeStore {
             if migratedLegacyKeys { try modelContext.save() }
             lastPersistenceError = nil
         } catch {
-            lastPersistenceError = "بازیابی اطلاعات مرور انجام نشد: \(error.localizedDescription)"
+            lastPersistenceError = PrototypeLocalization.current("store.error.reviewRestore", error.localizedDescription)
         }
     }
 
@@ -1836,142 +1860,39 @@ extension PrototypeWord {
 }
 
 enum PrototypeData {
-    static let words: [PrototypeWord] = [
-        word("arbeiten", "کار کردن", "A1", "Verb", "Ich arbeite heute von zu Hause.", "من امروز از خانه کار می‌کنم."),
-        word("die Entscheidung", "تصمیم", "B1", "Nomen", "Wir treffen morgen eine Entscheidung.", "ما فردا تصمیم می‌گیریم.", article: "die"),
-        word("zuverlässig", "قابل اعتماد", "B1", "Adjektiv", "Sie ist eine zuverlässige Kollegin.", "او همکار قابل اعتمادی است."),
-        word("der Arbeitsvertrag", "قرارداد کاری", "B2", "Nomen", "Bitte lesen Sie den Arbeitsvertrag sorgfältig.", "لطفاً قرارداد کاری را با دقت بخوانید.", article: "der"),
-        word("das Haus", "خانه", "A1", "Nomen", "Das Haus ist sehr alt.", "خانه بسیار قدیمی است.", article: "das"),
-        word("die Familie", "خانواده", "A1", "Nomen", "Meine Familie lebt in Berlin.", "خانوادهٔ من در برلین زندگی می‌کند.", article: "die"),
-        word("lernen", "یاد گرفتن", "A1", "Verb", "Ich lerne jeden Tag Deutsch.", "من هر روز آلمانی یاد می‌گیرم."),
-        word("sprechen", "صحبت کردن", "A1", "Verb", "Wir sprechen über die Arbeit.", "ما دربارهٔ کار صحبت می‌کنیم."),
-        word("verstehen", "فهمیدن", "A1", "Verb", "Ich verstehe die Frage.", "من سؤال را می‌فهمم."),
-        word("brauchen", "نیاز داشتن", "A1", "Verb", "Ich brauche mehr Zeit.", "من به زمان بیشتری نیاز دارم."),
-        word("kaufen", "خریدن", "A1", "Verb", "Sie kauft frisches Brot.", "او نان تازه می‌خرد."),
-        word("bezahlen", "پرداخت کردن", "A1", "Verb", "Kann ich mit Karte bezahlen?", "می‌توانم با کارت پرداخت کنم؟"),
-        word("die Wohnung", "آپارتمان", "A1", "Nomen", "Die Wohnung hat drei Zimmer.", "آپارتمان سه اتاق دارد.", article: "die"),
-        word("der Bahnhof", "ایستگاه قطار", "A1", "Nomen", "Der Bahnhof ist in der Nähe.", "ایستگاه قطار نزدیک است.", article: "der"),
-        word("die Gesundheit", "سلامتی", "A2", "Nomen", "Gesundheit ist sehr wichtig.", "سلامتی بسیار مهم است.", article: "die"),
-        word("der Termin", "قرار", "A2", "Nomen", "Ich habe morgen einen Termin.", "من فردا یک قرار دارم.", article: "der"),
-        word("die Erfahrung", "تجربه", "A2", "Nomen", "Er hat viel Erfahrung.", "او تجربهٔ زیادی دارد.", article: "die"),
-        word("die Bewerbung", "درخواست استخدام", "B1", "Nomen", "Meine Bewerbung ist fertig.", "درخواست استخدام من آماده است.", article: "die"),
-        word("das Gespräch", "گفت‌وگو", "A2", "Nomen", "Das Gespräch war hilfreich.", "گفت‌وگو مفید بود.", article: "das"),
-        word("der Mitarbeiter", "کارمند", "A2", "Nomen", "Der Mitarbeiter beantwortet die E-Mail.", "کارمند به ایمیل پاسخ می‌دهد.", article: "der"),
-        word("die Aufgabe", "وظیفه", "A2", "Nomen", "Diese Aufgabe ist einfach.", "این وظیفه ساده است.", article: "die"),
-        word("die Besprechung", "جلسه", "B1", "Nomen", "Die Besprechung beginnt um neun Uhr.", "جلسه ساعت نه شروع می‌شود.", article: "die"),
-        word("erklären", "توضیح دادن", "A2", "Verb", "Können Sie das bitte erklären?", "می‌توانید لطفاً آن را توضیح دهید؟"),
-        word("vereinbaren", "هماهنگ کردن", "B1", "Verb", "Wir vereinbaren einen neuen Termin.", "ما یک قرار جدید هماهنگ می‌کنیم."),
-        word("teilnehmen", "شرکت کردن", "B1", "Verb", "Ich nehme an der Besprechung teil.", "من در جلسه شرکت می‌کنم."),
-        word("sich bewerben", "درخواست استخدام دادن", "B1", "Verb", "Sie bewirbt sich um eine Stelle.", "او برای یک شغل درخواست می‌دهد."),
-        word("entscheiden", "تصمیم گرفتن", "B1", "Verb", "Wir müssen heute entscheiden.", "ما باید امروز تصمیم بگیریم."),
-        word("verbessern", "بهبود دادن", "B1", "Verb", "Ich möchte mein Deutsch verbessern.", "می‌خواهم زبان آلمانی‌ام را بهتر کنم."),
-        word("unterstützen", "حمایت کردن", "B1", "Verb", "Das Team unterstützt mich.", "تیم از من حمایت می‌کند."),
-        word("verantwortlich", "مسئول", "B1", "Adjektiv", "Wer ist dafür verantwortlich?", "چه کسی مسئول آن است؟"),
-        word("pünktlich", "سروقت", "A2", "Adjektiv", "Der Zug kommt pünktlich an.", "قطار سروقت می‌رسد."),
-        word("freundlich", "دوستانه", "A1", "Adjektiv", "Die Ärztin ist sehr freundlich.", "پزشک بسیار خوش‌برخورد است."),
-        word("wichtig", "مهم", "A1", "Adjektiv", "Diese Information ist wichtig.", "این اطلاعات مهم است."),
-        word("möglich", "ممکن", "A2", "Adjektiv", "Ist das morgen möglich?", "آیا فردا ممکن است؟"),
-        word("gemeinsam", "با هم", "A2", "Adverb", "Wir lösen das Problem gemeinsam.", "ما مشکل را با هم حل می‌کنیم."),
-        word("wahrscheinlich", "احتمالاً", "B1", "Adverb", "Er kommt wahrscheinlich später.", "او احتمالاً دیرتر می‌آید."),
-        word("die Rechnung", "صورتحساب", "A2", "Nomen", "Bitte bringen Sie die Rechnung.", "لطفاً صورتحساب را بیاورید.", article: "die"),
-        word("die Versicherung", "بیمه", "B1", "Nomen", "Die Versicherung bezahlt die Kosten.", "بیمه هزینه‌ها را پرداخت می‌کند.", article: "die"),
-        word("die Nachricht", "پیام", "A1", "Nomen", "Ich habe deine Nachricht gelesen.", "من پیام تو را خواندم.", article: "die"),
-        word("die Frage", "سؤال", "A1", "Nomen", "Ich habe eine Frage.", "من یک سؤال دارم.", article: "die"),
-        word("die Antwort", "پاسخ", "A1", "Nomen", "Seine Antwort ist richtig.", "پاسخ او درست است.", article: "die"),
-        word("der Unterschied", "تفاوت", "B1", "Nomen", "Was ist der Unterschied?", "تفاوت چیست؟", article: "der"),
-        word("die Möglichkeit", "امکان", "B1", "Nomen", "Es gibt eine andere Möglichkeit.", "امکان دیگری وجود دارد.", article: "die"),
-        word("die Verantwortung", "مسئولیت", "B1", "Nomen", "Sie übernimmt die Verantwortung.", "او مسئولیت را بر عهده می‌گیرد.", article: "die"),
-        word("der Erfolg", "موفقیت", "B1", "Nomen", "Der Kurs war ein großer Erfolg.", "دوره موفقیت بزرگی بود.", article: "der"),
-        word("die Herausforderung", "چالش", "B2", "Nomen", "Das Projekt ist eine Herausforderung.", "این پروژه یک چالش است.", article: "die"),
-        word("die Weiterbildung", "آموزش تکمیلی", "B2", "Nomen", "Die Firma bezahlt meine Weiterbildung.", "شرکت هزینهٔ آموزش تکمیلی من را می‌دهد.", article: "die"),
-        word("die Voraussetzung", "پیش‌شرط", "B2", "Nomen", "Deutsch B2 ist eine Voraussetzung.", "آلمانی B2 یک پیش‌شرط است.", article: "die"),
-        word("die Zusammenarbeit", "همکاری", "B2", "Nomen", "Danke für die gute Zusammenarbeit.", "از همکاری خوبتان متشکرم.", article: "die"),
-        word("die Rückmeldung", "بازخورد", "B2", "Nomen", "Ich warte auf Ihre Rückmeldung.", "منتظر بازخورد شما هستم.", article: "die")
-    ]
+    /// Built-in German–Persian vocabulary from `seed-cards.json`.
+    static let words: [PrototypeWord] = SeedCardCatalog.bundled.words.map { word in
+        PrototypeWord(
+            german: word.german,
+            persian: word.persian,
+            article: word.article,
+            level: word.level,
+            partOfSpeech: word.partOfSpeech,
+            example: word.example,
+            exampleTranslation: word.exampleTranslation
+        )
+    }
 
     /// Five owned test cards for every directed pair among Persian, German,
     /// and English. `german` temporarily stores target-side text and `persian`
     /// stores source-side text until the neutral field-name migration in M1.
-    static let multilingualSamples: [PrototypeWord] = [
-        sample(1, "fa", "de", "کتاب", "das Buch", "این یک کتاب است.", "Das ist ein Buch."),
-        sample(2, "fa", "de", "آب", "das Wasser", "من آب می‌نوشم.", "Ich trinke Wasser."),
-        sample(3, "fa", "de", "دوست", "der Freund", "او دوست من است.", "Er ist mein Freund."),
-        sample(4, "fa", "de", "یاد گرفتن", "lernen", "من هر روز یاد می‌گیرم.", "Ich lerne jeden Tag."),
-        sample(5, "fa", "de", "سریع", "schnell", "قطار سریع است.", "Der Zug ist schnell."),
-
-        sample(6, "fa", "en", "خانه", "house", "این خانه بزرگ است.", "This house is large."),
-        sample(7, "fa", "en", "کتاب", "book", "کتاب روی میز است.", "The book is on the table."),
-        sample(8, "fa", "en", "کار کردن", "work", "من امروز کار می‌کنم.", "I work today."),
-        sample(9, "fa", "en", "پرسش", "question", "من یک پرسش دارم.", "I have a question."),
-        sample(10, "fa", "en", "مهم", "important", "این موضوع مهم است.", "This topic is important."),
-
-        sample(11, "de", "fa", "das Haus", "خانه", "Das Haus ist alt.", "خانه قدیمی است."),
-        sample(12, "de", "fa", "das Buch", "کتاب", "Ich lese ein Buch.", "من یک کتاب می‌خوانم."),
-        sample(13, "de", "fa", "arbeiten", "کار کردن", "Wir arbeiten zusammen.", "ما با هم کار می‌کنیم."),
-        sample(14, "de", "fa", "die Frage", "پرسش", "Das ist eine gute Frage.", "این پرسش خوبی است."),
-        sample(15, "de", "fa", "wichtig", "مهم", "Deutsch ist für mich wichtig.", "آلمانی برای من مهم است."),
-
-        sample(16, "de", "en", "das Haus", "house", "Das Haus ist neu.", "The house is new."),
-        sample(17, "de", "en", "das Buch", "book", "Das Buch liegt hier.", "The book is here."),
-        sample(18, "de", "en", "arbeiten", "work", "Ich arbeite in Berlin.", "I work in Berlin."),
-        sample(19, "de", "en", "die Antwort", "answer", "Die Antwort ist richtig.", "The answer is correct."),
-        sample(20, "de", "en", "freundlich", "friendly", "Sie ist sehr freundlich.", "She is very friendly."),
-
-        sample(21, "en", "fa", "home", "خانه", "My home is nearby.", "خانهٔ من نزدیک است."),
-        sample(22, "en", "fa", "water", "آب", "I need some water.", "من کمی آب نیاز دارم."),
-        sample(23, "en", "fa", "learn", "یاد گرفتن", "We learn together.", "ما با هم یاد می‌گیریم."),
-        sample(24, "en", "fa", "friend", "دوست", "She is my friend.", "او دوست من است."),
-        sample(25, "en", "fa", "important", "مهم", "This meeting is important.", "این جلسه مهم است."),
-
-        sample(26, "en", "de", "house", "das Haus", "The house is old.", "Das Haus ist alt."),
-        sample(27, "en", "de", "book", "das Buch", "I am reading a book.", "Ich lese ein Buch."),
-        sample(28, "en", "de", "work", "arbeiten", "We work together.", "Wir arbeiten zusammen."),
-        sample(29, "en", "de", "question", "die Frage", "I have a question.", "Ich habe eine Frage."),
-        sample(30, "en", "de", "friendly", "freundlich", "The doctor is friendly.", "Die Ärztin ist freundlich.")
-    ]
-
-    private static func sample(
-        _ number: Int,
-        _ source: String,
-        _ target: String,
-        _ sourceText: String,
-        _ targetText: String,
-        _ sourceExample: String,
-        _ targetExample: String
-    ) -> PrototypeWord {
-        PrototypeWord(
-            id: UUID(uuidString: String(format: "71000000-0000-4000-8000-%012d", number))!,
-            german: targetText,
-            persian: sourceText,
-            level: "A1",
-            partOfSpeech: "Test",
-            example: targetExample,
-            exampleTranslation: sourceExample,
-            domain: "Multilingual Test",
-            sourceLanguageTag: source,
-            targetLanguageTag: target
-        )
-    }
-
-    private static func word(
-        _ german: String,
-        _ persian: String,
-        _ level: String,
-        _ partOfSpeech: String,
-        _ example: String,
-        _ exampleTranslation: String,
-        article: String? = nil
-    ) -> PrototypeWord {
-        PrototypeWord(
-            german: german,
-            persian: persian,
-            article: article,
-            level: level,
-            partOfSpeech: partOfSpeech,
-            example: example,
-            exampleTranslation: exampleTranslation
-        )
-    }
+    static let multilingualSamples: [PrototypeWord] = {
+        let defaults = SeedCardCatalog.bundled.multilingualSampleDefaults
+        return SeedCardCatalog.bundled.multilingualSamples.map { sample in
+            PrototypeWord(
+                id: UUID(uuidString: defaults.idPrefix + String(format: "%012d", sample.number))!,
+                german: sample.target,
+                persian: sample.source,
+                level: defaults.level,
+                partOfSpeech: defaults.partOfSpeech,
+                example: sample.targetExample,
+                exampleTranslation: sample.sourceExample,
+                domain: defaults.domain,
+                sourceLanguageTag: sample.sourceLanguageTag,
+                targetLanguageTag: sample.targetLanguageTag
+            )
+        }
+    }()
 }
 
 enum PrototypeTheme {

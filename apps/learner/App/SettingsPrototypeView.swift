@@ -6,6 +6,8 @@ import Security
 struct SettingsPrototypeView: View {
     @Environment(PrototypeLocalization.self) private var localization
     @Environment(PrototypeLanguageSettings.self) private var languageSettings
+    @Environment(PrototypeLearnerProfile.self) private var learnerProfile
+    @Environment(PrototypeStore.self) private var store
 
     var body: some View {
         ZStack {
@@ -21,30 +23,30 @@ struct SettingsPrototypeView: View {
                         items: [
                             .init(
                                 title: localization.text(.languagesAndLevel),
-                                detail: "\(languageName(languageSettings.sourceLanguageTag)) → \(languageName(languageSettings.targetLanguageTag)) · B1",
+                                detail: "\(languageName(languageSettings.sourceLanguageTag)) → \(languageName(languageSettings.targetLanguageTag)) · \(localization.levelName(learnerProfile.currentLevel))",
                                 symbol: "character.book.closed.fill", color: .blue, destination: .languages
                             ),
                             .init(title: customDomainsTitle, detail: customDomainsSubtitle, symbol: "square.grid.2x2", color: .purple, destination: .domains),
-                            .init(title: localization.text(.goalsAndDailyPlan), detail: localization.localized("کار در آلمان · ۲۰ دقیقه"), symbol: "target", color: PrototypeTheme.pink, destination: .learning),
-                            .init(title: localization.text(.reviewAndPractice), detail: localization.localized("مرور تطبیقی · حالت متعادل"), symbol: "rectangle.stack.fill", color: .orange, destination: .review),
-                            .init(title: localization.text(.audioAndPronunciation), detail: localization.localized("صدای آلمانی · سرعت عادی"), symbol: "waveform", color: PrototypeTheme.mint, destination: .audio)
+                            .init(title: localization.text(.goalsAndDailyPlan), detail: localization.localized("settings.summary.learning"), symbol: "target", color: PrototypeTheme.pink, destination: .learning),
+                            .init(title: localization.text(.reviewAndPractice), detail: localization.localized("settings.summary.review"), symbol: "rectangle.stack.fill", color: .orange, destination: .review),
+                            .init(title: localization.text(.audioAndPronunciation), detail: localization.localized("settings.summary.audio"), symbol: "waveform", color: PrototypeTheme.mint, destination: .audio)
                         ]
                     )
                     settingsGroup(
-                        title: localization.localized("هوش مصنوعی و آفلاین"),
-                        subtitle: localization.localized("مدل‌ها، دانلودها و هزینه"),
+                        title: localization.localized("settings.group.aiOffline"),
+                        subtitle: localization.localized("settings.group.aiOfflineSubtitle"),
                         items: [
-                            .init(title: localization.localized("دستیار هوشمند"), detail: localization.localized("provider.configurable"), symbol: "wand.and.stars", color: PrototypeTheme.accent, destination: .ai),
-                            .init(title: localization.localized("محتوای آفلاین"), detail: localization.localized("۱۸۴ مگابایت روی دستگاه"), symbol: "arrow.down.circle.fill", color: .indigo, destination: .offline)
+                            .init(title: localization.localized("settings.item.assistant"), detail: localization.localized("provider.configurable"), symbol: "wand.and.stars", color: PrototypeTheme.accent, destination: .ai),
+                            .init(title: localization.localized("settings.item.offlineContent"), detail: localization.localized("settings.summary.offline"), symbol: "arrow.down.circle.fill", color: .indigo, destination: .offline)
                         ]
                     )
                     settingsGroup(
-                        title: localization.localized("برنامه و حساب"),
+                        title: localization.localized("settings.group.appAccount"),
                         subtitle: nil,
                         items: [
-                            .init(title: localization.localized("حریم خصوصی و داده‌ها"), detail: localization.localized("محلی · پشتیبان اختیاری iCloud"), symbol: "lock.shield.fill", color: .green, destination: .privacy),
-                            .init(title: localization.localized("دسترس‌پذیری و ظاهر"), detail: localization.localized("هماهنگ با سیستم"), symbol: "accessibility", color: .teal, destination: .accessibility),
-                            .init(title: localization.localized("دربارهٔ LinguaBrain"), detail: localization.localized("Visual Prototype 0.2"), symbol: "info.circle.fill", color: .gray, destination: .about)
+                            .init(title: localization.localized("settings.item.privacy"), detail: localization.localized("settings.summary.privacy"), symbol: "lock.shield.fill", color: .green, destination: .privacy),
+                            .init(title: localization.localized("settings.item.accessibility"), detail: localization.localized("settings.summary.system"), symbol: "accessibility", color: .teal, destination: .accessibility),
+                            .init(title: localization.localized("settings.item.about"), detail: localization.localized("settings.about.versionValue"), symbol: "info.circle.fill", color: .gray, destination: .about)
                         ]
                     )
                 }
@@ -58,19 +60,11 @@ struct SettingsPrototypeView: View {
     }
 
     private var customDomainsTitle: String {
-        switch localization.language {
-        case .english: "Custom categories"
-        case .german: "Eigene Kategorien"
-        case .persian: "دسته‌های سفارشی"
-        }
+        localization.localized("settings.customDomains.title")
     }
 
     private var customDomainsSubtitle: String {
-        switch localization.language {
-        case .english: "Create and manage your learning topics"
-        case .german: "Eigene Lernthemen erstellen und verwalten"
-        case .persian: "ساخت و مدیریت موضوع‌های یادگیری"
-        }
+        localization.localized("settings.customDomains.subtitle")
     }
 
     private var profileCard: some View {
@@ -97,7 +91,7 @@ struct SettingsPrototypeView: View {
                 }
 
                 VStack(alignment: .leading, spacing: 5) {
-                    Text("سعید رضایی")
+                    Text(localization.localized("settings.profile.placeholderName"))
                         .font(.title3.weight(.bold))
                     Text(localization.text(.learnerSubtitle))
                         .font(.subheadline)
@@ -119,11 +113,11 @@ struct SettingsPrototypeView: View {
 
     private var learningSummary: some View {
         VStack(alignment: .leading, spacing: 10) {
-            SectionHeader(title: "خلاصهٔ مسیر شما", subtitle: "تنظیماتی که برنامهٔ امروز را شکل می‌دهند")
+            SectionHeader(title: "settings.pathSummary.title", subtitle: "settings.pathSummary.subtitle")
             HStack(spacing: 10) {
-                MetricPill(value: "B2", label: "سطح هدف", symbol: "flag.checkered", color: PrototypeTheme.accent)
-                MetricPill(value: "۲۰ دقیقه", label: "هدف روزانه", symbol: "clock.fill", color: .orange)
-                MetricPill(value: "آلمان", label: "مأموریت", symbol: "briefcase.fill", color: PrototypeTheme.mint)
+                MetricPill(value: store.activeTargetLevel, label: "settings.pathSummary.targetLevel", symbol: "flag.checkered", color: PrototypeTheme.accent)
+                MetricPill(value: localization.minutesLong(learnerProfile.dailyGoalMinutes), label: "settings.pathSummary.dailyGoal", symbol: "clock.fill", color: .orange)
+                MetricPill(value: store.activeMissionKey, label: "settings.pathSummary.mission", symbol: "briefcase.fill", color: PrototypeTheme.mint)
             }
         }
     }
@@ -199,12 +193,7 @@ private enum SettingsSection {
     func title(for localization: PrototypeLocalization) -> String {
         switch self {
         case .languages: localization.text(.languagesAndLevel)
-        case .domains:
-            switch localization.language {
-            case .english: "Custom categories"
-            case .german: "Eigene Kategorien"
-            case .persian: "دسته‌های سفارشی"
-            }
+        case .domains: localization.localized("settings.customDomains.title")
         case .learning: localization.text(.goalsAndDailyPlan)
         case .review: localization.text(.reviewAndPractice)
         case .audio: localization.text(.audioAndPronunciation)
@@ -225,20 +214,22 @@ private enum SettingsSection {
 }
 
 private struct SettingsDetailPrototypeView: View {
+    private static let rules = LearningContentRules.bundled
+
     let section: SettingsSection
     @Environment(PrototypeLocalization.self) private var localization
     @Environment(PrototypeLanguageSettings.self) private var languageSettings
+    @Environment(PrototypeLearnerProfile.self) private var learnerProfile
     @Environment(PrototypeStore.self) private var store
     @Environment(PrototypeCloudBackupController.self) private var cloudBackup
-    @State private var dailyGoal = 20
     @State private var notifications = true
     @State private var offlineOnly = false
-    @State private var audioSpeed = 1.0
 
     var body: some View {
         Form {
             switch section {
             case .languages:
+                @Bindable var learnerProfile = learnerProfile
                 Section(localization.text(.languageSettings)) {
                     Picker(localization.text(.interfaceLanguage), selection: interfaceLanguageBinding) {
                         ForEach(PrototypeAppLanguage.allCases) { language in
@@ -255,85 +246,99 @@ private struct SettingsDetailPrototypeView: View {
                             Text(language.nativeName).tag(language.rawValue)
                         }
                     }
-                    LabeledContent(localization.text(.currentLevel), value: "B1")
-                    LabeledContent(localization.text(.targetLevel), value: "B2")
+                    Picker(localization.text(.currentLevel), selection: $learnerProfile.currentLevel) {
+                        ForEach(Self.rules.onboarding.levels, id: \.self) { level in
+                            Text(localization.levelName(level)).tag(level)
+                        }
+                    }
+                    Picker(localization.text(.targetLevel), selection: targetLevelBinding) {
+                        ForEach(Self.rules.levels.cefr, id: \.self) { level in
+                            Text(level).tag(level)
+                        }
+                    }
                     if !languageSettings.isValidPair {
-                        Label(localization.localized("Source and learning languages must be different."), systemImage: "exclamationmark.triangle.fill")
+                        Label(localization.localized("settings.languages.mustDiffer"), systemImage: "exclamationmark.triangle.fill")
                             .foregroundStyle(.orange)
                     }
                 }
             case .domains:
                 CustomDomainsSettingsContent()
             case .learning:
-                Section(localization.localized("برنامهٔ روزانه")) {
-                    Picker(localization.localized("هدف روزانه"), selection: $dailyGoal) {
-                        Text(localization.localized("۱۰ دقیقه")).tag(10)
-                        Text(localization.localized("۲۰ دقیقه")).tag(20)
-                        Text(localization.localized("۳۰ دقیقه")).tag(30)
-                        Text(localization.localized("۶۰ دقیقه")).tag(60)
+                @Bindable var learnerProfile = learnerProfile
+                Section(localization.localized("settings.learning.dailyPlan")) {
+                    Picker(localization.localized("settings.pathSummary.dailyGoal"), selection: $learnerProfile.dailyGoalMinutes) {
+                        ForEach(Self.rules.learnerProfile.dailyGoalMinuteOptions, id: \.self) { minutes in
+                            Text(localization.minutesLong(minutes)).tag(minutes)
+                        }
                     }
-                    LabeledContent(localization.localized("مأموریت فعال"), value: localization.localized("کار در آلمان"))
-                    Toggle(localization.localized("یادآوری روزانه"), isOn: $notifications)
+                    Picker(localization.localized("settings.learning.activeMission"), selection: missionBinding) {
+                        ForEach(Self.rules.onboarding.missionKeys, id: \.self) { key in
+                            Text(localization.localized(key)).tag(key)
+                        }
+                    }
+                    Toggle(localization.localized("settings.learning.dailyReminder"), isOn: $notifications)
                 }
             case .review:
-                Section(localization.localized("روش تمرین")) {
-                    LabeledContent(localization.localized("الگوریتم مرور"), value: localization.localized("تطبیقی"))
-                    LabeledContent(localization.localized("جهت ترجمه"), value: localization.localized("هر دو جهت"))
-                    Toggle(localization.localized("مرور شنیداری"), isOn: $notifications)
+                Section(localization.localized("settings.review.method")) {
+                    LabeledContent(localization.localized("settings.review.algorithm"), value: localization.localized("settings.review.algorithmValue"))
+                    LabeledContent(localization.localized("settings.review.direction"), value: localization.localized("settings.review.directionValue"))
+                    Toggle(localization.localized("settings.review.listening"), isOn: $notifications)
                 }
             case .audio:
-                Section(localization.localized("پخش")) {
-                    LabeledContent(localization.localized("صدای آلمانی"), value: "Anna")
-                    Slider(value: $audioSpeed, in: 0.5...1.5, step: 0.1) {
-                        Text(localization.localized("سرعت پخش"))
+                @Bindable var learnerProfile = learnerProfile
+                let rate = Self.rules.learnerProfile.playbackRate
+                Section(localization.localized("settings.audio.playback")) {
+                    LabeledContent(localization.localized("settings.audio.germanVoice"), value: localization.localized("settings.audio.voicePlaceholder"))
+                    Slider(value: $learnerProfile.playbackRate, in: rate.minimum...rate.maximum, step: rate.step) {
+                        Text(localization.localized("settings.audio.playbackSpeed"))
                     }
-                    LabeledContent("سرعت", value: audioSpeed.formatted(.number.precision(.fractionLength(1))) + "×")
+                    LabeledContent(localization.localized("settings.audio.speed"), value: learnerProfile.playbackRate.formatted(.number.precision(.fractionLength(1))) + "×")
                 }
             case .ai:
                 ProviderMenuIndex()
-                Section("Apple Intelligence — آینده") {
-                    Label("Apple Foundation Models · بدون API Key", systemImage: "apple.intelligence")
-                    Text("پس از ارزیابی پشتیبانی و کیفیت فارسی، پردازش محلی Apple به‌عنوان Provider اختیاری اضافه می‌شود.")
+                Section(localization.localized("settings.ai.appleSection")) {
+                    Label(localization.localized("settings.ai.appleModels"), systemImage: "apple.intelligence")
+                    Text(localization.localized("settings.ai.appleNote"))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
-                Section("سایر ارائه‌دهندگان آینده") {
-                    Label("LM Studio / Ollama", systemImage: "desktopcomputer")
-                    Toggle("فقط حالت آفلاین", isOn: $offlineOnly)
+                Section(localization.localized("settings.ai.futureProviders")) {
+                    Label(localization.localized("settings.ai.localProviders"), systemImage: "desktopcomputer")
+                    Toggle(localization.localized("settings.ai.offlineOnly"), isOn: $offlineOnly)
                 }
             case .offline:
-                Section("دانلودشده") {
-                    LabeledContent("واژگان پایه", value: "۱۲۰ مگابایت")
-                    LabeledContent("صداهای آلمانی", value: "۶۴ مگابایت")
-                    Button("مدیریت دانلودها") { }
+                Section(localization.localized("settings.offline.downloaded")) {
+                    LabeledContent(localization.localized("settings.offline.vocabulary"), value: localization.localized("settings.offline.vocabularySize"))
+                    LabeledContent(localization.localized("settings.offline.voices"), value: localization.localized("settings.offline.voicesSize"))
+                    Button(localization.localized("settings.offline.manage")) { }
                 }
             case .privacy:
                 @Bindable var cloudBackup = cloudBackup
-                Section("پشتیبان iCloud") {
-                    Toggle("ذخیرهٔ کارت‌های من در iCloud", isOn: $cloudBackup.isEnabled)
-                    Text("کارت‌های ساخته‌شده و بسته‌های Anki واردشده در پایگاه خصوصی iCloud شما نگهداری می‌شوند. کارت‌های نمونهٔ برنامه ارسال نمی‌شوند.")
+                Section(localization.localized("settings.privacy.iCloudBackup")) {
+                    Toggle(localization.localized("settings.privacy.backupToggle"), isOn: $cloudBackup.isEnabled)
+                    Text(localization.localized("settings.privacy.backupNote"))
                         .font(.caption)
                         .foregroundStyle(.secondary)
-                    Button("همگام‌سازی اکنون") {
+                    Button(localization.localized("settings.privacy.syncNow")) {
                         Task { await cloudBackup.sync(store: store) }
                     }
                     .disabled(!cloudBackup.isEnabled || isCloudSyncBusy)
                     cloudStatusView
                 }
-                Section("داده‌های محلی") {
-                    Button("خروجی گرفتن از داده‌ها") { }
-                    Button("حذف تمام داده‌ها", role: .destructive) { }
+                Section(localization.localized("settings.privacy.localData")) {
+                    Button(localization.localized("settings.privacy.export")) { }
+                    Button(localization.localized("settings.privacy.deleteAll"), role: .destructive) { }
                 }
             case .accessibility:
-                Section("نمایش و دسترسی") {
-                    Toggle("متن خواناتر", isOn: $notifications)
-                    LabeledContent("اندازهٔ نوشته", value: "هماهنگ با سیستم")
-                    LabeledContent("ظاهر", value: "خودکار")
+                Section(localization.localized("settings.accessibility.display")) {
+                    Toggle(localization.localized("settings.accessibility.readableText"), isOn: $notifications)
+                    LabeledContent(localization.localized("settings.accessibility.textSize"), value: localization.localized("settings.summary.system"))
+                    LabeledContent(localization.localized("settings.accessibility.appearance"), value: localization.localized("settings.accessibility.automatic"))
                 }
             case .about:
                 Section {
-                    LabeledContent("نسخه", value: "Visual Prototype 0.2")
-                    NavigationLink("نمایش راه‌اندازی اولیه") {
+                    LabeledContent(localization.localized("settings.about.version"), value: localization.localized("settings.about.versionValue"))
+                    NavigationLink(localization.localized("settings.about.showOnboarding")) {
                         OnboardingPrototypeView()
                     }
                 }
@@ -358,6 +363,14 @@ private struct SettingsDetailPrototypeView: View {
         Binding(get: { languageSettings.targetLanguageTag }, set: { languageSettings.selectTarget($0) })
     }
 
+    private var targetLevelBinding: Binding<String> {
+        Binding(get: { store.activeTargetLevel }, set: { store.setActiveTargetLevel($0) })
+    }
+
+    private var missionBinding: Binding<String> {
+        Binding(get: { store.activeMissionKey }, set: { store.setActiveMissionKey($0) })
+    }
+
     private var isCloudSyncBusy: Bool {
         cloudBackup.status == .checking || cloudBackup.status == .syncing
     }
@@ -366,19 +379,23 @@ private struct SettingsDetailPrototypeView: View {
     private var cloudStatusView: some View {
         switch cloudBackup.status {
         case .idle:
-            Label("هنوز همگام‌سازی نشده است", systemImage: "icloud")
+            Label(localization.localized("cloudBackup.status.idle"), systemImage: "icloud")
         case .checking:
-            Label("در حال بررسی حساب iCloud…", systemImage: "icloud")
+            Label(localization.localized("cloudBackup.status.checking"), systemImage: "icloud")
         case .syncing:
-            HStack { ProgressView(); Text("در حال پشتیبان‌گیری و بازیابی…") }
+            HStack { ProgressView(); Text(localization.localized("cloudBackup.status.syncing")) }
         case let .synced(date, count):
-            Label("آخرین همگام‌سازی: \(date.formatted(date: .abbreviated, time: .shortened)) · \(count) کارت", systemImage: "checkmark.icloud.fill")
+            Label(localization.formatted(
+                "cloudBackup.status.synced",
+                date.formatted(Date.FormatStyle(date: .abbreviated, time: .shortened).locale(localization.language.locale)),
+                "\(count)"
+            ), systemImage: "checkmark.icloud.fill")
                 .foregroundStyle(.green)
         case let .unavailable(message):
             Label(message, systemImage: "icloud.slash")
                 .foregroundStyle(.orange)
         case let .failed(message):
-            Label("همگام‌سازی ناموفق بود: \(message)", systemImage: "exclamationmark.icloud.fill")
+            Label(localization.formatted("cloudBackup.status.failed", message), systemImage: "exclamationmark.icloud.fill")
                 .foregroundStyle(.red)
         }
     }
@@ -428,11 +445,14 @@ private struct CustomDomainsSettingsContent: View {
     }
 
     private var copy: (title: String, subtitle: String, placeholder: String, add: String, empty: String, delete: String) {
-        switch localization.language {
-        case .english: ("Custom categories", "Create topics that constrain AI card generation.", "Category name", "Add", "No custom categories yet.", "Delete")
-        case .german: ("Eigene Kategorien", "Erstellen Sie Themen, die die KI-Kartenerstellung eingrenzen.", "Kategoriename", "Hinzufügen", "Noch keine eigenen Kategorien.", "Löschen")
-        case .persian: ("دسته‌های سفارشی", "موضوع‌هایی بسازید که تولید کارت با هوش مصنوعی را محدود می‌کنند.", "نام دسته", "افزودن", "هنوز دستهٔ سفارشی ندارید.", "حذف")
-        }
+        (
+            localization.localized("settings.customDomains.title"),
+            localization.localized("settings.customDomains.description"),
+            localization.localized("settings.customDomains.placeholder"),
+            localization.localized("common.add"),
+            localization.localized("settings.customDomains.empty"),
+            localization.localized("common.delete")
+        )
     }
 }
 
@@ -441,6 +461,7 @@ private struct LegacyProviderSettingsForm: View {
     @Environment(PrototypeAISettings.self) private var settings
     @State private var apiKey = ""
     @State private var statusMessage: String?
+    @State private var statusIsSuccess = false
     @State private var isTesting = false
 
     var body: some View {
@@ -449,7 +470,7 @@ private struct LegacyProviderSettingsForm: View {
             SecureField(settings.hasAPIKey ? localization.localized("provider.savedKeyChange") : localization.localized("provider.apiKey"), text: $apiKey)
                 .textContentType(.password)
                 .environment(\.layoutDirection, .leftToRight)
-            TextField("Model ID", text: $settings.modelID)
+            TextField(localization.localized("provider.modelID"), text: $settings.modelID)
                 .environment(\.layoutDirection, .leftToRight)
             Toggle(localization.localized("provider.cloudConsent"), isOn: $settings.cloudConsent)
             Text(localization.localized("provider.keychainNotice"))
@@ -457,33 +478,35 @@ private struct LegacyProviderSettingsForm: View {
                 .foregroundStyle(.secondary)
 
             HStack {
-                Button(localization.localized("ذخیرهٔ امن کلید")) {
+                Button(localization.localized("provider.saveKey")) {
                     do {
                         try settings.saveAPIKey(apiKey)
                         apiKey = ""
-                        statusMessage = "کلید در Keychain ذخیره شد."
+                        statusMessage = localization.localized("provider.keySaved")
                     } catch {
                         statusMessage = error.localizedDescription
                     }
+                    statusIsSuccess = false
                 }
                 .disabled(apiKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
 
-                Button(localization.localized("تست اتصال")) { testConnection() }
+                Button(localization.localized("provider.testConnection")) { testConnection() }
                     .disabled(!settings.hasAPIKey || isTesting)
 
                 if settings.hasAPIKey {
-                    Button(localization.localized("حذف کلید"), role: .destructive) {
+                    Button(localization.localized("provider.deleteKey"), role: .destructive) {
                         settings.deleteAPIKey()
-                        statusMessage = "کلید حذف شد."
+                        statusMessage = localization.localized("provider.keyDeleted")
+                        statusIsSuccess = false
                     }
                 }
             }
 
-            if isTesting { ProgressView(localization.localized("در حال آزمایش…")) }
+            if isTesting { ProgressView(localization.localized("provider.testing")) }
             if let statusMessage {
                 Text(statusMessage)
                     .font(.caption)
-                    .foregroundStyle(statusMessage.contains("موفق") ? PrototypeTheme.mint : .secondary)
+                    .foregroundStyle(statusIsSuccess ? PrototypeTheme.mint : .secondary)
             }
         }
     }
@@ -493,9 +516,11 @@ private struct LegacyProviderSettingsForm: View {
         Task {
             do {
                 try await ConfiguredProviderClient(baseURL: settings.endpoint, protocolName: settings.protocolName).testConnection(apiKey: try settings.apiKey())
-                statusMessage = "اتصال موفق بود."
+                statusMessage = localization.localized("provider.connectionSucceeded")
+                statusIsSuccess = true
             } catch {
                 statusMessage = error.localizedDescription
+                statusIsSuccess = false
             }
             isTesting = false
         }
@@ -525,6 +550,9 @@ final class PrototypeAISettings {
     private static let audioTranscriptModelOptionsKey = "prototype.provider.audio.transcript-model-options"
     private static let audioStreamModelKey = "prototype.provider.audio.stream-model"
     private static let audioStreamModelOptionsKey = "prototype.provider.audio.stream-model-options"
+    /// Persisted protocol identifiers; these are storage values, not configuration.
+    private static let openAICompatibleProtocol = "openai-compatible"
+    private static let googleNativeProtocol = "google-native"
 
     var textMode: PrototypeProviderMode { didSet { UserDefaults.standard.set(textMode.rawValue, forKey: Self.textModeKey) } }
     var audioMode: PrototypeProviderMode { didSet { UserDefaults.standard.set(audioMode.rawValue, forKey: Self.audioModeKey) } }
@@ -558,53 +586,57 @@ final class PrototypeAISettings {
     private(set) var hasAPIKey: Bool
 
     init() {
-        textMode = PrototypeProviderMode(rawValue: UserDefaults.standard.string(forKey: Self.textModeKey) ?? "cloud") ?? .cloud
-        audioMode = PrototypeProviderMode(rawValue: UserDefaults.standard.string(forKey: Self.audioModeKey) ?? "cloud") ?? .cloud
-        imageMode = PrototypeProviderMode(rawValue: UserDefaults.standard.string(forKey: Self.imageModeKey) ?? "cloud") ?? .cloud
+        let catalog = ProviderCatalog.bundled
+        let defaultMode = catalog.defaultProviderMode
+        textMode = UserDefaults.standard.string(forKey: Self.textModeKey).flatMap(PrototypeProviderMode.init(rawValue:)) ?? defaultMode
+        audioMode = UserDefaults.standard.string(forKey: Self.audioModeKey).flatMap(PrototypeProviderMode.init(rawValue:)) ?? defaultMode
+        imageMode = UserDefaults.standard.string(forKey: Self.imageModeKey).flatMap(PrototypeProviderMode.init(rawValue:)) ?? defaultMode
         let storedTextEndpoint = UserDefaults.standard.string(forKey: Self.endpointKey) ?? ""
-        if storedTextEndpoint.localizedCaseInsensitiveContains("openrouter.ai") {
-            endpoint = "https://api.openai.com/v1"
-            UserDefaults.standard.set("https://api.openai.com/v1", forKey: Self.endpointKey)
+        if catalog.hostMarkers.replacedTextEndpoints.contains(where: { storedTextEndpoint.localizedCaseInsensitiveContains($0) }) {
+            endpoint = catalog.endpoints.text
+            UserDefaults.standard.set(catalog.endpoints.text, forKey: Self.endpointKey)
         } else {
-            endpoint = storedTextEndpoint.isEmpty ? "https://api.openai.com/v1" : storedTextEndpoint
+            endpoint = storedTextEndpoint.isEmpty ? catalog.endpoints.text : storedTextEndpoint
         }
         let storedProtocol = UserDefaults.standard.string(forKey: Self.protocolKey) ?? ""
-        let resolvedProtocol = storedProtocol == "google-native" ? "google-native" : "openai-compatible"
+        let resolvedProtocol = storedProtocol == Self.googleNativeProtocol ? Self.googleNativeProtocol : catalog.defaultProtocol
         let storedAudioEndpoint = UserDefaults.standard.string(forKey: Self.audioEndpointKey) ?? ""
         // Audio follows the provider configuration already saved on this device.
         // Do not silently switch an existing installation to Google.
-        let resolvedEndpoint = storedTextEndpoint.isEmpty ? "https://api.openai.com/v1" : storedTextEndpoint
+        let resolvedEndpoint = storedTextEndpoint.isEmpty ? catalog.endpoints.text : storedTextEndpoint
         let candidateAudioEndpoint = storedAudioEndpoint.isEmpty ? resolvedEndpoint : storedAudioEndpoint
-        audioEndpoint = (resolvedProtocol == "openai-compatible" && candidateAudioEndpoint.contains("texttospeech.googleapis.com"))
+        audioEndpoint = (resolvedProtocol == Self.openAICompatibleProtocol && candidateAudioEndpoint.contains(catalog.hostMarkers.googleTextToSpeech))
             ? resolvedEndpoint
             : candidateAudioEndpoint
-        imageEndpoint = UserDefaults.standard.string(forKey: Self.imageEndpointKey) ?? "https://api.openai.com/v1"
+        imageEndpoint = UserDefaults.standard.string(forKey: Self.imageEndpointKey) ?? catalog.endpoints.image
         protocolName = resolvedProtocol
         let storedAudioProtocol = UserDefaults.standard.string(forKey: Self.audioProtocolKey)
-        let resolvedAudioProtocol = (resolvedProtocol == "openai-compatible" && storedAudioProtocol == "google-native")
-            ? "openai-compatible"
+        let resolvedAudioProtocol = (resolvedProtocol == Self.openAICompatibleProtocol && storedAudioProtocol == Self.googleNativeProtocol)
+            ? Self.openAICompatibleProtocol
             : (storedAudioProtocol ?? resolvedProtocol)
         // Repair the stale Google values written by the previous implementation
         // when this device is configured for OpenAI-compatible speech.
         let storedVoice = UserDefaults.standard.string(forKey: Self.audioVoiceKey) ?? ""
         let storedAudioModel = UserDefaults.standard.string(forKey: Self.audioModelKey) ?? ""
         audioProtocolName = resolvedAudioProtocol
-        if resolvedAudioProtocol == "openai-compatible" {
-            audioVoice = storedVoice.isEmpty || storedVoice.contains("Standard-") ? "alloy" : storedVoice
+        if resolvedAudioProtocol == Self.openAICompatibleProtocol {
+            audioVoice = storedVoice.isEmpty || storedVoice.contains(catalog.hostMarkers.legacyGoogleVoice)
+                ? catalog.openAICompatibleAudio.voice
+                : storedVoice
             // `audioModelID` remains the speech-synthesis role used by card
             // pronunciation. Older builds stored transcription models here;
             // migrate those installations back to a valid TTS default.
             let storedLooksLikeTranscription = storedAudioModel.localizedCaseInsensitiveContains("transcri")
                 || storedAudioModel.localizedCaseInsensitiveContains("whisper")
-            audioModelID = storedAudioModel.isEmpty || storedAudioModel == "standard" || storedLooksLikeTranscription
-                ? "gpt-4o-mini-tts"
+            audioModelID = storedAudioModel.isEmpty || storedAudioModel == catalog.googleNativeAudio.speechModel || storedLooksLikeTranscription
+                ? catalog.models.speech
                 : storedAudioModel
         } else {
-            audioVoice = storedVoice.isEmpty ? "de-DE-Standard-A" : storedVoice
-            audioModelID = storedAudioModel.isEmpty ? "standard" : storedAudioModel
+            audioVoice = storedVoice.isEmpty ? catalog.googleNativeAudio.voice : storedVoice
+            audioModelID = storedAudioModel.isEmpty ? catalog.googleNativeAudio.speechModel : storedAudioModel
         }
-        imageModelID = UserDefaults.standard.string(forKey: Self.imageModelKey) ?? "gpt-image-1-mini"
-        modelID = UserDefaults.standard.string(forKey: Self.modelKey) ?? "gpt-4o-mini"
+        imageModelID = UserDefaults.standard.string(forKey: Self.imageModelKey) ?? catalog.models.image
+        modelID = UserDefaults.standard.string(forKey: Self.modelKey) ?? catalog.models.text
         let storedAudioOptions = UserDefaults.standard.stringArray(forKey: Self.audioModelOptionsKey) ?? []
         let storedTranscriptOptions = UserDefaults.standard.stringArray(forKey: Self.audioTranscriptModelOptionsKey) ?? []
         let storedStreamOptions = UserDefaults.standard.stringArray(forKey: Self.audioStreamModelOptionsKey) ?? []
@@ -620,20 +652,20 @@ final class PrototypeAISettings {
             let migratedStream = storedAudioOptions.filter {
                 $0.localizedCaseInsensitiveContains("live-transcri") || $0.localizedCaseInsensitiveContains("realtime-whisper")
             }
-            audioModelOptions = migratedSpeech.isEmpty ? ["gpt-4o-mini-tts", "tts-1", "tts-1-hd"] : migratedSpeech
+            audioModelOptions = migratedSpeech.isEmpty ? catalog.defaultModelOptions.speech : migratedSpeech
             audioTranscriptModelOptions = storedTranscriptOptions.isEmpty
-                ? (migratedTranscript.isEmpty ? ["gpt-transcribe", "gpt-4o-transcribe", "gpt-4o-mini-transcribe", "whisper-1"] : migratedTranscript)
+                ? (migratedTranscript.isEmpty ? catalog.defaultModelOptions.transcript : migratedTranscript)
                 : storedTranscriptOptions
             audioStreamModelOptions = storedStreamOptions.isEmpty
-                ? (migratedStream.isEmpty ? ["gpt-live-transcribe", "gpt-realtime-whisper"] : migratedStream)
+                ? (migratedStream.isEmpty ? catalog.defaultModelOptions.stream : migratedStream)
                 : storedStreamOptions
         } else {
             audioModelOptions = storedAudioOptions
             audioTranscriptModelOptions = storedTranscriptOptions
             audioStreamModelOptions = storedStreamOptions
         }
-        audioTranscriptModelID = UserDefaults.standard.string(forKey: Self.audioTranscriptModelKey) ?? "gpt-transcribe"
-        audioStreamModelID = UserDefaults.standard.string(forKey: Self.audioStreamModelKey) ?? "gpt-live-transcribe"
+        audioTranscriptModelID = UserDefaults.standard.string(forKey: Self.audioTranscriptModelKey) ?? catalog.models.transcript
+        audioStreamModelID = UserDefaults.standard.string(forKey: Self.audioStreamModelKey) ?? catalog.models.stream
         cloudConsent = UserDefaults.standard.bool(forKey: Self.consentKey)
         hasAPIKey = (try? Self.readTextOrLegacyKey()) != nil
     }
@@ -795,6 +827,16 @@ enum ProviderCredentialDiagnostics {
 
     private static func fingerprint(_ key: String) -> String {
         SHA256.hash(data: Data(key.utf8)).map { String(format: "%02x", $0) }.joined().prefix(12).description
+    }
+}
+
+extension ProviderCatalog {
+    /// The configured default mode for newly installed providers.
+    var defaultProviderMode: PrototypeProviderMode {
+        guard let mode = PrototypeProviderMode(rawValue: defaultMode) else {
+            preconditionFailure("provider-catalog.json defaultMode '\(defaultMode)' is not a PrototypeProviderMode")
+        }
+        return mode
     }
 }
 
@@ -1036,13 +1078,13 @@ private struct ProviderConfigurationView: View {
                 settings.audioTranscriptModelOptions = catalog.transcript
                 settings.audioStreamModelOptions = catalog.stream
                 if !catalog.speech.contains(settings.audioModelID) {
-                    settings.audioModelID = catalog.speech.first ?? "gpt-4o-mini-tts"
+                    settings.audioModelID = catalog.speech.first ?? ProviderCatalog.bundled.models.speech
                 }
                 if !catalog.transcript.contains(settings.audioTranscriptModelID) {
-                    settings.audioTranscriptModelID = catalog.transcript.first ?? "gpt-transcribe"
+                    settings.audioTranscriptModelID = catalog.transcript.first ?? ProviderCatalog.bundled.models.transcript
                 }
                 if !catalog.stream.contains(settings.audioStreamModelID) {
-                    settings.audioStreamModelID = catalog.stream.first ?? "gpt-live-transcribe"
+                    settings.audioStreamModelID = catalog.stream.first ?? ProviderCatalog.bundled.models.stream
                 }
                 keyMessage = localization.localized("provider.audioConnectionSuccess")
             } catch {
@@ -1064,13 +1106,13 @@ enum ProviderError: LocalizedError {
 
     var errorDescription: String? {
         switch self {
-        case .missingAPIKey: "ابتدا API Key مربوط به provider انتخاب‌شده را در تنظیمات ذخیره کن."
-        case .consentRequired: "برای provider ابری، اجازهٔ ارسال داده را در تنظیمات فعال کن."
-        case .providerDisabled: "تولید متن در تنظیمات خاموش است."
-        case .unsupportedProtocol: "پروتکل انتخاب‌شده هنوز برای تولید کارت پشتیبانی نمی‌شود."
-        case .invalidResponse: "پاسخ provider با ساختار کارت سازگار نبود."
-        case .service(let status, let message): "Provider (\(status)): \(message)"
-        case .keychain(let status): "ذخیره یا خواندن Keychain انجام نشد (\(status))."
+        case .missingAPIKey: PrototypeLocalization.current("provider.error.missingKey")
+        case .consentRequired: PrototypeLocalization.current("provider.error.consent")
+        case .providerDisabled: PrototypeLocalization.current("provider.error.disabled")
+        case .unsupportedProtocol: PrototypeLocalization.current("provider.error.protocol")
+        case .invalidResponse: PrototypeLocalization.current("provider.error.invalidResponse")
+        case .service(let status, let message): PrototypeLocalization.current("provider.error.service", "\(status)", message)
+        case .keychain(let status): PrototypeLocalization.current("provider.error.keychain", "\(status)")
         }
     }
 }
@@ -1226,7 +1268,7 @@ struct ConfiguredProviderClient: Sendable {
     let baseURL: String
     let protocolName: String
 
-    init(baseURL: String = "https://api.openai.com/v1", protocolName: String = "openai-compatible") {
+    init(baseURL: String = ProviderCatalog.bundled.endpoints.text, protocolName: String = ProviderCatalog.bundled.defaultProtocol) {
         self.baseURL = baseURL.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
         self.protocolName = protocolName
     }
@@ -1237,7 +1279,7 @@ struct ConfiguredProviderClient: Sendable {
         let (_, response) = try await URLSession.shared.data(for: request)
         guard let http = response as? HTTPURLResponse else { throw ProviderError.invalidResponse }
         guard (200..<300).contains(http.statusCode) else {
-            throw ProviderError.service(http.statusCode, http.statusCode == 401 ? "کلید API معتبر نیست یا برای این endpoint قابل استفاده نیست." : "کلید یا اتصال معتبر نیست.")
+            throw ProviderError.service(http.statusCode, PrototypeLocalization.current(http.statusCode == 401 ? "provider.error.invalidKey" : "provider.error.keyOrConnection"))
         }
     }
 
@@ -1253,16 +1295,17 @@ struct ConfiguredProviderClient: Sendable {
         let (data, response) = try await URLSession.shared.data(for: request)
         guard let http = response as? HTTPURLResponse else { throw ProviderError.invalidResponse }
         guard (200..<300).contains(http.statusCode) else {
-            throw ProviderError.service(http.statusCode, http.statusCode == 401 ? "کلید API معتبر نیست یا برای این endpoint قابل استفاده نیست." : "دریافت فهرست مدل‌ها ناموفق بود.")
+            throw ProviderError.service(http.statusCode, PrototypeLocalization.current(http.statusCode == 401 ? "provider.error.invalidKey" : "provider.error.modelList"))
         }
         guard let envelope = try? JSONDecoder().decode(ProviderModelsEnvelope.self, from: data) else {
             throw ProviderError.invalidResponse
         }
         let models = envelope.data.map(\.id)
-        if baseURL.localizedCaseInsensitiveContains("api.openai.com") {
-            let speechOrder = ["gpt-4o-mini-tts", "tts-1", "tts-1-hd"]
-            let transcriptOrder = ["gpt-transcribe", "gpt-4o-transcribe", "gpt-4o-mini-transcribe", "gpt-4o-transcribe-diarize", "whisper-1"]
-            let streamOrder = ["gpt-live-transcribe", "gpt-realtime-whisper"]
+        let providerCatalog = ProviderCatalog.bundled
+        if baseURL.localizedCaseInsensitiveContains(providerCatalog.hostMarkers.openAI) {
+            let speechOrder = providerCatalog.preferredModelOrder.speech
+            let transcriptOrder = providerCatalog.preferredModelOrder.transcript
+            let streamOrder = providerCatalog.preferredModelOrder.stream
             let speechModels = models.filter { id in
                 let normalized = id.lowercased()
                 return normalized.contains("tts") || (normalized.contains("speech") && !normalized.contains("speech-to-text"))
@@ -1297,6 +1340,24 @@ struct ConfiguredProviderClient: Sendable {
         return AudioModelCatalog(speech: speech, transcript: transcript, stream: stream)
     }
 
+    /// `temperature` and, when configured, `max_tokens` for a chat completion.
+    private static func samplingParameters(_ profile: ProviderCatalog.RequestProfile) -> [String: Any] {
+        var parameters: [String: Any] = ["temperature": profile.temperature]
+        if let maxTokens = profile.maxTokens { parameters["max_tokens"] = maxTokens }
+        return parameters
+    }
+
+    private static func chatBody(
+        model: String,
+        messages: [[String: String]],
+        responseFormat: [String: Any]? = nil,
+        profile: ProviderCatalog.RequestProfile
+    ) -> [String: Any] {
+        var body: [String: Any] = ["model": model, "messages": messages]
+        if let responseFormat { body["response_format"] = responseFormat }
+        return body.merging(samplingParameters(profile)) { $1 }
+    }
+
     private static func preferredModels(_ discovered: [String], including official: [String], order: [String]) -> [String] {
         let candidates = Array(Set(discovered).union(official))
         return candidates.sorted { left, right in
@@ -1307,9 +1368,13 @@ struct ConfiguredProviderClient: Sendable {
     }
 
     func translateText(_ text: String, model: String, apiKey: String, sourceLanguageTag: String, targetLanguageTag: String) async throws -> String {
-        let body: [String: Any] = ["model": model, "messages": [["role": "system", "content": "Translate faithfully from \(sourceLanguageTag) to \(targetLanguageTag). Preserve paragraphs and return only the translation."], ["role": "user", "content": text]], "temperature": 0.1]
+        let profile = ProviderCatalog.bundled.requests.translateText
+        let instruction = PromptTemplate.render(AIPromptCatalog.bundled.templates.translateText, [
+            "sourceLanguageTag": sourceLanguageTag, "targetLanguageTag": targetLanguageTag
+        ])
+        let body = Self.chatBody(model: model, messages: [["role": "system", "content": instruction], ["role": "user", "content": text]], profile: profile)
         var request = URLRequest(url: URL(string: "\(baseURL)/chat/completions")!)
-        request.httpMethod = "POST"; request.timeoutInterval = 45
+        request.httpMethod = "POST"; request.timeoutInterval = profile.timeoutSeconds
         if !apiKey.isEmpty { request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization") }
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
@@ -1322,12 +1387,15 @@ struct ConfiguredProviderClient: Sendable {
     }
 
     func extractImportantWords(from text: String, topic: String, languageTag: String, minimumLevel: String, model: String, apiKey: String) async throws -> [String] {
-        let candidateProperties: [String: Any] = ["surfaceForm": ["type": "string"], "lemma": ["type": "string"], "partOfSpeech": ["type": "string", "enum": ["noun", "verb", "adjective", "adverb", "fixedExpression"]], "estimatedLevel": ["type": "string", "enum": ["A1", "A2", "B1", "B2", "C1", "C2"]], "topicRelevance": ["type": "string", "enum": ["direct", "contextual"]], "confidence": ["type": "number", "minimum": 0, "maximum": 1], "reason": ["type": "string"]]
+        let candidateProperties: [String: Any] = ["surfaceForm": ["type": "string"], "lemma": ["type": "string"], "partOfSpeech": ["type": "string", "enum": ["noun", "verb", "adjective", "adverb", "fixedExpression"]], "estimatedLevel": ["type": "string", "enum": LearningContentRules.bundled.levels.cefr], "topicRelevance": ["type": "string", "enum": ["direct", "contextual"]], "confidence": ["type": "number", "minimum": 0, "maximum": 1], "reason": ["type": "string"]]
         let schema: [String: Any] = ["type": "object", "properties": ["candidates": ["type": "array", "minItems": 1, "maxItems": 8, "items": ["type": "object", "properties": candidateProperties, "required": ["surfaceForm", "lemma", "partOfSpeech", "estimatedLevel", "topicRelevance", "confidence", "reason"], "additionalProperties": false]]], "required": ["candidates"], "additionalProperties": false]
-        let instruction = "Select 3 to 8 genuinely important vocabulary items from this \(languageTag) passage for a learner studying '\(topic)' at CEFR \(minimumLevel) or higher. For every candidate return the exact surface form found in the passage and its canonical dictionary lemma. For German, verbs must be infinitives, nouns must use dictionary capitalization without an article in lemma, adjectives must be uninflected, and separable verbs must use their complete infinitive. Choose only content words or fixed expressions central to the passage/topic whose standard lexical CEFR level is \(minimumLevel) or above. Exclude articles, pronouns, conjunctions, prepositions, modal and auxiliary verbs, names, numbers, generic function words, and anything normally taught below \(minimumLevel). Confidence measures certainty in both lemma and CEFR classification. Return only JSON."
-        let body: [String: Any] = ["model": model, "messages": [["role": "system", "content": instruction], ["role": "user", "content": text]], "response_format": ["type": "json_schema", "json_schema": ["name": "important_vocabulary", "strict": true, "schema": schema]], "temperature": 0.1, "max_tokens": 300]
+        let profile = ProviderCatalog.bundled.requests.extractImportantWords
+        let instruction = PromptTemplate.render(AIPromptCatalog.bundled.templates.extractImportantWords, [
+            "languageTag": languageTag, "topic": topic, "minimumLevel": minimumLevel
+        ])
+        let body = Self.chatBody(model: model, messages: [["role": "system", "content": instruction], ["role": "user", "content": text]], responseFormat: ["type": "json_schema", "json_schema": ["name": "important_vocabulary", "strict": true, "schema": schema]], profile: profile)
         var request = URLRequest(url: URL(string: "\(baseURL)/chat/completions")!)
-        request.httpMethod = "POST"; request.timeoutInterval = 45
+        request.httpMethod = "POST"; request.timeoutInterval = profile.timeoutSeconds
         if !apiKey.isEmpty { request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization") }
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
@@ -1338,11 +1406,11 @@ struct ConfiguredProviderClient: Sendable {
               let content = message["content"] as? String,
               let payload = try JSONSerialization.jsonObject(with: Data(content.utf8)) as? [String: Any],
               let candidates = payload["candidates"] as? [[String: Any]] else { throw ProviderError.invalidResponse }
-        let levels = ["A1", "A2", "B1", "B2", "C1", "C2"]
+        let levels = LearningContentRules.bundled.levels.cefr
         let minimumIndex = levels.firstIndex(of: minimumLevel) ?? 0
         let words = candidates.compactMap { candidate -> String? in
             guard let lemma = candidate["lemma"] as? String, let estimatedLevel = candidate["estimatedLevel"] as? String,
-                  let confidence = candidate["confidence"] as? Double, confidence >= 0.8,
+                  let confidence = candidate["confidence"] as? Double, confidence >= ProviderCatalog.bundled.vocabularyExtraction.minimumConfidence,
                   let levelIndex = levels.firstIndex(of: estimatedLevel), levelIndex >= minimumIndex else { return nil }
             return lemma
         }
@@ -1351,12 +1419,13 @@ struct ConfiguredProviderClient: Sendable {
     }
 
     func normalizeVocabularyItem(_ surfaceForm: String, passage: String, languageTag: String, model: String, apiKey: String) async throws -> NormalizedVocabularyItem {
-        let schema: [String: Any] = ["type": "object", "properties": ["lemma": ["type": "string"], "actualLevel": ["type": "string", "enum": ["A1", "A2", "B1", "B2", "C1", "C2"]], "confidence": ["type": "number", "minimum": 0, "maximum": 1]], "required": ["lemma", "actualLevel", "confidence"], "additionalProperties": false]
-        let instruction = "Normalize the supplied \(languageTag) vocabulary item using its passage context. Return only its canonical dictionary headword and actual lexical CEFR level. For German: verbs must be infinitives, separable and reflexive verbs must retain their complete dictionary form, nouns must use dictionary capitalization without adding an article, and adjectives must be uninflected. Never echo an inflected surface form as lemma unless it is already the canonical dictionary form. Return only JSON."
+        let schema: [String: Any] = ["type": "object", "properties": ["lemma": ["type": "string"], "actualLevel": ["type": "string", "enum": LearningContentRules.bundled.levels.cefr], "confidence": ["type": "number", "minimum": 0, "maximum": 1]], "required": ["lemma", "actualLevel", "confidence"], "additionalProperties": false]
+        let profile = ProviderCatalog.bundled.requests.normalizeVocabularyItem
+        let instruction = PromptTemplate.render(AIPromptCatalog.bundled.templates.normalizeVocabularyItem, ["languageTag": languageTag])
         let userPayload = try JSONSerialization.data(withJSONObject: ["surfaceForm": surfaceForm, "passage": passage])
-        let body: [String: Any] = ["model": model, "messages": [["role": "system", "content": instruction], ["role": "user", "content": String(decoding: userPayload, as: UTF8.self)]], "response_format": ["type": "json_schema", "json_schema": ["name": "normalized_vocabulary", "strict": true, "schema": schema]], "temperature": 0, "max_tokens": 120]
+        let body = Self.chatBody(model: model, messages: [["role": "system", "content": instruction], ["role": "user", "content": String(decoding: userPayload, as: UTF8.self)]], responseFormat: ["type": "json_schema", "json_schema": ["name": "normalized_vocabulary", "strict": true, "schema": schema]], profile: profile)
         var request = URLRequest(url: URL(string: "\(baseURL)/chat/completions")!)
-        request.httpMethod = "POST"; request.timeoutInterval = 45
+        request.httpMethod = "POST"; request.timeoutInterval = profile.timeoutSeconds
         if !apiKey.isEmpty { request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization") }
         request.setValue("application/json", forHTTPHeaderField: "Content-Type"); request.httpBody = try JSONSerialization.data(withJSONObject: body)
         let (data, response) = try await URLSession.shared.data(for: request)
@@ -1368,11 +1437,12 @@ struct ConfiguredProviderClient: Sendable {
         guard card.senses.count > 1 else { return card.senses.isEmpty ? [] : [0] }
         let schema: [String: Any] = ["type": "object", "properties": ["representativeIndexes": ["type": "array", "minItems": 1, "items": ["type": "integer"]]], "required": ["representativeIndexes"], "additionalProperties": false]
         let senses = card.senses.enumerated().map { ["index": $0.offset, "meaning": $0.element.meaning, "usage": $0.element.usage, "example": $0.element.example.target] as [String: Any] }
-        let instruction = "Act as a strict lexicographic deduplicator. Return one zero-based representative index for each genuinely independent dictionary meaning. Merge paraphrases, near-synonyms, register or usage differences, collocations, grammatical variants, and different examples into the same meaning. Most ordinary words should produce one representative. Multiple representatives are allowed only when a learner must recall materially different definitions. Return only JSON."
+        let profile = ProviderCatalog.bundled.requests.representativeSenses
+        let instruction = AIPromptCatalog.bundled.templates.representativeSenses
         let payload = try JSONSerialization.data(withJSONObject: ["headword": card.targetText, "partOfSpeech": card.partOfSpeech, "senses": senses])
-        let body: [String: Any] = ["model": model, "messages": [["role": "system", "content": instruction], ["role": "user", "content": String(decoding: payload, as: UTF8.self)]], "response_format": ["type": "json_schema", "json_schema": ["name": "sense_deduplication", "strict": true, "schema": schema]], "temperature": 0, "max_tokens": 150]
+        let body = Self.chatBody(model: model, messages: [["role": "system", "content": instruction], ["role": "user", "content": String(decoding: payload, as: UTF8.self)]], responseFormat: ["type": "json_schema", "json_schema": ["name": "sense_deduplication", "strict": true, "schema": schema]], profile: profile)
         var request = URLRequest(url: URL(string: "\(baseURL)/chat/completions")!)
-        request.httpMethod = "POST"; request.timeoutInterval = 45
+        request.httpMethod = "POST"; request.timeoutInterval = profile.timeoutSeconds
         if !apiKey.isEmpty { request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization") }
         request.setValue("application/json", forHTTPHeaderField: "Content-Type"); request.httpBody = try JSONSerialization.data(withJSONObject: body)
         let (data, response) = try await URLSession.shared.data(for: request)
@@ -1380,9 +1450,17 @@ struct ConfiguredProviderClient: Sendable {
         return Array(Set(indexes.filter { card.senses.indices.contains($0) })).sorted()
     }
 
-    func generateCard(word: String, domain: String, model: String, apiKey: String, sourceLanguageTag: String = "fa", targetLanguageTag: String = "de", context: String? = nil, level: String? = nil) async throws -> ConfiguredProviderCard {
-        let categoryScope = categoryScope(for: domain) + "; meanings and usage must be in source language \(sourceLanguageTag) (Persian script when fa), while target examples remain in \(targetLanguageTag)"
-        let contextInstruction = "IMPORTANT LANGUAGE CONTRACT: targetText and example.target are \(targetLanguageTag); sourceMeaning, every senses.meaning, senses.usage, and example.source are \(sourceLanguageTag). Report the headword's actual CEFR level; never raise or relabel it to match the learner's requested minimum. " + ((context.map { "Use this learner-supplied passage as the primary context (do not copy it verbatim): \($0.prefix(4000))" } ?? "No passage was supplied; use authentic examples for the category.")) + (level.map { " The learner requested minimum CEFR \($0), but accuracy of the word's actual level is mandatory." } ?? "")
+    func generateCard(word: String, domain: String, model: String, apiKey: String, sourceLanguageTag: String, targetLanguageTag: String, context: String? = nil, level: String? = nil) async throws -> ConfiguredProviderCard {
+        let prompts = AIPromptCatalog.bundled.templates
+        let profile = ProviderCatalog.bundled.requests.generateCard
+        let passageLimit = ProviderCatalog.bundled.cardGeneration.maximumPassageCharacters
+        let languageValues = ["sourceLanguageTag": sourceLanguageTag, "targetLanguageTag": targetLanguageTag]
+        let categoryScope = PromptTemplate.render(prompts.generateCardCategoryScope, languageValues.merging([
+            "categoryScope": AIPromptCatalog.bundled.categoryScope(for: domain)
+        ]) { $1 })
+        let contextInstruction = PromptTemplate.render(prompts.generateCardLanguageContract, languageValues)
+            + (context.map { PromptTemplate.render(prompts.generateCardPassageContext, ["passage": String($0.prefix(passageLimit))]) } ?? prompts.generateCardNoPassageContext)
+            + (level.map { PromptTemplate.render(prompts.generateCardMinimumLevel, ["level": $0]) } ?? "")
         let schema: [String: Any] = [
             "type": "object",
             "properties": [
@@ -1417,22 +1495,24 @@ struct ConfiguredProviderClient: Sendable {
             "required": ["targetText", "sourceMeaning", "level", "partOfSpeech", "article", "topicRelevance", "example", "senses"],
             "additionalProperties": false
         ]
-        let body: [String: Any] = [
+        var body: [String: Any] = [
             "model": model,
             "messages": [
-                ["role": "system", "content": "You are an expert lexicographer and curriculum-aware language teacher creating accurate learning cards. The learning language is \(targetLanguageTag); the learner's support language is \(sourceLanguageTag). The selected topic is the organizing principle of the card, not a pass/fail filter. Establish the supplied headword's real spelling, grammar, and dictionary meanings, then choose the meaning and usage most useful inside the supplied topic scope. Preserve targetText as the supplied headword apart from normal capitalization or a required article. Never replace it with another word and never invent a meaning or collocation. General verbs, adjectives, and everyday nouns belong when they naturally occur in topic-specific instructions, questions, rules, reports, warnings, or conversations. Make the primary meaning, example, usage note, and collocations concretely reflect the topic wherever linguistically natural. Do not split paraphrases, register variants, grammar variants, synonyms, usage notes, collocations, or different examples into separate senses. An ordinary noun normally has one card: only return multiple senses for unmistakably independent dictionary homonyms. Return only genuinely independent dictionary meanings. Use an empty article for non-nouns. All meanings and example.source values must be in \(sourceLanguageTag); targetText and example.target values must be in \(targetLanguageTag)."],
-                ["role": "user", "content": "Create a complete card for the \(targetLanguageTag) headword '\(word)' in the learner category '\(domain)'. Topic scope: \(categoryScope). \(contextInstruction) Treat all of these as relevant parts of the category and use the closest natural context for this word. The first meaning and primary example must prioritize the selected topic when a genuine use exists. Set topicRelevance to direct for specialist terminology, contextual for an ordinary word naturally used in this topic, and unrelated only when no honest topical use exists; this label is informational and must never prevent returning a card. Choose a precise sourceMeaning and a natural, realistic example. Return up to three genuinely independent meanings, with the topic-relevant meaning first. Other common independent meanings may follow when useful, but do not create multiple cards for mere paraphrases. If the word is uncommon or ambiguous, keep the requested headword and return the best supported dictionary analysis instead of guessing another word. Fill every required JSON field and return only the requested JSON object."]
+                ["role": "system", "content": PromptTemplate.render(prompts.generateCardSystem, languageValues)],
+                ["role": "user", "content": PromptTemplate.render(prompts.generateCardUser, [
+                    "targetLanguageTag": targetLanguageTag, "word": word, "domain": domain,
+                    "categoryScope": categoryScope, "contextInstruction": contextInstruction
+                ])]
             ],
             "response_format": [
                 "type": "json_schema",
                 "json_schema": ["name": "linguabrain_card", "strict": true, "schema": schema]
-            ],
-            "temperature": 0.1,
-            "max_tokens": 1_200
+            ]
         ]
+        body.merge(Self.samplingParameters(profile)) { $1 }
         var request = URLRequest(url: URL(string: "\(baseURL)/chat/completions")!)
         request.httpMethod = "POST"
-        request.timeoutInterval = 45
+        request.timeoutInterval = profile.timeoutSeconds
         if !apiKey.isEmpty { request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization") }
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
@@ -1440,8 +1520,8 @@ struct ConfiguredProviderClient: Sendable {
         guard let http = response as? HTTPURLResponse else { throw ProviderError.invalidResponse }
         guard (200..<300).contains(http.statusCode) else {
             let message = (try? JSONSerialization.jsonObject(with: data) as? [String: Any])
-                .flatMap { $0["error"] as? [String: Any] }?["message"] as? String ?? "درخواست ناموفق بود."
-            let normalizedMessage = http.statusCode == 401 ? "کلید API معتبر نیست یا برای این endpoint قابل استفاده نیست." : message
+                .flatMap { $0["error"] as? [String: Any] }?["message"] as? String ?? PrototypeLocalization.current("provider.error.requestFailed")
+            let normalizedMessage = http.statusCode == 401 ? PrototypeLocalization.current("provider.error.invalidKey") : message
             throw ProviderError.service(http.statusCode, normalizedMessage)
         }
         let envelope = try JSONDecoder().decode(ProviderChatEnvelope.self, from: data)
@@ -1450,39 +1530,19 @@ struct ConfiguredProviderClient: Sendable {
         return try JSONDecoder().decode(ConfiguredProviderCard.self, from: contentData)
     }
 
-    private func categoryScope(for domain: String) -> String {
-        let normalized = domain.folding(options: [.caseInsensitive, .diacriticInsensitive], locale: .current)
-        if normalized.contains("fuhrerschein") || normalized.contains("führerschein") || normalized.contains("driv") || normalized.contains("verkehr") || normalized.contains("road") || normalized.contains("رانند") || normalized.contains("گواهینامه") {
-            return "driving and road traffic; driving-licence theory and practical tests; roads, lanes, intersections and right of way; traffic laws, signs and signals; speed, distance and parking; vehicles and their operation; drivers, cyclists and pedestrians; hazards, weather, accidents and first aid; offences, fines, alcohol or drugs, police checks, insurance, registration and licensing administration"
-        }
-        if normalized == "software" || normalized.contains("برنامه") {
-            return "software development, applications, interfaces, data, debugging, security, deployment, technical documentation and workplace communication"
-        }
-        if normalized == "medical" || normalized.contains("پزش") || normalized.contains("gesund") {
-            return "healthcare, symptoms, anatomy, diagnosis, treatment, medication, appointments, hospitals, emergencies and communication with patients"
-        }
-        if normalized == "work" || normalized.contains("کار") || normalized.contains("beruf") {
-            return "workplaces, professions, tasks, meetings, employment, applications, contracts, schedules, collaboration and professional communication"
-        }
-        if normalized == "general" {
-            return "common everyday situations, practical communication, home, travel, services, relationships, news and public life"
-        }
-        return "the topic '\(domain)' and its terminology, actors, objects, places, actions, rules, processes, risks, documents, common questions and authentic real-world conversations"
-    }
-
     func translate(text: String, targetLanguageTag: String, model: String, apiKey: String) async throws -> String {
-        let body: [String: Any] = [
+        let profile = ProviderCatalog.bundled.requests.translate
+        var body: [String: Any] = [
             "model": model,
             "messages": [
-                ["role": "system", "content": "Translate the user's text into language code \(targetLanguageTag). Preserve meaning, names, numbers, and paragraph breaks. Return only the translation."],
+                ["role": "system", "content": PromptTemplate.render(AIPromptCatalog.bundled.templates.translate, ["targetLanguageTag": targetLanguageTag])],
                 ["role": "user", "content": text]
-            ],
-            "temperature": 0.1,
-            "max_tokens": 2_000
+            ]
         ]
+        body.merge(Self.samplingParameters(profile)) { $1 }
         var request = URLRequest(url: URL(string: "\(baseURL)/chat/completions")!)
         request.httpMethod = "POST"
-        request.timeoutInterval = 45
+        request.timeoutInterval = profile.timeoutSeconds
         request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
@@ -1490,7 +1550,7 @@ struct ConfiguredProviderClient: Sendable {
         guard let http = response as? HTTPURLResponse else { throw ProviderError.invalidResponse }
         guard (200..<300).contains(http.statusCode) else {
             let message = (try? JSONSerialization.jsonObject(with: data) as? [String: Any])
-                .flatMap { $0["error"] as? [String: Any] }?["message"] as? String ?? "ترجمه ناموفق بود."
+                .flatMap { $0["error"] as? [String: Any] }?["message"] as? String ?? PrototypeLocalization.current("provider.error.translationFailed")
             throw ProviderError.service(http.statusCode, message)
         }
         let envelope = try JSONDecoder().decode(ProviderChatEnvelope.self, from: data)
@@ -1501,19 +1561,19 @@ struct ConfiguredProviderClient: Sendable {
     }
 
     func streamTranslate(text: String, targetLanguageTag: String, model: String, apiKey: String, onDelta: @escaping @Sendable (String) async -> Void) async throws {
-        let body: [String: Any] = [
+        let profile = ProviderCatalog.bundled.requests.streamTranslate
+        var body: [String: Any] = [
             "model": model,
             "stream": true,
             "messages": [
-                ["role": "system", "content": "Translate into language code \(targetLanguageTag). Return only the translation."],
+                ["role": "system", "content": PromptTemplate.render(AIPromptCatalog.bundled.templates.streamTranslate, ["targetLanguageTag": targetLanguageTag])],
                 ["role": "user", "content": text]
-            ],
-            "temperature": 0.1,
-            "max_tokens": 2_000
+            ]
         ]
+        body.merge(Self.samplingParameters(profile)) { $1 }
         var request = URLRequest(url: URL(string: "\(baseURL)/chat/completions")!)
         request.httpMethod = "POST"
-        request.timeoutInterval = 60
+        request.timeoutInterval = profile.timeoutSeconds
         request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
@@ -1559,6 +1619,12 @@ private struct ProviderStreamEnvelope: Decodable {
     NavigationStack {
         SettingsPrototypeView()
     }
+    .environment(PrototypeStore(inMemory: true))
+    .environment(PrototypeLocalization())
+    .environment(PrototypeLanguageSettings())
+    .environment(PrototypeLearnerProfile())
+    .environment(PrototypeAISettings())
+    .environment(PrototypeCloudBackupController())
     .environment(\.layoutDirection, .rightToLeft)
     .tint(PrototypeTheme.accent)
 }

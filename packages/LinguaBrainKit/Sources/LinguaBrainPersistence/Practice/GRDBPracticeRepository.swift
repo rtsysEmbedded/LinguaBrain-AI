@@ -30,8 +30,8 @@ public actor GRDBPracticeRepository: PracticeRepository {
     }
     public func projection(for unitID: UUID) async throws -> PracticeMasteryProjection? {
         try await pool.read { db in
-            guard let row = try Row.fetchOne(db, sql: "SELECT mastery_state, mastery_score, due_at, algorithm_version, scheduler_state, independent_evidence_count, independent_score_total FROM practice_review_units WHERE unit_id = ?", arguments: [unitID.uuidString]), let state = PracticeMasteryState(rawValue: row["mastery_state"] as String) else { return nil }
-            return PracticeMasteryProjection(state: state, score: row["mastery_score"] as Double?, dueAt: (row["due_at"] as Double?).map(Date.init(timeIntervalSince1970:)), algorithmVersion: row["algorithm_version"] as String?, schedulerState: row["scheduler_state"] as String?, independentEvidenceCount: row["independent_evidence_count"] as Int? ?? 0, independentScoreTotal: row["independent_score_total"] as Double? ?? 0)
+            guard let row = try Row.fetchOne(db, sql: "SELECT mastery_state, mastery_score, due_at, algorithm_version, scheduler_state, independent_evidence_count, independent_score_total FROM practice_review_units WHERE unit_id = ?", arguments: [unitID.uuidString]) else { return nil }
+            return Self.projection(from: row)
         }
     }
     public func saveSentence(_ sentence: Sentence) async throws {
@@ -171,6 +171,10 @@ public actor GRDBPracticeRepository: PracticeRepository {
         let refs = try Row.fetchAll(db, sql: "SELECT * FROM practice_sentence_lexical_refs WHERE sentence_id = ? AND revision = ? ORDER BY ordinal", arguments: [id.uuidString, revision]).map { LexicalReference(senseKey: $0["sense_key"] as String, surface: $0["surface"] as String?) }
         return Sentence(id: id, revision: revision, text: row["text"] as String, translation: row["translation"] as String, originalLearnerResponse: row["original_learner_response"] as String?, minimalCorrection: row["minimal_correction"] as String?, naturalVariant: row["natural_variant"] as String?, validation: try validation(row["validation"] as String), provenance: try decodeJSON(row["provenance_json"] as String?), ruleReferences: rules, lexicalReferences: refs)
     }
+    private static func projection(from row: Row) -> PracticeMasteryProjection? {
+        guard let state = PracticeMasteryState(rawValue: row["mastery_state"] as String) else { return nil }
+        return PracticeMasteryProjection(state: state, score: row["mastery_score"] as Double?, dueAt: (row["due_at"] as Double?).map(Date.init(timeIntervalSince1970:)), algorithmVersion: row["algorithm_version"] as String?, schedulerState: row["scheduler_state"] as String?, independentEvidenceCount: row["independent_evidence_count"] as Int? ?? 0, independentScoreTotal: row["independent_score_total"] as Double? ?? 0)
+    }
     private static func unit(from row: Row) -> ReviewUnit { ReviewUnit(id: UUID(uuidString: row["unit_id"] as String), learnerID: row["learner_id"] as String, skill: PracticeSkill(rawValue: row["skill"] as String)!, objectiveKey: row["objective_key"] as String, sentenceID: (row["sentence_id"] as String?).flatMap(UUID.init(uuidString:)), sentenceRevision: row["sentence_revision"] as Int?) }
     private static func learningEvent(id: UUID, in db: Database) throws -> PracticeLearningEvent? {
         guard let row = try Row.fetchOne(db, sql: "SELECT * FROM practice_learning_events WHERE event_id = ?", arguments: [id.uuidString]) else { return nil }
@@ -189,4 +193,16 @@ public actor GRDBPracticeRepository: PracticeRepository {
     private static func outcome(_ value: String) throws -> AttemptOutcome { guard let value = AttemptOutcome(rawValue: value) else { throw PracticePersistenceError.invalidRecord }; return value }
     private static func helpKind(_ value: String) throws -> HelpKind { guard let value = HelpKind(rawValue: value) else { throw PracticePersistenceError.invalidRecord }; return value }
     private static func validation(_ value: String) throws -> SentenceValidationStatus { guard let value = SentenceValidationStatus(rawValue: value) else { throw PracticePersistenceError.invalidRecord }; return value }
+}
+
+extension GRDBPracticeRepository: PracticeProgressReading {
+    public func unitProgress(skill: PracticeSkill, learnerID: String) async throws -> [PracticeUnitProgress] {
+        try await pool.read { db in
+            try Row.fetchAll(
+                db,
+                sql: "SELECT * FROM practice_review_units WHERE skill = ? AND learner_id = ? ORDER BY stable_key",
+                arguments: [skill.rawValue, learnerID]
+            ).map { PracticeUnitProgress(unit: Self.unit(from: $0), projection: Self.projection(from: $0)) }
+        }
+    }
 }

@@ -189,6 +189,7 @@
 - [ ] T027 [US4] آزمون شنیداری در `packages/LinguaBrainKit/Tests/LinguaBrainAITests/ListeningEvaluationTests.swift` و `apps/learner/Tests/ListeningPracticeTests.swift`.
   - وابستگی: T026. مالک: QA شنیداری.
   - پذیرش: paraphrase، نفی معکوس، عامل اشتباه، درک جزئی، sentence/audio mismatch، hide/reveal، لغو، دو بار پخش، unavailable و بازیابی پس از restart تست شوند؛ هم‌خوانی صوت و متن با sample واقعی بررسی شود.
+  - وضعیت (۲۰۲۶-۱۰-۱۳): تصمیم Product Owner این است که صدای جمله با گفتار روی دستگاه (Apple) ساخته شود؛ بنابراین صوت از متن همان نسخهٔ جمله تولید می‌شود و checksum آن به شناسه، نسخه، متن، locale و صدا وابسته است. آزمون‌های package برای نفی معکوس، معنای نامطمئن، قواعد slot و اتصال به نسخهٔ ذخیره‌شدهٔ جمله اضافه شدند. QA روی دستگاه (دو بار پخش، لغو، بازیابی پس از restart و شنیدن واقعی صدا) هنوز انجام نشده و این تسک باز است.
 
 ## فاز ۸ — US5: تکرار جمله و ارزیابی واقعی تلفظ
 
@@ -221,6 +222,7 @@
 - [ ] T033 یکپارچه‌سازی مسیرهای برنامه و زبان‌ها در `apps/learner/App/TodayPrototypeView.swift`، `apps/learner/App/ProgressPrototypeView.swift`، `apps/learner/App/PrototypeRootView.swift`، `apps/learner/App/Practice/PracticeComposition.swift`، `apps/learner/Resources/Localization/fa.json`، `apps/learner/Resources/Localization/en.json`، `apps/learner/Resources/Localization/de.json` و `apps/learner/Resources/Localizable.xcstrings`.
   - وابستگی: T019، T023، T027؛ گفتار هنگام تکمیل T032. مالک: تنها هماهنگ‌کننده.
   - پذیرش: navigation از Today و weak-skill recommendations به تمرین درست برسد؛ «مرور پیشنهادی» همچنان فقط صف کارت‌های موعددار Anki باشد و هیچ تمرین چهارمهارتی را مخلوط/جایگزین نکند؛ progress از evidence واقعی خوانده شود؛ mode unavailable صریح gated باشد؛ کلیدهای داستان‌ها یک بار merge شوند؛ فایل‌ها در هر دو app target حاضر باشند. ادغام مرحله‌ای مجاز است؛ checkbox نهایی پس از تمام داستان‌ها.
+  - وضعیت (۲۰۲۶-۱۰-۱۳): فازهای A1 (لایهٔ package) و A2 (اتصال به برنامه) در [طرح یکپارچه‌سازی T033](T033-integration-design.md) پیاده‌سازی شده‌اند: مسیر Today به تمرین نوشتن و شنیداری، توضیح صریح برای حالت‌های در دسترس نبودن، پیشنهاد ضعیف‌ترین مهارت و پیشرفت از GRDB. این تسک تا آماده شدن محتوای بررسی‌شدهٔ دستور زبان، build در Xcode 27 و QA روی دستگاه باز می‌ماند.
 
 - [ ] T034 مالکیت، حذف و خروجی داده‌های تمرین را در `packages/LinguaBrainKit/Sources/LinguaBrainApplication/Practice/PracticeDataOwnershipService.swift`، `apps/learner/App/Practice/History/SentenceLearningHistoryView.swift` و `packages/LinguaBrainKit/Tests/LinguaBrainApplicationTests/PracticeDataOwnershipTests.swift` تکمیل کنید.
   - وابستگی: T018، T029، T030. مالک: Data ownership.

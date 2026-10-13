@@ -42,15 +42,9 @@ public enum GrammarExerciseFactoryError: Error, Equatable { case unknownRule, in
 
 public enum GrammarExerciseFactory {
     public static let contractVersion = "grammar-practice-v1"
-    public static let rules: [String: GrammarRule] = [
-        "de.word_order.verb_final": GrammarRule(code: "de.word_order.verb_final", category: "word_order", targetLanguage: "de", grammaticalRole: "main_verb_position"),
-        "de.verb.inflection": GrammarRule(code: "de.verb.inflection", category: "inflection", targetLanguage: "de", grammaticalRole: "verb_agreement"),
-        "de.article.case": GrammarRule(code: "de.article.case", category: "article_case", targetLanguage: "de", grammaticalRole: "determiner_case"),
-        "de.conjunction.weil": GrammarRule(code: "de.conjunction.weil", category: "conjunction", targetLanguage: "de", grammaticalRole: "subordinate_conjunction"),
-        "de.preposition.case": GrammarRule(code: "de.preposition.case", category: "preposition", targetLanguage: "de", grammaticalRole: "preposition_case")
-    ]
-
-    public static func make(_ input: GrammarExerciseTemplate) throws -> GrammarExerciseDescriptor {
+    /// - Parameter rules: The rule bank by code (from the app's grammar
+    ///   content file); a template naming another rule is rejected.
+    public static func make(_ input: GrammarExerciseTemplate, rules: [String: GrammarRule]) throws -> GrammarExerciseDescriptor {
         guard let rule = rules[input.ruleCode] else { throw GrammarExerciseFactoryError.unknownRule }
         guard input.targetLanguage == rule.targetLanguage else { throw GrammarExerciseFactoryError.invalidLanguage }
         guard input.grammaticalRole == rule.grammaticalRole else { throw GrammarExerciseFactoryError.invalidRole }

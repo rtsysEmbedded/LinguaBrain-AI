@@ -1,0 +1,335 @@
+{
+  "schemaVersion": 1,
+  "defaults": {
+    "sourceLanguageTag": "fa",
+    "targetLanguageTag": "de",
+    "domain": "عمومی"
+  },
+  "deckNames": {
+    "core": "واژگان پایه آلمانی–فارسی",
+    "generated": "کارت‌های هوشمند",
+    "multilingual": "Multilingual Test Cards",
+    "cloudFallback": "Cloud Cards"
+  },
+  "classifierFallbackDomain": "general",
+  "genericDomainNames": [
+    "general",
+    "imported",
+    "عمومی",
+    "allgemein"
+  ],
+  "nounPartOfSpeechMarkers": [
+    "noun",
+    "اسم"
+  ],
+  "verbPartOfSpeechMarkers": [
+    "verb"
+  ],
+  "domainKeywords": [
+    {
+      "domain": "work",
+      "terms": [
+        "arbeit",
+        "beruf",
+        "job",
+        "büro",
+        "firma",
+        "geschäft",
+        "chef",
+        "kolleg",
+        "mitarbeiter",
+        "arbeitgeber",
+        "work",
+        "career",
+        "office",
+        "company",
+        "business",
+        "employee",
+        "employer",
+        "meeting"
+      ]
+    },
+    {
+      "domain": "software",
+      "terms": [
+        "computer",
+        "internet",
+        "software",
+        "datei",
+        "daten",
+        "digital",
+        "programm",
+        "webseite",
+        "telefon",
+        "handy",
+        "data",
+        "technology",
+        "website",
+        "phone"
+      ]
+    },
+    {
+      "domain": "medical",
+      "terms": [
+        "arzt",
+        "ärzt",
+        "medizin",
+        "gesund",
+        "krank",
+        "körper",
+        "schmerz",
+        "apotheke",
+        "health",
+        "doctor",
+        "medical",
+        "sick",
+        "body",
+        "pain",
+        "hospital",
+        "pharmacy"
+      ]
+    },
+    {
+      "domain": "travel",
+      "terms": [
+        "reise",
+        "reisen",
+        "flug",
+        "flughafen",
+        "bahnhof",
+        "zug",
+        "hotel",
+        "urlaub",
+        "bus",
+        "straße",
+        "travel",
+        "flight",
+        "airport",
+        "station",
+        "train",
+        "hotel",
+        "holiday",
+        "road"
+      ]
+    },
+    {
+      "domain": "food",
+      "terms": [
+        "essen",
+        "trinken",
+        "küche",
+        "restaurant",
+        "brot",
+        "fleisch",
+        "gemüse",
+        "obst",
+        "kaffee",
+        "food",
+        "drink",
+        "kitchen",
+        "restaurant",
+        "bread",
+        "meat",
+        "vegetable",
+        "fruit",
+        "coffee"
+      ]
+    },
+    {
+      "domain": "family",
+      "terms": [
+        "familie",
+        "mutter",
+        "vater",
+        "eltern",
+        "kind",
+        "sohn",
+        "tochter",
+        "bruder",
+        "schwester",
+        "family",
+        "mother",
+        "father",
+        "parent",
+        "child",
+        "son",
+        "daughter",
+        "brother",
+        "sister"
+      ]
+    },
+    {
+      "domain": "education",
+      "terms": [
+        "schule",
+        "universität",
+        "lehrer",
+        "student",
+        "lernen",
+        "unterricht",
+        "prüfung",
+        "buch",
+        "school",
+        "university",
+        "teacher",
+        "student",
+        "learn",
+        "lesson",
+        "exam",
+        "book"
+      ]
+    },
+    {
+      "domain": "home",
+      "terms": [
+        "haus",
+        "wohnung",
+        "zimmer",
+        "tür",
+        "fenster",
+        "tisch",
+        "stuhl",
+        "bett",
+        "home",
+        "house",
+        "apartment",
+        "room",
+        "door",
+        "window",
+        "table",
+        "chair",
+        "bed"
+      ]
+    },
+    {
+      "domain": "nature",
+      "terms": [
+        "natur",
+        "tier",
+        "pflanze",
+        "baum",
+        "blume",
+        "wasser",
+        "berg",
+        "wald",
+        "wetter",
+        "nature",
+        "animal",
+        "plant",
+        "tree",
+        "flower",
+        "water",
+        "mountain",
+        "forest",
+        "weather"
+      ]
+    },
+    {
+      "domain": "time",
+      "terms": [
+        "zeit",
+        "tag",
+        "woche",
+        "monat",
+        "jahr",
+        "uhr",
+        "morgen",
+        "gestern",
+        "heute",
+        "time",
+        "day",
+        "week",
+        "month",
+        "year",
+        "clock",
+        "tomorrow",
+        "yesterday",
+        "today"
+      ]
+    }
+  ],
+  "levels": {
+    "cefr": [
+      "A1",
+      "A2",
+      "B1",
+      "B2",
+      "C1",
+      "C2"
+    ],
+    "cardGeneration": [
+      "A1",
+      "A2",
+      "B1",
+      "B2",
+      "C1"
+    ],
+    "cardGenerationDefault": "B1"
+  },
+  "onboarding": {
+    "levels": [
+      "beginner",
+      "A1",
+      "A2",
+      "B1",
+      "B2"
+    ],
+    "defaultLevel": "B1",
+    "missionKeys": [
+      "onboarding.mission.everyday",
+      "onboarding.mission.work",
+      "onboarding.mission.goethe",
+      "onboarding.mission.travel"
+    ],
+    "defaultMissionKey": "onboarding.mission.work"
+  },
+  "addWord": {
+    "initialWord": "arbeiten",
+    "defaultTopic": "general",
+    "defaultExportFileName": "linguabrain-cards"
+  },
+  "weakStrengthThreshold": 0.5,
+  "dailyPlan": {
+    "defaultEnergy": 6.0,
+    "defaultAvailableMinutes": 20,
+    "defaultMotivation": 3,
+    "availableMinuteOptions": [
+      5,
+      10,
+      20,
+      30
+    ],
+    "minutesPerNewCard": 1.8,
+    "energyFactorBase": 0.45,
+    "energyFactorDivisor": 12.0,
+    "motivationFactorBase": 0.82,
+    "motivationFactorStep": 0.1,
+    "modeFactors": {
+      "lightReview": 0.7,
+      "balanced": 1.0,
+      "challenge": 1.25
+    },
+    "maximumNewCards": 20,
+    "recoveryEnergyAtMost": 3.0,
+    "challengeEnergyAtLeast": 8.0
+  },
+  "learnerProfile": {
+    "defaultTargetLevel": "B2",
+    "dailyGoalMinuteOptions": [
+      10,
+      20,
+      30,
+      60
+    ],
+    "defaultDailyGoalMinutes": 20,
+    "playbackRate": {
+      "minimum": 0.5,
+      "maximum": 1.5,
+      "step": 0.1,
+      "defaultValue": 1.0
+    }
+  },
+  "speech": {
+    "slowReplayFactor": 0.72
+  }
+}

@@ -3,22 +3,32 @@ import LinguaBrainDomain
 import LinguaBrainApplication
 
 struct TodayPrototypeView: View {
-    /// Optional until the story-specific exercise retrieval composition is
-    /// supplied. The route itself is shared now; legacy content remains the
-    /// compatibility body until T011 verifies every visible surface.
+    /// Feature 004 practice composition; `nil` until the practice store has
+    /// started, in which case the skill routes explain that storage is not
+    /// ready.
     let practiceComposition: PracticeComposition?
 
     @Environment(PrototypeStore.self) private var store
     @Environment(PrototypeLocalization.self) private var localization
     @Environment(PrototypeLanguageSettings.self) private var languageSettings
-    @State private var energy = 6.0
-    @State private var selectedTime = 20
-    @State private var motivation = 3
+    @Environment(PrototypeAISettings.self) private var aiSettings
+    /// Weakest available skill with evidence in the active pair, if any.
+    @State private var recommendedSkill: PracticeSkill?
+    @State private var energy = LearningContentRules.bundled.dailyPlan.defaultEnergy
+    // A new day starts from the learner's daily goal (Settings).
+    @State private var selectedTime = LearningContentRules.bundled.dailyPlan.availableMinutes(
+        forDailyGoal: PrototypeLearnerProfile.storedDailyGoalMinutes()
+    )
+    @State private var motivation = LearningContentRules.bundled.dailyPlan.defaultMotivation
     @State private var selectedMode = LearningSessionMode.balanced.rawValue
-    @State private var selectedDomain = "همه حوزه‌ها"
+    @State private var selectedDomain = Self.allDomains
     @State private var customDomains = PrototypeDomainCatalog.customDomains
     @State private var didLoadDailyState = false
     @State private var dailyStateCapturedAt: Date?
+
+    /// Picker tag for "all topics"; never stored as a learner domain.
+    private static let allDomains = "today.domain.all"
+    private static let availableMinuteOptions = LearningContentRules.bundled.dailyPlan.availableMinuteOptions
 
     init(practiceComposition: PracticeComposition? = nil) {
         self.practiceComposition = practiceComposition
@@ -29,7 +39,7 @@ struct TodayPrototypeView: View {
             sourceLanguageTag: languageSettings.sourceLanguageTag,
             targetLanguageTag: languageSettings.targetLanguageTag
         )
-        return selectedDomain == "همه حوزه‌ها" ? words : words.filter { $0.domain == selectedDomain }
+        return selectedDomain == Self.allDomains ? words : words.filter { $0.domain == selectedDomain }
     }
 
     private var reviewedCount: Int { store.reviewedCount(in: activeWords) }
@@ -38,21 +48,19 @@ struct TodayPrototypeView: View {
     private var weakCount: Int { store.weakCount(in: activeWords) }
 
     private var newCardLimit: Int {
-        let energyFactor = 0.45 + (energy / 12)
-        let timeCapacity = Double(selectedTime) / 1.8
-        let motivationFactor = 0.82 + (Double(motivation - 1) * 0.10)
-        let modeFactor: Double = switch selectedMode {
-        case LearningSessionMode.lightReview.rawValue: 0.70
-        case LearningSessionMode.challenge.rawValue: 1.25
-        default: 1.0
-        }
-        return min(unreviewedCount, max(0, min(20, Int((timeCapacity * energyFactor * motivationFactor * modeFactor).rounded()))))
+        min(unreviewedCount, LearningContentRules.bundled.dailyPlan.newCardCount(
+            energy: energy,
+            availableMinutes: selectedTime,
+            motivation: motivation,
+            modeRawValue: selectedMode
+        ))
     }
 
     private var learningMode: String {
-        if energy <= 3 { return localization.localized("حالت بازیابی") }
-        if energy >= 8 { return localization.localized("حالت چالش") }
-        return localization.localized("حالت رشد")
+        let plan = LearningContentRules.bundled.dailyPlan
+        if energy <= plan.recoveryEnergyAtMost { return localization.localized("today.mode.recovery") }
+        if energy >= plan.challengeEnergyAtLeast { return localization.localized("today.mode.challenge") }
+        return localization.localized("today.mode.growth")
     }
 
     var body: some View {
@@ -69,13 +77,13 @@ struct TodayPrototypeView: View {
             .frame(maxWidth: .infinity)
         }
         .background(PrototypeBackground())
-        .navigationTitle("امروز")
+        .navigationTitle(localization.localized("today.title"))
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button(action: {}) {
                     Image(systemName: "bell.badge")
                 }
-                .accessibilityLabel("اعلان‌ها")
+                .accessibilityLabel(localization.localized("today.notifications"))
             }
         }
         .onAppear {
@@ -125,10 +133,10 @@ struct TodayPrototypeView: View {
         VStack(alignment: .leading, spacing: 18) {
             HStack(alignment: .top) {
                 VStack(alignment: .leading, spacing: 5) {
-                    Text("Guten Morgen 👋")
+                    Text(localization.localized("today.greeting"))
                         .font(.title2.weight(.bold))
                         .environment(\.layoutDirection, .leftToRight)
-                    Text("امروز یک قدم کوچک اما پیوسته برداریم.")
+                    Text(localization.localized("today.encouragement"))
                         .foregroundStyle(.white.opacity(0.88))
                 }
                 Spacer()
@@ -137,9 +145,9 @@ struct TodayPrototypeView: View {
             }
 
             HStack(spacing: 10) {
-                MetricPill(value: "\(dueCount)", label: "مرور", symbol: "arrow.clockwise", color: PrototypeTheme.accent)
-                MetricPill(value: "\(unreviewedCount)", label: "جدید", symbol: "sparkles", color: PrototypeTheme.pink)
-                MetricPill(value: store.averageStrength(in: activeWords).formatted(.percent.precision(.fractionLength(0))), label: "حافظه", symbol: "brain", color: PrototypeTheme.mint)
+                MetricPill(value: "\(dueCount)", label: "today.metric.review", symbol: "arrow.clockwise", color: PrototypeTheme.accent)
+                MetricPill(value: "\(unreviewedCount)", label: "today.metric.new", symbol: "sparkles", color: PrototypeTheme.pink)
+                MetricPill(value: store.averageStrength(in: activeWords).formatted(.percent.precision(.fractionLength(0))), label: "today.metric.memory", symbol: "brain", color: PrototypeTheme.mint)
             }
             .foregroundStyle(.primary)
         }
@@ -152,7 +160,7 @@ struct TodayPrototypeView: View {
     private var checkIn: some View {
         PrototypeCard {
             VStack(alignment: .leading, spacing: 18) {
-                SectionHeader(title: "امروز چه‌قدر انرژی داری؟", subtitle: "برنامه بر اساس حال امروزت تنظیم می‌شود")
+                SectionHeader(title: "today.energyQuestion", subtitle: "today.energySubtitle")
                 HStack {
                     Image(systemName: "battery.25percent").foregroundStyle(.secondary)
                     Slider(value: $energy, in: 1...10, step: 1)
@@ -161,11 +169,10 @@ struct TodayPrototypeView: View {
                         .font(.headline.monospacedDigit())
                         .frame(width: 28)
                 }
-                Picker("زمان آزاد", selection: $selectedTime) {
-                    Text("۵ دقیقه").tag(5)
-                    Text("۱۰ دقیقه").tag(10)
-                    Text("۲۰ دقیقه").tag(20)
-                    Text("۳۰ دقیقه").tag(30)
+                Picker(localization.localized("today.availableTime"), selection: $selectedTime) {
+                    ForEach(Self.availableMinuteOptions, id: \.self) { minutes in
+                        Text(localization.minutesLong(minutes)).tag(minutes)
+                    }
                 }
                 .pickerStyle(.segmented)
                 Picker(localization.localized("daily.motivation"), selection: $motivation) {
@@ -180,8 +187,8 @@ struct TodayPrototypeView: View {
                     Text(localization.localized("daily.mode.challenge")).tag(LearningSessionMode.challenge.rawValue)
                 }
                 .pickerStyle(.segmented)
-                Picker("حوزهٔ امروز", selection: $selectedDomain) {
-                    Text("همه حوزه‌ها").tag("همه حوزه‌ها")
+                Picker(localization.localized("today.domainPicker"), selection: $selectedDomain) {
+                    Text(localization.localized(Self.allDomains)).tag(Self.allDomains)
                     ForEach(customDomains, id: \.self) { Text($0).tag($0) }
                 }
                 .onAppear { customDomains = PrototypeDomainCatalog.customDomains }
@@ -191,12 +198,12 @@ struct TodayPrototypeView: View {
 
     private var todayPlan: some View {
         VStack(alignment: .leading, spacing: 12) {
-            SectionHeader(title: "مرور پیشنهادی", subtitle: "کارت‌های موعددار · \(localization.minutes(selectedTime))")
+            SectionHeader(title: "today.suggestedReview", subtitle: localization.formatted("today.dueCardsSubtitle", localization.minutes(selectedTime)))
             PrototypeCard {
                 planRow(
                     symbol: "rectangle.stack.fill",
                     color: PrototypeTheme.accent,
-                    title: "مرور کارت‌ها",
+                    title: "today.reviewCards",
                     detail: localization.reviewSummary(due: dueCount, new: newCardLimit),
                     time: localization.minutes(selectedTime)
                 )
@@ -205,7 +212,7 @@ struct TodayPrototypeView: View {
             NavigationLink {
                 ReviewPrototypeView(newCardLimit: newCardLimit, mode: .recognition)
             } label: {
-                Label("شروع مرور کارت‌ها", systemImage: "play.fill")
+                Label(localization.localized("today.startReview"), systemImage: "play.fill")
                     .font(.headline)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 14)
@@ -256,14 +263,35 @@ struct TodayPrototypeView: View {
             )
             PrototypeCard {
                 VStack(spacing: 10) {
+                    if let recommendedSkill {
+                        let mode = PrototypeSkillPracticeMode(practiceSkill: recommendedSkill)
+                        NavigationLink {
+                            SkillPracticeEntryView(skill: recommendedSkill, composition: practiceComposition)
+                        } label: {
+                            HStack(spacing: 12) {
+                                Image(systemName: "sparkles")
+                                    .foregroundStyle(PrototypeTheme.pink)
+                                    .frame(width: 32)
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(localization.localized("skillPractice.recommendation.title"))
+                                        .font(.subheadline.weight(.semibold))
+                                    Text(localization.formatted("skillPractice.recommendation.detail", localization.localized(mode.titleKey)))
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                }
+                                Spacer()
+                                Image(systemName: "chevron.right")
+                                    .font(.caption.weight(.bold))
+                                    .foregroundStyle(.secondary)
+                            }
+                            .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                        Divider()
+                    }
                     ForEach(PrototypeSkillPracticeMode.allCases) { practiceMode in
                         NavigationLink {
-                            PracticeSessionBoundaryView(
-                                composition: practiceComposition,
-                                exercise: nil
-                            ) {
-                                SkillPracticeView(practiceMode: practiceMode, cardLimit: max(1, min(newCardLimit == 0 ? 5 : newCardLimit, 10)))
-                            }
+                            SkillPracticeEntryView(skill: practiceMode.practiceSkill, composition: practiceComposition)
                         } label: {
                             HStack(spacing: 12) {
                                 Image(systemName: practiceMode.symbol)
@@ -285,5 +313,27 @@ struct TodayPrototypeView: View {
                 }
             }
         }
+        .task(id: "\(languageSettings.sourceLanguageTag)>\(languageSettings.targetLanguageTag)>\(store.words.count)") {
+            await loadRecommendation()
+        }
+    }
+
+    /// Recommends the available skill with the lowest evidenced mastery.
+    /// Skills without evidence are not called weak.
+    private func loadRecommendation() async {
+        guard let practiceComposition else {
+            recommendedSkill = nil
+            return
+        }
+        let probe = PracticeCapabilityProbe(
+            composition: practiceComposition,
+            cards: PrototypeStorePracticeCards(store: store),
+            aiSettings: aiSettings,
+            sourceLanguage: languageSettings.sourceLanguageTag,
+            targetLanguage: languageSettings.targetLanguageTag
+        )
+        let available = Set(PracticeSkill.allCases.filter { probe.availability(for: $0).isAvailable })
+        let summaries = (try? await probe.progress()) ?? []
+        recommendedSkill = PracticeProgressCalculator.weakestSkill(summaries, available: available)
     }
 }

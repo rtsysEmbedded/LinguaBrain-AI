@@ -7,6 +7,33 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		CB0000000000000000000017 /* grammar-content.json in Resources */ = {isa = PBXBuildFile; fileRef = CB0000000000000000000015 /* grammar-content.json */; };
+		CB0000000000000000000016 /* grammar-content.json in Resources */ = {isa = PBXBuildFile; fileRef = CB0000000000000000000015 /* grammar-content.json */; };
+		CB0000000000000000000014 /* PracticeEvaluation.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB0000000000000000000012 /* PracticeEvaluation.swift */; };
+		CB0000000000000000000013 /* PracticeEvaluation.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB0000000000000000000012 /* PracticeEvaluation.swift */; };
+		CB0000000000000000000011 /* SkillPracticeRoutingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB0000000000000000000010 /* SkillPracticeRoutingTests.swift */; };
+		CB000000000000000000000F /* SkillPracticeEntryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB000000000000000000000D /* SkillPracticeEntryView.swift */; };
+		CB000000000000000000000E /* SkillPracticeEntryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB000000000000000000000D /* SkillPracticeEntryView.swift */; };
+		CB000000000000000000000C /* PracticeContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB000000000000000000000A /* PracticeContent.swift */; };
+		CB000000000000000000000B /* PracticeContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB000000000000000000000A /* PracticeContent.swift */; };
+		CB0000000000000000000009 /* LearnerProfileTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB0000000000000000000008 /* LearnerProfileTests.swift */; };
+		CB0000000000000000000007 /* LearnerProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB0000000000000000000005 /* LearnerProfile.swift */; };
+		CB0000000000000000000006 /* LearnerProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB0000000000000000000005 /* LearnerProfile.swift */; };
+		CB0000000000000000000004 /* CardContentReviewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB0000000000000000000003 /* CardContentReviewTests.swift */; };
+		CB0000000000000000000002 /* AnkiExportDocumentTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB0000000000000000000001 /* AnkiExportDocumentTests.swift */; };
+		CF000000000000000000001A /* seed-cards.json in Resources */ = {isa = PBXBuildFile; fileRef = CF0000000000000000000007 /* seed-cards.json */; };
+		CF000000000000000000001B /* content-rules.json in Resources */ = {isa = PBXBuildFile; fileRef = CF0000000000000000000008 /* content-rules.json */; };
+		CF000000000000000000001C /* seed-cards.json in Resources */ = {isa = PBXBuildFile; fileRef = CF0000000000000000000007 /* seed-cards.json */; };
+		CF000000000000000000001D /* content-rules.json in Resources */ = {isa = PBXBuildFile; fileRef = CF0000000000000000000008 /* content-rules.json */; };
+		CF0000000000000000000018 /* InfoPlist.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = CF0000000000000000000006 /* InfoPlist.xcstrings */; };
+		CF0000000000000000000019 /* InfoPlist.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = CF0000000000000000000006 /* InfoPlist.xcstrings */; };
+		CF0000000000000000000017 /* AppConfigurationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF0000000000000000000005 /* AppConfigurationTests.swift */; };
+		CF0000000000000000000011 /* AppConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF0000000000000000000001 /* AppConfiguration.swift */; };
+		CF0000000000000000000012 /* AppConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF0000000000000000000001 /* AppConfiguration.swift */; };
+		CF0000000000000000000013 /* provider-catalog.json in Resources */ = {isa = PBXBuildFile; fileRef = CF0000000000000000000002 /* provider-catalog.json */; };
+		CF0000000000000000000014 /* ai-prompts.json in Resources */ = {isa = PBXBuildFile; fileRef = CF0000000000000000000003 /* ai-prompts.json */; };
+		CF0000000000000000000015 /* provider-catalog.json in Resources */ = {isa = PBXBuildFile; fileRef = CF0000000000000000000002 /* provider-catalog.json */; };
+		CF0000000000000000000016 /* ai-prompts.json in Resources */ = {isa = PBXBuildFile; fileRef = CF0000000000000000000003 /* ai-prompts.json */; };
 		100000000000000000000001 /* LinguaBrainPrototypeApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000001 /* LinguaBrainPrototypeApp.swift */; };
 		100000000000000000000002 /* PrototypeModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000002 /* PrototypeModels.swift */; };
 		100000000000000000000003 /* PrototypeComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000003 /* PrototypeComponents.swift */; };
@@ -102,6 +129,22 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		CB0000000000000000000015 /* grammar-content.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "grammar-content.json"; sourceTree = "<group>"; };
+		CB0000000000000000000012 /* PracticeEvaluation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PracticeEvaluation.swift; sourceTree = "<group>"; };
+		CB0000000000000000000010 /* SkillPracticeRoutingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SkillPracticeRoutingTests.swift; sourceTree = "<group>"; };
+		CB000000000000000000000D /* SkillPracticeEntryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SkillPracticeEntryView.swift; sourceTree = "<group>"; };
+		CB000000000000000000000A /* PracticeContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PracticeContent.swift; sourceTree = "<group>"; };
+		CB0000000000000000000008 /* LearnerProfileTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LearnerProfileTests.swift; sourceTree = "<group>"; };
+		CB0000000000000000000005 /* LearnerProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LearnerProfile.swift; sourceTree = "<group>"; };
+		CB0000000000000000000003 /* CardContentReviewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardContentReviewTests.swift; sourceTree = "<group>"; };
+		CB0000000000000000000001 /* AnkiExportDocumentTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnkiExportDocumentTests.swift; sourceTree = "<group>"; };
+		CF0000000000000000000007 /* seed-cards.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "seed-cards.json"; sourceTree = "<group>"; };
+		CF0000000000000000000008 /* content-rules.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "content-rules.json"; sourceTree = "<group>"; };
+		CF0000000000000000000006 /* InfoPlist.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = InfoPlist.xcstrings; sourceTree = "<group>"; };
+		CF0000000000000000000005 /* AppConfigurationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConfigurationTests.swift; sourceTree = "<group>"; };
+		CF0000000000000000000001 /* AppConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConfiguration.swift; sourceTree = "<group>"; };
+		CF0000000000000000000002 /* provider-catalog.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "provider-catalog.json"; sourceTree = "<group>"; };
+		CF0000000000000000000003 /* ai-prompts.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "ai-prompts.json"; sourceTree = "<group>"; };
 		200000000000000000000001 /* LinguaBrainPrototypeApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinguaBrainPrototypeApp.swift; sourceTree = "<group>"; };
 		200000000000000000000002 /* PrototypeModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrototypeModels.swift; sourceTree = "<group>"; };
 		200000000000000000000003 /* PrototypeComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrototypeComponents.swift; sourceTree = "<group>"; };
@@ -200,9 +243,11 @@
 		400000000000000000000002 /* App */ = {
 			isa = PBXGroup;
 			children = (
+				CB0000000000000000000005 /* LearnerProfile.swift */,
 				DEADBEEF0000000000000050 /* Practice */,
 				200000000000000000000001 /* LinguaBrainPrototypeApp.swift */,
 				20000000000000000000000F /* AppLocalization.swift */,
+				CF0000000000000000000001 /* AppConfiguration.swift */,
 				200000000000000000000014 /* GoogleCloudTextToSpeech.swift */,
 				200000000000000000000015 /* CloudCardBackup.swift */,
 				200000000000000000000016 /* UtilitiesPrototypeView.swift */,
@@ -224,6 +269,9 @@
 		DEADBEEF0000000000000050 /* Practice */ = {
 			isa = PBXGroup;
 			children = (
+				CB0000000000000000000012 /* PracticeEvaluation.swift */,
+				CB000000000000000000000D /* SkillPracticeEntryView.swift */,
+				CB000000000000000000000A /* PracticeContent.swift */,
 				DEADBEEF0000000000000059 /* Shared */,
 				DEADBEEF0000000000000063 /* Writing */,
 				DEADBEEF0000000000000069 /* History */,
@@ -270,11 +318,14 @@
 			children = (
 				20000000000000000000000C /* Assets.xcassets */,
 				200000000000000000000010 /* Localizable.xcstrings */,
+				CF0000000000000000000006 /* InfoPlist.xcstrings */,
 				400000000000000000000005 /* Localization */,
+				CF0000000000000000000004 /* Configuration */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
 		};
+		CF0000000000000000000004 /* Configuration */ = { isa = PBXGroup; children = ( CB0000000000000000000015 /* grammar-content.json */, CF0000000000000000000002 /* provider-catalog.json */, CF0000000000000000000003 /* ai-prompts.json */, CF0000000000000000000007 /* seed-cards.json */, CF0000000000000000000008 /* content-rules.json */ ); path = Configuration; sourceTree = "<group>"; };
 		400000000000000000000005 /* Localization */ = { isa = PBXGroup; children = ( 200000000000000000000011 /* en.json */, 200000000000000000000012 /* de.json */, 200000000000000000000013 /* fa.json */ ); path = Localization; sourceTree = "<group>"; };
 		400000000000000000000004 /* Products */ = {
 			isa = PBXGroup;
@@ -289,6 +340,10 @@
 		420000000000000000000001 /* Tests */ = {
 			isa = PBXGroup;
 			children = (
+				CB0000000000000000000010 /* SkillPracticeRoutingTests.swift */,
+				CB0000000000000000000008 /* LearnerProfileTests.swift */,
+				CB0000000000000000000003 /* CardContentReviewTests.swift */,
+				CB0000000000000000000001 /* AnkiExportDocumentTests.swift */,
 				220000000000000000000001 /* AnkiCoreRegressionTests.swift */,
 				220000000000000000000002 /* APKGFixtureFactory.swift */,
 				220000000000000000000006 /* modern-apkg-fixtures.json */,
@@ -297,6 +352,7 @@
 				DEADBEEF0000000000000043 /* LegacyPracticeMigrationTests.swift */,
 				DEADBEEF0000000000000058 /* PracticeSessionModelTests.swift */,
 				DEADBEEF0000000000000065 /* WritingPracticeTests.swift */,
+				CF0000000000000000000005 /* AppConfigurationTests.swift */,
 				DEADBEEF0000000000000071 /* SentenceReuseIntegrationTests.swift */,
 				DEADBEEF000000000000007A /* ListeningPracticeTests.swift */,
 				DEADBEEF0000000000000081 /* GrammarPracticeTests.swift */,
@@ -477,11 +533,17 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				CB0000000000000000000016 /* grammar-content.json in Resources */,
 				10000000000000000000000C /* Assets.xcassets in Resources */,
 				10000000000000000000000E /* Localizable.xcstrings in Resources */,
+				CF0000000000000000000018 /* InfoPlist.xcstrings in Resources */,
 				100000000000000000000011 /* en.json in Resources */,
 				100000000000000000000012 /* de.json in Resources */,
 				100000000000000000000013 /* fa.json in Resources */,
+				CF0000000000000000000013 /* provider-catalog.json in Resources */,
+				CF0000000000000000000014 /* ai-prompts.json in Resources */,
+				CF000000000000000000001A /* seed-cards.json in Resources */,
+				CF000000000000000000001B /* content-rules.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -489,11 +551,17 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				CB0000000000000000000017 /* grammar-content.json in Resources */,
 				11000000000000000000000C /* Assets.xcassets in Resources */,
 				11000000000000000000000E /* Localizable.xcstrings in Resources */,
+				CF0000000000000000000019 /* InfoPlist.xcstrings in Resources */,
 				110000000000000000000011 /* en.json in Resources */,
 				110000000000000000000012 /* de.json in Resources */,
 				110000000000000000000013 /* fa.json in Resources */,
+				CF0000000000000000000015 /* provider-catalog.json in Resources */,
+				CF0000000000000000000016 /* ai-prompts.json in Resources */,
+				CF000000000000000000001C /* seed-cards.json in Resources */,
+				CF000000000000000000001D /* content-rules.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -514,8 +582,13 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				CB0000000000000000000013 /* PracticeEvaluation.swift in Sources */,
+				CB000000000000000000000E /* SkillPracticeEntryView.swift in Sources */,
+				CB000000000000000000000B /* PracticeContent.swift in Sources */,
+				CB0000000000000000000006 /* LearnerProfile.swift in Sources */,
 				100000000000000000000001 /* LinguaBrainPrototypeApp.swift in Sources */,
 				10000000000000000000000D /* AppLocalization.swift in Sources */,
+				CF0000000000000000000011 /* AppConfiguration.swift in Sources */,
 				100000000000000000000002 /* PrototypeModels.swift in Sources */,
 				100000000000000000000003 /* PrototypeComponents.swift in Sources */,
 				100000000000000000000004 /* PrototypeRootView.swift in Sources */,
@@ -548,8 +621,13 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				CB0000000000000000000014 /* PracticeEvaluation.swift in Sources */,
+				CB000000000000000000000F /* SkillPracticeEntryView.swift in Sources */,
+				CB000000000000000000000C /* PracticeContent.swift in Sources */,
+				CB0000000000000000000007 /* LearnerProfile.swift in Sources */,
 				110000000000000000000001 /* LinguaBrainPrototypeApp.swift in Sources */,
 				11000000000000000000000D /* AppLocalization.swift in Sources */,
+				CF0000000000000000000012 /* AppConfiguration.swift in Sources */,
 				110000000000000000000002 /* PrototypeModels.swift in Sources */,
 				110000000000000000000003 /* PrototypeComponents.swift in Sources */,
 				110000000000000000000004 /* PrototypeRootView.swift in Sources */,
@@ -582,12 +660,17 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				CB0000000000000000000011 /* SkillPracticeRoutingTests.swift in Sources */,
+				CB0000000000000000000009 /* LearnerProfileTests.swift in Sources */,
+				CB0000000000000000000004 /* CardContentReviewTests.swift in Sources */,
+				CB0000000000000000000002 /* AnkiExportDocumentTests.swift in Sources */,
 				120000000000000000000001 /* AnkiCoreRegressionTests.swift in Sources */,
 				120000000000000000000002 /* APKGFixtureFactory.swift in Sources */,
 				DEADBEEF0000000000000032 /* GenerationPrototypeIntegrationTests.swift in Sources */,
 				DEADBEEF0000000000000041 /* LegacyPracticeMigrationTests.swift in Sources */,
 				DEADBEEF0000000000000057 /* PracticeSessionModelTests.swift in Sources */,
 				DEADBEEF0000000000000064 /* WritingPracticeTests.swift in Sources */,
+				CF0000000000000000000017 /* AppConfigurationTests.swift in Sources */,
 				DEADBEEF0000000000000070 /* SentenceReuseIntegrationTests.swift in Sources */,
 				DEADBEEF0000000000000079 /* ListeningPracticeTests.swift in Sources */,
 				DEADBEEF0000000000000080 /* GrammarPracticeTests.swift in Sources */,

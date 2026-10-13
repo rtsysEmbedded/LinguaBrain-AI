@@ -22,6 +22,8 @@ struct PrototypeCloudCard: Codable, Sendable {
     let targetLanguageTag: String
     let pronunciationAudio: Data?
     let pronunciationAudioFilename: String?
+    /// Absent in snapshots written before the field existed; read as `false`.
+    let contentReviewed: Bool?
 }
 
 struct PrototypeCloudCardSnapshot: Codable, Sendable {
@@ -127,12 +129,12 @@ final class PrototypeCloudBackupController {
 
     private static func message(for status: CKAccountStatus) -> String {
         switch status {
-        case .noAccount: "برای پشتیبان‌گیری، در تنظیمات دستگاه وارد iCloud شوید."
-        case .restricted: "دسترسی iCloud روی این دستگاه محدود شده است."
-        case .couldNotDetermine: "وضعیت حساب iCloud قابل تشخیص نیست."
-        case .temporarilyUnavailable: "iCloud موقتاً در دسترس نیست."
+        case .noAccount: PrototypeLocalization.current("cloudBackup.status.noAccount")
+        case .restricted: PrototypeLocalization.current("cloudBackup.status.restricted")
+        case .couldNotDetermine: PrototypeLocalization.current("cloudBackup.status.couldNotDetermine")
+        case .temporarilyUnavailable: PrototypeLocalization.current("cloudBackup.status.temporarilyUnavailable")
         case .available: ""
-        @unknown default: "iCloud در دسترس نیست."
+        @unknown default: PrototypeLocalization.current("cloudBackup.status.unavailable")
         }
     }
 }

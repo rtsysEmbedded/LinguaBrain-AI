@@ -14,17 +14,8 @@ enum PracticeCutoverFailure: String, Error, Codable, Sendable, Equatable {
     case activationFailed
     case recoveryFailed
 
-    var recoveryGuidance: String {
-        switch self {
-        case .legacyStoreMissing: "The legacy learning store was not found. No migration was attempted."
-        case .legacyStoreUnreadable: "The legacy store could not be read. Keep the retained source and use the verified backup before retrying."
-        case .backupFailed: "The required pre-migration backup could not be created. Nothing was activated."
-        case .migrationFailed: "Migration stopped safely. The retained source and any checkpoint remain available for recovery and retry."
-        case .validationFailed: "Validation did not pass. GRDB was not activated; compare counts, identities, and the retained source."
-        case .activationFailed: "The new store was not activated. Keep the backup and retry after diagnosing the local store."
-        case .recoveryFailed: "Recovery did not complete. Keep both stores intact and use the platform recovery procedure."
-        }
-    }
+    /// Localization key for the learner-facing recovery guidance.
+    var recoveryGuidanceKey: String { "cutover.recovery.\(rawValue)" }
 }
 
 enum PracticeCutoverState: Codable, Sendable, Equatable {
@@ -273,12 +264,12 @@ final class PracticeCutoverCoordinator {
             let newRepository = try repositoryBuilder(paths.practiceStoreURL)
             try await newRepository.transaction {
                 for seed in plan.newSkillSeeds {
-                    let unit = ReviewUnit(learnerID: "local", skill: seed.skill, objectiveKey: "legacy-card:\(seed.cardID.uuidString.lowercased())")
+                    let unit = ReviewUnit(learnerID: PracticeLearner.localID, skill: seed.skill, objectiveKey: "legacy-card:\(seed.cardID.uuidString.lowercased())")
                     try await newRepository.saveReviewUnit(unit, projection: PracticeMasteryProjection(state: seed.state))
                 }
             }
             for seed in plan.newSkillSeeds {
-                let unit = ReviewUnit(learnerID: "local", skill: seed.skill, objectiveKey: "legacy-card:\(seed.cardID.uuidString.lowercased())")
+                let unit = ReviewUnit(learnerID: PracticeLearner.localID, skill: seed.skill, objectiveKey: "legacy-card:\(seed.cardID.uuidString.lowercased())")
                 guard try await newRepository.projection(for: unit.id)?.state == .unknown, try await newRepository.attempts(for: unit).isEmpty else { throw LegacyPracticeCutoverError.validation }
             }
             repository = newRepository
