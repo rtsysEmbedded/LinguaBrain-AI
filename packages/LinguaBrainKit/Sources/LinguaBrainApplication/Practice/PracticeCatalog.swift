@@ -36,7 +36,7 @@ public struct PracticeCardCandidate: Sendable, Equatable {
         self.sourceLanguage = sourceLanguage; self.targetLanguage = targetLanguage
     }
 
-    var hasReviewedExample: Bool {
+    public var hasReviewedExample: Bool {
         exampleReview == .reviewed
             && !exampleTarget.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
             && !exampleSource.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
@@ -158,6 +158,18 @@ public struct CardSentenceListeningRetrieval: Sendable {
         self.sourceLanguage = sourceLanguage; self.targetLanguage = targetLanguage
     }
 
+    public static func objectiveKey(sentenceID: UUID) -> String { "listening.sentence.\(sentenceID.uuidString.lowercased())" }
+
+    /// The validated sentence revision built from a card's reviewed example.
+    public static func sentence(for card: PracticeCardCandidate) -> Sentence {
+        Sentence(
+            text: card.exampleTarget,
+            translation: card.exampleSource,
+            validation: .validated,
+            provenance: Provenance(provider: provenanceProvider, model: card.cardID.uuidString.lowercased(), generatedAt: Date(timeIntervalSince1970: 0))
+        )
+    }
+
     public func hasMaterial() async throws -> Bool {
         try await cards.practiceCards(sourceLanguage: sourceLanguage, targetLanguage: targetLanguage).contains { $0.hasReviewedExample }
     }
@@ -166,19 +178,12 @@ public struct CardSentenceListeningRetrieval: Sendable {
         let candidates = try await cards.practiceCards(sourceLanguage: sourceLanguage, targetLanguage: targetLanguage)
             .filter(\.hasReviewedExample)
         guard !candidates.isEmpty else { return nil }
-        let sentences = candidates.map { card in
-            (card, Sentence(
-                text: card.exampleTarget,
-                translation: card.exampleSource,
-                validation: .validated,
-                provenance: Provenance(provider: Self.provenanceProvider, model: card.cardID.uuidString.lowercased(), generatedAt: Date(timeIntervalSince1970: 0))
-            ))
-        }
+        let sentences = candidates.map { card in (card, Self.sentence(for: card)) }
         let units = sentences.map { entry in
             (entry, ReviewUnit(
                 learnerID: learnerID,
                 skill: .listening,
-                objectiveKey: "listening.sentence.\(entry.1.id.uuidString.lowercased())",
+                objectiveKey: Self.objectiveKey(sentenceID: entry.1.id),
                 sentenceID: entry.1.id,
                 sentenceRevision: entry.1.revision
             ))
@@ -219,5 +224,22 @@ enum PracticeCatalogSelection {
         )
         guard let chosen = plan.items.first?.candidate.reviewUnit else { return nil }
         return items.first { $0.1.id == chosen.id }
+    }
+}
+
+/// The review-unit objective keys the card catalog creates for a set of
+/// cards, so progress can be limited to one language pair.
+public enum PracticeCatalogKeys {
+    public static func objectiveKeys(skill: PracticeSkill, cards: [PracticeCardCandidate]) -> Set<String> {
+        switch skill {
+        case .writing:
+            Set(cards.map { CardBackedWritingRetrieval.objectiveKey(cardID: $0.cardID) })
+        case .listening:
+            Set(cards.filter(\.hasReviewedExample).map {
+                CardSentenceListeningRetrieval.objectiveKey(sentenceID: CardSentenceListeningRetrieval.sentence(for: $0).id)
+            })
+        case .grammar, .speaking:
+            []
+        }
     }
 }

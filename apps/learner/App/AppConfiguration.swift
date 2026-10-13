@@ -323,17 +323,10 @@ struct LearningContentRules: Decodable, Sendable {
     }
 
     struct Speech: Decodable, Sendable {
-        /// `AVSpeechUtterance.rate` for spoken review prompts at playback rate 1.
-        let reviewPromptRate: Double
         /// Factor applied to the default speech rate for "play slowly".
         let slowReplayFactor: Double
     }
 
-    struct SkillPractice: Decodable, Sendable {
-        /// Session size when the daily new-card limit is 0 (unlimited).
-        let cardLimitWithoutNewCardLimit: Int
-        let maximumCardLimit: Int
-    }
 
     let schemaVersion: Int
     let defaults: Defaults
@@ -348,7 +341,6 @@ struct LearningContentRules: Decodable, Sendable {
     let addWord: AddWord
     /// A reviewed card whose memory strength is below this value is weak.
     let weakStrengthThreshold: Double
-    let skillPractice: SkillPractice
     let dailyPlan: DailyPlan
     let learnerProfile: LearnerProfile
     let speech: Speech

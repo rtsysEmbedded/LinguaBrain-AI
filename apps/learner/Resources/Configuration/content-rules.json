@@ -289,10 +289,6 @@
     "defaultExportFileName": "linguabrain-cards"
   },
   "weakStrengthThreshold": 0.5,
-  "skillPractice": {
-    "cardLimitWithoutNewCardLimit": 5,
-    "maximumCardLimit": 10
-  },
   "dailyPlan": {
     "defaultEnergy": 6.0,
     "defaultAvailableMinutes": 20,
@@ -334,7 +330,6 @@
     }
   },
   "speech": {
-    "reviewPromptRate": 0.45,
     "slowReplayFactor": 0.72
   }
 }

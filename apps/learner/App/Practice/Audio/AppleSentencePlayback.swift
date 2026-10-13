@@ -15,10 +15,13 @@ actor AppleSentencePlayback: PracticeSentencePlayback {
     private let synthesizer = AVSpeechSynthesizer()
     private let locale: String
     private let voiceIdentifier: String?
+    /// The learner's playback rate (Settings); 1 is the system default.
+    private let rateMultiplier: Float
 
-    init(locale: String, voiceIdentifier: String? = nil) {
+    init(locale: String, voiceIdentifier: String? = nil, rateMultiplier: Double = 1) {
         self.locale = locale
         self.voiceIdentifier = voiceIdentifier
+        self.rateMultiplier = Float(rateMultiplier)
     }
 
     func sentenceAudio(for sentence: Sentence) async throws -> MediaAsset {
@@ -29,17 +32,22 @@ actor AppleSentencePlayback: PracticeSentencePlayback {
         guard Locale(identifier: locale).language.languageCode != nil else {
             throw AppleSentencePlaybackError.invalidLocale
         }
-        try speak(sentence, rate: AVSpeechUtteranceDefaultSpeechRate)
+        try speak(sentence, rate: scaled(AVSpeechUtteranceDefaultSpeechRate))
         return asset(for: sentence)
     }
 
     func replay(_ sentence: Sentence, slowly: Bool) throws {
-        let rate = slowly ? max(AVSpeechUtteranceMinimumSpeechRate, AVSpeechUtteranceDefaultSpeechRate * 0.72) : AVSpeechUtteranceDefaultSpeechRate
-        try speak(sentence, rate: rate)
+        let slowFactor = Float(LearningContentRules.bundled.speech.slowReplayFactor)
+        let rate = slowly ? AVSpeechUtteranceDefaultSpeechRate * slowFactor : AVSpeechUtteranceDefaultSpeechRate
+        try speak(sentence, rate: scaled(rate))
     }
 
     func stop() {
         synthesizer.stopSpeaking(at: .immediate)
+    }
+
+    private func scaled(_ rate: Float) -> Float {
+        min(max(rate * rateMultiplier, AVSpeechUtteranceMinimumSpeechRate), AVSpeechUtteranceMaximumSpeechRate)
     }
 
     private func speak(_ sentence: Sentence, rate: Float) throws {

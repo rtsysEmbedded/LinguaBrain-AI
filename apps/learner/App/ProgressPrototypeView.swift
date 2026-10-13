@@ -1,12 +1,24 @@
 import SwiftUI
+import LinguaBrainApplication
 import LinguaBrainDomain
 
 struct ProgressPrototypeView: View {
+    /// Source of practice-skill evidence (GRDB); `nil` until the practice
+    /// store has started.
+    let practiceComposition: PracticeComposition?
+
     @Environment(PrototypeStore.self) private var store
     @Environment(PrototypeLocalization.self) private var localization
     @Environment(PrototypeLanguageSettings.self) private var languageSettings
+    @Environment(PrototypeAISettings.self) private var aiSettings
     @State private var isResetConfirmationPresented = false
     @State private var persistenceError: String?
+    /// Evidence-based mastery per practice skill for the active pair.
+    @State private var practiceProgress: [PracticeSkill: PracticeSkillProgress] = [:]
+
+    init(practiceComposition: PracticeComposition? = nil) {
+        self.practiceComposition = practiceComposition
+    }
 
     private var activeWords: [PrototypeWord] {
         store.words(
@@ -19,10 +31,6 @@ struct ProgressPrototypeView: View {
     private var totalReviews: Int { store.totalReviews(in: activeWords) }
     private var recognitionMastery: Double { averageMastery(mode: .recognition) }
     private var recallMastery: Double { averageMastery(mode: .reverseTranslation) }
-    private var listeningMastery: Double { averageSkillMastery(.listening) }
-    private var writingMastery: Double { averageSkillMastery(.writing) }
-    private var productionMastery: Double { averageSkillMastery(.production) }
-    private var grammarMastery: Double { averageSkillMastery(.grammar) }
     private var week: [Int] { [0, 0, 0, 0, 0, 0, min(totalReviews, 50)] }
 
     var body: some View {
@@ -122,12 +130,32 @@ struct ProgressPrototypeView: View {
                 SectionHeader(title: "progress.skillMap", subtitle: "progress.skillMapSubtitle")
                 SkillProgressRow(label: "progress.skill.recognition", value: recognitionMastery, color: PrototypeTheme.mint)
                 SkillProgressRow(label: "progress.skill.recall", value: recallMastery, color: PrototypeTheme.accent)
-                SkillProgressRow(label: "progress.skill.listening", value: listeningMastery, color: PrototypeTheme.pink)
-                SkillProgressRow(label: "progress.skill.writing", value: writingMastery, color: PrototypeTheme.blue)
-                SkillProgressRow(label: "progress.skill.production", value: productionMastery, color: .orange)
-                SkillProgressRow(label: "progress.skill.grammar", value: grammarMastery, color: .purple)
+                SkillProgressRow(label: "progress.skill.listening", value: practiceProgress[.listening]?.averageMastery, color: PrototypeTheme.pink)
+                SkillProgressRow(label: "progress.skill.writing", value: practiceProgress[.writing]?.averageMastery, color: PrototypeTheme.blue)
+                SkillProgressRow(label: "progress.skill.production", value: practiceProgress[.speaking]?.averageMastery, color: .orange)
+                SkillProgressRow(label: "progress.skill.grammar", value: practiceProgress[.grammar]?.averageMastery, color: .purple)
             }
         }
+        .task(id: "\(languageSettings.sourceLanguageTag)>\(languageSettings.targetLanguageTag)>\(store.words.count)") {
+            await loadPracticeProgress()
+        }
+    }
+
+    private func loadPracticeProgress() async {
+        guard let practiceComposition else {
+            practiceProgress = [:]
+            return
+        }
+        let probe = PracticeCapabilityProbe(
+            composition: practiceComposition,
+            cards: PrototypeStorePracticeCards(store: store),
+            aiSettings: aiSettings,
+            sourceLanguage: languageSettings.sourceLanguageTag,
+            targetLanguage: languageSettings.targetLanguageTag,
+            hasReviewedGrammarContent: false
+        )
+        let summaries = (try? await probe.progress()) ?? []
+        practiceProgress = Dictionary(uniqueKeysWithValues: summaries.map { ($0.skill, $0) })
     }
 
     private var insight: some View {
@@ -178,12 +206,6 @@ struct ProgressPrototypeView: View {
         let reviewed = activeWords.filter { store.reviewCount(for: $0, mode: mode) > 0 }
         guard !reviewed.isEmpty else { return 0 }
         return reviewed.reduce(0) { $0 + store.mastery(for: $1, mode: mode) } / Double(reviewed.count)
-    }
-
-    private func averageSkillMastery(_ skill: LearningSkill) -> Double {
-        let attempted = activeWords.filter { store.skillAttemptCount(for: $0, skill: skill) > 0 }
-        guard !attempted.isEmpty else { return 0 }
-        return attempted.reduce(0) { $0 + store.mastery(for: $1, skill: skill) } / Double(attempted.count)
     }
 
     private var insightDescription: String {

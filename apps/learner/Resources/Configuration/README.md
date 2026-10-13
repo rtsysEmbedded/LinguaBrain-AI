@@ -103,16 +103,13 @@ The card-generation user message is assembled as:
 | `addWord.defaultTopic` | Topic preselected for single-word and batch generation. |
 | `addWord.defaultExportFileName` | Package name used when the batch export name is empty; `.apkg` is appended. |
 | `weakStrengthThreshold` | A reviewed card whose memory strength is below this value counts as weak (Today, Library filter and tint). |
-| `skillPractice.cardLimitWithoutNewCardLimit` | Session size of the legacy skill practice when today's new-card limit is 0. |
-| `skillPractice.maximumCardLimit` | Upper bound of a legacy skill-practice session, and its size when no limit is passed. |
 | `dailyPlan.defaultEnergy`, `defaultAvailableMinutes`, `defaultMotivation` | Today check-in values before the learner answers. |
 | `dailyPlan.availableMinuteOptions` | Time choices in the Today check-in. |
 | `dailyPlan.*Factor*`, `minutesPerNewCard`, `modeFactors`, `maximumNewCards` | New cards per session = `min(maximumNewCards, round(minutes / minutesPerNewCard × (energyFactorBase + energy / energyFactorDivisor) × (motivationFactorBase + (motivation − 1) × motivationFactorStep) × modeFactor))`, then capped by the number of unreviewed cards. |
 | `dailyPlan.recoveryEnergyAtMost`, `challengeEnergyAtLeast` | Energy bounds for the recovery and challenge labels on Today. |
 | `learnerProfile.defaultTargetLevel` | Target level shown until the learner chooses one in Settings. |
 | `learnerProfile.dailyGoalMinuteOptions`, `defaultDailyGoalMinutes` | Daily-goal choices in Settings. A new day on Today starts with the largest `dailyPlan.availableMinuteOptions` value that does not exceed the goal. |
-| `learnerProfile.playbackRate` | `minimum`, `maximum`, `step`, and `defaultValue` of the playback-speed slider. The rate multiplies card audio (`AVAudioPlayer.rate`) and spoken review prompts. |
-| `speech.reviewPromptRate` | `AVSpeechUtterance.rate` of spoken review prompts at playback rate 1. |
+| `learnerProfile.playbackRate` | `minimum`, `maximum`, `step`, and `defaultValue` of the playback-speed slider. The rate multiplies card audio (`AVAudioPlayer.rate`) and listening-practice speech. |
 | `speech.slowReplayFactor` | Factor applied to the default speech rate when a sentence is replayed slowly. |
 
 **Stable identifiers.** `defaults`, `deckNames`, and `genericDomainNames` are compared with values already stored on learners' devices. Changing them after release orphans existing records or creates duplicate decks. The three `defaults` values are also mirrored by the SwiftData schema defaults of `PrototypeCardRecord` (`domain`, `sourceLanguageTag`, `targetLanguageTag`), which are needed for lightweight migration of older stores and must stay literal; keep both in sync and never change either after release.

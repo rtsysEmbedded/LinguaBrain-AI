@@ -7,6 +7,11 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		CB0000000000000000000011 /* SkillPracticeRoutingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB0000000000000000000010 /* SkillPracticeRoutingTests.swift */; };
+		CB000000000000000000000F /* SkillPracticeEntryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB000000000000000000000D /* SkillPracticeEntryView.swift */; };
+		CB000000000000000000000E /* SkillPracticeEntryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB000000000000000000000D /* SkillPracticeEntryView.swift */; };
+		CB000000000000000000000C /* PracticeContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB000000000000000000000A /* PracticeContent.swift */; };
+		CB000000000000000000000B /* PracticeContent.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB000000000000000000000A /* PracticeContent.swift */; };
 		CB0000000000000000000009 /* LearnerProfileTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB0000000000000000000008 /* LearnerProfileTests.swift */; };
 		CB0000000000000000000007 /* LearnerProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB0000000000000000000005 /* LearnerProfile.swift */; };
 		CB0000000000000000000006 /* LearnerProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB0000000000000000000005 /* LearnerProfile.swift */; };
@@ -120,6 +125,9 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		CB0000000000000000000010 /* SkillPracticeRoutingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SkillPracticeRoutingTests.swift; sourceTree = "<group>"; };
+		CB000000000000000000000D /* SkillPracticeEntryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SkillPracticeEntryView.swift; sourceTree = "<group>"; };
+		CB000000000000000000000A /* PracticeContent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PracticeContent.swift; sourceTree = "<group>"; };
 		CB0000000000000000000008 /* LearnerProfileTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LearnerProfileTests.swift; sourceTree = "<group>"; };
 		CB0000000000000000000005 /* LearnerProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LearnerProfile.swift; sourceTree = "<group>"; };
 		CB0000000000000000000003 /* CardContentReviewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardContentReviewTests.swift; sourceTree = "<group>"; };
@@ -255,6 +263,8 @@
 		DEADBEEF0000000000000050 /* Practice */ = {
 			isa = PBXGroup;
 			children = (
+				CB000000000000000000000D /* SkillPracticeEntryView.swift */,
+				CB000000000000000000000A /* PracticeContent.swift */,
 				DEADBEEF0000000000000059 /* Shared */,
 				DEADBEEF0000000000000063 /* Writing */,
 				DEADBEEF0000000000000069 /* History */,
@@ -323,6 +333,7 @@
 		420000000000000000000001 /* Tests */ = {
 			isa = PBXGroup;
 			children = (
+				CB0000000000000000000010 /* SkillPracticeRoutingTests.swift */,
 				CB0000000000000000000008 /* LearnerProfileTests.swift */,
 				CB0000000000000000000003 /* CardContentReviewTests.swift */,
 				CB0000000000000000000001 /* AnkiExportDocumentTests.swift */,
@@ -562,6 +573,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				CB000000000000000000000E /* SkillPracticeEntryView.swift in Sources */,
+				CB000000000000000000000B /* PracticeContent.swift in Sources */,
 				CB0000000000000000000006 /* LearnerProfile.swift in Sources */,
 				100000000000000000000001 /* LinguaBrainPrototypeApp.swift in Sources */,
 				10000000000000000000000D /* AppLocalization.swift in Sources */,
@@ -598,6 +611,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				CB000000000000000000000F /* SkillPracticeEntryView.swift in Sources */,
+				CB000000000000000000000C /* PracticeContent.swift in Sources */,
 				CB0000000000000000000007 /* LearnerProfile.swift in Sources */,
 				110000000000000000000001 /* LinguaBrainPrototypeApp.swift in Sources */,
 				11000000000000000000000D /* AppLocalization.swift in Sources */,
@@ -634,6 +649,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				CB0000000000000000000011 /* SkillPracticeRoutingTests.swift in Sources */,
 				CB0000000000000000000009 /* LearnerProfileTests.swift in Sources */,
 				CB0000000000000000000004 /* CardContentReviewTests.swift in Sources */,
 				CB0000000000000000000002 /* AnkiExportDocumentTests.swift in Sources */,

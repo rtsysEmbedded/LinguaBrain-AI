@@ -3,14 +3,17 @@ import LinguaBrainDomain
 import LinguaBrainApplication
 
 struct TodayPrototypeView: View {
-    /// Optional until the story-specific exercise retrieval composition is
-    /// supplied. The route itself is shared now; legacy content remains the
-    /// compatibility body until T011 verifies every visible surface.
+    /// Feature 004 practice composition; `nil` until the practice store has
+    /// started, in which case the skill routes explain that storage is not
+    /// ready.
     let practiceComposition: PracticeComposition?
 
     @Environment(PrototypeStore.self) private var store
     @Environment(PrototypeLocalization.self) private var localization
     @Environment(PrototypeLanguageSettings.self) private var languageSettings
+    @Environment(PrototypeAISettings.self) private var aiSettings
+    /// Weakest available skill with evidence in the active pair, if any.
+    @State private var recommendedSkill: PracticeSkill?
     @State private var energy = LearningContentRules.bundled.dailyPlan.defaultEnergy
     // A new day starts from the learner's daily goal (Settings).
     @State private var selectedTime = LearningContentRules.bundled.dailyPlan.availableMinutes(
@@ -51,12 +54,6 @@ struct TodayPrototypeView: View {
             motivation: motivation,
             modeRawValue: selectedMode
         ))
-    }
-
-    /// Skill-practice session size derived from today's new-card limit.
-    private var skillPracticeCardLimit: Int {
-        let rules = LearningContentRules.bundled.skillPractice
-        return max(1, min(newCardLimit == 0 ? rules.cardLimitWithoutNewCardLimit : newCardLimit, rules.maximumCardLimit))
     }
 
     private var learningMode: String {
@@ -266,14 +263,35 @@ struct TodayPrototypeView: View {
             )
             PrototypeCard {
                 VStack(spacing: 10) {
+                    if let recommendedSkill {
+                        let mode = PrototypeSkillPracticeMode(practiceSkill: recommendedSkill)
+                        NavigationLink {
+                            SkillPracticeEntryView(skill: recommendedSkill, composition: practiceComposition)
+                        } label: {
+                            HStack(spacing: 12) {
+                                Image(systemName: "sparkles")
+                                    .foregroundStyle(PrototypeTheme.pink)
+                                    .frame(width: 32)
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(localization.localized("skillPractice.recommendation.title"))
+                                        .font(.subheadline.weight(.semibold))
+                                    Text(localization.formatted("skillPractice.recommendation.detail", localization.localized(mode.titleKey)))
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                }
+                                Spacer()
+                                Image(systemName: "chevron.right")
+                                    .font(.caption.weight(.bold))
+                                    .foregroundStyle(.secondary)
+                            }
+                            .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                        Divider()
+                    }
                     ForEach(PrototypeSkillPracticeMode.allCases) { practiceMode in
                         NavigationLink {
-                            PracticeSessionBoundaryView(
-                                composition: practiceComposition,
-                                exercise: nil
-                            ) {
-                                SkillPracticeView(practiceMode: practiceMode, cardLimit: skillPracticeCardLimit)
-                            }
+                            SkillPracticeEntryView(skill: practiceMode.practiceSkill, composition: practiceComposition)
                         } label: {
                             HStack(spacing: 12) {
                                 Image(systemName: practiceMode.symbol)
@@ -295,5 +313,28 @@ struct TodayPrototypeView: View {
                 }
             }
         }
+        .task(id: "\(languageSettings.sourceLanguageTag)>\(languageSettings.targetLanguageTag)>\(store.words.count)") {
+            await loadRecommendation()
+        }
+    }
+
+    /// Recommends the available skill with the lowest evidenced mastery.
+    /// Skills without evidence are not called weak.
+    private func loadRecommendation() async {
+        guard let practiceComposition else {
+            recommendedSkill = nil
+            return
+        }
+        let probe = PracticeCapabilityProbe(
+            composition: practiceComposition,
+            cards: PrototypeStorePracticeCards(store: store),
+            aiSettings: aiSettings,
+            sourceLanguage: languageSettings.sourceLanguageTag,
+            targetLanguage: languageSettings.targetLanguageTag,
+            hasReviewedGrammarContent: false
+        )
+        let available = Set(PracticeSkill.allCases.filter { probe.availability(for: $0).isAvailable })
+        let summaries = (try? await probe.progress()) ?? []
+        recommendedSkill = PracticeProgressCalculator.weakestSkill(summaries, available: available)
     }
 }

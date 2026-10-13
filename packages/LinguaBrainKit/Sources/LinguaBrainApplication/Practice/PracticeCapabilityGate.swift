@@ -60,6 +60,21 @@ public struct PracticeCapabilityFacts: Sendable, Equatable {
         self.hasReviewedGrammarContent = hasReviewedGrammarContent; self.sentenceAudioAvailable = sentenceAudioAvailable
         self.pronunciationValidated = pronunciationValidated; self.evaluator = evaluator
     }
+
+    /// Facts for one language pair, derived from its cards.
+    public init(
+        cards: [PracticeCardCandidate], hasReviewedGrammarContent: Bool,
+        sentenceAudioAvailable: Bool, pronunciationValidated: Bool, evaluator: EvaluatorState
+    ) {
+        self.init(
+            hasCards: cards.contains { !$0.targetText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty },
+            hasReviewedSentences: cards.contains(where: \.hasReviewedExample),
+            hasReviewedGrammarContent: hasReviewedGrammarContent,
+            sentenceAudioAvailable: sentenceAudioAvailable,
+            pronunciationValidated: pronunciationValidated,
+            evaluator: evaluator
+        )
+    }
 }
 
 /// Pure capability decision per skill (T033 acceptance: unavailable modes

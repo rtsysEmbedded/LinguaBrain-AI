@@ -69,3 +69,25 @@ public enum PracticeProgressCalculator {
             .skill
     }
 }
+
+extension PracticeProgressCalculator {
+    /// Summaries for the given skills, limited to review units whose
+    /// objective key is in `objectiveKeys[skill]`. A skill without an entry
+    /// is not limited (for example, grammar units are not tied to cards).
+    public static func summaries(
+        skills: [PracticeSkill],
+        learnerID: String,
+        objectiveKeys: [PracticeSkill: Set<String>],
+        reader: any PracticeProgressReading
+    ) async throws -> [PracticeSkillProgress] {
+        var result: [PracticeSkillProgress] = []
+        for skill in skills {
+            var units = try await reader.unitProgress(skill: skill, learnerID: learnerID)
+            if let keys = objectiveKeys[skill] {
+                units = units.filter { keys.contains($0.unit.objectiveKey) }
+            }
+            result.append(summarize(skill: skill, units: units))
+        }
+        return result
+    }
+}

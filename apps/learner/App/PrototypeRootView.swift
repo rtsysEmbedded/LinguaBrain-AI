@@ -138,7 +138,7 @@ struct PrototypeRootView: View {
         case .add:
             AddWordPrototypeView()
         case .progress:
-            ProgressPrototypeView()
+            ProgressPrototypeView(practiceComposition: practiceComposition)
         case .utilities:
             UtilitiesPrototypeView()
         case .settings:

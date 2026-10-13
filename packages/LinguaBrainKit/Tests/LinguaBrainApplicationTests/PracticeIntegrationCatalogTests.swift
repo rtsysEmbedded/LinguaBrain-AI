@@ -185,4 +185,50 @@ final class PracticeIntegrationCatalogTests: XCTestCase {
         let other = try await repository.unitProgress(skill: .writing, learnerID: "someone-else")
         XCTAssertTrue(other.isEmpty)
     }
+
+    func testProgressIsLimitedToTheActiveLanguagePair() async throws {
+        let repository = InMemoryPracticeRepository()
+        let clock = CatalogClock(date: now)
+        let german = card(1, "arbeiten")
+        let english = card(2, "work", source: "fa", destination: "en")
+        let session = PracticeSessionService(repository: repository, evaluator: CorrectEvaluator(), clock: clock)
+        for (pairCard, target) in [(german, "de"), (english, "en")] {
+            let retrieval = CardBackedWritingRetrieval(cards: StaticCardSource(cards: [pairCard]), repository: repository, clock: clock, sourceLanguage: "fa", targetLanguage: target)
+            let candidate = try await retrieval.nextWritingExercise(learnerID: "local", cefrLevel: "A2", seed: 0)
+            let descriptor = try XCTUnwrap(candidate)
+            _ = try await session.prepare(exercise: descriptor.exercise)
+            _ = try await session.submit(exercise: descriptor.exercise, response: "answer")
+        }
+
+        let keys: [PracticeSkill: Set<String>] = [
+            .writing: PracticeCatalogKeys.objectiveKeys(skill: .writing, cards: [german]),
+            .listening: PracticeCatalogKeys.objectiveKeys(skill: .listening, cards: [german])
+        ]
+        let summaries = try await PracticeProgressCalculator.summaries(skills: [.writing, .listening], learnerID: "local", objectiveKeys: keys, reader: repository)
+        XCTAssertEqual(summaries.map(\.skill), [.writing, .listening])
+        XCTAssertEqual(summaries[0].evidencedUnitCount, 1, "Only the German card's unit counts for the German pair")
+        XCTAssertNil(summaries[1].averageMastery)
+    }
+
+    func testListeningKeysMatchTheUnitsTheRetrievalCreates() async throws {
+        let repository = InMemoryPracticeRepository()
+        let reviewed = card(1, "arbeiten")
+        let retrieval = CardSentenceListeningRetrieval(cards: StaticCardSource(cards: [reviewed, card(2, "lernen", review: .unreviewed)]), repository: repository, clock: CatalogClock(date: now), sourceLanguage: "fa", targetLanguage: "de")
+        let candidate = try await retrieval.nextListeningExercise(learnerID: "local", seed: 0)
+        let descriptor = try XCTUnwrap(candidate)
+        XCTAssertEqual(PracticeCatalogKeys.objectiveKeys(skill: .listening, cards: [reviewed, card(2, "lernen", review: .unreviewed)]), [descriptor.exercise.reviewUnit.objectiveKey])
+        XCTAssertEqual(PracticeCatalogKeys.objectiveKeys(skill: .grammar, cards: [reviewed]), [])
+    }
+
+    func testCapabilityFactsAreDerivedFromCards() {
+        let none = PracticeCapabilityFacts(cards: [], hasReviewedGrammarContent: false, sentenceAudioAvailable: true, pronunciationValidated: false, evaluator: .notConfigured)
+        XCTAssertFalse(none.hasCards)
+        XCTAssertFalse(none.hasReviewedSentences)
+        let unreviewed = PracticeCapabilityFacts(cards: [card(1, "x", review: .unreviewed)], hasReviewedGrammarContent: false, sentenceAudioAvailable: true, pronunciationValidated: false, evaluator: .notConfigured)
+        XCTAssertTrue(unreviewed.hasCards)
+        XCTAssertFalse(unreviewed.hasReviewedSentences)
+        XCTAssertEqual(PracticeCapabilityGate.availability(for: .listening, facts: unreviewed), .unavailable(.noReviewedSentences))
+        XCTAssertEqual(PracticeCapabilityGate.availability(for: .writing, facts: unreviewed), .available(.ungradedNoProvider))
+    }
+
 }

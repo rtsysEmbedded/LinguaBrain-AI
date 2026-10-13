@@ -264,12 +264,12 @@ final class PracticeCutoverCoordinator {
             let newRepository = try repositoryBuilder(paths.practiceStoreURL)
             try await newRepository.transaction {
                 for seed in plan.newSkillSeeds {
-                    let unit = ReviewUnit(learnerID: "local", skill: seed.skill, objectiveKey: "legacy-card:\(seed.cardID.uuidString.lowercased())")
+                    let unit = ReviewUnit(learnerID: PracticeLearner.localID, skill: seed.skill, objectiveKey: "legacy-card:\(seed.cardID.uuidString.lowercased())")
                     try await newRepository.saveReviewUnit(unit, projection: PracticeMasteryProjection(state: seed.state))
                 }
             }
             for seed in plan.newSkillSeeds {
-                let unit = ReviewUnit(learnerID: "local", skill: seed.skill, objectiveKey: "legacy-card:\(seed.cardID.uuidString.lowercased())")
+                let unit = ReviewUnit(learnerID: PracticeLearner.localID, skill: seed.skill, objectiveKey: "legacy-card:\(seed.cardID.uuidString.lowercased())")
                 guard try await newRepository.projection(for: unit.id)?.state == .unknown, try await newRepository.attempts(for: unit).isEmpty else { throw LegacyPracticeCutoverError.validation }
             }
             repository = newRepository

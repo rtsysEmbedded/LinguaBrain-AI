@@ -1,6 +1,6 @@
 # T033 Integration Design — Skill Practice Routes
 
-**Status:** Phase A1 (package layer) implemented and tested; Phase A2 (app wiring) not started. All decisions are recorded in Section 6.
+**Status:** Phases A1 (package layer) and A2 (app wiring) implemented; Phases B (graded evaluation) and C (grammar content, listening audio) follow. All decisions are recorded in Section 6. T033 stays open until grammar content is reviewed and an Xcode 27 build and device QA pass.
 **Date:** 2026-10-13
 **Task:** [T033](tasks.md) — integrate app routes and languages.
 **Related:** [spec.md](spec.md), [plan.md](plan.md), [2026-10-13 project audit](../../docs/PROJECT_AUDIT_2026-10-13.md) finding A2.
@@ -155,3 +155,20 @@ Mapping `generated` to `.reviewed` would therefore admit unreviewed AI output fr
 Option 1 meets the contract; it is a decision for the Product Owner before Phase A2.
 
 **Decision (2026-10-13): option 1.** `PrototypeCardRecord.contentReviewed` (schema default `false`) is set for built-in seed cards (with a one-time backfill of the built-in decks), for cards saved through the single-card preview, and by the learner with the toggle on the card detail screen. Batch, passage, and imported cards start unreviewed. Cards approved in the preview before this change cannot be distinguished from batch cards and start unreviewed. The flag is included in iCloud card backups; older snapshots decode it as `false`.
+
+### 7.4 Phase A2 — app wiring
+
+| Area | Implementation |
+| --- | --- |
+| Card source | `PrototypeStorePracticeCards` (`App/Practice/PracticeContent.swift`) snapshots `PrototypeStore` cards on the main actor. Each card's example is `.reviewed` only when `PrototypeCardRecord.contentReviewed` is true (Section 7.3). |
+| Capability | `PracticeCapabilityProbe` builds `PracticeCapabilityFacts` per language pair: cards, reviewed sentences, an installed speech voice for the target language, no validated pronunciation provider (T028), and the evaluator state from the composition's graded skills and the Text provider settings (mode, key, cloud consent). |
+| Route | Today's four skill rows open `SkillPracticeEntryView(skill:)`. It shows the writing or listening story view, or `PracticeUnavailableView` with a localized reason. «Next exercise» starts the next occurrence chosen by the planner. A notice states when answers will not be graded. |
+| Legacy | `SkillPracticeView` and `PracticeSessionBoundaryView` were removed (decision 5). Skill evidence is written only to GRDB. |
+| Recommendation | Today shows the available skill with the lowest evidenced mastery (`PracticeProgressCalculator.weakestSkill`); skills without evidence are never recommended as weak. |
+| Progress | Listening, writing, speaking, and grammar rows read GRDB projections limited to the active pair (`PracticeCatalogKeys`, `PracticeProgressCalculator.summaries`); a skill without evidence shows «no evidence yet». Recognition and recall still read `PrototypeStore`. |
+| Learner ID | `PracticeLearner.localID` (`"local"`), shared with the legacy migration. |
+| Localization | 20 keys added in fa, en, and de; 23 keys used only by the removed legacy view were deleted. |
+| Tests | Package: `PracticeIntegrationCatalogTests` (13 tests, Linux). App: `SkillPracticeRoutingTests`. The non-UI app files type-check against the package modules on Linux; the SwiftUI views need an Xcode 27 build. |
+
+Grammar stays unavailable (`noReviewedGrammarContent`) until reviewed templates exist (Phase C). Speaking stays unavailable (`pronunciationNotValidated`).
+
