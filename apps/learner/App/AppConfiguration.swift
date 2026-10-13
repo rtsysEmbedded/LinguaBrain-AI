@@ -192,6 +192,81 @@ struct AIPromptCatalog: Decodable, Sendable {
     }
 }
 
+/// Defaults, stored identifiers, and classification terms for learner content.
+/// Source: `Resources/Configuration/content-rules.json`.
+///
+/// `deckNames`, `defaults.domain`, and `genericDomainNames` are compared with
+/// values already persisted on learners' devices. Changing them after release
+/// orphans existing records, so treat them as stable identifiers.
+struct LearningContentRules: Decodable, Sendable {
+    struct Defaults: Decodable, Sendable {
+        let sourceLanguageTag: String
+        let targetLanguageTag: String
+        let domain: String
+    }
+
+    struct DeckNames: Decodable, Sendable {
+        let core: String
+        let generated: String
+        let multilingual: String
+    }
+
+    struct DomainKeywords: Decodable, Sendable {
+        let domain: String
+        let terms: [String]
+    }
+
+    let schemaVersion: Int
+    let defaults: Defaults
+    let deckNames: DeckNames
+    let classifierFallbackDomain: String
+    let genericDomainNames: [String]
+    let nounPartOfSpeechMarkers: [String]
+    let verbPartOfSpeechMarkers: [String]
+    let domainKeywords: [DomainKeywords]
+
+    static let bundled = AppConfigurationResource.load(LearningContentRules.self, named: "content-rules")
+}
+
+/// Built-in sample cards seeded into an empty installation.
+/// Source: `Resources/Configuration/seed-cards.json`.
+struct SeedCardCatalog: Decodable, Sendable {
+    struct Word: Decodable, Sendable {
+        let german: String
+        let persian: String
+        let level: String
+        let partOfSpeech: String
+        let example: String
+        let exampleTranslation: String
+        let article: String?
+    }
+
+    struct MultilingualSampleDefaults: Decodable, Sendable {
+        /// Sample `number` is appended as 12 zero-padded digits to form a stable UUID.
+        let idPrefix: String
+        let level: String
+        let partOfSpeech: String
+        let domain: String
+    }
+
+    struct MultilingualSample: Decodable, Sendable {
+        let number: Int
+        let sourceLanguageTag: String
+        let targetLanguageTag: String
+        let source: String
+        let target: String
+        let sourceExample: String
+        let targetExample: String
+    }
+
+    let schemaVersion: Int
+    let words: [Word]
+    let multilingualSampleDefaults: MultilingualSampleDefaults
+    let multilingualSamples: [MultilingualSample]
+
+    static let bundled = AppConfigurationResource.load(SeedCardCatalog.self, named: "seed-cards")
+}
+
 enum PromptTemplate {
     /// Replaces `{name}` placeholders in a single pass. Substituted values are
     /// never scanned again, so learner text that contains braces is preserved.

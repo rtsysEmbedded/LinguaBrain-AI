@@ -55,8 +55,9 @@ struct AddWordPrototypeView: View {
     // while the picker is the language the user wants as the translation.
     // Keeping those roles separate prevents a German input + Persian translation
     // from being rendered as a Persian-front card.
-    @State private var batchInputLanguage = "de"
-    @State private var batchTranslationLanguage = "fa"
+    /// Batch input words are in the learning (target) language and are translated into the support (source) language.
+    @State private var batchInputLanguage = LearningContentRules.bundled.defaults.targetLanguageTag
+    @State private var batchTranslationLanguage = LearningContentRules.bundled.defaults.sourceLanguageTag
     @State private var didInitializeBatchLanguages = false
     @State private var batchIncludeAudio = false
     @State private var batchIncludeImage = false
@@ -1507,8 +1508,8 @@ struct APKGCardReader: Sendable {
             let normalizedSource = sanitize(source)
             let normalizedTarget = sanitize(target)
             guard !normalizedSource.isEmpty, !normalizedTarget.isEmpty else { return nil }
-            let sourceTag = sanitize(values["SourceLanguageTag"] ?? "fa")
-            let targetTag = sanitize(values["TargetLanguageTag"] ?? "de")
+            let sourceTag = sanitize(values["SourceLanguageTag"] ?? LearningContentRules.bundled.defaults.sourceLanguageTag)
+            let targetTag = sanitize(values["TargetLanguageTag"] ?? LearningContentRules.bundled.defaults.targetLanguageTag)
             let examples = PrototypeExamplePairing.pair(target: values["TargetExample"] ?? "", source: values["SourceExample"] ?? "")
             return PrototypeWord(
                 german: normalizedTarget,
@@ -1626,7 +1627,7 @@ struct APKGCardReader: Sendable {
                     level: sanitize(fields[6]), partOfSpeech: sanitize(fields[7]),
                     example: sanitize(fields[4]), exampleTranslation: sanitize(fields[5]),
                     examples: PrototypeExamplePairing.pair(target: fields[4], source: fields[5]),
-                    domain: sanitize(fields[8]), sourceLanguageTag: "fa", targetLanguageTag: "de"
+                    domain: sanitize(fields[8]), sourceLanguageTag: LearningContentRules.bundled.defaults.sourceLanguageTag, targetLanguageTag: LearningContentRules.bundled.defaults.targetLanguageTag
                 )
             }
         }

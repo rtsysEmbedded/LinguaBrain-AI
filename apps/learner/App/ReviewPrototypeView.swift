@@ -631,11 +631,12 @@ struct ReviewPrototypeView: View {
             }
             if mode == .mixedGame {
                 let eligibleKinds: [MixedPracticeKind] = store.words.first(where: { $0.id == nextID }).flatMap { word in
+                    let rules = LearningContentRules.bundled
                     let canTestArticle = correctArticle(for: word) != nil &&
-                        (word.partOfSpeech.localizedCaseInsensitiveContains("noun") ||
-                         word.partOfSpeech.localizedCaseInsensitiveContains("اسم") ||
+                        (rules.nounPartOfSpeechMarkers.contains { word.partOfSpeech.localizedCaseInsensitiveContains($0) } ||
                          word.article != nil)
-                    let canTestOddMeaning = relatedMeanings(for: word).count >= 3 && word.partOfSpeech.localizedCaseInsensitiveContains("verb")
+                    let canTestOddMeaning = relatedMeanings(for: word).count >= 3
+                        && rules.verbPartOfSpeechMarkers.contains { word.partOfSpeech.localizedCaseInsensitiveContains($0) }
                     return (canTestOddMeaning ? [.direct, .reverse, .collocation, .oddMeaning] : [.direct, .reverse, .collocation]) +
                         (canTestArticle ? [.article] : [])
                 } ?? [.direct, .reverse, .collocation]

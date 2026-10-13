@@ -49,8 +49,10 @@ final class GenerationPrototypeModel {
     var topic: String = ""
     var count: Int = 20
     var level: String = "A1"
-    var sourceLanguage: String = "de"
-    var targetLanguage: String = "fa"
+    // In this generation prototype "source" is the learning language and
+    // "target" is the translation language.
+    var sourceLanguage: String = LearningContentRules.bundled.defaults.targetLanguageTag
+    var targetLanguage: String = LearningContentRules.bundled.defaults.sourceLanguageTag
     var isGenerating = false
     var editorBeingEdited: String?
     var pendingEditText = ""

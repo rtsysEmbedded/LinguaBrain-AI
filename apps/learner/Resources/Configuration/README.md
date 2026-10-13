@@ -6,8 +6,10 @@ The learner app reads provider settings and AI prompt text from the JSON files i
 | --- | --- | --- |
 | `provider-catalog.json` | `ProviderCatalog.bundled` | Default provider mode and protocol, endpoints, model identifiers, model lists, voices, request parameters, and Realtime transcription profiles. |
 | `ai-prompts.json` | `AIPromptCatalog.bundled` | Prompt templates sent to text and image providers, and topic scopes for card generation. |
+| `content-rules.json` | `LearningContentRules.bundled` | Default language pair and domain, stored deck names, generic domain names, part-of-speech markers, and topic-classification terms. |
+| `seed-cards.json` | `SeedCardCatalog.bundled` | Built-in vocabulary seeded into an empty installation and the multilingual sample cards. |
 
-Both files are bundled into the iOS and macOS app targets. The loader is `apps/learner/App/AppConfiguration.swift`.
+All files are bundled into the iOS and macOS app targets. The loader is `apps/learner/App/AppConfiguration.swift`.
 
 ## Loading rules
 
@@ -77,6 +79,28 @@ The card-generation user message is assembled as:
 
 `categoryScopes` is an ordered list. The learner category is case- and diacritic-folded; the first entry whose `equals` list contains the folded category, or whose `contains` list has a fragment found in it, supplies the scope. Otherwise `defaultCategoryScope` is used with the `{domain}` placeholder.
 
+## `content-rules.json`
+
+| Field | Meaning |
+| --- | --- |
+| `defaults.sourceLanguageTag`, `defaults.targetLanguageTag` | Language pair used before the learner chooses one, and for imported cards without language tags. |
+| `defaults.domain` | Domain assigned to cards without a topic. |
+| `deckNames.core`, `deckNames.generated`, `deckNames.multilingual` | Names of the built-in, AI-generated, and multilingual sample decks. Existing decks are found by these names. |
+| `classifierFallbackDomain` | Domain returned when no classification term matches. |
+| `genericDomainNames` | Lower-cased domain names treated as "no topic"; such cards may be reclassified. |
+| `nounPartOfSpeechMarkers`, `verbPartOfSpeechMarkers` | Case-insensitive fragments that identify nouns (article practice) and verbs (odd-meaning practice) in a stored part of speech. |
+| `domainKeywords` | Ordered topic terms; the domain with the most matching terms in a card's text wins. |
+
+**Stable identifiers.** `defaults`, `deckNames`, and `genericDomainNames` are compared with values already stored on learners' devices. Changing them after release orphans existing records or creates duplicate decks. The three `defaults` values are also mirrored by the SwiftData schema defaults of `PrototypeCardRecord` (`domain`, `sourceLanguageTag`, `targetLanguageTag`), which are needed for lightweight migration of older stores and must stay literal; keep both in sync and never change either after release.
+
+## `seed-cards.json`
+
+| Field | Meaning |
+| --- | --- |
+| `words` | German–Persian cards (`german`, `persian`, `level`, `partOfSpeech`, `example`, `exampleTranslation`, optional `article`) inserted only into an empty store. |
+| `multilingualSampleDefaults` | `idPrefix`, `level`, `partOfSpeech`, and `domain` shared by all sample cards. |
+| `multilingualSamples` | One card per entry with `number`, language tags, and source/target text and examples. The card ID is `idPrefix` followed by `number` as 12 zero-padded digits, so `number` must never be reused or changed. |
+
 ## Values that remain in code
 
 These values are part of code contracts rather than settings and stay in Swift:
@@ -85,3 +109,6 @@ These values are part of code contracts rather than settings and stay in Swift:
 - Realtime and chat-completion protocol event names, field names, and the 24 kHz PCM input format.
 - Substring heuristics that classify fetched model identifiers into speech, transcript, and stream roles.
 - Persisted protocol identifiers (`openai-compatible`, `google-native`).
+- The SwiftData schema defaults of `PrototypeCardRecord` described above.
+- Language facts used as logic, such as treating Persian (`fa`) as right-to-left.
+- Format-specific import mappings, such as the field names of known Anki deck layouts.

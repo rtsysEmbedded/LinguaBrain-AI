@@ -113,7 +113,7 @@ This section is updated by the commits that address the findings.
 | Group | Status |
 | --- | --- |
 | 1. Safe code fixes | Open — not selected for this round. |
-| 2. Hardcoding removal | Provider configuration and prompts moved to `Resources/Configuration` (C3). Interface copy moved to `fa/en/de.json` with stable keys and a localized `InfoPlist.xcstrings` (C1, C2, C4). Remaining: seed vocabulary and stored identifiers (deck names, default domain), and the package-level defaults in `ProviderConfiguration` and `LinguaBrainAI`. |
+| 2. Hardcoding removal | Provider configuration and prompts moved to `Resources/Configuration` (C3). Interface copy moved to `fa/en/de.json` with stable keys and a localized `InfoPlist.xcstrings` (C1, C2, C4). Seed cards and content rules moved to `seed-cards.json` and `content-rules.json`. Remaining by design: SwiftData schema defaults, protocol and file-format identifiers. Remaining open: package-level defaults in `ProviderConfiguration` and `LinguaBrainAI` request parameters. |
 | 3. Documentation | In progress. |
 | 4. Feature 004 integration | Design pending approval. |
 | B5 | Removed from the working tree and ignored; history unchanged. |

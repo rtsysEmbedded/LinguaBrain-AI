@@ -102,7 +102,7 @@ final class LiveTranscriptionController {
         #endif
     }
 
-    func toggle(languageTag: String = "de") {
+    func toggle(languageTag: String = LearningContentRules.bundled.defaults.targetLanguageTag) {
         if isRecording { stop() } else if !isStarting { start(languageTag: languageTag) }
     }
 
@@ -113,7 +113,7 @@ final class LiveTranscriptionController {
     }
 
     func start(
-        languageTag: String = "de",
+        languageTag: String = LearningContentRules.bundled.defaults.targetLanguageTag,
         aiSettings: PrototypeAISettings? = nil,
         cloudMode: PrototypeCloudTranscriptionMode = .liveStream
     ) {

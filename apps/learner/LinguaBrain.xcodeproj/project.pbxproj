@@ -7,6 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		CF000000000000000000001A /* seed-cards.json in Resources */ = {isa = PBXBuildFile; fileRef = CF0000000000000000000007 /* seed-cards.json */; };
+		CF000000000000000000001B /* content-rules.json in Resources */ = {isa = PBXBuildFile; fileRef = CF0000000000000000000008 /* content-rules.json */; };
+		CF000000000000000000001C /* seed-cards.json in Resources */ = {isa = PBXBuildFile; fileRef = CF0000000000000000000007 /* seed-cards.json */; };
+		CF000000000000000000001D /* content-rules.json in Resources */ = {isa = PBXBuildFile; fileRef = CF0000000000000000000008 /* content-rules.json */; };
 		CF0000000000000000000018 /* InfoPlist.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = CF0000000000000000000006 /* InfoPlist.xcstrings */; };
 		CF0000000000000000000019 /* InfoPlist.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = CF0000000000000000000006 /* InfoPlist.xcstrings */; };
 		CF0000000000000000000017 /* AppConfigurationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF0000000000000000000005 /* AppConfigurationTests.swift */; };
@@ -111,6 +115,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		CF0000000000000000000007 /* seed-cards.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "seed-cards.json"; sourceTree = "<group>"; };
+		CF0000000000000000000008 /* content-rules.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "content-rules.json"; sourceTree = "<group>"; };
 		CF0000000000000000000006 /* InfoPlist.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = InfoPlist.xcstrings; sourceTree = "<group>"; };
 		CF0000000000000000000005 /* AppConfigurationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConfigurationTests.swift; sourceTree = "<group>"; };
 		CF0000000000000000000001 /* AppConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppConfiguration.swift; sourceTree = "<group>"; };
@@ -292,7 +298,7 @@
 			path = Resources;
 			sourceTree = "<group>";
 		};
-		CF0000000000000000000004 /* Configuration */ = { isa = PBXGroup; children = ( CF0000000000000000000002 /* provider-catalog.json */, CF0000000000000000000003 /* ai-prompts.json */ ); path = Configuration; sourceTree = "<group>"; };
+		CF0000000000000000000004 /* Configuration */ = { isa = PBXGroup; children = ( CF0000000000000000000002 /* provider-catalog.json */, CF0000000000000000000003 /* ai-prompts.json */, CF0000000000000000000007 /* seed-cards.json */, CF0000000000000000000008 /* content-rules.json */ ); path = Configuration; sourceTree = "<group>"; };
 		400000000000000000000005 /* Localization */ = { isa = PBXGroup; children = ( 200000000000000000000011 /* en.json */, 200000000000000000000012 /* de.json */, 200000000000000000000013 /* fa.json */ ); path = Localization; sourceTree = "<group>"; };
 		400000000000000000000004 /* Products */ = {
 			isa = PBXGroup;
@@ -504,6 +510,8 @@
 				100000000000000000000013 /* fa.json in Resources */,
 				CF0000000000000000000013 /* provider-catalog.json in Resources */,
 				CF0000000000000000000014 /* ai-prompts.json in Resources */,
+				CF000000000000000000001A /* seed-cards.json in Resources */,
+				CF000000000000000000001B /* content-rules.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -519,6 +527,8 @@
 				110000000000000000000013 /* fa.json in Resources */,
 				CF0000000000000000000015 /* provider-catalog.json in Resources */,
 				CF0000000000000000000016 /* ai-prompts.json in Resources */,
+				CF000000000000000000001C /* seed-cards.json in Resources */,
+				CF000000000000000000001D /* content-rules.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

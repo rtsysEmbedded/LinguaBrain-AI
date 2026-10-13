@@ -40,6 +40,23 @@ final class AppConfigurationTests: XCTestCase {
         )
     }
 
+    func testBundledContentRulesAndSeedCardsLoad() {
+        let rules = LearningContentRules.bundled
+        XCTAssertEqual(rules.schemaVersion, 1)
+        XCTAssertNotEqual(rules.defaults.sourceLanguageTag, rules.defaults.targetLanguageTag)
+        XCTAssertTrue(PrototypeDomainClassifier.isGeneric(rules.defaults.domain))
+        XCTAssertFalse(rules.domainKeywords.isEmpty)
+
+        let seeds = SeedCardCatalog.bundled
+        XCTAssertEqual(seeds.schemaVersion, 1)
+        XCTAssertEqual(PrototypeData.words.count, seeds.words.count)
+        XCTAssertEqual(Set(PrototypeData.multilingualSamples.map(\.id)).count, seeds.multilingualSamples.count)
+        XCTAssertEqual(
+            PrototypeData.multilingualSamples.first?.id.uuidString.lowercased(),
+            "71000000-0000-4000-8000-000000000001"
+        )
+    }
+
     func testTemplateRenderingIsSinglePass() {
         XCTAssertEqual(PromptTemplate.render("{a} and {b}", ["a": "{b}", "b": "x"]), "{b} and x")
         XCTAssertEqual(PromptTemplate.render("keep {unknown}", [:]), "keep {unknown}")

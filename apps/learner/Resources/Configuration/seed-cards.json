@@ -1,0 +1,711 @@
+{
+  "schemaVersion": 1,
+  "words": [
+    {
+      "german": "arbeiten",
+      "persian": "کار کردن",
+      "level": "A1",
+      "partOfSpeech": "Verb",
+      "example": "Ich arbeite heute von zu Hause.",
+      "exampleTranslation": "من امروز از خانه کار می‌کنم."
+    },
+    {
+      "german": "die Entscheidung",
+      "persian": "تصمیم",
+      "level": "B1",
+      "partOfSpeech": "Nomen",
+      "example": "Wir treffen morgen eine Entscheidung.",
+      "exampleTranslation": "ما فردا تصمیم می‌گیریم.",
+      "article": "die"
+    },
+    {
+      "german": "zuverlässig",
+      "persian": "قابل اعتماد",
+      "level": "B1",
+      "partOfSpeech": "Adjektiv",
+      "example": "Sie ist eine zuverlässige Kollegin.",
+      "exampleTranslation": "او همکار قابل اعتمادی است."
+    },
+    {
+      "german": "der Arbeitsvertrag",
+      "persian": "قرارداد کاری",
+      "level": "B2",
+      "partOfSpeech": "Nomen",
+      "example": "Bitte lesen Sie den Arbeitsvertrag sorgfältig.",
+      "exampleTranslation": "لطفاً قرارداد کاری را با دقت بخوانید.",
+      "article": "der"
+    },
+    {
+      "german": "das Haus",
+      "persian": "خانه",
+      "level": "A1",
+      "partOfSpeech": "Nomen",
+      "example": "Das Haus ist sehr alt.",
+      "exampleTranslation": "خانه بسیار قدیمی است.",
+      "article": "das"
+    },
+    {
+      "german": "die Familie",
+      "persian": "خانواده",
+      "level": "A1",
+      "partOfSpeech": "Nomen",
+      "example": "Meine Familie lebt in Berlin.",
+      "exampleTranslation": "خانوادهٔ من در برلین زندگی می‌کند.",
+      "article": "die"
+    },
+    {
+      "german": "lernen",
+      "persian": "یاد گرفتن",
+      "level": "A1",
+      "partOfSpeech": "Verb",
+      "example": "Ich lerne jeden Tag Deutsch.",
+      "exampleTranslation": "من هر روز آلمانی یاد می‌گیرم."
+    },
+    {
+      "german": "sprechen",
+      "persian": "صحبت کردن",
+      "level": "A1",
+      "partOfSpeech": "Verb",
+      "example": "Wir sprechen über die Arbeit.",
+      "exampleTranslation": "ما دربارهٔ کار صحبت می‌کنیم."
+    },
+    {
+      "german": "verstehen",
+      "persian": "فهمیدن",
+      "level": "A1",
+      "partOfSpeech": "Verb",
+      "example": "Ich verstehe die Frage.",
+      "exampleTranslation": "من سؤال را می‌فهمم."
+    },
+    {
+      "german": "brauchen",
+      "persian": "نیاز داشتن",
+      "level": "A1",
+      "partOfSpeech": "Verb",
+      "example": "Ich brauche mehr Zeit.",
+      "exampleTranslation": "من به زمان بیشتری نیاز دارم."
+    },
+    {
+      "german": "kaufen",
+      "persian": "خریدن",
+      "level": "A1",
+      "partOfSpeech": "Verb",
+      "example": "Sie kauft frisches Brot.",
+      "exampleTranslation": "او نان تازه می‌خرد."
+    },
+    {
+      "german": "bezahlen",
+      "persian": "پرداخت کردن",
+      "level": "A1",
+      "partOfSpeech": "Verb",
+      "example": "Kann ich mit Karte bezahlen?",
+      "exampleTranslation": "می‌توانم با کارت پرداخت کنم؟"
+    },
+    {
+      "german": "die Wohnung",
+      "persian": "آپارتمان",
+      "level": "A1",
+      "partOfSpeech": "Nomen",
+      "example": "Die Wohnung hat drei Zimmer.",
+      "exampleTranslation": "آپارتمان سه اتاق دارد.",
+      "article": "die"
+    },
+    {
+      "german": "der Bahnhof",
+      "persian": "ایستگاه قطار",
+      "level": "A1",
+      "partOfSpeech": "Nomen",
+      "example": "Der Bahnhof ist in der Nähe.",
+      "exampleTranslation": "ایستگاه قطار نزدیک است.",
+      "article": "der"
+    },
+    {
+      "german": "die Gesundheit",
+      "persian": "سلامتی",
+      "level": "A2",
+      "partOfSpeech": "Nomen",
+      "example": "Gesundheit ist sehr wichtig.",
+      "exampleTranslation": "سلامتی بسیار مهم است.",
+      "article": "die"
+    },
+    {
+      "german": "der Termin",
+      "persian": "قرار",
+      "level": "A2",
+      "partOfSpeech": "Nomen",
+      "example": "Ich habe morgen einen Termin.",
+      "exampleTranslation": "من فردا یک قرار دارم.",
+      "article": "der"
+    },
+    {
+      "german": "die Erfahrung",
+      "persian": "تجربه",
+      "level": "A2",
+      "partOfSpeech": "Nomen",
+      "example": "Er hat viel Erfahrung.",
+      "exampleTranslation": "او تجربهٔ زیادی دارد.",
+      "article": "die"
+    },
+    {
+      "german": "die Bewerbung",
+      "persian": "درخواست استخدام",
+      "level": "B1",
+      "partOfSpeech": "Nomen",
+      "example": "Meine Bewerbung ist fertig.",
+      "exampleTranslation": "درخواست استخدام من آماده است.",
+      "article": "die"
+    },
+    {
+      "german": "das Gespräch",
+      "persian": "گفت‌وگو",
+      "level": "A2",
+      "partOfSpeech": "Nomen",
+      "example": "Das Gespräch war hilfreich.",
+      "exampleTranslation": "گفت‌وگو مفید بود.",
+      "article": "das"
+    },
+    {
+      "german": "der Mitarbeiter",
+      "persian": "کارمند",
+      "level": "A2",
+      "partOfSpeech": "Nomen",
+      "example": "Der Mitarbeiter beantwortet die E-Mail.",
+      "exampleTranslation": "کارمند به ایمیل پاسخ می‌دهد.",
+      "article": "der"
+    },
+    {
+      "german": "die Aufgabe",
+      "persian": "وظیفه",
+      "level": "A2",
+      "partOfSpeech": "Nomen",
+      "example": "Diese Aufgabe ist einfach.",
+      "exampleTranslation": "این وظیفه ساده است.",
+      "article": "die"
+    },
+    {
+      "german": "die Besprechung",
+      "persian": "جلسه",
+      "level": "B1",
+      "partOfSpeech": "Nomen",
+      "example": "Die Besprechung beginnt um neun Uhr.",
+      "exampleTranslation": "جلسه ساعت نه شروع می‌شود.",
+      "article": "die"
+    },
+    {
+      "german": "erklären",
+      "persian": "توضیح دادن",
+      "level": "A2",
+      "partOfSpeech": "Verb",
+      "example": "Können Sie das bitte erklären?",
+      "exampleTranslation": "می‌توانید لطفاً آن را توضیح دهید؟"
+    },
+    {
+      "german": "vereinbaren",
+      "persian": "هماهنگ کردن",
+      "level": "B1",
+      "partOfSpeech": "Verb",
+      "example": "Wir vereinbaren einen neuen Termin.",
+      "exampleTranslation": "ما یک قرار جدید هماهنگ می‌کنیم."
+    },
+    {
+      "german": "teilnehmen",
+      "persian": "شرکت کردن",
+      "level": "B1",
+      "partOfSpeech": "Verb",
+      "example": "Ich nehme an der Besprechung teil.",
+      "exampleTranslation": "من در جلسه شرکت می‌کنم."
+    },
+    {
+      "german": "sich bewerben",
+      "persian": "درخواست استخدام دادن",
+      "level": "B1",
+      "partOfSpeech": "Verb",
+      "example": "Sie bewirbt sich um eine Stelle.",
+      "exampleTranslation": "او برای یک شغل درخواست می‌دهد."
+    },
+    {
+      "german": "entscheiden",
+      "persian": "تصمیم گرفتن",
+      "level": "B1",
+      "partOfSpeech": "Verb",
+      "example": "Wir müssen heute entscheiden.",
+      "exampleTranslation": "ما باید امروز تصمیم بگیریم."
+    },
+    {
+      "german": "verbessern",
+      "persian": "بهبود دادن",
+      "level": "B1",
+      "partOfSpeech": "Verb",
+      "example": "Ich möchte mein Deutsch verbessern.",
+      "exampleTranslation": "می‌خواهم زبان آلمانی‌ام را بهتر کنم."
+    },
+    {
+      "german": "unterstützen",
+      "persian": "حمایت کردن",
+      "level": "B1",
+      "partOfSpeech": "Verb",
+      "example": "Das Team unterstützt mich.",
+      "exampleTranslation": "تیم از من حمایت می‌کند."
+    },
+    {
+      "german": "verantwortlich",
+      "persian": "مسئول",
+      "level": "B1",
+      "partOfSpeech": "Adjektiv",
+      "example": "Wer ist dafür verantwortlich?",
+      "exampleTranslation": "چه کسی مسئول آن است؟"
+    },
+    {
+      "german": "pünktlich",
+      "persian": "سروقت",
+      "level": "A2",
+      "partOfSpeech": "Adjektiv",
+      "example": "Der Zug kommt pünktlich an.",
+      "exampleTranslation": "قطار سروقت می‌رسد."
+    },
+    {
+      "german": "freundlich",
+      "persian": "دوستانه",
+      "level": "A1",
+      "partOfSpeech": "Adjektiv",
+      "example": "Die Ärztin ist sehr freundlich.",
+      "exampleTranslation": "پزشک بسیار خوش‌برخورد است."
+    },
+    {
+      "german": "wichtig",
+      "persian": "مهم",
+      "level": "A1",
+      "partOfSpeech": "Adjektiv",
+      "example": "Diese Information ist wichtig.",
+      "exampleTranslation": "این اطلاعات مهم است."
+    },
+    {
+      "german": "möglich",
+      "persian": "ممکن",
+      "level": "A2",
+      "partOfSpeech": "Adjektiv",
+      "example": "Ist das morgen möglich?",
+      "exampleTranslation": "آیا فردا ممکن است؟"
+    },
+    {
+      "german": "gemeinsam",
+      "persian": "با هم",
+      "level": "A2",
+      "partOfSpeech": "Adverb",
+      "example": "Wir lösen das Problem gemeinsam.",
+      "exampleTranslation": "ما مشکل را با هم حل می‌کنیم."
+    },
+    {
+      "german": "wahrscheinlich",
+      "persian": "احتمالاً",
+      "level": "B1",
+      "partOfSpeech": "Adverb",
+      "example": "Er kommt wahrscheinlich später.",
+      "exampleTranslation": "او احتمالاً دیرتر می‌آید."
+    },
+    {
+      "german": "die Rechnung",
+      "persian": "صورتحساب",
+      "level": "A2",
+      "partOfSpeech": "Nomen",
+      "example": "Bitte bringen Sie die Rechnung.",
+      "exampleTranslation": "لطفاً صورتحساب را بیاورید.",
+      "article": "die"
+    },
+    {
+      "german": "die Versicherung",
+      "persian": "بیمه",
+      "level": "B1",
+      "partOfSpeech": "Nomen",
+      "example": "Die Versicherung bezahlt die Kosten.",
+      "exampleTranslation": "بیمه هزینه‌ها را پرداخت می‌کند.",
+      "article": "die"
+    },
+    {
+      "german": "die Nachricht",
+      "persian": "پیام",
+      "level": "A1",
+      "partOfSpeech": "Nomen",
+      "example": "Ich habe deine Nachricht gelesen.",
+      "exampleTranslation": "من پیام تو را خواندم.",
+      "article": "die"
+    },
+    {
+      "german": "die Frage",
+      "persian": "سؤال",
+      "level": "A1",
+      "partOfSpeech": "Nomen",
+      "example": "Ich habe eine Frage.",
+      "exampleTranslation": "من یک سؤال دارم.",
+      "article": "die"
+    },
+    {
+      "german": "die Antwort",
+      "persian": "پاسخ",
+      "level": "A1",
+      "partOfSpeech": "Nomen",
+      "example": "Seine Antwort ist richtig.",
+      "exampleTranslation": "پاسخ او درست است.",
+      "article": "die"
+    },
+    {
+      "german": "der Unterschied",
+      "persian": "تفاوت",
+      "level": "B1",
+      "partOfSpeech": "Nomen",
+      "example": "Was ist der Unterschied?",
+      "exampleTranslation": "تفاوت چیست؟",
+      "article": "der"
+    },
+    {
+      "german": "die Möglichkeit",
+      "persian": "امکان",
+      "level": "B1",
+      "partOfSpeech": "Nomen",
+      "example": "Es gibt eine andere Möglichkeit.",
+      "exampleTranslation": "امکان دیگری وجود دارد.",
+      "article": "die"
+    },
+    {
+      "german": "die Verantwortung",
+      "persian": "مسئولیت",
+      "level": "B1",
+      "partOfSpeech": "Nomen",
+      "example": "Sie übernimmt die Verantwortung.",
+      "exampleTranslation": "او مسئولیت را بر عهده می‌گیرد.",
+      "article": "die"
+    },
+    {
+      "german": "der Erfolg",
+      "persian": "موفقیت",
+      "level": "B1",
+      "partOfSpeech": "Nomen",
+      "example": "Der Kurs war ein großer Erfolg.",
+      "exampleTranslation": "دوره موفقیت بزرگی بود.",
+      "article": "der"
+    },
+    {
+      "german": "die Herausforderung",
+      "persian": "چالش",
+      "level": "B2",
+      "partOfSpeech": "Nomen",
+      "example": "Das Projekt ist eine Herausforderung.",
+      "exampleTranslation": "این پروژه یک چالش است.",
+      "article": "die"
+    },
+    {
+      "german": "die Weiterbildung",
+      "persian": "آموزش تکمیلی",
+      "level": "B2",
+      "partOfSpeech": "Nomen",
+      "example": "Die Firma bezahlt meine Weiterbildung.",
+      "exampleTranslation": "شرکت هزینهٔ آموزش تکمیلی من را می‌دهد.",
+      "article": "die"
+    },
+    {
+      "german": "die Voraussetzung",
+      "persian": "پیش‌شرط",
+      "level": "B2",
+      "partOfSpeech": "Nomen",
+      "example": "Deutsch B2 ist eine Voraussetzung.",
+      "exampleTranslation": "آلمانی B2 یک پیش‌شرط است.",
+      "article": "die"
+    },
+    {
+      "german": "die Zusammenarbeit",
+      "persian": "همکاری",
+      "level": "B2",
+      "partOfSpeech": "Nomen",
+      "example": "Danke für die gute Zusammenarbeit.",
+      "exampleTranslation": "از همکاری خوبتان متشکرم.",
+      "article": "die"
+    },
+    {
+      "german": "die Rückmeldung",
+      "persian": "بازخورد",
+      "level": "B2",
+      "partOfSpeech": "Nomen",
+      "example": "Ich warte auf Ihre Rückmeldung.",
+      "exampleTranslation": "منتظر بازخورد شما هستم.",
+      "article": "die"
+    }
+  ],
+  "multilingualSampleDefaults": {
+    "idPrefix": "71000000-0000-4000-8000-",
+    "level": "A1",
+    "partOfSpeech": "Test",
+    "domain": "Multilingual Test"
+  },
+  "multilingualSamples": [
+    {
+      "number": 1,
+      "sourceLanguageTag": "fa",
+      "targetLanguageTag": "de",
+      "source": "کتاب",
+      "target": "das Buch",
+      "sourceExample": "این یک کتاب است.",
+      "targetExample": "Das ist ein Buch."
+    },
+    {
+      "number": 2,
+      "sourceLanguageTag": "fa",
+      "targetLanguageTag": "de",
+      "source": "آب",
+      "target": "das Wasser",
+      "sourceExample": "من آب می‌نوشم.",
+      "targetExample": "Ich trinke Wasser."
+    },
+    {
+      "number": 3,
+      "sourceLanguageTag": "fa",
+      "targetLanguageTag": "de",
+      "source": "دوست",
+      "target": "der Freund",
+      "sourceExample": "او دوست من است.",
+      "targetExample": "Er ist mein Freund."
+    },
+    {
+      "number": 4,
+      "sourceLanguageTag": "fa",
+      "targetLanguageTag": "de",
+      "source": "یاد گرفتن",
+      "target": "lernen",
+      "sourceExample": "من هر روز یاد می‌گیرم.",
+      "targetExample": "Ich lerne jeden Tag."
+    },
+    {
+      "number": 5,
+      "sourceLanguageTag": "fa",
+      "targetLanguageTag": "de",
+      "source": "سریع",
+      "target": "schnell",
+      "sourceExample": "قطار سریع است.",
+      "targetExample": "Der Zug ist schnell."
+    },
+    {
+      "number": 6,
+      "sourceLanguageTag": "fa",
+      "targetLanguageTag": "en",
+      "source": "خانه",
+      "target": "house",
+      "sourceExample": "این خانه بزرگ است.",
+      "targetExample": "This house is large."
+    },
+    {
+      "number": 7,
+      "sourceLanguageTag": "fa",
+      "targetLanguageTag": "en",
+      "source": "کتاب",
+      "target": "book",
+      "sourceExample": "کتاب روی میز است.",
+      "targetExample": "The book is on the table."
+    },
+    {
+      "number": 8,
+      "sourceLanguageTag": "fa",
+      "targetLanguageTag": "en",
+      "source": "کار کردن",
+      "target": "work",
+      "sourceExample": "من امروز کار می‌کنم.",
+      "targetExample": "I work today."
+    },
+    {
+      "number": 9,
+      "sourceLanguageTag": "fa",
+      "targetLanguageTag": "en",
+      "source": "پرسش",
+      "target": "question",
+      "sourceExample": "من یک پرسش دارم.",
+      "targetExample": "I have a question."
+    },
+    {
+      "number": 10,
+      "sourceLanguageTag": "fa",
+      "targetLanguageTag": "en",
+      "source": "مهم",
+      "target": "important",
+      "sourceExample": "این موضوع مهم است.",
+      "targetExample": "This topic is important."
+    },
+    {
+      "number": 11,
+      "sourceLanguageTag": "de",
+      "targetLanguageTag": "fa",
+      "source": "das Haus",
+      "target": "خانه",
+      "sourceExample": "Das Haus ist alt.",
+      "targetExample": "خانه قدیمی است."
+    },
+    {
+      "number": 12,
+      "sourceLanguageTag": "de",
+      "targetLanguageTag": "fa",
+      "source": "das Buch",
+      "target": "کتاب",
+      "sourceExample": "Ich lese ein Buch.",
+      "targetExample": "من یک کتاب می‌خوانم."
+    },
+    {
+      "number": 13,
+      "sourceLanguageTag": "de",
+      "targetLanguageTag": "fa",
+      "source": "arbeiten",
+      "target": "کار کردن",
+      "sourceExample": "Wir arbeiten zusammen.",
+      "targetExample": "ما با هم کار می‌کنیم."
+    },
+    {
+      "number": 14,
+      "sourceLanguageTag": "de",
+      "targetLanguageTag": "fa",
+      "source": "die Frage",
+      "target": "پرسش",
+      "sourceExample": "Das ist eine gute Frage.",
+      "targetExample": "این پرسش خوبی است."
+    },
+    {
+      "number": 15,
+      "sourceLanguageTag": "de",
+      "targetLanguageTag": "fa",
+      "source": "wichtig",
+      "target": "مهم",
+      "sourceExample": "Deutsch ist für mich wichtig.",
+      "targetExample": "آلمانی برای من مهم است."
+    },
+    {
+      "number": 16,
+      "sourceLanguageTag": "de",
+      "targetLanguageTag": "en",
+      "source": "das Haus",
+      "target": "house",
+      "sourceExample": "Das Haus ist neu.",
+      "targetExample": "The house is new."
+    },
+    {
+      "number": 17,
+      "sourceLanguageTag": "de",
+      "targetLanguageTag": "en",
+      "source": "das Buch",
+      "target": "book",
+      "sourceExample": "Das Buch liegt hier.",
+      "targetExample": "The book is here."
+    },
+    {
+      "number": 18,
+      "sourceLanguageTag": "de",
+      "targetLanguageTag": "en",
+      "source": "arbeiten",
+      "target": "work",
+      "sourceExample": "Ich arbeite in Berlin.",
+      "targetExample": "I work in Berlin."
+    },
+    {
+      "number": 19,
+      "sourceLanguageTag": "de",
+      "targetLanguageTag": "en",
+      "source": "die Antwort",
+      "target": "answer",
+      "sourceExample": "Die Antwort ist richtig.",
+      "targetExample": "The answer is correct."
+    },
+    {
+      "number": 20,
+      "sourceLanguageTag": "de",
+      "targetLanguageTag": "en",
+      "source": "freundlich",
+      "target": "friendly",
+      "sourceExample": "Sie ist sehr freundlich.",
+      "targetExample": "She is very friendly."
+    },
+    {
+      "number": 21,
+      "sourceLanguageTag": "en",
+      "targetLanguageTag": "fa",
+      "source": "home",
+      "target": "خانه",
+      "sourceExample": "My home is nearby.",
+      "targetExample": "خانهٔ من نزدیک است."
+    },
+    {
+      "number": 22,
+      "sourceLanguageTag": "en",
+      "targetLanguageTag": "fa",
+      "source": "water",
+      "target": "آب",
+      "sourceExample": "I need some water.",
+      "targetExample": "من کمی آب نیاز دارم."
+    },
+    {
+      "number": 23,
+      "sourceLanguageTag": "en",
+      "targetLanguageTag": "fa",
+      "source": "learn",
+      "target": "یاد گرفتن",
+      "sourceExample": "We learn together.",
+      "targetExample": "ما با هم یاد می‌گیریم."
+    },
+    {
+      "number": 24,
+      "sourceLanguageTag": "en",
+      "targetLanguageTag": "fa",
+      "source": "friend",
+      "target": "دوست",
+      "sourceExample": "She is my friend.",
+      "targetExample": "او دوست من است."
+    },
+    {
+      "number": 25,
+      "sourceLanguageTag": "en",
+      "targetLanguageTag": "fa",
+      "source": "important",
+      "target": "مهم",
+      "sourceExample": "This meeting is important.",
+      "targetExample": "این جلسه مهم است."
+    },
+    {
+      "number": 26,
+      "sourceLanguageTag": "en",
+      "targetLanguageTag": "de",
+      "source": "house",
+      "target": "das Haus",
+      "sourceExample": "The house is old.",
+      "targetExample": "Das Haus ist alt."
+    },
+    {
+      "number": 27,
+      "sourceLanguageTag": "en",
+      "targetLanguageTag": "de",
+      "source": "book",
+      "target": "das Buch",
+      "sourceExample": "I am reading a book.",
+      "targetExample": "Ich lese ein Buch."
+    },
+    {
+      "number": 28,
+      "sourceLanguageTag": "en",
+      "targetLanguageTag": "de",
+      "source": "work",
+      "target": "arbeiten",
+      "sourceExample": "We work together.",
+      "targetExample": "Wir arbeiten zusammen."
+    },
+    {
+      "number": 29,
+      "sourceLanguageTag": "en",
+      "targetLanguageTag": "de",
+      "source": "question",
+      "target": "die Frage",
+      "sourceExample": "I have a question.",
+      "targetExample": "Ich habe eine Frage."
+    },
+    {
+      "number": 30,
+      "sourceLanguageTag": "en",
+      "targetLanguageTag": "de",
+      "source": "friendly",
+      "target": "freundlich",
+      "sourceExample": "The doctor is friendly.",
+      "targetExample": "Die Ärztin ist freundlich."
+    }
+  ]
+}

@@ -193,8 +193,8 @@ final class PrototypeLanguageSettings {
 
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
-        sourceLanguageTag = defaults.string(forKey: Key.source) ?? "fa"
-        targetLanguageTag = defaults.string(forKey: Key.target) ?? "de"
+        sourceLanguageTag = defaults.string(forKey: Key.source) ?? LearningContentRules.bundled.defaults.sourceLanguageTag
+        targetLanguageTag = defaults.string(forKey: Key.target) ?? LearningContentRules.bundled.defaults.targetLanguageTag
     }
 
     var isValidPair: Bool { sourceLanguageTag != targetLanguageTag }
