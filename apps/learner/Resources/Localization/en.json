@@ -761,5 +761,7 @@
   "provider.audioLocalDescription": "Use Apple on-device transcription.",
   "provider.audioConnectionSuccess": "Connection succeeded. Audio models loaded.",
   "settings.languages.mustDiffer": "Source and learning languages must be different.",
-  "provider.audioModel": "Audio model"
+  "provider.audioModel": "Audio model",
+  "wordDetail.contentReviewed": "I have checked the meaning and example translation",
+  "wordDetail.contentReviewed.detail": "Only checked examples are used in listening practice."
 }

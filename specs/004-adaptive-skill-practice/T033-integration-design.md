@@ -1,6 +1,6 @@
 # T033 Integration Design — Skill Practice Routes
 
-**Status:** Phase A1 (package layer) implemented and tested; Phase A2 (app wiring) not started. Decisions 1–4 are recorded in Section 6; decision 5 is open.
+**Status:** Phase A1 (package layer) implemented and tested; Phase A2 (app wiring) not started. All decisions are recorded in Section 6.
 **Date:** 2026-10-13
 **Task:** [T033](tasks.md) — integrate app routes and languages.
 **Related:** [spec.md](spec.md), [plan.md](plan.md), [2026-10-13 project audit](../../docs/PROJECT_AUDIT_2026-10-13.md) finding A2.
@@ -114,7 +114,7 @@ Each phase ends with package tests (Linux harness where possible), deterministic
 | 2 | Grammar templates | **Drafted by the assistant, reviewed by the Product Owner.** Drafts are stored with a pending-review marker and are never accepted as `curated` until a human reviews them. |
 | 3 | AI evaluation | **Enabled through the configured Text provider, with cloud consent.** Without a provider or consent, attempts are saved and shown as ungraded. |
 | 4 | Listening audio | **On-device Apple speech synthesis**, with the audio asset key bound to sentence revision, locale, and voice. |
-| 5 | Legacy `SkillPracticeView` | **Open.** Recommendation: remove it from the skill-practice route in Phase A2 so that skill evidence is written only to GRDB. |
+| 5 | Legacy `SkillPracticeView` | **Removed from the skill-practice route in Phase A2**, so skill evidence is written only to GRDB. |
 
 ## 7. Implementation record
 
@@ -135,7 +135,7 @@ New types in `LinguaBrainApplication/Practice/`:
 
 `PracticeSessionService.prepare` previously restored session state from **all** attempts of a review unit. A unit that had been completed once therefore reopened in its finished state and could not be practised again. Session state is now restored only from attempts whose `exerciseID` matches the prepared exercise; each exercise is one occurrence of the unit. `PracticeOccurrence.exerciseID(for:attempts:)` resumes an occurrence whose last attempt is still `pending` and otherwise derives a new deterministic ID from the unit's stable key and the number of earlier occurrences. Mastery projections and attempt history are unaffected and remain per unit.
 
-### 7.3 Listening material: open question
+### 7.3 Listening material
 
 The listening contract requires a reviewed translation. The package accepts only candidates marked `.reviewed` (`PracticeCardCandidate.ExampleReview`); the app adapter (Phase A2) decides that mark.
 
@@ -153,3 +153,5 @@ Mapping `generated` to `.reviewed` would therefore admit unreviewed AI output fr
 3. Accept `generated` as reviewed and document the exception.
 
 Option 1 meets the contract; it is a decision for the Product Owner before Phase A2.
+
+**Decision (2026-10-13): option 1.** `PrototypeCardRecord.contentReviewed` (schema default `false`) is set for built-in seed cards (with a one-time backfill of the built-in decks), for cards saved through the single-card preview, and by the learner with the toggle on the card detail screen. Batch, passage, and imported cards start unreviewed. Cards approved in the preview before this change cannot be distinguished from batch cards and start unreviewed. The flag is included in iCloud card backups; older snapshots decode it as `false`.

@@ -216,6 +216,8 @@ struct LearningContentRules: Decodable, Sendable {
         let core: String
         let generated: String
         let multilingual: String
+        /// Deck for restored iCloud cards whose deck no longer exists.
+        let cloudFallback: String
     }
 
     struct DomainKeywords: Decodable, Sendable {

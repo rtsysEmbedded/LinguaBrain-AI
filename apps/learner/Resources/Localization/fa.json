@@ -761,5 +761,7 @@
   "provider.audioLocalDescription": "از تبدیل گفتار به متن داخلی اپل استفاده کن.",
   "provider.audioConnectionSuccess": "اتصال موفق بود و مدل‌های صوتی بارگذاری شدند.",
   "settings.languages.mustDiffer": "زبان توضیحات و زبان یادگیری باید متفاوت باشند.",
-  "provider.audioModel": "مدل صوتی"
+  "provider.audioModel": "مدل صوتی",
+  "wordDetail.contentReviewed": "معنی و ترجمهٔ مثال را بررسی کرده‌ام",
+  "wordDetail.contentReviewed.detail": "فقط مثال‌های بررسی‌شده در تمرین شنیداری استفاده می‌شوند."
 }

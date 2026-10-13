@@ -1101,6 +1101,18 @@ struct WordDetailPrototypeView: View {
                         Text(localization.localized("wordDetail.example")).font(.headline)
                         LanguageText(text: word.example, languageTag: word.targetLanguageTag, font: .title3)
                         LanguageText(text: word.exampleTranslation, languageTag: word.sourceLanguageTag, color: .secondary)
+                        Divider()
+                        Toggle(isOn: Binding(
+                            get: { store.isContentReviewed(word) },
+                            set: { store.setContentReviewed($0, for: word) }
+                        )) {
+                            VStack(alignment: .leading, spacing: 3) {
+                                Text(localization.localized("wordDetail.contentReviewed"))
+                                Text(localization.localized("wordDetail.contentReviewed.detail"))
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
                     }
                 }
 

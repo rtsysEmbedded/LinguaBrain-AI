@@ -761,5 +761,7 @@
   "provider.audioLocalDescription": "Apple On-Device-Transkription verwenden.",
   "provider.audioConnectionSuccess": "Verbindung erfolgreich. Audiomodelle geladen.",
   "settings.languages.mustDiffer": "Erklärungs- und Lernsprache müssen sich unterscheiden.",
-  "provider.audioModel": "Audiomodell"
+  "provider.audioModel": "Audiomodell",
+  "wordDetail.contentReviewed": "Bedeutung und Beispielübersetzung geprüft",
+  "wordDetail.contentReviewed.detail": "Nur geprüfte Beispiele werden im Hörtraining verwendet."
 }

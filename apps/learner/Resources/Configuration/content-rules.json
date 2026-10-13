@@ -8,7 +8,8 @@
   "deckNames": {
     "core": "واژگان پایه آلمانی–فارسی",
     "generated": "کارت‌های هوشمند",
-    "multilingual": "Multilingual Test Cards"
+    "multilingual": "Multilingual Test Cards",
+    "cloudFallback": "Cloud Cards"
   },
   "classifierFallbackDomain": "general",
   "genericDomainNames": [

@@ -22,6 +22,8 @@ struct PrototypeCloudCard: Codable, Sendable {
     let targetLanguageTag: String
     let pronunciationAudio: Data?
     let pronunciationAudioFilename: String?
+    /// Absent in snapshots written before the field existed; read as `false`.
+    let contentReviewed: Bool?
 }
 
 struct PrototypeCloudCardSnapshot: Codable, Sendable {

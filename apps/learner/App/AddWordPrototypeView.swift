@@ -1023,7 +1023,8 @@ struct AddWordPrototypeView: View {
                         sourceLanguageTag: languageSettings.sourceLanguageTag,
                         targetLanguageTag: languageSettings.targetLanguageTag
                     )] } ?? [preview]
-                    let saved = store.addGeneratedCards(cards, sharedPronunciationAudio: generatedAudio)
+                    // The learner approves exactly these previewed cards.
+                    let saved = store.addGeneratedCards(cards, sharedPronunciationAudio: generatedAudio, contentReviewed: true)
                     if saved {
                         generatedCardSaved = true
                     } else {

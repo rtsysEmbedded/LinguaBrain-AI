@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		CB0000000000000000000004 /* CardContentReviewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB0000000000000000000003 /* CardContentReviewTests.swift */; };
 		CB0000000000000000000002 /* AnkiExportDocumentTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CB0000000000000000000001 /* AnkiExportDocumentTests.swift */; };
 		CF000000000000000000001A /* seed-cards.json in Resources */ = {isa = PBXBuildFile; fileRef = CF0000000000000000000007 /* seed-cards.json */; };
 		CF000000000000000000001B /* content-rules.json in Resources */ = {isa = PBXBuildFile; fileRef = CF0000000000000000000008 /* content-rules.json */; };
@@ -116,6 +117,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		CB0000000000000000000003 /* CardContentReviewTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardContentReviewTests.swift; sourceTree = "<group>"; };
 		CB0000000000000000000001 /* AnkiExportDocumentTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnkiExportDocumentTests.swift; sourceTree = "<group>"; };
 		CF0000000000000000000007 /* seed-cards.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "seed-cards.json"; sourceTree = "<group>"; };
 		CF0000000000000000000008 /* content-rules.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = "content-rules.json"; sourceTree = "<group>"; };
@@ -315,6 +317,7 @@
 		420000000000000000000001 /* Tests */ = {
 			isa = PBXGroup;
 			children = (
+				CB0000000000000000000003 /* CardContentReviewTests.swift */,
 				CB0000000000000000000001 /* AnkiExportDocumentTests.swift */,
 				220000000000000000000001 /* AnkiCoreRegressionTests.swift */,
 				220000000000000000000002 /* APKGFixtureFactory.swift */,
@@ -622,6 +625,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				CB0000000000000000000004 /* CardContentReviewTests.swift in Sources */,
 				CB0000000000000000000002 /* AnkiExportDocumentTests.swift in Sources */,
 				120000000000000000000001 /* AnkiCoreRegressionTests.swift in Sources */,
 				120000000000000000000002 /* APKGFixtureFactory.swift in Sources */,

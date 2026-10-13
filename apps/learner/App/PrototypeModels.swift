@@ -95,12 +95,19 @@ final class PrototypeCardRecord {
     @Attribute(.externalStorage) var illustrationImage: Data?
     var illustrationImageFilename: String?
     var illustrationImageAssetID: UUID?
+    /// Whether a person reviewed the card's meaning and example translation:
+    /// built-in seed content, a card approved in the single-card preview, or
+    /// a card the learner marked as reviewed. Batch-generated and imported
+    /// cards start unreviewed. Only reviewed examples are used as listening
+    /// material (Feature 004 T033). Schema default for older stores.
+    var contentReviewed: Bool = false
 
     init(
         word: PrototypeWord,
         deckID: UUID,
         position: Int,
         createdAt: Date = .now,
+        contentReviewed: Bool = false,
         sourceIdentifier: String? = nil,
         sourcePackage: String? = nil,
         pronunciationAudio: Data? = nil,
@@ -134,6 +141,7 @@ final class PrototypeCardRecord {
         self.illustrationImage = illustrationImage
         self.illustrationImageFilename = illustrationImageFilename
         self.illustrationImageAssetID = illustrationImageAssetID
+        self.contentReviewed = contentReviewed
     }
 
     var word: PrototypeWord {
@@ -814,6 +822,9 @@ final class PrototypeStore {
     private let scheduler = PrototypeFSRS6Scheduler()
 
     private(set) var words: [PrototypeWord] = []
+    /// IDs of cards whose content a person reviewed (see
+    /// `PrototypeCardRecord.contentReviewed`).
+    private(set) var reviewedCardIDs: Set<UUID> = []
 
     init(inMemory: Bool = false) {
         assert(
@@ -1051,6 +1062,31 @@ final class PrototypeStore {
         Set(value.lowercased().split { !$0.isLetter }.map(String.init).filter { $0.count >= 4 })
     }
 
+    func isContentReviewed(_ word: PrototypeWord) -> Bool {
+        reviewedCardIDs.contains(word.id)
+    }
+
+    /// Records the learner's own review of a card's meaning and example.
+    @discardableResult
+    func setContentReviewed(_ reviewed: Bool, for word: PrototypeWord) -> Bool {
+        let wordID = word.id
+        var descriptor = FetchDescriptor<PrototypeCardRecord>(predicate: #Predicate { $0.id == wordID })
+        descriptor.fetchLimit = 1
+        do {
+            guard let record = try modelContext.fetch(descriptor).first else { return false }
+            guard record.contentReviewed != reviewed else { return true }
+            record.contentReviewed = reviewed
+            try modelContext.save()
+            if reviewed { reviewedCardIDs.insert(wordID) } else { reviewedCardIDs.remove(wordID) }
+            lastPersistenceError = nil
+            return true
+        } catch {
+            modelContext.rollback()
+            lastPersistenceError = error.localizedDescription
+            return false
+        }
+    }
+
     func provenance(of word: PrototypeWord) -> PrototypeCardProvenance {
         let wordID = word.id
         var descriptor = FetchDescriptor<PrototypeCardRecord>(
@@ -1279,7 +1315,7 @@ final class PrototypeStore {
             guard record.sourcePackage != nil || deckNames[record.deckID] == LearningContentRules.bundled.deckNames.generated else { return nil }
             return PrototypeCloudCard(
                 id: record.id,
-                deckName: deckNames[record.deckID] ?? "Cloud Cards",
+                deckName: deckNames[record.deckID] ?? LearningContentRules.bundled.deckNames.cloudFallback,
                 position: record.position,
                 german: record.german,
                 persian: record.persian,
@@ -1296,7 +1332,8 @@ final class PrototypeStore {
                 sourceLanguageTag: record.sourceLanguageTag,
                 targetLanguageTag: record.targetLanguageTag,
                 pronunciationAudio: pronunciationAudio(for: record.word),
-                pronunciationAudioFilename: record.pronunciationAudioFilename
+                pronunciationAudioFilename: record.pronunciationAudioFilename,
+                contentReviewed: record.contentReviewed
             )
         }
     }
@@ -1335,6 +1372,7 @@ final class PrototypeStore {
                 deckID: deck.id,
                 position: card.position,
                 createdAt: card.createdAt,
+                contentReviewed: card.contentReviewed ?? false,
                 sourceIdentifier: card.sourceIdentifier,
                 sourcePackage: card.sourcePackage,
                 pronunciationAudio: card.pronunciationAudio,
@@ -1442,22 +1480,27 @@ final class PrototypeStore {
     func addGeneratedCard(
         _ word: PrototypeWord,
         pronunciationAudio: Data? = nil,
-        illustrationImage: Data? = nil
+        illustrationImage: Data? = nil,
+        contentReviewed: Bool = false
     ) -> Bool {
         addGeneratedCards(
             [word],
             sharedPronunciationAudio: pronunciationAudio,
-            sharedIllustrationImage: illustrationImage
+            sharedIllustrationImage: illustrationImage,
+            contentReviewed: contentReviewed
         )
     }
 
     /// Persists each independent meaning as a card while creating at most one
     /// audio asset and one image asset for the submitted headword.
+    /// `contentReviewed` is true only when the learner approved these exact
+    /// cards in a preview.
     @discardableResult
     func addGeneratedCards(
         _ words: [PrototypeWord],
         sharedPronunciationAudio: Data? = nil,
-        sharedIllustrationImage: Data? = nil
+        sharedIllustrationImage: Data? = nil,
+        contentReviewed: Bool = false
     ) -> Bool {
         guard !words.isEmpty else { return true }
         do {
@@ -1491,6 +1534,7 @@ final class PrototypeStore {
                     word: word,
                     deckID: deck.id,
                     position: cards.count + offset,
+                    contentReviewed: contentReviewed,
                     pronunciationAudioAssetID: audioAsset?.id,
                     illustrationImageAssetID: imageAsset?.id
                 ))
@@ -1602,7 +1646,7 @@ final class PrototypeStore {
         modelContext.insert(deck)
         for (position, word) in PrototypeData.words.enumerated() {
             modelContext.insert(
-                PrototypeCardRecord(word: word, deckID: deck.id, position: position)
+                PrototypeCardRecord(word: word, deckID: deck.id, position: position, contentReviewed: true)
             )
         }
         try modelContext.save()
@@ -1619,7 +1663,7 @@ final class PrototypeStore {
         let offset = existingRecords.count
         for (index, word) in missing.enumerated() {
             modelContext.insert(
-                PrototypeCardRecord(word: word, deckID: deck.id, position: offset + index)
+                PrototypeCardRecord(word: word, deckID: deck.id, position: offset + index, contentReviewed: true)
             )
         }
         try modelContext.save()
@@ -1644,8 +1688,22 @@ final class PrototypeStore {
         if try removeDanglingLearningReferences(liveCards: records) {
             requiresSave = true
         }
+        // Built-in seed decks were inserted before `contentReviewed` existed;
+        // their content is curated, so mark it reviewed once.
+        let builtInDeckNames: Set<String> = [
+            LearningContentRules.bundled.deckNames.core,
+            LearningContentRules.bundled.deckNames.multilingual
+        ]
+        let builtInDeckIDs = Set(try modelContext.fetch(FetchDescriptor<PrototypeDeckRecord>())
+            .filter { builtInDeckNames.contains($0.name) }
+            .map(\.id))
+        for record in records where !record.contentReviewed && record.sourcePackage == nil && builtInDeckIDs.contains(record.deckID) {
+            record.contentReviewed = true
+            requiresSave = true
+        }
         if requiresSave { try modelContext.save() }
         words = records.map(\.word)
+        reviewedCardIDs = Set(records.filter(\.contentReviewed).map(\.id))
         let grouped = Dictionary(grouping: records.compactMap { record in
             record.sourcePackage.map { ($0, record.id) }
         }, by: \.0)

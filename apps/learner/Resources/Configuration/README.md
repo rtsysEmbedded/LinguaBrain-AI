@@ -89,7 +89,8 @@ The card-generation user message is assembled as:
 | --- | --- |
 | `defaults.sourceLanguageTag`, `defaults.targetLanguageTag` | Language pair used before the learner chooses one, and for imported cards without language tags. |
 | `defaults.domain` | Domain assigned to cards without a topic. |
-| `deckNames.core`, `deckNames.generated`, `deckNames.multilingual` | Names of the built-in, AI-generated, and multilingual sample decks. Existing decks are found by these names. |
+| `deckNames.core`, `deckNames.generated`, `deckNames.multilingual` | Names of the built-in, AI-generated, and multilingual sample decks. Existing decks are found by these names; cards in the built-in and multilingual decks count as reviewed content. |
+| `deckNames.cloudFallback` | Deck for cards restored from an iCloud backup whose deck name is missing. |
 | `classifierFallbackDomain` | Domain returned when no classification term matches. |
 | `genericDomainNames` | Lower-cased domain names treated as "no topic"; such cards may be reclassified. |
 | `nounPartOfSpeechMarkers`, `verbPartOfSpeechMarkers` | Case-insensitive fragments that identify nouns (article practice) and verbs (odd-meaning practice) in a stored part of speech. |
