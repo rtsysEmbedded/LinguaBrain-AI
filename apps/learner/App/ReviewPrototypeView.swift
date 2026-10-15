@@ -726,6 +726,35 @@ enum PrototypeSkillPracticeMode: String, CaseIterable, Identifiable, Sendable {
     }
 }
 
+/// Feature switches loaded from Resources/Configuration/features.json.
+/// Missing or malformed configuration falls back to an empty set of practice
+/// modes so that disabled features never reappear by accident.
+struct PrototypeFeatureConfiguration: Decodable, Sendable {
+    struct SkillPractice: Decodable, Sendable {
+        let enabledModes: [String]
+    }
+
+    struct TranscriptExport: Decodable, Sendable {
+        let defaultFilename: String
+    }
+
+    let skillPractice: SkillPractice
+    let transcriptExport: TranscriptExport
+
+    static let shared: PrototypeFeatureConfiguration? = {
+        let url = Bundle.main.url(forResource: "features", withExtension: "json")
+            ?? Bundle.main.url(forResource: "features", withExtension: "json", subdirectory: "Configuration")
+        return url.flatMap { try? JSONDecoder().decode(PrototypeFeatureConfiguration.self, from: Data(contentsOf: $0)) }
+    }()
+}
+
+extension PrototypeSkillPracticeMode {
+    static var enabledCases: [PrototypeSkillPracticeMode] {
+        let enabled = Set(PrototypeFeatureConfiguration.shared?.skillPractice.enabledModes ?? [])
+        return allCases.filter { enabled.contains($0.rawValue) }
+    }
+}
+
 struct SkillPracticeView: View {
     let practiceMode: PrototypeSkillPracticeMode
     let cardLimit: Int?

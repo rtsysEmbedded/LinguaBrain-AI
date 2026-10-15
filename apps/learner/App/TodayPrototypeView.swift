@@ -61,7 +61,9 @@ struct TodayPrototypeView: View {
                 hero
                 checkIn
                 todayPlan
-                skillPractice
+                if !PrototypeSkillPracticeMode.enabledCases.isEmpty {
+                    skillPractice
+                }
                 weakArea
             }
             .padding()
@@ -256,7 +258,7 @@ struct TodayPrototypeView: View {
             )
             PrototypeCard {
                 VStack(spacing: 10) {
-                    ForEach(PrototypeSkillPracticeMode.allCases) { practiceMode in
+                    ForEach(PrototypeSkillPracticeMode.enabledCases) { practiceMode in
                         NavigationLink {
                             PracticeSessionBoundaryView(
                                 composition: practiceComposition,
@@ -278,7 +280,7 @@ struct TodayPrototypeView: View {
                             .contentShape(Rectangle())
                         }
                         .buttonStyle(.plain)
-                        if practiceMode != PrototypeSkillPracticeMode.allCases.last {
+                        if practiceMode != PrototypeSkillPracticeMode.enabledCases.last {
                             Divider()
                         }
                     }
