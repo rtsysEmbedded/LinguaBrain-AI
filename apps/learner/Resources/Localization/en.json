@@ -36,6 +36,8 @@
   "utilities.listening": "Listening",
   "utilities.clear": "Clear",
   "utilities.copyTranscript": "Copy transcript",
+  "utilities.saveTranscript": "Save transcript",
+  "utilities.transcriptSaved": "Transcript saved.",
   "utilities.translationTitle": "Translate transcript",
   "utilities.translationLanguage": "Translation language",
   "utilities.translationEmpty": "Choose a target language and translate.",

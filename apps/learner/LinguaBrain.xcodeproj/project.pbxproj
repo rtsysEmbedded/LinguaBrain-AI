@@ -24,6 +24,8 @@
 		100000000000000000000011 /* en.json in Resources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000011 /* en.json */; };
 		100000000000000000000012 /* de.json in Resources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000012 /* de.json */; };
 		100000000000000000000013 /* fa.json in Resources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000013 /* fa.json */; };
+		1000000000000000000000F1 /* features.json in Resources */ = {isa = PBXBuildFile; fileRef = 2000000000000000000000F1 /* features.json */; };
+		1100000000000000000000F1 /* features.json in Resources */ = {isa = PBXBuildFile; fileRef = 2000000000000000000000F1 /* features.json */; };
 		100000000000000000000014 /* GoogleCloudTextToSpeech.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000014 /* GoogleCloudTextToSpeech.swift */; };
 		110000000000000000000001 /* LinguaBrainPrototypeApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000001 /* LinguaBrainPrototypeApp.swift */; };
 		110000000000000000000002 /* PrototypeModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 200000000000000000000002 /* PrototypeModels.swift */; };
@@ -121,6 +123,7 @@
 		200000000000000000000011 /* en.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = en.json; sourceTree = "<group>"; };
 		200000000000000000000012 /* de.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = de.json; sourceTree = "<group>"; };
 		200000000000000000000013 /* fa.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = fa.json; sourceTree = "<group>"; };
+		2000000000000000000000F1 /* features.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = features.json; sourceTree = "<group>"; };
 		200000000000000000000014 /* GoogleCloudTextToSpeech.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoogleCloudTextToSpeech.swift; sourceTree = "<group>"; };
 		200000000000000000000015 /* CloudCardBackup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudCardBackup.swift; sourceTree = "<group>"; };
 		200000000000000000000016 /* UtilitiesPrototypeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UtilitiesPrototypeView.swift; sourceTree = "<group>"; };
@@ -271,11 +274,13 @@
 				20000000000000000000000C /* Assets.xcassets */,
 				200000000000000000000010 /* Localizable.xcstrings */,
 				400000000000000000000005 /* Localization */,
+				4000000000000000000000F1 /* Configuration */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
 		};
 		400000000000000000000005 /* Localization */ = { isa = PBXGroup; children = ( 200000000000000000000011 /* en.json */, 200000000000000000000012 /* de.json */, 200000000000000000000013 /* fa.json */ ); path = Localization; sourceTree = "<group>"; };
+		4000000000000000000000F1 /* Configuration */ = { isa = PBXGroup; children = ( 2000000000000000000000F1 /* features.json */ ); path = Configuration; sourceTree = "<group>"; };
 		400000000000000000000004 /* Products */ = {
 			isa = PBXGroup;
 			children = (
@@ -482,6 +487,7 @@
 				100000000000000000000011 /* en.json in Resources */,
 				100000000000000000000012 /* de.json in Resources */,
 				100000000000000000000013 /* fa.json in Resources */,
+				1000000000000000000000F1 /* features.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -494,6 +500,7 @@
 				110000000000000000000011 /* en.json in Resources */,
 				110000000000000000000012 /* de.json in Resources */,
 				110000000000000000000013 /* fa.json in Resources */,
+				1100000000000000000000F1 /* features.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

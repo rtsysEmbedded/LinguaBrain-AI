@@ -36,6 +36,8 @@
   "utilities.listening": "Hört zu",
   "utilities.clear": "Löschen",
   "utilities.copyTranscript": "Transkript kopieren",
+  "utilities.saveTranscript": "Transkript speichern",
+  "utilities.transcriptSaved": "Transkript gespeichert.",
   "utilities.translationTitle": "Transkript übersetzen",
   "utilities.translationLanguage": "Übersetzungssprache",
   "utilities.translationEmpty": "Zielsprache wählen und übersetzen.",

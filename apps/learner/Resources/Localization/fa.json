@@ -36,6 +36,8 @@
   "utilities.listening": "در حال شنیدن",
   "utilities.clear": "پاک کردن",
   "utilities.copyTranscript": "کپی متن",
+  "utilities.saveTranscript": "ذخیره متن",
+  "utilities.transcriptSaved": "متن ذخیره شد.",
   "utilities.translationTitle": "ترجمهٔ متن",
   "utilities.translationLanguage": "زبان ترجمه",
   "utilities.translationEmpty": "زبان مقصد را انتخاب کنید و ترجمه را بزنید.",

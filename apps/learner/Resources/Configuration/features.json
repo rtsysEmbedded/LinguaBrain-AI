@@ -1,0 +1,8 @@
+{
+  "skillPractice": {
+    "enabledModes": ["listening"]
+  },
+  "transcriptExport": {
+    "defaultFilename": "linguabrain-transcript.txt"
+  }
+}

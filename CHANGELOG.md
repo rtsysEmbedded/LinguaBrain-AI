@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-10-15 — Disable writing/speaking/grammar practice; save transcripts
+
+- Hid the writing, speaking, and grammar skill-practice modes from Today. Enabled modes are now read from `Resources/Configuration/features.json` (`skillPractice.enabledModes`); only listening is enabled.
+- Added a "Save transcript" action in Utilities that exports the transcript as a plain-text file through the system save dialog. The default filename is configured in `features.json`.
+
 ## 2026-08-22 — Role-specific audio provider models
 
 - Split Audio settings into Speech/TTS, Transcript, and Live Stream model selections with independent persistence and model lists.

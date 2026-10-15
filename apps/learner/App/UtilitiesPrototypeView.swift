@@ -2,6 +2,7 @@
 import Observation
 import Speech
 import SwiftUI
+import UniformTypeIdentifiers
 #if os(macOS)
 import AppKit
 import CoreAudio
@@ -821,6 +822,9 @@ struct UtilitiesPrototypeView: View {
     @State private var isTranslating = false
     @State private var liveTranslationTask: Task<Void, Never>?
     @State private var cloudMode: PrototypeCloudTranscriptionMode = .liveStream
+    @State private var isTranscriptExporterPresented = false
+    @State private var transcriptExportDocument = AnkiTSVDocument(text: "")
+    @State private var transcriptExportStatus: String?
 
     var body: some View {
         ScrollView {
@@ -838,6 +842,19 @@ struct UtilitiesPrototypeView: View {
         .background(PrototypeBackground())
         .navigationTitle(localization.localized("utilities.title"))
         .onDisappear { liveTranslationTask?.cancel() }
+        .fileExporter(
+            isPresented: $isTranscriptExporterPresented,
+            document: transcriptExportDocument,
+            contentType: .plainText,
+            defaultFilename: PrototypeFeatureConfiguration.shared?.transcriptExport.defaultFilename
+        ) { result in
+            switch result {
+            case .success:
+                transcriptExportStatus = localization.localized("utilities.transcriptSaved")
+            case .failure(let error):
+                transcriptExportStatus = error.localizedDescription
+            }
+        }
         .onChange(of: transcription.visibleText) { _, value in
             scheduleLiveTranslation(value)
         }
@@ -963,11 +980,24 @@ struct UtilitiesPrototypeView: View {
                         .buttonStyle(.bordered)
                     Spacer()
                     Button {
+                        transcriptExportDocument = AnkiTSVDocument(text: transcription.visibleText)
+                        transcriptExportStatus = nil
+                        isTranscriptExporterPresented = true
+                    } label: {
+                        Label(localization.localized("utilities.saveTranscript"), systemImage: "square.and.arrow.down")
+                    }
+                    .disabled(transcription.visibleText.isEmpty)
+                    Button {
                         copyToClipboard(transcription.visibleText)
                     } label: {
                         Label(localization.localized("utilities.copyTranscript"), systemImage: "doc.on.doc")
                     }
                     .disabled(transcription.visibleText.isEmpty)
+                }
+                if let transcriptExportStatus {
+                    Text(transcriptExportStatus)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
                 }
             }
         }
